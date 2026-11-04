@@ -34,6 +34,41 @@ export type Database = {
   }
   public: {
     Tables: {
+      ai_usage: {
+        Row: {
+          created_at: string
+          id: string
+          input_tokens: number | null
+          kind: string
+          output_tokens: number | null
+          owner_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          input_tokens?: number | null
+          kind: string
+          output_tokens?: number | null
+          owner_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          input_tokens?: number | null
+          kind?: string
+          output_tokens?: number | null
+          owner_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ai_usage_owner_id_fkey"
+            columns: ["owner_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       characters: {
         Row: {
           created_at: string

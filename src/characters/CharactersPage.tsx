@@ -7,7 +7,6 @@ import { Card, CardDescription, CardFooter, CardHeader, CardTitle } from '@/comp
 import { Empty, EmptyContent, EmptyDescription, EmptyHeader, EmptyMedia, EmptyTitle } from '@/components/ui/empty'
 import { Skeleton } from '@/components/ui/skeleton'
 import { useCharacters } from './api'
-import { derived } from './character'
 
 export function CharactersPage() {
   const { data, isPending, error } = useCharacters()
@@ -46,18 +45,19 @@ export function CharactersPage() {
       {data && data.length > 0 && (
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {data.map((c) => {
-            const d = derived(c.data)
             return (
               <Card key={c.id} size="sm" className="relative">
                 <CardHeader>
                   <CardTitle>
                     <Link to={`/characters/${c.id}`} className="after:absolute after:inset-0">{c.data.name}</Link>
                   </CardTitle>
-                  {c.data.occupation && <CardDescription>{c.data.occupation}</CardDescription>}
+                  <CardDescription>
+                    {[c.data.occupation, c.data.age && `${c.data.age} ans`, c.data.player && `joué par ${c.data.player}`].filter(Boolean).join(' · ')}
+                  </CardDescription>
                 </CardHeader>
                 <CardFooter className="flex flex-wrap gap-2">
-                  {d.hp !== undefined && <Badge variant="outline">PV {d.hp}</Badge>}
-                  {d.san !== undefined && <Badge variant="outline">SAN {d.san}</Badge>}
+                  {c.data.hp !== undefined && <Badge variant="outline">PV {c.data.hp}</Badge>}
+                  {c.data.san !== undefined && <Badge variant="outline">SAN {c.data.san}</Badge>}
                   {c.data.luck !== undefined && <Badge variant="outline">Chance {c.data.luck}</Badge>}
                 </CardFooter>
               </Card>

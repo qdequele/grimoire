@@ -24,7 +24,56 @@ async function signUp(page: Page, name = 'Keeper') {
   await page.getByLabel('E-mail').fill(`e2e-${crypto.randomUUID()}@test.local`)
   await page.getByLabel('Mot de passe').fill('correct-horse-battery')
   await page.getByRole('button', { name: 'Créer mon compte' }).click()
-  await expect(page.getByRole('heading', { name: `Bonsoir, ${name}` })).toBeVisible()
+  await expect(page.getByText(`Bonsoir, ${name}`)).toBeVisible()
+}
+
+/** Walks the 7-step creation wizard (the legacy app's rules) for a journalist. */
+async function createJournalist(page: Page, name: string) {
+  const next = (label: string) => page.getByRole('button', { name: new RegExp(label, 'i') }).last().click()
+
+  // 1. Concept (Journaliste is the default occupation)
+  await expect(page.getByRole('heading', { name: 'Créer un investigateur' })).toBeVisible()
+  await page.getByLabel('Nom', { exact: true }).fill(name)
+  await page.getByLabel('Joueur').fill('Camille')
+  await next('Caractéristiques')
+
+  // 2. Characteristics: place the fixed values, roll luck
+  const values: Record<string, string> = {
+    Force: '50', Constitution: '60', Taille: '70', Dextérité: '50', Apparence: '40', Intelligence: '80', Pouvoir: '60', Éducation: '50',
+  }
+  for (const [label, v] of Object.entries(values)) await page.getByLabel(label, { exact: true }).selectOption(v)
+  await expect(page.getByText('toutes placées ✓')).toBeVisible()
+  await page.getByRole('button', { name: /Lancer/i }).click()
+  await next('Valeurs dérivées')
+
+  // 3. Derived values
+  await expect(page.getByText('Points de vie')).toBeVisible()
+  await next("Compétences d'occupation")
+
+  // 4. Occupation: 5 imposed skills + a social skill + 2 free, then place 70/60/60/50/50/50/40/40/40
+  const add = page.getByLabel('Compétence à ajouter')
+  for (const skill of ['Charme', 'Écouter', 'Trouver Objet Caché']) await add.selectOption({ label: skill })
+  await expect(page.getByText('8 / 8 compétences')).toBeVisible()
+  for (const v of ['70', '60', '60', '50', '50', '50', '40', '40', '40']) {
+    const empty = page.locator('select[aria-label^="Valeur"]').filter({ has: page.locator('option[value=""]:checked') }).first()
+    await empty.selectOption(v)
+  }
+  await next('Intérêts personnels')
+
+  // 5. Personal interests: 4 skills at +20
+  for (const skill of ['Grimper', 'Nager', 'Sauter', 'Occultisme']) {
+    await page.getByRole('checkbox', { name: `Intérêt personnel : ${skill}` }).check()
+  }
+  await expect(page.getByText('4 / 4')).toBeVisible()
+  await next('Profil')
+
+  // 6. Profile
+  await page.getByLabel('Trait', { exact: true }).fill('Curieuse, têtue')
+  await next('Récapitulatif')
+
+  // 7. Summary and save
+  await expect(page.getByText('Tout est prêt')).toBeVisible()
+  await page.getByRole('button', { name: 'Enregistrer le personnage' }).click()
 }
 
 test('signed-out visitors are sent to the login page', async ({ page }) => {
@@ -44,19 +93,12 @@ test('login form validates input', async ({ page }) => {
 test('keeper creates an investigator, then plays a marketplace story', async ({ page }) => {
   await signUp(page)
 
-  // Investigator, with HP/MP/SAN derived from characteristics
-  await page.getByRole('link', { name: 'Investigateurs' }).first().click()
+  await page.getByRole('link', { name: /^Investigateurs/ }).click()
   await page.getByRole('button', { name: 'Nouvel investigateur' }).click()
-  await page.getByLabel('Nom', { exact: true }).fill('Ada Lark')
-  await page.getByLabel('Profession').fill('Librarian')
-  await page.getByLabel('CON').fill('50')
-  await page.getByLabel('SIZ').fill('60')
-  await page.getByLabel('POW').fill('65')
-  await page.getByLabel('Compétences').fill('Bibliothèque 70\nTrouver Objet Caché 50')
-  await page.getByRole('button', { name: 'Enregistrer' }).click()
+  await createJournalist(page, 'Ada Lark')
   await expect(page.getByRole('link', { name: 'Ada Lark' })).toBeVisible()
-  await expect(page.getByText('PV 11')).toBeVisible()
-  await expect(page.getByText('SAN 65')).toBeVisible()
+  await expect(page.getByText('PV 13')).toBeVisible() // (CON 60 + SIZ 70) / 10
+  await expect(page.getByText('SAN 60')).toBeVisible() // = POW
 
   // Marketplace story → start a game with that investigator
   await page.getByRole('link', { name: 'Bibliothèque' }).click()
@@ -67,18 +109,106 @@ test('keeper creates an investigator, then plays a marketplace story', async ({ 
   await page.getByLabel(/Ada Lark/).check()
   await page.getByRole('button', { name: 'Lancer la partie' }).click()
   await expect(page).toHaveURL(/\/games\//)
-  const firstScene = await page.getByRole('heading', { level: 1 }).textContent()
+  // The original game engine, full screen, on this story
+  await expect(page.frameLocator('iframe[title="Partie"]').locator('#scene h2')).toBeVisible()
 
-  // Moving to the next scene is saved to the account
-  await page.getByRole('button', { name: 'Scène suivante' }).click()
-  await expect(page.getByRole('heading', { level: 1 })).not.toHaveText(firstScene ?? '')
-  const second = await page.getByRole('heading', { level: 1 }).textContent()
+  // …and the game shows up as in progress on the home page
+  await page.goto('/')
+  await expect(page.getByRole('link', { name: /Reprendre la partie/ })).toBeVisible()
+})
+
+test('creation draft survives a reload, and editing reopens the wizard', async ({ page }) => {
+  await signUp(page)
+  await page.goto('/characters/new')
+  await page.getByLabel('Nom', { exact: true }).fill('Brouillon Test')
+  await page.getByLabel('Occupation').selectOption({ label: 'Médecin' })
   await page.reload()
-  await expect(page.getByRole('heading', { level: 1 })).toHaveText(second ?? '')
+  await expect(page.getByLabel('Nom', { exact: true })).toHaveValue('Brouillon Test')
+  await expect(page.getByLabel('Occupation')).toHaveValue('doctor')
 
-  // …and shows up as a game in progress on the home page
-  await page.getByRole('link', { name: 'Grimoire' }).click()
-  await expect(page.getByRole('heading', { name: 'Parties en cours' })).toBeVisible()
+  // Saving is blocked until everything is filled in
+  await page.getByRole('navigation', { name: 'Étapes de création' }).getByRole('button', { name: /Récapitulatif/ }).click()
+  await expect(page.getByText(/À compléter avant d'enregistrer/)).toBeVisible()
+  await expect(page.getByRole('button', { name: 'Enregistrer le personnage' })).toBeDisabled()
+  // …and says where to go: the step list marks Concept done (a name is set), Caractéristiques to do
+  const steps = page.getByRole('navigation', { name: 'Étapes de création' })
+  await expect(steps.getByRole('button', { name: /Concept/ }).getByLabel('complet')).toBeVisible()
+  await expect(steps.getByRole('button', { name: /Caractéristiques/ }).getByLabel('à compléter')).toBeVisible()
+  await page.getByRole('button', { name: 'Chance manquante → Caractéristiques' }).click()
+  await expect(page.getByRole('heading', { name: 'Caractéristiques', level: 1 })).toBeVisible()
+
+  await page.getByRole('navigation', { name: 'Étapes de création' }).getByRole('button', { name: /Concept/ }).click()
+  await page.getByLabel('Occupation').selectOption({ label: 'Journaliste' })
+  await createJournalist(page, 'Edith Vale')
+  await page.getByRole('link', { name: 'Edith Vale' }).click()
+  await expect(page.getByRole('heading', { name: 'Modifier un investigateur' })).toBeVisible()
+  await expect(page.getByLabel('Nom', { exact: true })).toHaveValue('Edith Vale')
+  await expect(page.getByLabel('Joueur')).toHaveValue('Camille')
+})
+
+test('game screen: the original engine runs a story, rolls, saves to the account and returns to the menu', async ({ page }) => {
+  await signUp(page)
+  await page.goto('/characters/new')
+  await createJournalist(page, 'Vera Holt')
+  await page.goto('/marketplace')
+  await page.getByRole('link', { name: 'The Silent Light' }).click()
+  await page.getByLabel(/Vera Holt/).check()
+  await page.getByRole('button', { name: 'Lancer la partie' }).click()
+  await expect(page).toHaveURL(/\/games\//)
+  const gameId = page.url().split('/games/')[1]
+
+  const game = page.frameLocator('iframe[title="Partie"]')
+  await expect(game.locator('#scene h2')).toHaveText('The harbour')
+  // The investigator from the account, with the player name from the wizard
+  await expect(game.locator('#invView .nm')).toHaveText('Vera Holt')
+  await expect(game.locator('#invView .player')).toHaveText('Camille')
+
+  // A roll line of the story becomes buttons; rolling logs the result in the journal
+  await game.locator('#scene .chip[data-kind="test"]').first().click()
+  await expect(game.locator('#pick')).toBeVisible()
+  await game.locator('#pkGo').click()
+  await expect(game.locator('#pick .pres li').first()).toBeVisible()
+  await game.locator('#pkClose').click()
+  await expect(game.locator('#jList li').first()).toBeVisible()
+
+  // Next scene, then reload without the browser copy: the account copy brings it back
+  await game.locator('#scene .scene-foot .btn.prim[data-go]').click()
+  await expect(game.locator('#scene h2')).not.toHaveText('The harbour')
+  const second = (await game.locator('#scene h2').textContent()) ?? ''
+  await page.waitForTimeout(1500) // let the delayed save reach the account
+  await page.evaluate((id) => localStorage.removeItem(`grimoire-game-${id}`), gameId)
+  await page.reload()
+  await expect(page.frameLocator('iframe[title="Partie"]').locator('#scene h2')).toHaveText(second)
+
+  // Progression is the investigator's: written in this game…
+  const frame = () => page.frames().find((f) => f.url().includes('play.html'))!
+  await frame().evaluate(() => {
+    const g = eval as (s: string) => unknown
+    const S = g('S') as { chars: Array<{ id: string }> }
+    const P_ = g('P_') as (id: string) => { hist: Array<{ at: number; txt: string }> }
+    P_(S.chars[0].id).hist.unshift({ at: Date.now(), txt: 'Survived the lighthouse' })
+    ;(g('save') as () => void)()
+  })
+  await page.waitForTimeout(1500)
+
+  // The game menu's quit goes back to the app, where the game can be resumed
+  const again = page.frameLocator('iframe[title="Partie"]')
+  await again.locator('#menuBtn').click()
+  await again.locator('#gmQuit').click()
+  await expect(page.getByRole('link', { name: /Reprendre la partie/ })).toBeVisible()
+
+  // …and found again when the same investigator starts another game.
+  await page.goto('/marketplace')
+  await page.getByRole('link', { name: 'The Silent Light' }).click()
+  await page.getByLabel(/Vera Holt/).check()
+  await page.getByRole('button', { name: 'Lancer la partie' }).click()
+  await expect(page.frameLocator('iframe[title="Partie"]').locator('#scene h2')).toHaveText('The harbour')
+  const history = await frame().evaluate(() => {
+    const g = eval as (s: string) => unknown
+    const S = g('S') as { chars: Array<{ id: string }> }
+    return (g('P_') as (id: string) => { hist: Array<{ txt: string }> })(S.chars[0].id).hist.map((h) => h.txt)
+  })
+  expect(history).toContain('Survived the lighthouse')
 })
 
 test('keeper copies a marketplace story into their own stories', async ({ page }) => {
@@ -91,7 +221,9 @@ test('keeper copies a marketplace story into their own stories', async ({ page }
   await expect(page.getByRole('link', { name: 'The Silent Light' })).toBeVisible()
 })
 
-test.describe('import', () => {
+test.describe('AI features (fake Claude API)', () => {
+  // One fake server on port 4010 for every test in here, so they must not run in parallel.
+  test.describe.configure({ mode: 'serial' })
   let mock: Server
   const draft = readFileSync('supabase/tests/fixtures/draft-batch.json', 'utf8')
 
@@ -108,11 +240,27 @@ test.describe('import', () => {
       ]
         .map(([e, d]) => `event: ${e}\ndata: ${JSON.stringify(d)}\n\n`)
         .join('')
+    const profile = {
+      description: 'Grande, imperméable usé', ideology: 'La vérité finit par sortir',
+      significantPeople: 'Son frère, Tom', meaningfulLocations: 'La salle de rédaction du Globe',
+      treasuredPossessions: 'Un Kodak Brownie', traits: 'Têtue, curieuse',
+    }
     mock = createServer((req, res) => {
-      req.resume()
+      let raw = ''
+      req.on('data', (c) => (raw += c))
       req.on('end', () => {
-        res.writeHead(200, { 'content-type': 'text/event-stream' })
-        res.end(events(draft))
+        // The import streams (SSE); profile suggestions are a plain JSON message.
+        if (JSON.parse(raw || '{}').stream) {
+          res.writeHead(200, { 'content-type': 'text/event-stream' })
+          res.end(events(draft))
+        } else {
+          res.writeHead(200, { 'content-type': 'application/json' })
+          res.end(JSON.stringify({
+            id: 'm', type: 'message', role: 'assistant', model: 'claude-opus-5-5',
+            content: [{ type: 'text', text: JSON.stringify(profile) }],
+            stop_reason: 'end_turn', stop_sequence: null, usage: { input_tokens: 1, output_tokens: 1 },
+          }))
+        }
       })
     })
     await new Promise<void>((r) => mock.listen(4010, '0.0.0.0', r))
@@ -120,9 +268,24 @@ test.describe('import', () => {
 
   test.afterAll(() => new Promise<void>((r) => mock.close(() => r())))
 
+  test('AI suggests the profile, keeping what the keeper wrote', async ({ page }) => {
+    await signUp(page)
+    await page.goto('/characters/new?etape=6')
+    await page.getByLabel('Idéologie', { exact: true }).fill('Rien ne vaut un bon scoop')
+    await page.getByRole('button', { name: 'Compléter les 5 champs vides' }).click()
+    await expect(page.getByLabel('Personne importante', { exact: true })).toHaveValue('Son frère, Tom')
+    await expect(page.getByLabel('Idéologie', { exact: true })).toHaveValue('Rien ne vaut un bon scoop')
+    await expect(page.getByLabel('Trait', { exact: true })).toHaveValue('Têtue, curieuse')
+
+    // ↻ on one field replaces just that field
+    await page.getByLabel('Idéologie', { exact: true }).fill('')
+    await page.getByRole('button', { name: 'Autre idée pour Idéologie' }).click()
+    await expect(page.getByLabel('Idéologie', { exact: true })).toHaveValue('La vérité finit par sortir')
+  })
+
   test('keeper imports page images into a private story', async ({ page }) => {
     await signUp(page)
-    await page.getByRole('link', { name: 'Importer' }).first().click()
+    await page.getByRole('link', { name: /^Importer une histoire/ }).click()
     const png = Buffer.from([137, 80, 78, 71, 13, 10, 26, 10])
     await page.getByTestId('page-input').setInputFiles([1, 2, 3].map((n) => ({ name: `page-${n}.png`, mimeType: 'image/png', buffer: png })))
     await expect(page.getByAltText('Page 3')).toBeVisible()

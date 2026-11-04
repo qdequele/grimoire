@@ -14,6 +14,8 @@ export default defineConfig({
       ? [{ name: 'legacy', testMatch: 'legacy.spec.ts', use: { baseURL: 'http://localhost:8000' } }]
       : []),
     { name: 'app', testMatch: 'app.spec.ts', use: { baseURL: 'http://localhost:5173' } },
+    // Original vs new game screen, scene by scene (private data only): pnpm e2e:parity
+    ...(hasLegacy ? [{ name: 'parity', testMatch: 'parity.spec.ts' }] : []),
   ],
   webServer: [
     ...(hasLegacy

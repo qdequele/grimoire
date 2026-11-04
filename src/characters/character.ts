@@ -1,43 +1,37 @@
-/** Investigator data stored in characters.data. Mirrors the story format's pregen shape. */
-export const CHARACTERISTICS = ['STR', 'CON', 'SIZ', 'DEX', 'APP', 'INT', 'POW', 'EDU'] as const
-export type Characteristic = (typeof CHARACTERISTICS)[number]
+import type { CreationDraft } from '@/engine/creation'
+import { skillLabel, type Characteristic, type ProfileField } from '@/rules/d100'
 
+/** Investigator data stored in characters.data. */
 export interface CharacterData {
   name: string
+  /** Occupation label as shown on the sheet. */
   occupation?: string
   age?: number
+  /** Who plays them (a name: players don't have accounts). */
+  player?: string
+  link?: string
   characteristics: Partial<Record<Characteristic, number>>
   hp?: number
   mp?: number
   san?: number
   luck?: number
-  /** Skill name or id → value. */
+  move?: number
+  build?: number
+  damageBonus?: string
+  /** Skill id (with ":specialty" when there is one) → value. */
   skills: Record<string, number>
-  background?: string
+  profile?: Partial<Record<ProfileField, string>>
+  /** The creation wizard's state, so editing reopens it as it was. */
+  creation?: CreationDraft
+  /**
+   * Progression from play, carried from one story to the next: the game engine's per-investigator
+   * record (improved skills, checked skills, history, current SAN, characteristics typed in play).
+   */
+  progress?: Record<string, unknown>
 }
 
-/** Derived values when the sheet doesn't give them: HP = (CON+SIZ)/10, MP = POW/5, SAN = POW. */
-export function derived(c: CharacterData): { hp?: number; mp?: number; san?: number } {
-  const { CON, SIZ, POW } = c.characteristics
-  return {
-    hp: c.hp ?? (CON && SIZ ? Math.floor((CON + SIZ) / 10) : undefined),
-    mp: c.mp ?? (POW ? Math.floor(POW / 5) : undefined),
-    san: c.san ?? POW,
-  }
-}
-
-/** "Spot Hidden 60" per line → { "Spot Hidden": 60 }. Lines without a trailing number are ignored. */
-export function parseSkills(text: string): Record<string, number> {
-  const out: Record<string, number> = {}
-  for (const line of text.split('\n')) {
-    const m = line.trim().match(/^(.+?)\s*[:=]?\s+(\d{1,2})\s*%?$/)
-    if (m) out[m[1].trim()] = Number(m[2])
-  }
-  return out
-}
-
-export function formatSkills(skills: Record<string, number>): string {
-  return Object.entries(skills)
-    .map(([k, v]) => `${k} ${v}`)
-    .join('\n')
+/** "art-craft:Photographie" → "Arts et métiers (Photographie)". */
+export function skillKeyLabel(key: string): string {
+  const [id, specialty] = key.split(/:(.*)/)
+  return skillLabel(id, specialty)
 }

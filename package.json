@@ -21,11 +21,13 @@
     "functions": "supabase functions serve --env-file supabase/functions/.env",
     "db:types": "supabase gen types typescript --local > src/lib/database.types.ts && cp src/lib/database.types.ts supabase/functions/_shared/database.types.ts",
     "test:db": "eval \"$(supabase status -o env | grep -E '^(API_URL|ANON_KEY|SERVICE_ROLE_KEY)=' | sed -E 's/^(API_URL|ANON_KEY|SERVICE_ROLE_KEY)=/export SUPABASE_\\1=/; s/SUPABASE_API_URL/SUPABASE_URL/')\" && vitest run --config vitest.db.config.ts supabase/tests/rls.test.ts",
-    "test:import": "eval \"$(supabase status -o env | grep -E '^(API_URL|ANON_KEY|SERVICE_ROLE_KEY)=' | sed -E 's/^(API_URL|ANON_KEY|SERVICE_ROLE_KEY)=/export SUPABASE_\\1=/; s/SUPABASE_API_URL/SUPABASE_URL/')\" && vitest run --config vitest.db.config.ts supabase/tests/import-story.test.ts"
+    "test:import": "eval \"$(supabase status -o env | grep -E '^(API_URL|ANON_KEY|SERVICE_ROLE_KEY)=' | sed -E 's/^(API_URL|ANON_KEY|SERVICE_ROLE_KEY)=/export SUPABASE_\\1=/; s/SUPABASE_API_URL/SUPABASE_URL/')\" && vitest run --config vitest.db.config.ts supabase/tests/import-story.test.ts supabase/tests/suggest-profile.test.ts",
+    "e2e:parity": "eval \"$(supabase status -o env | grep -E '^(API_URL|SERVICE_ROLE_KEY)=' | sed -E 's/^API_URL=/export SUPABASE_URL=/; s/^SERVICE_ROLE_KEY=/export SUPABASE_SERVICE_ROLE_KEY=/')\" && playwright test --project=parity",
+    "engine:extract": "node scripts/extract-engine.mjs",
+    "stories:convert": "node scripts/convert-legacy.ts"
   },
   "dependencies": {
     "@base-ui/react": "^1.9.0",
-    "@fontsource-variable/geist": "^5.3.0",
     "@hookform/resolvers": "^7.0.1",
     "@supabase/supabase-js": "2.118.0",
     "@tanstack/react-query": "^5.105.3",
@@ -51,6 +53,7 @@
     "@types/react": "^19.3.0",
     "@types/react-dom": "^19.3.0",
     "@vitejs/plugin-react": "^6.2.1",
+    "acorn": "^8.19.0",
     "oxlint": "^1.90.0",
     "tailwindcss": "^4.3.4",
     "typescript": "~7.0.2",

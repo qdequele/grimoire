@@ -1,13 +1,16 @@
 @import "tailwindcss";
 @import "tw-animate-css";
 @import "shadcn/tailwind.css";
-@import "@fontsource-variable/geist";
 
+/* Both skins are dark: shadcn's dark: variants always apply. */
 @custom-variant dark (&:is(.dark *));
 
 @theme inline {
-    --font-heading: var(--font-sans);
-    --font-sans: 'Geist Variable', sans-serif;
+    --font-heading: var(--f-disp);
+    --font-sans: var(--f-ui);
+    --font-serif: var(--f-body);
+    --font-mono: var(--f-num);
+    --color-gold: var(--gold);
     --color-sidebar-ring: var(--sidebar-ring);
     --color-sidebar-border: var(--sidebar-border);
     --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
@@ -48,83 +51,143 @@
     --radius-4xl: calc(var(--radius) * 2.6);
 }
 
-:root {
-    --background: oklch(1 0 0);
-    --foreground: oklch(0.145 0 0);
-    --card: oklch(1 0 0);
-    --card-foreground: oklch(0.145 0 0);
-    --popover: oklch(1 0 0);
-    --popover-foreground: oklch(0.145 0 0);
-    --primary: oklch(0.205 0 0);
-    --primary-foreground: oklch(0.985 0 0);
-    --secondary: oklch(0.97 0 0);
-    --secondary-foreground: oklch(0.205 0 0);
-    --muted: oklch(0.97 0 0);
-    --muted-foreground: oklch(0.556 0 0);
-    --accent: oklch(0.97 0 0);
-    --accent-foreground: oklch(0.205 0 0);
-    --destructive: oklch(0.577 0.245 27.325);
-    --border: oklch(0.922 0 0);
-    --input: oklch(0.922 0 0);
-    --ring: oklch(0.708 0 0);
-    --chart-1: oklch(0.87 0 0);
-    --chart-2: oklch(0.556 0 0);
-    --chart-3: oklch(0.439 0 0);
-    --chart-4: oklch(0.371 0 0);
-    --chart-5: oklch(0.269 0 0);
-    --radius: 0.625rem;
-    --sidebar: oklch(0.985 0 0);
-    --sidebar-foreground: oklch(0.145 0 0);
-    --sidebar-primary: oklch(0.205 0 0);
-    --sidebar-primary-foreground: oklch(0.985 0 0);
-    --sidebar-accent: oklch(0.97 0 0);
-    --sidebar-accent-foreground: oklch(0.205 0 0);
-    --sidebar-border: oklch(0.922 0 0);
-    --sidebar-ring: oklch(0.708 0 0);
+/*
+ * Skins, carried over from the legacy app (html[data-skin], key "gardien-skin" in localStorage).
+ * Classic: green-black, IM Fell / Spectral / IBM Plex. Art Deco (default): black and gold,
+ * Limelight / Cormorant Garamond / Josefin Sans, square corners.
+ */
+:root,
+:root[data-skin="classic"] {
+    color-scheme: dark;
+    --ink: #0f1513;
+    --slab: #161e1b;
+    --slab2: #1c2622;
+    --line: #2b3833;
+    --bone: #e6e1d4;
+    --mute: #93a19a;
+    --verd: #72b8a3;
+    --gold: #cdb06a;
+    --blood: #cf6352;
+    --f-disp: "IM Fell DW Pica", "Iowan Old Style", Georgia, serif;
+    --f-body: "Spectral", Georgia, "Times New Roman", serif;
+    --f-ui: "IBM Plex Sans Condensed", "Arial Narrow", system-ui, sans-serif;
+    --f-num: "IBM Plex Mono", ui-monospace, Menlo, monospace;
+    --radius: 0.375rem;
+    --ring: var(--verd);
 }
 
-.dark {
-    --background: oklch(0.145 0 0);
-    --foreground: oklch(0.985 0 0);
-    --card: oklch(0.205 0 0);
-    --card-foreground: oklch(0.985 0 0);
-    --popover: oklch(0.205 0 0);
-    --popover-foreground: oklch(0.985 0 0);
-    --primary: oklch(0.922 0 0);
-    --primary-foreground: oklch(0.205 0 0);
-    --secondary: oklch(0.269 0 0);
-    --secondary-foreground: oklch(0.985 0 0);
-    --muted: oklch(0.269 0 0);
-    --muted-foreground: oklch(0.708 0 0);
-    --accent: oklch(0.269 0 0);
-    --accent-foreground: oklch(0.985 0 0);
-    --destructive: oklch(0.704 0.191 22.216);
-    --border: oklch(1 0 0 / 10%);
-    --input: oklch(1 0 0 / 15%);
-    --ring: oklch(0.556 0 0);
-    --chart-1: oklch(0.87 0 0);
-    --chart-2: oklch(0.556 0 0);
-    --chart-3: oklch(0.439 0 0);
-    --chart-4: oklch(0.371 0 0);
-    --chart-5: oklch(0.269 0 0);
-    --sidebar: oklch(0.205 0 0);
-    --sidebar-foreground: oklch(0.985 0 0);
-    --sidebar-primary: oklch(0.488 0.243 264.376);
-    --sidebar-primary-foreground: oklch(0.985 0 0);
-    --sidebar-accent: oklch(0.269 0 0);
-    --sidebar-accent-foreground: oklch(0.985 0 0);
-    --sidebar-border: oklch(1 0 0 / 10%);
-    --sidebar-ring: oklch(0.556 0 0);
+:root[data-skin="deco"] {
+    --ink: #0a0907;
+    --slab: #12100c;
+    --slab2: #19160f;
+    --line: #3a3220;
+    --bone: #efe6cf;
+    --mute: #a59a7e;
+    --verd: #d9b45a;
+    --gold: #e2c06e;
+    --blood: #c8553f;
+    --f-disp: "Limelight", "IM Fell DW Pica", Georgia, serif;
+    --f-body: "Cormorant Garamond", "Spectral", Georgia, serif;
+    --f-ui: "Josefin Sans", "IBM Plex Sans Condensed", system-ui, sans-serif;
+    --radius: 0rem;
+    --ring: var(--gold);
+}
+
+/* shadcn tokens, derived from the skin palette. */
+:root {
+    --background: var(--ink);
+    --foreground: var(--bone);
+    --card: var(--slab);
+    --card-foreground: var(--bone);
+    --popover: var(--slab);
+    --popover-foreground: var(--bone);
+    --primary: var(--gold);
+    --primary-foreground: #120f08;
+    --secondary: var(--slab2);
+    --secondary-foreground: var(--bone);
+    --muted: var(--slab2);
+    --muted-foreground: var(--mute);
+    --accent: var(--slab2);
+    --accent-foreground: var(--bone);
+    --destructive: var(--blood);
+    --border: var(--line);
+    --input: var(--line);
+    --chart-1: var(--gold);
+    --chart-2: var(--verd);
+    --chart-3: var(--blood);
+    --chart-4: var(--mute);
+    --chart-5: var(--line);
+    --sidebar: var(--slab);
+    --sidebar-foreground: var(--bone);
+    --sidebar-primary: var(--gold);
+    --sidebar-primary-foreground: #120f08;
+    --sidebar-accent: var(--slab2);
+    --sidebar-accent-foreground: var(--bone);
+    --sidebar-border: var(--line);
+    --sidebar-ring: var(--ring);
 }
 
 @layer base {
   * {
     @apply border-border outline-ring/50;
-    }
+  }
   body {
     @apply bg-background text-foreground;
-    }
+  }
   html {
     @apply font-sans;
-    }
+  }
+  /* Faint fan pattern behind everything, as in the legacy Art Deco skin. */
+  :root[data-skin="deco"] body {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='80' height='40' viewBox='0 0 80 40'%3E%3Cg fill='none' stroke='%23c9a24f' stroke-opacity='.06'%3E%3Cpath d='M0 40a40 40 0 0 1 80 0M10 40a30 30 0 0 1 60 0M20 40a20 20 0 0 1 40 0M-40 0a40 40 0 0 1 80 0M40 0a40 40 0 0 1 80 0'/%3E%3C/g%3E%3C/svg%3E");
+    background-size: 80px 40px;
+  }
+  /* Art Deco headings are gold with a little air between letters. */
+  :root[data-skin="deco"] :is(h1, h2) {
+    color: var(--gold);
+    letter-spacing: 0.03em;
+  }
+}
+
+@layer components {
+  /* Small caps label above titles ("eyebrow"), as on the legacy home screen. */
+  .eyebrow {
+    color: var(--gold);
+    font-size: 0.6875rem;
+    font-weight: 600;
+    letter-spacing: 0.32em;
+    text-transform: uppercase;
+  }
+  /* Top bar of inner pages: a thin line, or in Art Deco a double gold rule (legacy header.top). */
+  .app-header {
+    position: relative;
+    border-bottom: 1px solid var(--line);
+  }
+  :root[data-skin="deco"] .app-header {
+    border-bottom: 0;
+    padding-bottom: 5px;
+  }
+  :root[data-skin="deco"] .app-header::after {
+    content: "";
+    position: absolute;
+    inset: auto 0 0 0;
+    height: 5px;
+    border-top: 1px solid var(--gold);
+    border-bottom: 1px solid color-mix(in srgb, var(--gold) 45%, transparent);
+  }
+  /* Art Deco buttons: uppercase, spaced letters (legacy .btn). */
+  :root[data-skin="deco"] [data-slot="button"] {
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    font-size: 0.75rem;
+    font-weight: 600;
+  }
+  /* Double gold rule under a title, Art Deco skin only. */
+  :root[data-skin="deco"] .deco-rule {
+    display: block;
+    width: 11rem;
+    height: 4px;
+    border-top: 1px solid var(--gold);
+    border-bottom: 1px solid color-mix(in srgb, var(--gold) 40%, transparent);
+  }
 }

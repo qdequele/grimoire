@@ -54,12 +54,38 @@ The legacy `index.html` was a claude.ai Artifact fragment (claude.ai adds the do
 
 Fonts come from Google Fonts (IM Fell DW Pica, Spectral, IBM Plex Sans Condensed/Mono, Limelight, Josefin Sans, Cormorant Garamond).
 
+## Look and feel: the legacy app is the design spec
+
+New screens must look like the original app, not like default shadcn. Both legacy skins are design
+tokens in `src/index.css` (`html[data-skin]`, saved under `gardien-skin`): **Art Deco** (default:
+black and gold, Limelight / Josefin Sans / Cormorant Garamond, square corners, fan pattern) and
+**Classic** (green-black, IM Fell / IBM Plex / Spectral). Reuse `src/theme/Masthead.tsx`
+(title block, quote column, skin toggle) and the legacy patterns: diamond-bullet menus, eyebrow
+labels, gold double rules. Before building a screen, screenshot the legacy equivalent
+(`pnpm legacy`) and match it. Keep Chaosium names (L'Appel de Cthulhu, Arkham…) out of the UI.
+
+## Game screen: the original engine, embedded
+
+The in-game interface is the legacy app's own engine, so it behaves exactly like the original:
+
+- `public/play/engine.js`, `public/play/legacy.css`, `play.html` are **generated** by `pnpm engine:extract` (`scripts/extract-engine.mjs`) from `legacy/index.html`. Don't hand-edit them: change the extraction script (its `patch()` calls list every code change, each with a reason) and re-run.
+- The extraction swaps every content constant for `GRIMOIRE_DATA.<NAME>` (found with a parser, not regexes) and removes the statements that only added content. Book references and setting names become `T(n, neutral)`: neutral text in the public code, original text from private data.
+- `/games/:id` (`src/games/GamePage.tsx`) shows `play.html` in a full-screen iframe. `src/play/boot.ts` reads `window.parent.__grimoirePlay` (`src/play/host.ts`), sets `GRIMOIRE_DATA`/`GRIMOIRE_HOST`, then loads the engine as a classic script (it relies on sloppy-mode globals and function redeclarations: never make it a module).
+- Data: `src/play/legacy/adapter.ts` turns any story.json into the engine's shapes; `src/play/engineData.ts` adds account investigators (`toLegacyCharacter`) and rules content.
+- State: the engine's whole `S` is saved in `games.state.legacy` (debounced) plus a browser copy (`grimoire-game-<id>`, newest wins). Investigator progression (`S.prog[id]`) is written back to `characters.data.progress` and seeds every new game.
+- Rules texts, glossary, bouts of madness, narrator instructions, translations and the original book references live in `private/engine-data.json` (gitignored), loaded with `import.meta.glob` when present; neutral fallbacks otherwise.
+- Your legacy scenarios: `pnpm stories:convert -- --upload <email>` (`scripts/convert-legacy.ts`) converts `private/legacy-dump/` into private stories in `private/stories/` and uploads them. The dump is taken from the running legacy page (see the scripts' headers).
+- Tests: `src/play/legacy/roundtrip.test.ts` (legacy data → story → engine data, field for field), `pnpm e2e:parity` (original vs new app, every scene and panel, FR + EN), and the "game screen" test in `e2e/app.spec.ts` (rolls, account save, quit, progression across games).
+- Known, intended differences: in English the new app translates the ritual panel and rules sheet (the original left them in French until the language was switched by hand); the English glossary/translation race is normalised in the parity test.
+- Not wired yet: the narrator (needs a Claude-backed `window.claude.use("sample")`), "Sauvegarder la partie" snapshots (still browser-only), and investigators created or edited from inside a game (they stay in that game, not in the account).
+
 ## Accounts, marketplace, import (Supabase)
 
 - **Only the keeper has an account.** Investigators belong to the keeper's account; players don't log in.
 - **Marketplace is curated:** only admins (`profiles.is_admin`) create/edit marketplace stories (`owner_id` null). Promote someone from SQL only: `update profiles set is_admin = true where id = '…'` (the API can't change `is_admin`).
 - **Private stories** are visible to their owner only, admins included. A story whose `meta.license` is `private` (every AI import) can never be marketplace: enforced by a DB constraint.
 - **AI import:** the browser uploads pages to `import-pages/<user id>/…`, then calls `import-story` 2 pages at a time (Edge Function wall-clock limit). Each call: quota check (`IMPORT_MONTHLY_PAGE_LIMIT` pages/month, admins unlimited) → Claude (`claude-opus-5-5`, structured output, cached instructions, server-side fallbacks) → merge into `story_imports.draft` → `draftToStory` → validate against `spec/story.schema.json` → save as private story. Pages are deleted after every call, success or not.
+- **AI profile help** (wizard step 6): `suggest-profile` Edge Function, logic in `_shared/profile.ts`. Fills only empty fields (or one field with ↻), never overwrites the keeper's text (`pickSuggestions`). `claude-opus-5-5`, effort low, structured output. Limit `PROFILE_MONTHLY_LIMIT` (50) per account, counted in `ai_usage` (service role writes only).
 - **Why a draft schema:** structured outputs allow ≤ 24 optional fields, ≤ 16 unions, no free-form maps; `story.schema.json` exceeds that. `import-draft.ts` has every field required (`""`/`[]` = absent); a test enforces this.
 - After editing `spec/`: `pnpm spec:bundle`. After editing `stories/`: `pnpm db:seed-gen`. Unit tests fail if the bundle is stale.
 - Deno blocks npm packages published < 24 h ago: pin a version that's at least a day old in the function imports.
@@ -109,6 +135,8 @@ Single `<script>`. Main pieces, roughly in file order:
 - Narrator and cloud sync never tested outside claude.ai.
 
 ## Copyright — important for the open-source repo
+
+**Open question before publishing:** `src/rules/d100.ts` (skill list with base values, the 9 occupations with their skills, the 40–80 / 70–40 value arrays) ports the legacy wizard's creation rules, which follow the Starter Set's simplified creation. Game mechanics are generally not protected, but decide (or check) before the repo goes public; page references and Starter Set wording were deliberately left out.
 
 `ACTS`, `LIVRES_ACTS`, `PROFILES`, `INV0`, `WHO`, `BEASTS`, `RULES`, `FLOWS`, page refs and `frontiere_en.json` are **derived from Chaosium's Call of Cthulhu Starter Set** (paraphrased, but still derivative). Keep them out of any public repo: convert them to *private* story packs on your own machine. Publish only the engine, the spec, the sound library (respect CC BY credits) and original content (e.g. the sample story, the READS ambience texts if you rewrite them as generic).
 

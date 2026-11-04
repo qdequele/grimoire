@@ -1,5 +1,4 @@
 import { useQuery, useQueryClient } from '@tanstack/react-query'
-import { FunctionsHttpError } from '@supabase/supabase-js'
 import { FileUp, ImagePlus, X } from 'lucide-react'
 import { useMemo, useRef, useState } from 'react'
 import { Link } from 'react-router'
@@ -12,6 +11,7 @@ import { Input } from '@/components/ui/input'
 import { Progress } from '@/components/ui/progress'
 import { Spinner } from '@/components/ui/spinner'
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import { functionErrorMessage } from '@/lib/functions'
 import { supabase } from '@/lib/supabase'
 import { storyKeys } from '@/stories/api'
 
@@ -31,18 +31,6 @@ type Phase =
   | { kind: 'running'; done: number; total: number; storyId: string | null }
   | { kind: 'done'; storyId: string | null; validationErrors: string[] }
   | { kind: 'error'; message: string; storyId: string | null }
-
-async function errorMessage(e: unknown): Promise<string> {
-  if (e instanceof FunctionsHttpError) {
-    try {
-      const body = (await e.context.json()) as { error?: { message?: string } }
-      if (body.error?.message) return body.error.message
-    } catch {
-      /* not JSON */
-    }
-  }
-  return e instanceof Error ? e.message : 'Import impossible.'
-}
 
 function usePagesUsedThisMonth() {
   const { session } = useAuth()
@@ -112,7 +100,7 @@ export function ImportPage() {
     } catch (e) {
       // Pages not reached yet are still in storage: remove them, book pages are never kept.
       if (paths.length) await supabase.storage.from('import-pages').remove(paths)
-      setPhase({ kind: 'error', message: await errorMessage(e), storyId })
+      setPhase({ kind: 'error', message: await functionErrorMessage(e, 'Import impossible.'), storyId })
     } finally {
       qc.invalidateQueries({ queryKey: ['imports'] })
       qc.invalidateQueries({ queryKey: storyKeys.all })

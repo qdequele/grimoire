@@ -5,12 +5,12 @@ import { Navigate } from 'react-router'
 import { z } from 'zod'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Field, FieldError, FieldGroup, FieldLabel } from '@/components/ui/field'
 import { Input } from '@/components/ui/input'
 import { Spinner } from '@/components/ui/spinner'
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { supabase } from '@/lib/supabase'
+import { Epigraph, Masthead, SkinToggle } from '@/theme/Masthead'
 import { useAuth } from './auth'
 
 const schema = z.object({
@@ -21,6 +21,7 @@ const schema = z.object({
 type Values = z.infer<typeof schema>
 type Mode = 'signin' | 'signup'
 
+// Laid out like the legacy home screen: title block and menu on the left, quote on the right.
 export function LoginPage() {
   const { session } = useAuth()
   const [mode, setMode] = useState<Mode>('signin')
@@ -45,15 +46,13 @@ export function LoginPage() {
   const { errors, isSubmitting } = form.formState
 
   return (
-    <main className="flex min-h-svh items-center justify-center p-4">
-      <Card className="w-full max-w-sm">
-        <CardHeader>
-          <CardTitle className="font-heading text-3xl">Grimoire</CardTitle>
-          <CardDescription>L'écran du gardien, scène par scène.</CardDescription>
-        </CardHeader>
-        <CardContent className="flex flex-col gap-6">
+    <main className="mx-auto grid min-h-svh w-full max-w-6xl gap-12 px-4 py-16 sm:px-10 lg:grid-cols-2 lg:gap-16 lg:py-[4.5rem]">
+      <div className="flex flex-col gap-10">
+        <Masthead eyebrow="Écran du gardien" title="Grimoire" subtitle="Le compagnon du gardien, scène par scène" />
+
+        <div className="flex max-w-sm flex-col gap-6">
           <Tabs value={mode} onValueChange={(v) => setMode(v as Mode)}>
-            <TabsList className="w-full">
+            <TabsList variant="line">
               <TabsTrigger value="signin">Se connecter</TabsTrigger>
               <TabsTrigger value="signup">Créer un compte</TabsTrigger>
             </TabsList>
@@ -93,8 +92,16 @@ export function LoginPage() {
               </Button>
             </FieldGroup>
           </form>
-        </CardContent>
-      </Card>
+          <SkinToggle />
+        </div>
+      </div>
+
+      <div className="lg:pt-2">
+        <Epigraph
+          quote="La lampe du phare s'est éteinte il y a trois nuits. Quelqu'un doit aller voir."
+          note="Connecte-toi pour retrouver tes investigateurs et tes parties en cours."
+        />
+      </div>
     </main>
   )
 }

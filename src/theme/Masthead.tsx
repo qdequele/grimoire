@@ -1,0 +1,52 @@
+import { useSkin } from './skin'
+
+/** Fan ornament above the title in the Art Deco skin (an original drawing in the legacy style). */
+function Fan() {
+  return (
+    <svg viewBox="0 0 120 60" width="110" height="55" aria-hidden="true" className="text-gold">
+      <g fill="none" stroke="currentColor" strokeWidth="1">
+        <path d="M2 58a58 58 0 0 1 116 0" />
+        <path d="M18 58a42 42 0 0 1 84 0" />
+        <path d="M34 58a26 26 0 0 1 52 0" />
+        <path d="M60 58V2M60 58 19 17M60 58l41-41M60 58 4 40M60 58l56-18" opacity=".7" />
+      </g>
+    </svg>
+  )
+}
+
+/** The big title block of the legacy home screen: eyebrow, ornament, title, italic subtitle. */
+export function Masthead({ eyebrow, title, subtitle }: { eyebrow: string; title: string; subtitle?: string }) {
+  const skin = useSkin((s) => s.skin)
+  return (
+    <div className="flex flex-col gap-3">
+      <p className="eyebrow">{eyebrow}</p>
+      {skin === 'deco' && <Fan />}
+      <h1 className="font-heading text-6xl leading-none text-balance sm:text-7xl">{title}</h1>
+      {subtitle && <p className="font-serif text-lg text-muted-foreground italic">{subtitle}</p>}
+    </div>
+  )
+}
+
+/** Quote column of the legacy home screen: display font, gold rule on the left. */
+export function Epigraph({ quote, note }: { quote: string; note?: string }) {
+  return (
+    <blockquote className="flex flex-col gap-3 border-l border-gold/60 pl-5">
+      <p className="font-heading text-2xl leading-snug text-balance">« {quote} »</p>
+      {note && <p className="text-sm text-muted-foreground">{note}</p>}
+    </blockquote>
+  )
+}
+
+/** "Thème : Art déco" link, uppercase and underlined like the legacy home. */
+export function SkinToggle() {
+  const { skin, toggle } = useSkin()
+  return (
+    <button
+      type="button"
+      onClick={toggle}
+      className="w-fit text-xs tracking-[0.2em] text-muted-foreground uppercase underline underline-offset-4 hover:text-foreground"
+    >
+      Thème : {skin === 'deco' ? 'Art déco' : 'Classique'}
+    </button>
+  )
+}

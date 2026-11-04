@@ -1,0 +1,152 @@
+<!doctype html>
+<html lang="fr" data-skin="deco">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Grimoire · Partie</title>
+<!-- The game screen: the legacy engine, isolated in its own page (see src/play/boot.ts). -->
+<script>try{var k=localStorage.getItem('gardien-skin');if(k)document.documentElement.dataset.skin=k}catch(e){}</script>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IM+Fell+DW+Pica:ital@0;1&family=Spectral:ital,wght@0,400;0,600;1,400&family=IBM+Plex+Sans+Condensed:wght@400;500;600&family=IBM+Plex+Mono:wght@500&family=Limelight&family=Josefin+Sans:wght@400;600;700&family=Cormorant+Garamond:ital,wght@0,500;0,600;1,500&display=swap">
+<link rel="stylesheet" href="/play/legacy.css">
+</head>
+<body>
+<header class="top bar2">
+  <button class="back" id="backHome" data-nav="accueil" hidden aria-label="Retour à la bibliothèque">←</button>
+  <div class="ctx-title"><h1 id="hTitle">Écran du Gardien</h1><span class="sub" id="subTitle">Bibliothèque des scénarios</span></div>
+  <div class="ctx" id="ctx" hidden></div>
+  <span class="spacer"></span>
+  <div class="qa" id="qa" hidden>
+    <div class="qa-g">
+    <button class="btn" id="qaRules">Règles</button>
+    <button class="btn ico" id="qaNpc" aria-pressed="false"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="9" cy="8" r="3.2"/><path d="M3.5 19c.6-3.3 2.8-5 5.5-5s4.9 1.7 5.5 5"/><path d="M15.5 5.5c1.6.3 2.8 1.6 2.8 3.2 0 1.4-.9 2.6-2.2 3M17 14.3c2 .6 3.2 2.2 3.5 4.7"/></svg>PNJ et monstres</button>
+    <button class="btn" id="qaCombat">⚔ Combat</button>
+    </div>
+    <div class="qa-g qa-tools" aria-label="Outils">
+    <button class="btn ico" id="qaDice" aria-label="Dés" title="Dés (D)" aria-pressed="false"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2.5 21 8v8l-9 5.5L3 16V8z"/><path d="M3 8l9 5.5L21 8M12 13.5v8"/><circle cx="12" cy="8" r="1.2" class="pip"/><circle cx="7.5" cy="14" r="1.1" class="pip"/><circle cx="16.5" cy="14" r="1.1" class="pip"/></svg></button>
+    <button class="btn ico" id="qaSnd" aria-label="Sons" title="Sons (S)" aria-pressed="false"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9.5h3.5L12 5.5v13l-4.5-4H4z"/><path d="M15.5 9a4 4 0 0 1 0 6M18 6.5a7.5 7.5 0 0 1 0 11" class="wave"/></svg><span class="live" id="sndLive" hidden></span></button>
+    </div>
+  </div>
+  <span class="clock" id="clock">00:00</span>
+  <button class="btn menubtn" id="menuBtn" aria-label="Menu de la partie" title="Menu de la partie (Échap)" aria-haspopup="dialog" aria-expanded="false"><span class="burger"><i></i><i></i><i></i></span></button>
+</header>
+
+<section class="view" id="vHome" hidden>
+  <div id="hMenu" class="tmenu">
+    <div class="tm-left"><p class="gm-eyebrow"><span data-t="16">Écran du gardien</span></p><h1 class="tm-title">Écran du Gardien</h1><p class="tm-sub"><span data-t="17">Années 1920</span></p>
+      <nav class="tm-list" id="tmList" aria-label="Menu principal"></nav><button class="lnk tm-skin" id="homeSkin">Thème : Art déco</button><button class="lnk tm-skin" id="homeLang">Langue : Français</button></div>
+    <div class="tm-right" id="tmRight"></div>
+  </div>
+  <div id="hStory" class="hsub" hidden><div class="hsub-head"><p class="gm-eyebrow">Nouvelle partie · étape 1 sur 2</p><h2>Choisis l'histoire</h2><p class="hint">Ensuite, tu choisiras qui joue et avec quel personnage.</p></div><div class="scen-list" id="storyList"></div></div>
+  <div id="hSaves" class="hsub" hidden><div class="hsub-head"><h2>Parties enregistrées</h2><p class="hint">Les parties en cours (sauvegardées automatiquement) et tes sauvegardes nommées, de la plus récente à la plus ancienne.</p></div><div id="savesList" class="saves-all"></div></div>
+  <div id="hPlayers" class="hsub" hidden><div class="hsub-head"><h2>Joueurs</h2><p class="hint">Les personnes avec qui tu joues et leurs personnages. On les retrouve d'une partie à l'autre, avec leurs progrès.</p>
+    <div class="addrow"><span id="addPlayerZone"><button class="btn prim" id="addPlayer">+ Ajouter un joueur</button></span><button class="btn" data-nav="creer">Créer un personnage</button><label class="btn" for="impFile" style="cursor:pointer">Importer un personnage</label><input type="file" id="impFile" accept=".json,application/json" hidden></div></div>
+    <div class="players" id="playersList"></div></div>
+  <div hidden><div id="scenList"></div><div id="charList"></div><div id="campBar"></div></div>
+</section>
+
+<div class="grid" id="vPlay" hidden>
+  <nav class="acts" id="nav" aria-label="Déroulé des scènes"></nav>
+  <main class="scene" id="scene"></main>
+  <aside class="side">
+    <section class="panel npcp" id="npcPanel" hidden><h3><span>PNJ de la scène</span> <button class="lnk" id="npcPanelCbt">⚔ Combat</button></h3><div id="npcCards"></div></section>
+    <section class="panel">
+      <h3>Investigateurs <span class="tabs"><button class="on" data-v="inv">Suivi</button><button data-v="who" id="tabWho">Qui sait quoi</button></span></h3>
+      <div id="invView"></div>
+      <div class="addrow"><button class="lnk" id="gmEdit2">Changer les joueurs : menu ☰ Partie › Modifier la partie</button></div>
+    </section>
+    <section class="panel narr" id="narrPanel" aria-label="Narrateur"><h3><button class="ptog" data-ptog="narrateur" aria-expanded="true"><span class="chev"></span>Narrateur</button></h3><div id="narrBody"></div></section>
+    <section class="panel ritual" id="ritPanel">
+      <h3 id="ritTitle"></h3>
+      <div class="line"><span>PM versés</span><b class="t" id="pmVal">0</b><span>/ <span id="ritMax"></span></span>
+        <button class="btn" id="pmAdd"></button>
+        <button class="btn" id="pmSub"></button></div>
+      <div class="bar"><i id="pmBar" style="width:0%"></i></div>
+      <div class="line"><span>Durée</span><b class="t" id="ritClock">0:00</b>
+        <button class="btn" id="ritStart"></button>
+        <button class="btn" id="ritReset">Remettre à zéro</button></div>
+      <div class="det" id="ritHelp" style="font-size:12px;color:var(--mute);margin-top:6px"></div>
+    </section>
+    <section class="panel journal" id="jPanel">
+      <h3><button class="ptog" data-ptog="journal" aria-expanded="true"><span class="chev"></span>Journal</button> <span class="jact"><button class="lnk" id="jToNotes">Vers les notes</button><button class="lnk" id="jCopy">Copier</button></span></h3>
+      <div class="jf" id="jFilters"></div>
+      <ol class="jlist" id="jList"></ol>
+    </section>
+    <section class="panel notes">
+      <h3><button class="ptog" data-ptog="notes" aria-expanded="true"><span class="chev"></span>Notes de séance</button></h3>
+      <textarea id="notes" placeholder="Ce que les joueurs ont décidé, les noms qu'ils ont donnés, ce qu'il faudra relancer…"></textarea>
+    </section>
+  </aside>
+</div>
+
+<section class="view" id="vSetup" hidden><div class="setup" id="setupBody"></div></section>
+<section class="view" id="vRules" hidden>
+  <div class="rules"><aside class="rtoc"><input id="rulesQ" type="search" placeholder="Chercher une règle…" aria-label="Chercher une règle"><ol id="rulesToc"></ol>
+    <p class="mut"><span data-t="18">Résumé reformulé des règles de base. Le livret fait foi.</span></p></aside><div id="rulesBody" class="rbody"></div></div>
+</section>
+<section class="view" id="vCreate" hidden>
+  <div class="wiz">
+    <ol class="steps" id="steps"></ol>
+    <div class="wbody" id="wbody"></div>
+  </div>
+</section>
+    <section class="dicefloat dice2" id="dicePanel" hidden aria-label="Dés">
+      <header class="d2-h"><h3>Dés</h3><button class="x" id="diceClose" aria-label="Fermer les dés">×</button></header>
+      <div class="result" id="result"><div class="d2-empty">Choisis un jet ci-dessous, ou clique un test dans la scène.</div></div>
+      <div class="d2-tabs" role="tablist"><button role="tab" data-dtab="test" class="on">Test D100</button><button role="tab" data-dtab="deg">Dégâts</button><button role="tab" data-dtab="grp">Groupe</button></div>
+      <div class="d2-pane" data-dpane="test">
+        <div class="d2-row"><label class="d2-l" for="dWho">Qui</label><select id="dWho"></select></div>
+        <div class="d2-row"><label class="d2-l" for="dSk">Quoi</label><select id="dSk"></select></div>
+        <div class="d2-row"><label class="d2-l" for="skill">Valeur</label>
+          <div class="d2-val"><button class="d2-step" data-vstep="-5" aria-label="Moins 5">−5</button><input id="skill" type="number" min="1" max="99" value="50"><button class="d2-step" data-vstep="5" aria-label="Plus 5">+5</button>
+          <span class="d2-thr" id="dThr"></span></div></div>
+        <div class="d2-row"><span class="d2-l">Dés</span><div class="d2-seg" id="dSeg" role="radiogroup" aria-label="Dés bonus ou malus">
+          <button data-net="-2" class="r">2 malus</button><button data-net="-1" class="r">1 malus</button><button data-net="0" class="on">Normal</button><button data-net="1" class="g">1 bonus</button><button data-net="2" class="g">2 bonus</button></div></div>
+        <button class="d2-go" id="rollTest">Lancer le D100</button>
+        <span hidden><span id="bCount">0</span><span id="mCount">0</span><button id="bMinus"></button><button id="bPlus"></button><button id="mMinus"></button><button id="mPlus"></button></span>
+      </div>
+      <div class="d2-pane" data-dpane="deg" hidden>
+        <div class="d2-dice" id="dDice"></div>
+        <div class="d2-row"><input id="formula" type="text" value="1D6" aria-label="Formule de dés"><button class="btn" id="dClear">Effacer</button></div>
+        <div class="quick" id="quick"></div>
+        <button class="d2-go" id="rollF">Lancer</button>
+      </div>
+      <div class="d2-pane" data-dpane="grp" hidden>
+        <p class="mut" style="margin:0">Pour le groupe suivi. Les résultats s'inscrivent dans le journal.</p>
+        <div class="d2-grp"><button class="d2-big" id="qaSan"><b>Test de SAN</b><span>chacun contre sa Santé mentale</span></button><button class="d2-big" id="qaLuck"><b>Chance du groupe</b><span>le moins chanceux lance pour tous</span></button></div>
+      </div>
+      <details class="d2-hist"><summary>Derniers jets</summary><ul class="log" id="log"></ul></details>
+    </section>
+<button class="fab" id="fab" aria-label="Ouvrir les dés"><span class="d20">⚂</span> Dés</button>
+<section class="sndfloat" id="sndPanel" hidden aria-label="Sons"><h3><span>Sons et ambiances</span><button class="x" id="sndClose" aria-label="Fermer les sons">×</button></h3><div id="sndBody"></div></section>
+<button class="fab fab-l" id="sndFab" aria-label="Ouvrir les sons"><span class="d20">♪</span> Sons</button>
+
+<div class="pickdlg" id="pick" hidden role="dialog" aria-modal="true"><div class="pick-box" id="pickBox"></div></div>
+<div class="pickdlg" id="npcDlg" hidden role="dialog" aria-modal="true" aria-labelledby="npcTitle"><div class="pick-box npc-box" id="npcBox"></div></div>
+<div class="sheetwrap" id="rulesSheet" hidden role="dialog" aria-modal="true" aria-label="Règles du jeu"><div class="sheet"><header class="sh-h"><h2>Règles du jeu</h2><button class="x" data-shclose="rulesSheet" aria-label="Fermer">×</button></header><div class="sh-b" id="rulesSheetBody"></div></div></div>
+<div class="sheetwrap" id="cbtSheet" hidden role="dialog" aria-modal="true" aria-label="Combat"><div class="sheet"><header class="sh-h"><h2>Combat</h2><button class="x" data-shclose="cbtSheet" aria-label="Fermer">×</button></header><div class="sh-b" id="cbtBody"></div></div></div>
+<div class="flash" id="flash" hidden></div>
+<div class="gmenu" id="gMenu" hidden role="dialog" aria-modal="true" aria-labelledby="gmTitle">
+  <div class="gm-box">
+    <div class="gm-head"><span class="gm-eyebrow">Menu de la partie</span><h2 id="gmTitle">—</h2><p class="gm-sub" id="gmSub"></p></div>
+    <div class="gm-list">
+      <button class="gm-item prim" id="gmResume"><span class="gm-k">Échap</span>Reprendre la partie</button>
+      <div class="gm-item-wrap"><button class="gm-item" id="gmEdit">Modifier la partie</button><span class="gm-meta">joueurs et personnages</span></div>
+      <div class="gm-item-wrap"><button class="gm-item" id="btnClock">Démarrer la séance</button><span class="gm-meta" id="gmClock"></span></div>
+      <div class="gm-item-wrap"><span id="saveZone"><button class="gm-item" id="btnSave">Sauvegarder la partie</button></span><span class="gm-meta" id="saveHint"></span></div>
+      <div class="gm-item-wrap"><button class="gm-item" id="gmLoad">Charger une sauvegarde</button></div>
+      <div id="gmSaves" class="gm-saves" hidden></div>
+      <div class="gm-item-wrap"><span id="finZone"><button class="gm-item" id="btnFin">Terminer le scénario</button></span></div>
+      <div class="gm-sep"></div>
+      <button class="gm-item" id="gmRules">Règles du jeu</button>
+      <div class="gm-item-wrap"><button class="gm-item" id="gmSkin">Thème : Art déco</button><span class="gm-meta">touche T</span></div>
+      <div class="gm-item-wrap"><button class="gm-item" id="gmLang">Langue : Français</button><span class="gm-meta">touche L</span></div>
+      <button class="gm-item" data-nav="menu" id="gmQuit">Quitter vers le menu principal</button>
+      <div class="gm-item-wrap"><span id="resetZone"><button class="gm-item danger" id="btnReset">Réinitialiser ce scénario</button></span></div>
+    </div>
+  </div>
+</div>
+<div class="toast" id="toast" hidden></div>
+
+<script type="module" src="/src/play/boot.ts"></script>
+</body>
+</html>

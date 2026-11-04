@@ -1,5 +1,6 @@
-import { LogOut, UserRound } from 'lucide-react'
-import { Link, Navigate, NavLink, Outlet } from 'react-router'
+import { LogOut, Palette, UserRound } from 'lucide-react'
+import type { ReactNode } from 'react'
+import { Link, Navigate, NavLink, Outlet, useLocation } from 'react-router'
 import { useAuth, useProfile } from '@/auth/auth'
 import { Button } from '@/components/ui/button'
 import {
@@ -14,6 +15,7 @@ import {
 import { Spinner } from '@/components/ui/spinner'
 import { supabase } from '@/lib/supabase'
 import { cn } from '@/lib/utils'
+import { SKIN_LABEL, useSkin } from '@/theme/skin'
 
 const NAV = [
   { to: '/marketplace', label: 'Bibliothèque' },
@@ -22,10 +24,57 @@ const NAV = [
   { to: '/import', label: 'Importer' },
 ]
 
+function AccountMenu() {
+  const { session } = useAuth()
+  const profile = useProfile()
+  const { skin, toggle } = useSkin()
+  return (
+    <DropdownMenu>
+      <DropdownMenuTrigger render={<Button variant="ghost" size="icon" aria-label="Compte" />}>
+        <UserRound />
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="end" className="w-auto min-w-56">
+        <DropdownMenuGroup>
+          <DropdownMenuLabel className="eyebrow truncate">
+            {profile.data?.display_name || session?.user.email}
+            {profile.data?.is_admin && ' · admin'}
+          </DropdownMenuLabel>
+        </DropdownMenuGroup>
+        <DropdownMenuSeparator />
+        <DropdownMenuGroup>
+          <DropdownMenuItem onClick={toggle}>
+            <Palette />
+            Thème : {SKIN_LABEL[skin]}
+          </DropdownMenuItem>
+          <DropdownMenuItem onClick={() => supabase.auth.signOut()}>
+            <LogOut />
+            Se déconnecter
+          </DropdownMenuItem>
+        </DropdownMenuGroup>
+      </DropdownMenuContent>
+    </DropdownMenu>
+  )
+}
+
+/** Signed-in pages without the app chrome (the game screen). Signed-out visitors go to /login. */
+export function RequireAuth({ children }: { children: ReactNode }) {
+  const { session, ready } = useAuth()
+  if (!ready) {
+    return (
+      <div className="flex min-h-svh items-center justify-center">
+        <Spinner />
+      </div>
+    )
+  }
+  if (!session) return <Navigate to="/login" replace />
+  return children
+}
+
 /** Shell for every signed-in page. Signed-out visitors go to /login. */
 export function AppLayout() {
   const { session, ready } = useAuth()
-  const profile = useProfile()
+  // The home screen has its own big title block, like the legacy menu: no top bar there.
+  const isHome = useLocation().pathname === '/'
 
   if (!ready) {
     return (
@@ -37,46 +86,36 @@ export function AppLayout() {
   if (!session) return <Navigate to="/login" replace />
 
   return (
-    <div className="flex min-h-svh flex-col">
-      <header className="border-b">
-        <div className="mx-auto flex w-full max-w-6xl items-center gap-4 px-4 py-3">
-          <Link to="/" className="font-heading text-xl">Grimoire</Link>
-          <nav className="flex flex-1 gap-1 overflow-x-auto">
-            {NAV.map((n) => (
-              <NavLink
-                key={n.to}
-                to={n.to}
-                className={({ isActive }) =>
-                  cn('rounded-md px-3 py-1.5 text-sm whitespace-nowrap hover:bg-muted', isActive && 'bg-muted font-medium')
-                }
-              >
-                {n.label}
-              </NavLink>
-            ))}
-          </nav>
-          <DropdownMenu>
-            <DropdownMenuTrigger render={<Button variant="ghost" size="icon" aria-label="Compte" />}>
-              <UserRound />
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              <DropdownMenuGroup>
-                <DropdownMenuLabel>
-                  {profile.data?.display_name || session.user.email}
-                  {profile.data?.is_admin && <span className="text-muted-foreground"> · admin</span>}
-                </DropdownMenuLabel>
-              </DropdownMenuGroup>
-              <DropdownMenuSeparator />
-              <DropdownMenuGroup>
-                <DropdownMenuItem onClick={() => supabase.auth.signOut()}>
-                  <LogOut />
-                  Se déconnecter
-                </DropdownMenuItem>
-              </DropdownMenuGroup>
-            </DropdownMenuContent>
-          </DropdownMenu>
+    <div className="relative flex min-h-svh flex-col">
+      {isHome ? (
+        <div className="absolute top-4 right-4 sm:right-10">
+          <AccountMenu />
         </div>
-      </header>
-      <main className="mx-auto w-full max-w-6xl flex-1 px-4 py-8">
+      ) : (
+        <header className="app-header">
+          <div className="mx-auto flex w-full max-w-6xl items-center gap-4 px-4 py-3 sm:px-10">
+            <Link to="/" className="font-heading text-2xl text-gold">Grimoire</Link>
+            <nav className="flex flex-1 gap-1 overflow-x-auto">
+              {NAV.map((n) => (
+                <NavLink
+                  key={n.to}
+                  to={n.to}
+                  className={({ isActive }) =>
+                    cn(
+                      'px-3 py-1.5 text-xs font-semibold tracking-[0.14em] whitespace-nowrap text-muted-foreground uppercase hover:text-gold',
+                      isActive && 'text-gold',
+                    )
+                  }
+                >
+                  {n.label}
+                </NavLink>
+              ))}
+            </nav>
+            <AccountMenu />
+          </div>
+        </header>
+      )}
+      <main className={cn('mx-auto w-full max-w-6xl flex-1 px-4 sm:px-10', isHome ? 'py-16 lg:py-[4.5rem]' : 'py-10')}>
         <Outlet />
       </main>
     </div>

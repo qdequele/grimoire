@@ -2,6 +2,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useAuth } from '@/auth/auth'
 import type { Json } from '@/lib/database.types'
 import { supabase, type Tables } from '@/lib/supabase'
+import type { LegacyState } from '@/play/host'
 import type { StoryContent } from '@/stories/api'
 
 /** Saved game state: ids only, never story text (STORY_FORMAT §9), so stories can be edited between sessions. */
@@ -9,6 +10,8 @@ export interface GameState {
   scene: string
   done: string[]
   party: Array<{ characterId: string }>
+  /** The game engine's own state (legacy engine), saved as is. */
+  legacy?: LegacyState
 }
 
 export type GameRow = Omit<Tables<'games'>, 'state'> & {

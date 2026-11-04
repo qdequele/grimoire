@@ -75,6 +75,10 @@ A **scene** is one screen in the app.
 | `next` | Likely next scene ids (defaults to the following scene). |
 | `images` | `{ src, caption, keeperOnly }` maps or pictures. |
 | `optional` | `true` for skippable scenes. |
+| `notesFirst` | Show `notes` before the read-aloud text. |
+| `notesAfter` | Reference blocks shown after the flow. |
+| `callout` | A highlighted keeper note at the end of the scene. |
+| `npcTable` | `true` to show the story's NPC reference table in this scene. |
 
 ### 4.1 Flow steps
 
@@ -94,6 +98,8 @@ The heart of a scene: what happens, in order, with the rolls and their outcomes.
 ```
 
 Only `title` is required. Write steps in **play order**; one step = one decision or one roll.
+
+Instead of a structured `roll`, a step may carry `test`: the roll in plain words (`"Charme ou Persuasion"`, `"Bibliothèque (pour retrouver la date)"`, `"SAN 0/1D6"`). The app turns it into roll buttons; text in brackets is a hint and is dropped.
 
 ### 4.2 Rolls
 
@@ -156,6 +162,12 @@ Dice (`1D6`) and SAN losses (`1/1D4`) are detected automatically and get glossar
 Everything except `id` and `name` is optional: a talking-only NPC can be just `name`, `role` and `knows`. Anything with `hp` and `attacks` can be dropped into combat.
 
 ## 6. Handouts, pregens, knowledge, trackers
+
+- **NPC table** (`npcTable`, story level): `{ ref, note, rows }`, one row per character as shown in the "PNJ et monstres" panel: name, short description, HP, DEX, attack, defence.
+- **Default party** (`defaultParty`): pregen ids suggested for a quick start.
+- `meta.playersText`: players as written in the source (`"2 à 5 joueurs"`), shown instead of `players.min/max`.
+- A pregen may give its skills as written on the sheet (`sheet`: `"Histoire 70 · Bibliothèque 60"`) instead of `skills`, and a `dodge` value.
+
 
 - **Handout**: `{ id, title, text?, image?, scene? }` — shown to players full screen.
 - **Pregen**: name, occupation, characteristics, hp/mp/san/luck, `skills` (id → value), attacks, background, important people.

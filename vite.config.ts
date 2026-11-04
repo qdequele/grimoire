@@ -6,6 +6,10 @@ import { defineConfig } from 'vite'
 
 export default defineConfig({
   plugins: [react(), tailwindcss()],
+  build: {
+    // Two pages: the app, and the game screen it embeds (the legacy engine, see src/play/boot.ts).
+    rolldownOptions: { input: { main: 'index.html', play: 'play.html' } },
+  },
   resolve: {
     alias: { '@': path.resolve(import.meta.dirname, './src') },
   },

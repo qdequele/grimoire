@@ -4,272 +4,905 @@
   "title": "Grimoire story pack",
   "description": "A playable investigation/horror scenario for a d100 percentile system. One file per story: story.json, next to optional images/ and sounds/ folders.",
   "type": "object",
-  "required": ["format", "meta", "acts"],
+  "required": [
+    "format",
+    "meta",
+    "acts"
+  ],
   "additionalProperties": false,
   "properties": {
-    "format":    { "const": "grimoire-story/1" },
-    "meta":      { "$ref": "#/$defs/meta" },
-    "overview":  { "$ref": "#/$defs/overview" },
-    "acts":      { "type": "array", "minItems": 1, "items": { "$ref": "#/$defs/act" } },
-    "npcs":      { "type": "array", "items": { "$ref": "#/$defs/npc" } },
-    "handouts":  { "type": "array", "items": { "$ref": "#/$defs/handout" } },
-    "pregens":   { "type": "array", "items": { "$ref": "#/$defs/pregen" } },
-    "knowledge": { "type": "array", "items": { "$ref": "#/$defs/knowledge" } },
-    "trackers":  { "type": "array", "items": { "$ref": "#/$defs/tracker" } },
-    "sounds":    { "type": "array", "items": { "$ref": "#/$defs/customSound" } }
-  },
-
-  "$defs": {
-    "id":   { "type": "string", "pattern": "^[a-z0-9][a-z0-9-]*$", "description": "Stable kebab-case identifier, unique within its list." },
-    "text": { "type": "string", "description": "Rich text: **bold**, *italic*, [[scene-id]] or [[scene-id|label]] links, {{npc:id}} and {{handout:id}} references. No HTML." },
-    "dice": { "type": "string", "pattern": "^[0-9]*D[0-9]+([+-][0-9]*D?[0-9]+)*$|^[0-9]+$", "description": "Dice notation, e.g. 1D6, 1D8+1D4, 2D6+4, 3." },
-    "sanLoss": { "type": "string", "pattern": "^[0-9D+]+/[0-9D+]+$", "description": "Sanity loss as success/failure, e.g. 0/1D6, 1/1D4." },
-    "pageRef": { "type": "string", "description": "Optional reference to the source book, e.g. 'p. 32-35'. Free text." },
-
+    "format": {
+      "const": "grimoire-story/1"
+    },
     "meta": {
-      "type": "object",
-      "required": ["id", "title", "lang"],
-      "additionalProperties": false,
-      "properties": {
-        "id":          { "$ref": "#/$defs/id" },
-        "title":       { "type": "string" },
-        "lang":        { "type": "string", "description": "BCP-47 language of all the story text, e.g. 'en', 'fr'." },
-        "summary":     { "$ref": "#/$defs/text", "description": "One-paragraph pitch shown in the story picker. No spoilers." },
-        "players":     { "type": "object", "properties": { "min": { "type": "integer", "minimum": 1 }, "max": { "type": "integer", "minimum": 1 } }, "additionalProperties": false },
-        "duration":    { "type": "string", "description": "e.g. '1 session', '2-3 hours'." },
-        "era":         { "type": "string", "description": "e.g. '1920s', 'modern'." },
-        "setting":     { "type": "string", "description": "Place, e.g. 'New England coast'." },
-        "system":      { "type": "string", "default": "d100", "description": "Rules family. Only 'd100' is supported in v1." },
-        "author":      { "type": "string" },
-        "source":      { "type": "string", "description": "Book or product the story comes from, if any (for the keeper's own reference)." },
-        "license":     { "type": "string", "description": "e.g. 'CC-BY-4.0', 'private'. Imported copyrighted material should be 'private'." },
-        "version":     { "type": "string" },
-        "tags":        { "type": "array", "items": { "type": "string" } },
-        "contentWarnings": { "type": "array", "items": { "type": "string" } }
+      "$ref": "#/$defs/meta"
+    },
+    "overview": {
+      "$ref": "#/$defs/overview"
+    },
+    "acts": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "$ref": "#/$defs/act"
       }
     },
-
+    "npcs": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/npc"
+      }
+    },
+    "handouts": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/handout"
+      }
+    },
+    "pregens": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/pregen"
+      }
+    },
+    "knowledge": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/knowledge"
+      }
+    },
+    "trackers": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/tracker"
+      }
+    },
+    "sounds": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/customSound"
+      }
+    },
+    "npcTable": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "rows"
+      ],
+      "description": "Reference table of NPCs and creatures (PNJ et monstres panel), one row per character: name, short description, HP, DEX, attack, defence.",
+      "properties": {
+        "ref": {
+          "$ref": "#/$defs/pageRef"
+        },
+        "note": {
+          "$ref": "#/$defs/text"
+        },
+        "rows": {
+          "type": "array",
+          "items": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        }
+      }
+    },
+    "defaultParty": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/id"
+      },
+      "description": "Pregen ids suggested as the party."
+    },
+    "knowledgeNote": {
+      "$ref": "#/$defs/text",
+      "description": "Shown under the who-knows-what table."
+    }
+  },
+  "$defs": {
+    "id": {
+      "type": "string",
+      "pattern": "^[a-z0-9][a-z0-9-]*$",
+      "description": "Stable kebab-case identifier, unique within its list."
+    },
+    "text": {
+      "type": "string",
+      "description": "Rich text: **bold**, *italic*, [[scene-id]] or [[scene-id|label]] links, {{npc:id}} and {{handout:id}} references. No HTML."
+    },
+    "dice": {
+      "type": "string",
+      "pattern": "^[0-9]*D[0-9]+([+-][0-9]*D?[0-9]+)*$|^[0-9]+$",
+      "description": "Dice notation, e.g. 1D6, 1D8+1D4, 2D6+4, 3."
+    },
+    "sanLoss": {
+      "type": "string",
+      "pattern": "^[0-9D+]+/[0-9D+]+$",
+      "description": "Sanity loss as success/failure, e.g. 0/1D6, 1/1D4."
+    },
+    "pageRef": {
+      "type": "string",
+      "description": "Optional reference to the source book, e.g. 'p. 32-35'. Free text."
+    },
+    "meta": {
+      "type": "object",
+      "required": [
+        "id",
+        "title",
+        "lang"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "$ref": "#/$defs/id"
+        },
+        "title": {
+          "type": "string"
+        },
+        "lang": {
+          "type": "string",
+          "description": "BCP-47 language of all the story text, e.g. 'en', 'fr'."
+        },
+        "summary": {
+          "$ref": "#/$defs/text",
+          "description": "One-paragraph pitch shown in the story picker. No spoilers."
+        },
+        "players": {
+          "type": "object",
+          "properties": {
+            "min": {
+              "type": "integer",
+              "minimum": 1
+            },
+            "max": {
+              "type": "integer",
+              "minimum": 1
+            }
+          },
+          "additionalProperties": false
+        },
+        "duration": {
+          "type": "string",
+          "description": "e.g. '1 session', '2-3 hours'."
+        },
+        "era": {
+          "type": "string",
+          "description": "e.g. '1920s', 'modern'."
+        },
+        "setting": {
+          "type": "string",
+          "description": "Place, e.g. 'New England coast'."
+        },
+        "system": {
+          "type": "string",
+          "default": "d100",
+          "description": "Rules family. Only 'd100' is supported in v1."
+        },
+        "author": {
+          "type": "string"
+        },
+        "source": {
+          "type": "string",
+          "description": "Book or product the story comes from, if any (for the keeper's own reference)."
+        },
+        "license": {
+          "type": "string",
+          "description": "e.g. 'CC-BY-4.0', 'private'. Imported copyrighted material should be 'private'."
+        },
+        "version": {
+          "type": "string"
+        },
+        "tags": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "contentWarnings": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "playersText": {
+          "type": "string",
+          "description": "Players as written in the source, e.g. '2 à 5 joueurs'. Shown instead of players.min/max when set."
+        }
+      }
+    },
     "overview": {
       "type": "object",
       "additionalProperties": false,
       "description": "The keeper's one-screen briefing.",
       "properties": {
-        "secret":       { "$ref": "#/$defs/text", "description": "What is really going on." },
-        "steps":        { "type": "array", "items": { "$ref": "#/$defs/text" }, "description": "Main beats, in order." },
-        "mustNotMiss":  { "type": "array", "items": { "$ref": "#/$defs/text" } },
-        "branches":     { "type": "array", "items": { "$ref": "#/$defs/text" }, "description": "Choices that change the story." },
-        "ifStuck":      { "type": "array", "items": { "$ref": "#/$defs/text" }, "description": "Nudges and NPC relaunches." },
-        "keeperTips":   { "type": "array", "items": { "$ref": "#/$defs/text" } }
+        "secret": {
+          "$ref": "#/$defs/text",
+          "description": "What is really going on."
+        },
+        "steps": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/text"
+          },
+          "description": "Main beats, in order."
+        },
+        "mustNotMiss": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/text"
+          }
+        },
+        "branches": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/text"
+          },
+          "description": "Choices that change the story."
+        },
+        "ifStuck": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/text"
+          },
+          "description": "Nudges and NPC relaunches."
+        },
+        "keeperTips": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/text"
+          }
+        }
       }
     },
-
     "act": {
       "type": "object",
-      "required": ["id", "title", "scenes"],
+      "required": [
+        "id",
+        "title",
+        "scenes"
+      ],
       "additionalProperties": false,
       "properties": {
-        "id":     { "$ref": "#/$defs/id" },
-        "title":  { "type": "string" },
-        "scenes": { "type": "array", "minItems": 1, "items": { "$ref": "#/$defs/scene" } }
+        "id": {
+          "$ref": "#/$defs/id"
+        },
+        "title": {
+          "type": "string"
+        },
+        "scenes": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "$ref": "#/$defs/scene"
+          }
+        }
       }
     },
-
     "scene": {
       "type": "object",
-      "required": ["id", "title"],
+      "required": [
+        "id",
+        "title"
+      ],
       "additionalProperties": false,
       "properties": {
-        "id":        { "$ref": "#/$defs/id" },
-        "title":     { "type": "string" },
-        "ref":       { "$ref": "#/$defs/pageRef" },
-        "lead":      { "$ref": "#/$defs/text", "description": "One-line keeper summary of the scene." },
-        "optional":  { "type": "boolean", "default": false },
-        "readAloud": { "type": "array", "items": { "$ref": "#/$defs/text" }, "description": "Paragraphs to read or paraphrase to the players." },
-        "flow":      { "type": "array", "items": { "$ref": "#/$defs/step" }, "description": "The scene, step by step." },
-        "notes":     { "type": "array", "items": { "$ref": "#/$defs/noteBlock" }, "description": "Reference blocks that don't fit the flow (room contents, timelines)." },
-        "npcs":      { "type": "array", "items": { "$ref": "#/$defs/id" }, "description": "NPC ids present in the scene; shown in the side panel." },
-        "handouts":  { "type": "array", "items": { "$ref": "#/$defs/id" } },
-        "rolls":     { "type": "array", "items": { "$ref": "#/$defs/roll" }, "description": "Quick-access rolls not tied to a flow step (damage, SAN)." },
-        "ambience":  { "type": "array", "items": { "type": "string" }, "maxItems": 3, "description": "Ids from the shared sound library (spec/sounds.json) or this story's sounds." },
-        "sfx":       { "type": "array", "items": { "type": "string" }, "description": "Sound-effect ids suggested for this scene." },
-        "next":      { "type": "array", "items": { "$ref": "#/$defs/id" }, "description": "Likely next scenes (defaults to the following scene)." },
-        "images":    { "type": "array", "items": { "$ref": "#/$defs/image" }, "description": "Maps or pictures for the keeper." }
+        "id": {
+          "$ref": "#/$defs/id"
+        },
+        "title": {
+          "type": "string"
+        },
+        "ref": {
+          "$ref": "#/$defs/pageRef"
+        },
+        "lead": {
+          "$ref": "#/$defs/text",
+          "description": "One-line keeper summary of the scene."
+        },
+        "optional": {
+          "type": "boolean",
+          "default": false
+        },
+        "readAloud": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/text"
+          },
+          "description": "Paragraphs to read or paraphrase to the players."
+        },
+        "flow": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/step"
+          },
+          "description": "The scene, step by step."
+        },
+        "notes": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/noteBlock"
+          },
+          "description": "Reference blocks that don't fit the flow (room contents, timelines)."
+        },
+        "npcs": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/id"
+          },
+          "description": "NPC ids present in the scene; shown in the side panel."
+        },
+        "handouts": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/id"
+          }
+        },
+        "rolls": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/roll"
+          },
+          "description": "Quick-access rolls not tied to a flow step (damage, SAN)."
+        },
+        "ambience": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "maxItems": 3,
+          "description": "Ids from the shared sound library (spec/sounds.json) or this story's sounds."
+        },
+        "sfx": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Sound-effect ids suggested for this scene."
+        },
+        "next": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/id"
+          },
+          "description": "Likely next scenes (defaults to the following scene)."
+        },
+        "images": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/image"
+          },
+          "description": "Maps or pictures for the keeper."
+        },
+        "notesFirst": {
+          "type": "boolean",
+          "default": false,
+          "description": "Show notes before the read-aloud text."
+        },
+        "notesAfter": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/noteBlock"
+          },
+          "description": "Reference blocks shown after the flow."
+        },
+        "callout": {
+          "$ref": "#/$defs/text",
+          "description": "Highlighted keeper note at the end of the scene."
+        },
+        "npcTable": {
+          "type": "boolean",
+          "default": false,
+          "description": "Show the story's npcTable in this scene."
+        }
       }
     },
-
     "step": {
       "type": "object",
-      "required": ["title"],
+      "required": [
+        "title"
+      ],
       "additionalProperties": false,
       "properties": {
-        "title":   { "type": "string" },
-        "text":    { "$ref": "#/$defs/text", "description": "What happens / what to describe." },
-        "roll":    { "$ref": "#/$defs/roll" },
-        "success": { "$ref": "#/$defs/text" },
-        "failure": { "$ref": "#/$defs/text" },
-        "pushed":  { "$ref": "#/$defs/text", "description": "Consequence if a pushed roll fails." },
-        "extra":   { "$ref": "#/$defs/text", "description": "Side note shown in muted text." },
-        "goto":    { "type": "array", "items": { "$ref": "#/$defs/id" }, "description": "Scenes this step can lead to." }
+        "title": {
+          "type": "string"
+        },
+        "text": {
+          "$ref": "#/$defs/text",
+          "description": "What happens / what to describe."
+        },
+        "roll": {
+          "$ref": "#/$defs/roll"
+        },
+        "success": {
+          "$ref": "#/$defs/text"
+        },
+        "failure": {
+          "$ref": "#/$defs/text"
+        },
+        "pushed": {
+          "$ref": "#/$defs/text",
+          "description": "Consequence if a pushed roll fails."
+        },
+        "extra": {
+          "$ref": "#/$defs/text",
+          "description": "Side note shown in muted text."
+        },
+        "goto": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/id"
+          },
+          "description": "Scenes this step can lead to."
+        },
+        "test": {
+          "type": "string",
+          "description": "Roll line in plain words, turned into roll buttons by the app, e.g. 'Charme ou Persuasion', 'SAN 0/1D6'. Alternative to roll."
+        }
       }
     },
-
     "roll": {
       "type": "object",
-      "required": ["type"],
+      "required": [
+        "type"
+      ],
       "additionalProperties": false,
       "properties": {
-        "type":       { "enum": ["skill", "characteristic", "luck", "san", "damage", "opposed", "group"] },
-        "options":    { "type": "array", "items": { "type": "string" }, "description": "Skill ids or characteristic codes the player may choose from (e.g. ['charm','persuade'])." },
-        "difficulty": { "enum": ["regular", "hard", "extreme"], "default": "regular" },
-        "bonus":      { "type": "integer", "minimum": -2, "maximum": 2, "description": "+n bonus dice / -n penalty dice." },
-        "san":        { "$ref": "#/$defs/sanLoss" },
-        "dice":       { "$ref": "#/$defs/dice" },
-        "against":    { "type": "object", "description": "For opposed rolls: the NPC and its skill.", "properties": { "npc": { "$ref": "#/$defs/id" }, "skill": { "type": "string" } }, "additionalProperties": false },
-        "label":      { "type": "string", "description": "Button label, e.g. 'Seeing the body'." }
+        "type": {
+          "enum": [
+            "skill",
+            "characteristic",
+            "luck",
+            "san",
+            "damage",
+            "opposed",
+            "group"
+          ]
+        },
+        "options": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Skill ids or characteristic codes the player may choose from (e.g. ['charm','persuade'])."
+        },
+        "difficulty": {
+          "enum": [
+            "regular",
+            "hard",
+            "extreme"
+          ],
+          "default": "regular"
+        },
+        "bonus": {
+          "type": "integer",
+          "minimum": -2,
+          "maximum": 2,
+          "description": "+n bonus dice / -n penalty dice."
+        },
+        "san": {
+          "$ref": "#/$defs/sanLoss"
+        },
+        "dice": {
+          "$ref": "#/$defs/dice"
+        },
+        "against": {
+          "type": "object",
+          "description": "For opposed rolls: the NPC and its skill.",
+          "properties": {
+            "npc": {
+              "$ref": "#/$defs/id"
+            },
+            "skill": {
+              "type": "string"
+            }
+          },
+          "additionalProperties": false
+        },
+        "label": {
+          "type": "string",
+          "description": "Button label, e.g. 'Seeing the body'."
+        }
       }
     },
-
     "noteBlock": {
       "type": "object",
-      "required": ["title", "items"],
+      "required": [
+        "title",
+        "items"
+      ],
       "additionalProperties": false,
       "properties": {
-        "title": { "type": "string" },
-        "items": { "type": "array", "items": { "$ref": "#/$defs/text" } }
+        "title": {
+          "type": "string"
+        },
+        "items": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/text"
+          }
+        }
       }
     },
-
     "npc": {
       "type": "object",
-      "required": ["id", "name"],
+      "required": [
+        "id",
+        "name"
+      ],
       "additionalProperties": false,
       "properties": {
-        "id":          { "$ref": "#/$defs/id" },
-        "name":        { "type": "string" },
-        "kind":        { "enum": ["person", "creature"], "default": "person" },
-        "role":        { "type": "string", "description": "Short tag, e.g. 'lighthouse keeper's widow'." },
-        "description": { "$ref": "#/$defs/text" },
-        "personality": { "$ref": "#/$defs/text" },
-        "knows":       { "type": "array", "items": { "$ref": "#/$defs/text" }, "description": "What they can reveal." },
+        "id": {
+          "$ref": "#/$defs/id"
+        },
+        "name": {
+          "type": "string"
+        },
+        "kind": {
+          "enum": [
+            "person",
+            "creature"
+          ],
+          "default": "person"
+        },
+        "role": {
+          "type": "string",
+          "description": "Short tag, e.g. 'lighthouse keeper's widow'."
+        },
+        "description": {
+          "$ref": "#/$defs/text"
+        },
+        "personality": {
+          "$ref": "#/$defs/text"
+        },
+        "knows": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/text"
+          },
+          "description": "What they can reveal."
+        },
         "characteristics": {
           "type": "object",
           "additionalProperties": false,
           "properties": {
-            "STR": { "type": "integer" }, "CON": { "type": "integer" }, "SIZ": { "type": "integer" }, "DEX": { "type": "integer" },
-            "APP": { "type": "integer" }, "INT": { "type": "integer" }, "POW": { "type": "integer" }, "EDU": { "type": "integer" }
+            "STR": {
+              "type": "integer"
+            },
+            "CON": {
+              "type": "integer"
+            },
+            "SIZ": {
+              "type": "integer"
+            },
+            "DEX": {
+              "type": "integer"
+            },
+            "APP": {
+              "type": "integer"
+            },
+            "INT": {
+              "type": "integer"
+            },
+            "POW": {
+              "type": "integer"
+            },
+            "EDU": {
+              "type": "integer"
+            }
           }
         },
-        "hp":          { "type": "integer" },
-        "mp":          { "type": "integer" },
-        "san":         { "type": "integer" },
-        "move":        { "type": "integer" },
-        "build":       { "type": "integer" },
-        "damageBonus": { "type": "string" },
-        "armor":       { "type": "integer", "default": 0 },
-        "dodge":       { "type": "integer" },
-        "attacksPerRound": { "type": "integer", "default": 1 },
-        "attacks":     { "type": "array", "items": { "$ref": "#/$defs/attack" } },
-        "skills":      { "type": "object", "additionalProperties": { "type": "integer" }, "description": "Skill id → value." },
-        "sanLoss":     { "$ref": "#/$defs/sanLoss", "description": "For seeing this creature." },
-        "special":     { "type": "array", "items": { "$ref": "#/$defs/text" }, "description": "Immunities, powers, weaknesses." },
-        "portrait":    { "type": "string", "description": "Relative path in images/." }
+        "hp": {
+          "type": "integer"
+        },
+        "mp": {
+          "type": "integer"
+        },
+        "san": {
+          "type": "integer"
+        },
+        "move": {
+          "type": "integer"
+        },
+        "build": {
+          "type": "integer"
+        },
+        "damageBonus": {
+          "type": "string"
+        },
+        "armor": {
+          "type": "integer",
+          "default": 0
+        },
+        "dodge": {
+          "type": "integer"
+        },
+        "attacksPerRound": {
+          "type": "integer",
+          "default": 1
+        },
+        "attacks": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/attack"
+          }
+        },
+        "skills": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "integer"
+          },
+          "description": "Skill id → value."
+        },
+        "sanLoss": {
+          "$ref": "#/$defs/sanLoss",
+          "description": "For seeing this creature."
+        },
+        "special": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/text"
+          },
+          "description": "Immunities, powers, weaknesses."
+        },
+        "portrait": {
+          "type": "string",
+          "description": "Relative path in images/."
+        }
       }
     },
-
     "attack": {
       "type": "object",
-      "required": ["name", "skill", "damage"],
+      "required": [
+        "name",
+        "skill",
+        "damage"
+      ],
       "additionalProperties": false,
       "properties": {
-        "name":   { "type": "string" },
-        "skill":  { "type": "integer", "minimum": 0, "maximum": 100 },
-        "damage": { "$ref": "#/$defs/dice" },
-        "note":   { "type": "string" }
+        "name": {
+          "type": "string"
+        },
+        "skill": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 100
+        },
+        "damage": {
+          "$ref": "#/$defs/dice"
+        },
+        "note": {
+          "type": "string"
+        }
       }
     },
-
     "handout": {
       "type": "object",
-      "required": ["id", "title"],
+      "required": [
+        "id",
+        "title"
+      ],
       "additionalProperties": false,
       "properties": {
-        "id":     { "$ref": "#/$defs/id" },
-        "title":  { "type": "string" },
-        "text":   { "$ref": "#/$defs/text" },
-        "image":  { "type": "string", "description": "Relative path in images/." },
-        "scene":  { "$ref": "#/$defs/id", "description": "Where it is usually found." }
+        "id": {
+          "$ref": "#/$defs/id"
+        },
+        "title": {
+          "type": "string"
+        },
+        "text": {
+          "$ref": "#/$defs/text"
+        },
+        "image": {
+          "type": "string",
+          "description": "Relative path in images/."
+        },
+        "scene": {
+          "$ref": "#/$defs/id",
+          "description": "Where it is usually found."
+        }
       }
     },
-
     "pregen": {
       "type": "object",
-      "required": ["id", "name"],
+      "required": [
+        "id",
+        "name"
+      ],
       "additionalProperties": false,
       "properties": {
-        "id":   { "$ref": "#/$defs/id" },
-        "name": { "type": "string" },
-        "occupation": { "type": "string" },
-        "age":  { "type": "integer" },
-        "characteristics": { "$ref": "#/$defs/npc/properties/characteristics" },
-        "hp":   { "type": "integer" }, "mp": { "type": "integer" }, "san": { "type": "integer" }, "luck": { "type": "integer" },
-        "skills":  { "type": "object", "additionalProperties": { "type": "integer" } },
-        "attacks": { "type": "array", "items": { "$ref": "#/$defs/attack" } },
-        "background": { "$ref": "#/$defs/text" },
-        "importantPeople": { "type": "array", "items": { "type": "string" } }
+        "id": {
+          "$ref": "#/$defs/id"
+        },
+        "name": {
+          "type": "string"
+        },
+        "occupation": {
+          "type": "string"
+        },
+        "age": {
+          "type": "integer"
+        },
+        "characteristics": {
+          "$ref": "#/$defs/npc/properties/characteristics"
+        },
+        "hp": {
+          "type": "integer"
+        },
+        "mp": {
+          "type": "integer"
+        },
+        "san": {
+          "type": "integer"
+        },
+        "luck": {
+          "type": "integer"
+        },
+        "skills": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "integer"
+          }
+        },
+        "attacks": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/attack"
+          }
+        },
+        "background": {
+          "$ref": "#/$defs/text"
+        },
+        "importantPeople": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "sheet": {
+          "type": "string",
+          "description": "Skills as written on the sheet, e.g. 'Histoire 70 · Bibliothèque 60'. Used when skills is absent."
+        },
+        "dodge": {
+          "type": "integer"
+        }
       }
     },
-
     "knowledge": {
       "type": "object",
-      "required": ["need"],
+      "required": [
+        "need"
+      ],
       "additionalProperties": false,
       "description": "'Who knows what' row: which skill or pregen helps with a story need.",
       "properties": {
-        "need":   { "type": "string", "description": "e.g. 'Read the Latin inscription'." },
-        "best":   { "type": "string" },
-        "backup": { "type": "string" }
+        "need": {
+          "type": "string",
+          "description": "e.g. 'Read the Latin inscription'."
+        },
+        "best": {
+          "type": "string"
+        },
+        "backup": {
+          "type": "string"
+        }
       }
     },
-
     "tracker": {
       "type": "object",
-      "required": ["id", "label", "max"],
+      "required": [
+        "id",
+        "label",
+        "max"
+      ],
       "additionalProperties": false,
       "description": "A counter shown in the side panel, e.g. ritual progress.",
       "properties": {
-        "id":    { "$ref": "#/$defs/id" },
-        "label": { "type": "string" },
-        "max":   { "type": "integer", "minimum": 1 },
-        "unit":  { "type": "string", "description": "e.g. 'MP', 'nights', 'minutes'." },
-        "step":  { "type": "integer", "default": 1 },
-        "timer": { "type": "boolean", "default": false, "description": "Also show a stopwatch." },
-        "help":  { "$ref": "#/$defs/text" },
-        "scenes":{ "type": "array", "items": { "$ref": "#/$defs/id" }, "description": "Only show during these scenes (all if empty)." }
+        "id": {
+          "$ref": "#/$defs/id"
+        },
+        "label": {
+          "type": "string"
+        },
+        "max": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "unit": {
+          "type": "string",
+          "description": "e.g. 'MP', 'nights', 'minutes'."
+        },
+        "step": {
+          "type": "integer",
+          "default": 1
+        },
+        "timer": {
+          "type": "boolean",
+          "default": false,
+          "description": "Also show a stopwatch."
+        },
+        "help": {
+          "$ref": "#/$defs/text"
+        },
+        "scenes": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/id"
+          },
+          "description": "Only show during these scenes (all if empty)."
+        },
+        "addLabel": {
+          "type": "string",
+          "description": "Button that adds a step, e.g. \"+2 PM (½ h of a reciter)\"."
+        },
+        "subLabel": {
+          "type": "string",
+          "description": "Button that removes a step."
+        },
+        "startLabel": {
+          "type": "string",
+          "description": "Button that starts the timer."
+        },
+        "runningLabel": {
+          "type": "string",
+          "description": "Timer button while running."
+        },
+        "fullMessage": {
+          "type": "string",
+          "description": "Message when the tracker reaches max."
+        }
       }
     },
-
     "image": {
       "type": "object",
-      "required": ["src"],
+      "required": [
+        "src"
+      ],
       "additionalProperties": false,
       "properties": {
-        "src":     { "type": "string" },
-        "caption": { "type": "string" },
-        "keeperOnly": { "type": "boolean", "default": true }
+        "src": {
+          "type": "string"
+        },
+        "caption": {
+          "type": "string"
+        },
+        "keeperOnly": {
+          "type": "boolean",
+          "default": true
+        }
       }
     },
-
     "customSound": {
       "type": "object",
-      "required": ["id", "file", "kind"],
+      "required": [
+        "id",
+        "file",
+        "kind"
+      ],
       "additionalProperties": false,
       "properties": {
-        "id":       { "$ref": "#/$defs/id" },
-        "file":     { "type": "string", "description": "Relative path in sounds/." },
-        "kind":     { "enum": ["ambience", "sfx"] },
-        "name":     { "type": "string" },
-        "fallback": { "type": "string", "description": "Shared library id used if the file is missing." },
-        "credit":   { "type": "string" }
+        "id": {
+          "$ref": "#/$defs/id"
+        },
+        "file": {
+          "type": "string",
+          "description": "Relative path in sounds/."
+        },
+        "kind": {
+          "enum": [
+            "ambience",
+            "sfx"
+          ]
+        },
+        "name": {
+          "type": "string"
+        },
+        "fallback": {
+          "type": "string",
+          "description": "Shared library id used if the file is missing."
+        },
+        "credit": {
+          "type": "string"
+        }
       }
     }
   }

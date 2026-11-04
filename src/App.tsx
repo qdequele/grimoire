@@ -1,10 +1,10 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { createBrowserRouter, RouterProvider } from 'react-router'
-import { AppLayout } from '@/AppLayout'
+import { AppLayout, RequireAuth } from '@/AppLayout'
 import { AuthProvider } from '@/auth/auth'
 import { LoginPage } from '@/auth/LoginPage'
-import { CharacterFormPage } from '@/characters/CharacterFormPage'
 import { CharactersPage } from '@/characters/CharactersPage'
+import { CharacterWizardPage } from '@/characters/wizard/CharacterWizardPage'
 import { Toaster } from '@/components/ui/sonner'
 import { GamePage } from '@/games/GamePage'
 import { HomePage } from '@/home/HomePage'
@@ -16,6 +16,8 @@ const queryClient = new QueryClient({ defaultOptions: { queries: { staleTime: 30
 
 const router = createBrowserRouter([
   { path: '/login', element: <LoginPage /> },
+  // Full-screen game screen, outside the app chrome.
+  { path: '/games/:id', element: <RequireAuth><GamePage /></RequireAuth> },
   {
     element: <AppLayout />,
     children: [
@@ -24,9 +26,8 @@ const router = createBrowserRouter([
       { path: 'stories', element: <MyStoriesPage /> },
       { path: 'stories/:id', element: <StoryPage /> },
       { path: 'characters', element: <CharactersPage /> },
-      { path: 'characters/:id', element: <CharacterFormPage /> },
+      { path: 'characters/:id', element: <CharacterWizardPage /> },
       { path: 'import', element: <ImportPage /> },
-      { path: 'games/:id', element: <GamePage /> },
     ],
   },
 ])
