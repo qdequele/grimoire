@@ -851,7 +851,7 @@ $("#scene").addEventListener("click",e=>{const c=e.target.closest("[data-ambset]
 
 /* ---------- Narrateur (Claude dans la page) ---------- */
 let sampleFn=null,narrCtl=null,narrBusy=false;
-(async()=>{try{if(window.claude&&claude.use)sampleFn=await claude.use("sample");}catch(e){sampleFn=null;}renderNarr();})();
+(async()=>{try{sampleFn=await Promise.resolve((typeof GRIMOIRE_HOST!=="undefined"&&GRIMOIRE_HOST.sample)||null);}catch(e){sampleFn=null;}renderNarr();})();
 const strip=s=>String(s||"").replace(/<[^>]+>/g,"");
 function narrContext(){
   const sc=SC(),st=ST();ensureGroups();const scenes=scenesOf(sc);

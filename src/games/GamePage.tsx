@@ -9,6 +9,7 @@ import { supabase } from '@/lib/supabase'
 import type { StoryForEngine } from '@/play/legacy/adapter'
 import { engineGlobals, freshState, withAccountProgress } from '@/play/engineData'
 import type { LegacyState } from '@/play/host'
+import { sample } from '@/play/narrator'
 import { gameKeys, useGame, type GameState } from './api'
 
 const SAVE_DELAY = 800
@@ -112,6 +113,7 @@ export function GamePage() {
         flush()
         navigate('/')
       },
+      sample,
     }
     setReady(true)
 

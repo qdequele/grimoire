@@ -1,3 +1,5 @@
+import type { SampleMessage, SampleOptions } from './narrator'
+
 // Contract between the app (GamePage) and the game screen iframe (play.html + boot.ts).
 // The app puts a PlayHost on its window before loading the iframe; the iframe reads it from
 // window.parent (same origin), sets GRIMOIRE_DATA / GRIMOIRE_HOST and starts the legacy engine.
@@ -51,6 +53,8 @@ export interface PlayHost {
   save: (state: LegacyState) => void
   /** Back to the app's menu. */
   quit: () => void
+  /** The narrator's text generation (what claude.use("sample") gave in claude.ai). */
+  sample?: (messages: SampleMessage[], opts?: SampleOptions) => Promise<{ text: string }>
 }
 
 declare global {

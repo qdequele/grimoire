@@ -172,16 +172,18 @@ test('game screen: the original engine runs a story, rolls, saves to the account
   await expect(game.locator('#jList li').first()).toBeVisible()
 
   // Next scene, then reload without the browser copy: the account copy brings it back
+  const gameSaved = page.waitForResponse((r) => r.request().method() === 'PATCH' && r.url().includes('/rest/v1/games'))
   await game.locator('#scene .scene-foot .btn.prim[data-go]').click()
   await expect(game.locator('#scene h2')).not.toHaveText('The harbour')
   const second = (await game.locator('#scene h2').textContent()) ?? ''
-  await page.waitForTimeout(1500) // let the delayed save reach the account
+  await gameSaved // the delayed save reached the account
   await page.evaluate((id) => localStorage.removeItem(`grimoire-game-${id}`), gameId)
   await page.reload()
   await expect(page.frameLocator('iframe[title="Partie"]').locator('#scene h2')).toHaveText(second)
 
   // Progression is the investigator's: written in this game…
   const frame = () => page.frames().find((f) => f.url().includes('play.html'))!
+  const progressSaved = page.waitForResponse((r) => r.request().method() === 'PATCH' && r.url().includes('/rest/v1/characters'))
   await frame().evaluate(() => {
     const g = eval as (s: string) => unknown
     const S = g('S') as { chars: Array<{ id: string }> }
@@ -189,7 +191,7 @@ test('game screen: the original engine runs a story, rolls, saves to the account
     P_(S.chars[0].id).hist.unshift({ at: Date.now(), txt: 'Survived the lighthouse' })
     ;(g('save') as () => void)()
   })
-  await page.waitForTimeout(1500)
+  await progressSaved
 
   // The game menu's quit goes back to the app, where the game can be resumed
   const again = page.frameLocator('iframe[title="Partie"]')
@@ -249,10 +251,12 @@ test.describe('AI features (fake Claude API)', () => {
       let raw = ''
       req.on('data', (c) => (raw += c))
       req.on('end', () => {
-        // The import streams (SSE); profile suggestions are a plain JSON message.
-        if (JSON.parse(raw || '{}').stream) {
+        // The import streams a structured draft; the narrator streams free text; profile
+        // suggestions are a plain JSON message.
+        const body = JSON.parse(raw || '{}')
+        if (body.stream) {
           res.writeHead(200, { 'content-type': 'text/event-stream' })
-          res.end(events(draft))
+          res.end(events(body.output_config?.format ? draft : 'Les vagues battent la jetée.'))
         } else {
           res.writeHead(200, { 'content-type': 'application/json' })
           res.end(JSON.stringify({
@@ -281,6 +285,21 @@ test.describe('AI features (fake Claude API)', () => {
     await page.getByLabel('Idéologie', { exact: true }).fill('')
     await page.getByRole('button', { name: 'Autre idée pour Idéologie' }).click()
     await expect(page.getByLabel('Idéologie', { exact: true })).toHaveValue('La vérité finit par sortir')
+  })
+
+  test('the narrator answers inside the game, through Claude', async ({ page }) => {
+    await signUp(page)
+    await page.goto('/characters/new')
+    await createJournalist(page, 'Nora Quill')
+    await page.goto('/marketplace')
+    await page.getByRole('link', { name: 'The Silent Light' }).click()
+    await page.getByLabel(/Nora Quill/).check()
+    await page.getByRole('button', { name: 'Lancer la partie' }).click()
+    const game = page.frameLocator('iframe[title="Partie"]')
+    await expect(game.locator('#scene h2')).toHaveText('The harbour')
+    await game.locator('#ninput').fill('Décris le port pour les joueurs.')
+    await game.locator('#ninput').press('Enter')
+    await expect(game.locator('#nlog .na').last()).toHaveText('Les vagues battent la jetée.')
   })
 
   test('keeper imports page images into a private story', async ({ page }) => {
