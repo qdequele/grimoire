@@ -1,0 +1,41 @@
+{
+  "$comment": "Grimoire shared sound library. Stories reference these ids only. Files live in the app, not in story packs.",
+  "version": 1,
+  "ambience": [
+    { "id": "rain",            "name": { "en": "Rain",                 "fr": "Pluie" },               "tags": ["weather", "outdoor", "calm"],        "loop": true },
+    { "id": "rain-heavy",      "name": { "en": "Heavy rain",           "fr": "Pluie battante" },      "tags": ["weather", "outdoor", "tense"],       "loop": true },
+    { "id": "rain-window",     "name": { "en": "Rain on the window",   "fr": "Pluie sur la vitre" },  "tags": ["weather", "indoor", "calm"],         "loop": true },
+    { "id": "storm",           "name": { "en": "Thunderstorm",         "fr": "Orage" },               "tags": ["weather", "outdoor", "horror"],      "loop": true },
+    { "id": "fireplace",       "name": { "en": "Fireplace",            "fr": "Feu de cheminée" },     "tags": ["indoor", "calm", "night"],           "loop": true },
+    { "id": "clock",           "name": { "en": "Ticking clock",        "fr": "Horloge" },             "tags": ["indoor", "tense"],                   "loop": true },
+    { "id": "wind",            "name": { "en": "Wind",                 "fr": "Vent" },                "tags": ["weather", "outdoor"],                "loop": true },
+    { "id": "wind-howling",    "name": { "en": "Howling wind",         "fr": "Vent hurlant" },        "tags": ["weather", "outdoor", "horror"],      "loop": true },
+    { "id": "crows",           "name": { "en": "Crows",                "fr": "Corbeaux" },            "tags": ["outdoor", "nature", "tense"],        "loop": true },
+    { "id": "nature-day",      "name": { "en": "Countryside, daytime", "fr": "Nature, le jour" },     "tags": ["outdoor", "nature", "day", "calm"],  "loop": true },
+    { "id": "night-crickets",  "name": { "en": "Night, crickets",      "fr": "Nuit, grillons" },      "tags": ["outdoor", "nature", "night"],        "loop": true },
+    { "id": "village-night",   "name": { "en": "Village at night",     "fr": "Village la nuit" },     "tags": ["outdoor", "town", "night"],          "loop": true },
+    { "id": "village-day",     "name": { "en": "Village, birds",       "fr": "Village, oiseaux" },    "tags": ["outdoor", "town", "day", "calm"],    "loop": true },
+    { "id": "street",          "name": { "en": "Street",               "fr": "Rue" },                 "tags": ["outdoor", "town"],                   "loop": true },
+    { "id": "crowd-indoor",    "name": { "en": "Indoor crowd",         "fr": "Foule en intérieur" },  "tags": ["indoor", "town", "public"],          "loop": true }
+  ],
+  "sfx": [
+    { "id": "door-creak",      "name": { "en": "Creaking door",        "fr": "Porte qui grince" },    "tags": ["door", "indoor", "tense"] },
+    { "id": "door-open",       "name": { "en": "Door opening",         "fr": "Porte qui s'ouvre" },   "tags": ["door", "indoor"] },
+    { "id": "door-slam",       "name": { "en": "Door slamming",        "fr": "Porte qui claque" },    "tags": ["door", "indoor", "horror"] },
+    { "id": "latch",           "name": { "en": "Metal latch",          "fr": "Loquet métallique" },   "tags": ["door", "object"] },
+    { "id": "footsteps",       "name": { "en": "Footsteps",            "fr": "Pas" },                 "tags": ["people", "tense"] },
+    { "id": "knocking",        "name": { "en": "Knocking on the door", "fr": "Coups à la porte" },    "tags": ["door", "horror"] },
+    { "id": "thunder",         "name": { "en": "Thunder",              "fr": "Tonnerre" },            "tags": ["weather", "horror"] },
+    { "id": "wolf-howl",       "name": { "en": "Howling wolf",         "fr": "Loup qui hurle" },      "tags": ["animal", "night", "horror"] },
+    { "id": "owl",             "name": { "en": "Owl",                  "fr": "Chouette" },            "tags": ["animal", "night"] },
+    { "id": "dog-bark",        "name": { "en": "Barking dog",          "fr": "Chien qui aboie" },     "tags": ["animal", "town"] },
+    { "id": "glass-break",     "name": { "en": "Breaking glass",       "fr": "Verre brisé" },         "tags": ["object", "horror"],  "status": "planned" },
+    { "id": "gunshot",         "name": { "en": "Gunshot",              "fr": "Coup de feu" },         "tags": ["combat"],            "status": "planned" },
+    { "id": "scream",          "name": { "en": "Scream",               "fr": "Cri" },                 "tags": ["people", "horror"],  "status": "planned" },
+    { "id": "roar",            "name": { "en": "Roar",                 "fr": "Rugissement" },         "tags": ["creature", "horror"],"status": "planned" },
+    { "id": "whispers",        "name": { "en": "Whispers",             "fr": "Chuchotements" },       "tags": ["creature", "horror"],"status": "planned" },
+    { "id": "scratching",      "name": { "en": "Scratching",           "fr": "Grattements" },         "tags": ["creature", "horror"],"status": "planned" },
+    { "id": "heartbeat",       "name": { "en": "Heartbeat",            "fr": "Battements de cœur" },  "tags": ["tense", "horror"],   "status": "planned" },
+    { "id": "object-fall",     "name": { "en": "Falling object",       "fr": "Objet qui tombe" },     "tags": ["object"],            "status": "planned" }
+  ]
+}

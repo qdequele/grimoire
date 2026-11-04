@@ -1,0 +1,14 @@
+# --- Private: derived from Chaosium's Call of Cthulhu Starter Set ---
+# Never commit these. They stay on this machine only (see CLAUDE.md, "Copyright").
+# The legacy single-file app embeds scenario data (ACTS, PROFILES, INV0, WHO, BEASTS, RULES, FLOWS…).
+app/index.html
+# Translation sources: frontiere_*.json, data_*.json (RULES/GLOSS), and the UI dictionaries
+# all contain scenario names and text.
+i18n/
+# Private story packs converted from books you own go here.
+private/
+
+# --- OS / tooling ---
+.DS_Store
+node_modules/
+dist/

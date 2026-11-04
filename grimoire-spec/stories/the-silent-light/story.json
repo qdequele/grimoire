@@ -1,0 +1,187 @@
+{
+  "format": "grimoire-story/1",
+  "meta": {
+    "id": "the-silent-light",
+    "title": "The Silent Light",
+    "lang": "en",
+    "summary": "Gull Rock lighthouse went dark three nights ago. The keeper has not been seen since, and the fishermen of Port Ansel refuse to row out. Someone has to find out why.",
+    "players": { "min": 1, "max": 4 },
+    "duration": "2-3 hours",
+    "era": "1920s",
+    "setting": "A fishing village on the New England coast",
+    "system": "d100",
+    "author": "Grimoire sample",
+    "license": "CC-BY-4.0",
+    "version": "1.0",
+    "tags": ["introductory", "coastal", "investigation"],
+    "contentWarnings": ["drowning", "grief"]
+  },
+
+  "overview": {
+    "secret": "Keeper **Elias Varnum** lost his young son to the sea last winter. Grief-mad, he answered a voice from the deep that promised to give the boy back if the light went dark for three nights. Something now climbs the rocks each night wearing the boy's shape. On the fourth night, it will come ashore for good.",
+    "steps": [
+      "[[harbour]]: the investigators reach Port Ansel and hear the rumours.",
+      "[[widow]]: Martha Varnum, Elias's wife, gives them the key and a warning.",
+      "[[crossing]]: rowing to Gull Rock at dusk.",
+      "[[lighthouse]]: the logbook, the empty bed, the child's footprints.",
+      "[[the-lamp]]: relight the lamp before the tide turns, or face what climbs the stairs."
+    ],
+    "mustNotMiss": [
+      "The **logbook** in the watch room: it explains the bargain.",
+      "Relighting the **lamp** breaks the bargain. Fighting the thing is a bad idea."
+    ],
+    "branches": [
+      "If they arrive after midnight, the thing is already inside the lighthouse.",
+      "Elias can be saved if someone talks him down ([[the-lamp]], step 3)."
+    ],
+    "ifStuck": [
+      "Martha remembers Elias muttering about 'keeping the light dark'.",
+      "A gull smashes into the dark lamp-room window: the lamp is the key."
+    ],
+    "keeperTips": [
+      "Play Elias as a broken father, not a villain.",
+      "The creature never runs. It walks, dripping, and calls for its father."
+    ]
+  },
+
+  "acts": [
+    {
+      "id": "village",
+      "title": "Port Ansel",
+      "scenes": [
+        {
+          "id": "harbour",
+          "title": "The harbour",
+          "lead": "Arrival, rumours, and a boat nobody will lend.",
+          "readAloud": [
+            "Port Ansel smells of tar and cold fish. A dozen boats knock against the pier, and every one of them is tied up tight, though the sea is calm.",
+            "Out past the breakwater, on its black rock, the lighthouse stands like a dead candle. Men mending nets stop talking when you pass."
+          ],
+          "flow": [
+            { "title": "Ask around", "text": "The fishermen won't row out. 'Not with the light gone.'", "roll": { "type": "skill", "options": ["charm", "fast-talk"] }, "success": "Old Tobias admits he saw a small figure on the rocks at night. 'Like a boy. But no boy swims that cold water.'", "failure": "Shrugs and shut doors." },
+            { "title": "Find a boat", "text": "Martha Varnum has her husband's dinghy. → [[widow]]" }
+          ],
+          "npcs": ["tobias"],
+          "ambience": ["village-day", "wind"],
+          "sfx": ["footsteps", "dog-bark"]
+        },
+        {
+          "id": "widow",
+          "title": "Martha Varnum",
+          "lead": "The keeper's wife, worn thin by grief.",
+          "readAloud": [
+            "The cottage is spotless and very quiet. On the mantel, a photograph of a small boy in a sailor suit is turned face down.",
+            "Martha listens to you without blinking. 'He hasn't been right since Thomas drowned,' she says at last. 'Bring him home. Whatever he's become.'"
+          ],
+          "flow": [
+            { "title": "Gain her trust", "roll": { "type": "skill", "options": ["psychology", "persuade"] }, "success": "She tells them Elias began talking to the sea at night, 'as if it answered'.", "failure": "She gives them the key and the boat, nothing more." },
+            { "title": "The photograph", "text": "If they look at it, describe the boy carefully: they will see that face again.", "extra": "This makes the final scene hit harder." }
+          ],
+          "npcs": ["martha"],
+          "handouts": ["photo"],
+          "ambience": ["clock", "fireplace"]
+        }
+      ]
+    },
+    {
+      "id": "rock",
+      "title": "Gull Rock",
+      "scenes": [
+        {
+          "id": "crossing",
+          "title": "The crossing",
+          "lead": "A short row at dusk that feels much longer.",
+          "readAloud": [
+            "The oars dip into water as dark as ink. Halfway across, the gulls fall silent all at once.",
+            "Something bumps the hull from below. Once. Then again, gently, like a hand testing a door."
+          ],
+          "flow": [
+            { "title": "Rowing", "roll": { "type": "characteristic", "options": ["STR"] }, "success": "They land before full dark.", "failure": "The current fights them: they land after nightfall, and the thing is already on the rocks." },
+            { "title": "Something below", "roll": { "type": "san", "san": "0/1D3", "label": "The bump under the hull" } }
+          ],
+          "ambience": ["wind", "crows"],
+          "sfx": ["thunder"]
+        },
+        {
+          "id": "lighthouse",
+          "title": "Inside the lighthouse",
+          "lead": "Wet footprints, a cold stove, and the logbook.",
+          "readAloud": [
+            "The door is unlocked. Inside, the stove is cold and the air smells of seaweed.",
+            "Small wet footprints, a child's, lead from the door to the spiral stairs, and stop on the first step as if whoever made them simply vanished."
+          ],
+          "flow": [
+            { "title": "Search the keeper's room", "roll": { "type": "skill", "options": ["spot-hidden"] }, "success": "The **logbook** under the mattress → {{handout:logbook}}.", "failure": "An unmade bed, an empty bottle.", "pushed": "They find it, but the noise brings Elias down the stairs, wild-eyed and holding a boat hook." },
+            { "title": "Read the logbook", "roll": { "type": "san", "san": "1/1D4", "label": "The last entries" }, "text": "Three nights dark. 'He came home. Tomorrow he stays.'" },
+            { "title": "Listen", "roll": { "type": "skill", "options": ["listen"] }, "success": "Someone is sobbing in the lamp room above. And, outside, something small is climbing the rocks.", "goto": ["the-lamp"] }
+          ],
+          "npcs": ["elias"],
+          "handouts": ["logbook"],
+          "ambience": ["wind-howling"],
+          "sfx": ["door-creak", "footsteps"]
+        },
+        {
+          "id": "the-lamp",
+          "title": "The lamp",
+          "lead": "Relight the lamp before midnight, while the drowned child climbs.",
+          "readAloud": [
+            "The lamp room is a cage of glass and brass. Elias Varnum kneels by the great dead lens, a cold match in his fingers.",
+            "Far below, a small voice calls up the stairwell. 'Papa? Papa, it's cold. Let me in.'"
+          ],
+          "flow": [
+            { "title": "The thing on the stairs", "text": "Each round it climbs one turn of the stairs. After 5 rounds it reaches the top.", "roll": { "type": "san", "san": "1/1D6", "label": "Seeing the drowned child" } },
+            { "title": "Relight the lamp", "text": "Oil, wick, mechanism: the lamp needs work.", "roll": { "type": "skill", "options": ["mechanical-repair", "electrical-repair"] }, "success": "The beam sweeps the sea. The voice on the stairs becomes a gurgling shriek and the thing collapses into seawater.", "failure": "Try again next round.", "pushed": "The lens cracks: the lamp lights, but at half strength. The thing survives and flees to the sea." },
+            { "title": "Talk Elias down", "text": "He tries to stop them: 'He's my son!'", "roll": { "type": "skill", "options": ["persuade", "psychology", "charm"], "difficulty": "hard" }, "success": "He weeps and helps relight the lamp (bonus die).", "failure": "He fights to keep the light dark." },
+            { "title": "If it reaches the top", "text": "It takes Elias's hand and walks him into the sea. Then it turns to the others.", "roll": { "type": "damage", "dice": "1D6", "label": "Cold grip" }, "goto": ["epilogue"] }
+          ],
+          "npcs": ["elias", "drowned-child"],
+          "ambience": ["storm"],
+          "sfx": ["footsteps", "knocking", "thunder"]
+        },
+        {
+          "id": "epilogue",
+          "title": "Dawn",
+          "lead": "Rewards and consequences.",
+          "readAloud": [
+            "Morning comes grey and ordinary. Out on Gull Rock, the light is still turning, though no one needs it now."
+          ],
+          "notes": [
+            { "title": "Outcome", "items": [
+              "Lamp relit before the thing reached the top: each investigator gains **1D6 SAN**.",
+              "Elias saved: Martha's gratitude, and a friend in Port Ansel.",
+              "Elias lost: **1/1D4 SAN**. Some nights, small wet footprints appear on the pier."
+            ] }
+          ],
+          "rolls": [ { "type": "damage", "dice": "1D6", "label": "SAN reward" } ],
+          "ambience": ["village-day"]
+        }
+      ]
+    }
+  ],
+
+  "npcs": [
+    { "id": "tobias", "name": "Old Tobias", "role": "Retired fisherman", "personality": "Superstitious, kind, drinks too much.", "knows": ["Saw a small figure on the rocks at night."], "hp": 9, "dodge": 20 },
+    { "id": "martha", "name": "Martha Varnum", "role": "The keeper's wife", "personality": "Composed, exhausted, fiercely loyal.", "knows": ["Elias talks to the sea at night.", "Thomas drowned last winter."], "hp": 10, "dodge": 25 },
+    { "id": "elias", "name": "Elias Varnum", "role": "Lighthouse keeper", "personality": "A grieving father who has stopped sleeping.",
+      "characteristics": { "STR": 65, "CON": 60, "SIZ": 70, "DEX": 50, "INT": 55, "POW": 40 },
+      "hp": 13, "dodge": 25, "attacks": [ { "name": "Boat hook", "skill": 45, "damage": "1D8" }, { "name": "Fists", "skill": 50, "damage": "1D3+1D4" } ] },
+    { "id": "drowned-child", "name": "The drowned child", "kind": "creature", "role": "Something wearing Thomas's shape",
+      "hp": 12, "dodge": 0, "armor": 0, "sanLoss": "1/1D6",
+      "attacks": [ { "name": "Cold grip", "skill": 50, "damage": "1D6", "note": "On a hit, the victim is held and dragged toward the sea." } ],
+      "special": ["Weapons pass through it like water: it takes no damage.", "Destroyed by the lighthouse beam."] }
+  ],
+
+  "handouts": [
+    { "id": "photo", "title": "Photograph of Thomas", "text": "A boy of about seven in a sailor suit, squinting at the camera. On the back: *Thomas, summer 1922.*", "scene": "widow" },
+    { "id": "logbook", "title": "Keeper's logbook, last entries", "text": "*Night one.* Lamp out. The sea said it would bring him.\n*Night two.* Saw him on the rocks. He waved.\n*Night three.* He came to the door. He came home. Tomorrow he stays.", "scene": "lighthouse" }
+  ],
+
+  "knowledge": [
+    { "need": "Relight the lamp", "best": "Mechanical Repair", "backup": "Electrical Repair, or Luck" },
+    { "need": "Calm Elias", "best": "Psychology", "backup": "Persuade, Charm" }
+  ],
+
+  "trackers": [
+    { "id": "stairs", "label": "Stairs climbed", "max": 5, "unit": "turns", "help": "At 5, the thing reaches the lamp room.", "scenes": ["the-lamp"] }
+  ]
+}
