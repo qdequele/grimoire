@@ -5,27 +5,71 @@ Keeper's companion web app for d100 investigation/horror tabletop games. Built i
 ## Layout
 
 ```
-app/
-  index.html          the whole app (HTML + CSS + JS in one file, ~470 KB)
-  sons/*.mp3          sound library (ambiences amb-*, effects fx-*), loaded by relative path
-i18n/                 translation sources and the build script that injected them into index.html
-  build.py            one-shot patcher (already applied — do NOT re-run on the current index.html)
-  i18n_tpl.js         FR/EN DOM translation layer (injected at end of <script>)
-  scen_tpl.js         builds the "Edge of Darkness" (frontiere-en) scenario from frontiere_en.json
-  ui_en.json, ui_patterns_en.json, skills_en.json, data_en.json, frontiere_en.json
-  *_fr.json           extracted French sources
-grimoire-spec/        target story-pack format (spec, JSON Schema, sound ids, sample story)
+src/                  NEW app: Vite + React 19 + TypeScript (strict) + Tailwind v4 + shadcn/ui (base-nova)
+  engine/             pure game rules, no UI: dice, success levels, damage. Unit-tested (Vitest).
+  auth/ characters/ stories/ games/ import/ home/   features, co-located (page + TanStack Query hooks in api.ts)
+  lib/supabase.ts     typed client; lib/database.types.ts is generated (`pnpm db:types`)
+  components/ui/      shadcn components (add with `pnpm dlx shadcn@latest add <name>`)
+  App.tsx             router (React Router) + providers
+supabase/
+  migrations/         schema + RLS (profiles, stories, characters, games, story_imports, import-pages bucket)
+  seed.sql            generated from stories/ (`pnpm db:seed-gen`): original stories → marketplace
+  functions/import-story/   AI import Edge Function (Deno). Own deno.json.
+  functions/_shared/  import-draft.ts (draft schema, merge, → story.json), import-prompt.ts,
+                      spec-bundle.ts (generated from spec/: `pnpm spec:bundle`), database.types.ts (generated)
+  tests/              rls.test.ts (security rules), import-story.test.ts (function, fake Claude API)
+scripts/              gen-seed.mjs, gen-spec-bundle.mjs
+public/sons/*.mp3     sound library (ambiences amb-*, effects fx-*), shared by both apps
+spec/                 story-pack format (STORY_FORMAT.md, story.schema.json, sounds.json)
+stories/              original, publishable story packs (the-silent-light)
+e2e/                  Playwright: legacy.spec.ts pins legacy behaviour, app.spec.ts tests the new app
+legacy/               PRIVATE, gitignored except the sons symlink
+  index.html          the old single-file app (HTML + CSS + JS, ~470 KB)
+  sons -> ../public/sons
+  i18n/               translation sources + build.py (one-shot patcher, already applied, do NOT re-run)
+private/              PRIVATE, gitignored: story packs converted from books you own
 ```
+
+`cn` comes from the `cn` package (shadcn's drop-in replacement for clsx + tailwind-merge), re-exported by `@/lib/utils`.
 
 ## Run it locally
 
-Sounds are fetched with `fetch("sons/…")`, so serve over HTTP (file:// breaks audio):
-
 ```sh
-cd app && python3 -m http.server 8000   # → http://localhost:8000
+supabase start      # local Supabase (OrbStack). Studio → http://127.0.0.1:54323
+cp .env.example .env.local   # then fill VITE_SUPABASE_ANON_KEY from `supabase status`
+pnpm dev            # new app → http://localhost:5173
+pnpm functions      # Edge Functions with supabase/functions/.env (needs ANTHROPIC_API_KEY)
+pnpm test:db        # RLS security tests against the local DB
+pnpm test:import    # import function end-to-end with a fake Claude API; first run:
+                    #   supabase functions serve --env-file supabase/tests/functions.env
+pnpm db:reset       # re-apply migrations + seed (wipes local data)
+pnpm db:types       # regenerate DB types after a migration (app + function copies)
+pnpm legacy         # old app → http://localhost:8000 (must be served over HTTP: sounds use fetch)
+pnpm test           # engine unit tests
+pnpm e2e            # Playwright, both apps (legacy project is skipped when legacy/index.html is absent)
+pnpm typecheck && pnpm lint && pnpm build
 ```
 
+The legacy `index.html` was a claude.ai Artifact fragment (claude.ai adds the document skeleton when publishing). A `<!doctype html>` + `<meta charset="utf-8">` header was added at migration: without it the browser decodes the file as Windows-1252 and the script fails with "Invalid or unexpected token".
+
 Fonts come from Google Fonts (IM Fell DW Pica, Spectral, IBM Plex Sans Condensed/Mono, Limelight, Josefin Sans, Cormorant Garamond).
+
+## Accounts, marketplace, import (Supabase)
+
+- **Only the keeper has an account.** Investigators belong to the keeper's account; players don't log in.
+- **Marketplace is curated:** only admins (`profiles.is_admin`) create/edit marketplace stories (`owner_id` null). Promote someone from SQL only: `update profiles set is_admin = true where id = '…'` (the API can't change `is_admin`).
+- **Private stories** are visible to their owner only, admins included. A story whose `meta.license` is `private` (every AI import) can never be marketplace: enforced by a DB constraint.
+- **AI import:** the browser uploads pages to `import-pages/<user id>/…`, then calls `import-story` 2 pages at a time (Edge Function wall-clock limit). Each call: quota check (`IMPORT_MONTHLY_PAGE_LIMIT` pages/month, admins unlimited) → Claude (`claude-opus-5-5`, structured output, cached instructions, server-side fallbacks) → merge into `story_imports.draft` → `draftToStory` → validate against `spec/story.schema.json` → save as private story. Pages are deleted after every call, success or not.
+- **Why a draft schema:** structured outputs allow ≤ 24 optional fields, ≤ 16 unions, no free-form maps; `story.schema.json` exceeds that. `import-draft.ts` has every field required (`""`/`[]` = absent); a test enforces this.
+- After editing `spec/`: `pnpm spec:bundle`. After editing `stories/`: `pnpm db:seed-gen`. Unit tests fail if the bundle is stale.
+- Deno blocks npm packages published < 24 h ago: pin a version that's at least a day old in the function imports.
+
+## Engine conventions
+
+- Engine functions are pure and take an injectable `Rng` (`src/engine/random.ts`); tests use `scriptedRng`.
+- Engine returns codes (`'extreme'`, `'majorWound'`…), never display strings. Translation lives in the UI.
+- Port behaviour exactly first, improve later (e.g. legacy has no critical/fumble: `successLevel` doesn't either).
+- Committed tests and code must never contain scenario text or names (copyright, see below). Use structural selectors.
 
 ## claude.ai runtime dependencies (must be replaced outside claude.ai)
 
@@ -70,7 +114,7 @@ Single `<script>`. Main pieces, roughly in file order:
 
 ## Suggested migration plan
 
-1. Create repo `grimoire/` with `grimoire-spec/` as `spec/`.
+1. ~~Create repo `grimoire/` with `grimoire-spec/` as `spec/`.~~ Done (Vite + React scaffold, legacy smoke tests).
 2. Split `index.html` into modules; keep behaviour identical (Playwright smoke tests: home, new game, scene, dice, combat, sounds, FR/EN).
 3. Write a converter: current `SCENARIOS` data → `story.json` packs (private), validate against `spec/story.schema.json`.
 4. Make the engine load packs instead of constants; map skill ids ↔ display names per language.

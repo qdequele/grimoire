@@ -1,0 +1,67 @@
+{
+  "title": "The Clockmaker",
+  "summary": "A clock in a Boston shop runs backwards, and so does its owner's memory.",
+  "era": "1920s",
+  "setting": "Boston",
+  "duration": "1 session",
+  "overview": {
+    "secret": "The clock trades the owner's memories for time.",
+    "steps": ["Visit the [[front-room]]."],
+    "mustNotMiss": [],
+    "branches": [],
+    "ifStuck": [],
+    "keeperTips": []
+  },
+  "acts": [
+    {
+      "id": "shop",
+      "title": "The shop",
+      "scenes": [
+        {
+          "id": "front-room",
+          "title": "Front room",
+          "ref": "p. 1",
+          "lead": "Dust, and a hundred clocks ticking out of step.",
+          "readAloud": ["Every clock in the shop shows a different hour."],
+          "flow": [
+            {
+              "title": "Look around",
+              "text": "{{npc:otto}} watches from the counter.",
+              "roll": [{ "type": "skill", "options": ["spot-hidden"], "difficulty": "regular", "bonus": 0, "san": "", "dice": "", "label": "", "againstNpc": "", "againstSkill": "" }],
+              "success": "A brass key under the counter.",
+              "failure": "",
+              "pushed": "",
+              "extra": "",
+              "goto": []
+            }
+          ],
+          "notes": [],
+          "npcs": ["otto"],
+          "handouts": [],
+          "rolls": [],
+          "ambience": ["clock", "rain-window"],
+          "sfx": ["door-creak"],
+          "next": []
+        }
+      ]
+    }
+  ],
+  "npcs": [
+    {
+      "id": "otto",
+      "name": "Otto Brandt",
+      "kind": "person",
+      "role": "Clockmaker",
+      "description": "",
+      "personality": "Nervous, forgets names mid-sentence.",
+      "knows": ["The clock was a gift from a stranger."],
+      "stats": [{ "key": "DEX", "value": 70 }, { "key": "hp", "value": 9 }],
+      "damageBonus": "",
+      "attacks": [],
+      "skills": [{ "id": "mechanical-repair", "value": 80 }],
+      "sanLoss": "",
+      "special": []
+    }
+  ],
+  "handouts": []
+}
