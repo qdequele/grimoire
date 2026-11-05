@@ -55,6 +55,28 @@ export function diffPoints(
   return out
 }
 
+export type KeeperEchoAction = 'ignore' | 'repair' | 'adopt'
+
+/**
+ * What to do with a keeper `points` event (our own write's echo, or another keeper tab's write).
+ * - ignore: it is what we last wrote (or only another tab's checks differ: each tab keeps its own).
+ * - repair: a phone value was applied since our last write, so this is an older keeper write that
+ *   landed after it: write back what we hold. Only this case writes, so two tabs never fight.
+ * - adopt: another tab changed the points: take them (points only, our checks stay).
+ */
+export function keeperEchoAction(
+  last: (Points & { checks: string[] }) | undefined,
+  incoming: Points & { checks: string[] },
+  phoneSinceWrite: boolean,
+): KeeperEchoAction {
+  const samePoints = !!last && last.pv === incoming.pv && last.san === incoming.san &&
+    last.chance === incoming.chance && last.pm === incoming.pm
+  const sameChecks = !!last && last.checks.length === incoming.checks.length && last.checks.every((c, i) => c === incoming.checks[i])
+  if (samePoints && sameChecks) return 'ignore'
+  if (last && phoneSinceWrite) return 'repair'
+  return samePoints ? 'ignore' : 'adopt'
+}
+
 /** Phone rows newer than `since` (ms) applied to the party slots (and S.prog[cid].san). Returns a new state. */
 export function applyPoints(S: LegacyState, storyId: string, rows: PointsRow[], since: number): LegacyState {
   const fresh = new Map<string, PointsRow>()

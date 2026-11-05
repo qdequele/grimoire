@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import type { CharacterData } from '@/characters/character'
-import { addMissingMembers, applyPoints, diffPoints, partyIds, pointsFromState, type PointsRow } from './companion'
+import { addMissingMembers, applyPoints, diffPoints, keeperEchoAction, partyIds, pointsFromState, type PointsRow } from './companion'
 import type { LegacyState } from './host'
 
 const slot = (cid: string, v = 10) => ({ cid, player: '', pv: v, san: v + 1, chance: v + 2, pm: v + 3, state: '', note: '' })
@@ -71,5 +71,47 @@ describe('companion helpers', () => {
 
   it("partyIds skips in-game investigators that aren't account ones", () => {
     expect(partyIds(stateOf(), 's', new Set(['c1']))).toEqual(['c1'])
+  })
+
+  describe('keeperEchoAction', () => {
+    const p = (pv: number, checks: string[] = []) => ({ pv, san: 50, chance: 40, pm: 8, checks })
+
+    it('ignores the echo of our own write', () => {
+      expect(keeperEchoAction(p(10), p(10), false)).toBe('ignore')
+      expect(keeperEchoAction(p(10), p(10), true)).toBe('ignore')
+    })
+
+    it('repairs an older own write that landed after a phone value', () => {
+      expect(keeperEchoAction(p(3), p(9), true)).toBe('repair')
+    })
+
+    it("adopts another tab's change, and doesn't fight its checks", () => {
+      expect(keeperEchoAction(p(10), p(7), false)).toBe('adopt')
+      expect(keeperEchoAction(p(10, ['A']), p(10, ['B']), false)).toBe('ignore')
+    })
+
+    it("two keeper tabs with different values settle instead of writing back and forth", () => {
+      // Each tab: what it last wrote, and whether a phone value came since. Tab 1 writes X = 1.
+      const tabs = [{ last: p(1), phone: false }, { last: p(2), phone: false }]
+      let inFlight: Array<{ to: number; value: ReturnType<typeof p> }> = [{ to: 1, value: p(1) }]
+      let writes = 0
+      for (let step = 0; step < 20 && inFlight.length; step++) {
+        const next: typeof inFlight = []
+        for (const { to, value } of inFlight) {
+          const tab = tabs[to]
+          const action = keeperEchoAction(tab.last, value, tab.phone)
+          if (action === 'adopt') tab.last = value
+          if (action === 'repair') {
+            tab.phone = false
+            writes++
+            next.push({ to: 1 - to, value: tab.last }, { to, value: tab.last })
+          }
+        }
+        inFlight = next
+      }
+      expect(inFlight).toEqual([])
+      expect(writes).toBe(0)
+      expect(tabs[1].last).toEqual(p(1))
+    })
   })
 })

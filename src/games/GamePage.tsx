@@ -6,7 +6,7 @@ import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Spinner } from '@/components/ui/spinner'
 import type { Json } from '@/lib/database.types'
 import { supabase, type Tables } from '@/lib/supabase'
-import { addMissingMembers, applyPoints, diffPoints, partyIds, pointsFromState, type PointsRow } from '@/play/companion'
+import { addMissingMembers, applyPoints, diffPoints, keeperEchoAction, partyIds, pointsFromState, type PointsRow } from '@/play/companion'
 import type { StoryForEngine } from '@/play/legacy/adapter'
 import { engineGlobals, freshState, toLegacyCharacter, withAccountProgress } from '@/play/engineData'
 import type { EngineApi, LegacyState, NotebookEntry } from '@/play/host'
@@ -125,6 +125,8 @@ export function GamePage() {
 
     // Points last written to (or received from) game_points, per account investigator.
     let lastWritten: Tracked = new Map()
+    // Investigators whose phone values were applied since our last keeper write (see keeperEchoAction).
+    const phoneSinceWrite = new Set<string>()
     // Newest game_points update seen per investigator, to catch up after (re)subscribing.
     const seen = new Map<string, string>()
     let notebooks: Record<string, NotebookEntry[]> = {}
@@ -177,6 +179,7 @@ export function GamePage() {
     /** Keeper values to game_points. updated_at is the server's (trigger): client clocks drift. */
     const upsertPoints = (rows: ReturnType<typeof diffPoints>) => {
       if (!rows.length) return
+      for (const r of rows) phoneSinceWrite.delete(r.characterId)
       void supabase
         .from('game_points')
         .upsert(rows.map((p) => ({
@@ -228,6 +231,7 @@ export function GamePage() {
       const v = { pv: r.pv, san: r.san, chance: r.chance, pm: r.pm }
       if (accountIds.has(r.characterId)) {
         lastWritten.set(r.characterId, { ...v, checks: lastWritten.get(r.characterId)?.checks ?? r.checks })
+        phoneSinceWrite.add(r.characterId)
       }
       e.setPoints(r.characterId, v)
     }
@@ -355,11 +359,18 @@ export function GamePage() {
         withEngine,
         onPoints: (r) => {
           if (r.source === 'phone') return applyPhone(r)
-          // A keeper write that landed after a newer phone write (or our own older write): put back what we hold.
-          const mine = lastWritten.get(r.characterId)
-          if (mine && diffPoints(new Map([[r.characterId, r]]), new Map([[r.characterId, mine]])).length) {
-            upsertPoints([{ characterId: r.characterId, ...mine }])
-          }
+          const cid = r.characterId
+          withEngine((e) => {
+            if (!accountIds.has(cid)) return
+            const mine = lastWritten.get(cid)
+            const action = keeperEchoAction(mine, r, phoneSinceWrite.has(cid))
+            if (action === 'repair' && mine) upsertPoints([{ characterId: cid, ...mine }])
+            else if (action === 'adopt') {
+              const v = { pv: r.pv, san: r.san, chance: r.chance, pm: r.pm }
+              lastWritten.set(cid, { ...v, checks: mine?.checks ?? r.checks })
+              e.setPoints(cid, v)
+            }
+          })
         },
         onNotes: (cid) => accountIds.has(cid) && refreshNotes(cid),
         onMember: (cid) => void addMember(cid),
