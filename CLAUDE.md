@@ -7,8 +7,8 @@ Keeper's companion web app for d100 investigation/horror tabletop games. Built i
 ```
 src/                  NEW app: Vite + React 19 + TypeScript (strict) + Tailwind v4 + shadcn/ui (base-nova)
   engine/             pure game rules, no UI: dice, success levels, damage. Unit-tested (Vitest).
-  auth/ characters/ stories/ games/ import/ home/   features, co-located (page + TanStack Query hooks in api.ts)
-  lib/supabase.ts     typed client; lib/database.types.ts is generated (`pnpm db:types`)
+  auth/ characters/ stories/ games/ import/ home/ companion/   features, co-located (page + TanStack Query hooks in api.ts)
+  lib/supabase.ts     typed client; lib/database.types.ts is generated (`pnpm db:types` → scripts/gen-db-types.mjs)
   components/ui/      shadcn components (add with `pnpm dlx shadcn@latest add <name>`)
   App.tsx             router (React Router) + providers
 supabase/
@@ -39,14 +39,15 @@ supabase start      # local Supabase (OrbStack). Studio → http://127.0.0.1:543
 cp .env.example .env.local   # then fill VITE_SUPABASE_ANON_KEY from `supabase status`
 pnpm dev            # new app → http://localhost:5173
 pnpm functions      # Edge Functions with supabase/functions/.env (needs ANTHROPIC_API_KEY)
-pnpm test:db        # RLS security tests against the local DB
-pnpm test:import    # import function end-to-end with a fake Claude API; first run:
+pnpm test:db        # RLS security + companion RPC tests against the local DB
+pnpm test:import    # import, suggest-profile and narrate functions with a fake Claude API; first run:
                     #   supabase functions serve --env-file supabase/tests/functions.env
 pnpm db:reset       # re-apply migrations + seed (wipes local data)
-pnpm db:types       # regenerate DB types after a migration (app + function copies)
+pnpm db:types       # regenerate DB types after a migration (scripts/gen-db-types.mjs: app + function copies, normalised)
 pnpm legacy         # old app → http://localhost:8000 (must be served over HTTP: sounds use fetch)
 pnpm test           # engine unit tests
-pnpm e2e            # Playwright, both apps (legacy project is skipped when legacy/index.html is absent)
+pnpm e2e            # Playwright, both apps + companion (keeper and phone); the AI tests need the functions server above
+                    #   (legacy project is skipped when legacy/index.html is absent)
 pnpm typecheck && pnpm lint && pnpm build
 ```
 
@@ -79,7 +80,20 @@ The in-game interface is the legacy app's own engine, so it behaves exactly like
 - Layout changes from the original (extraction patches, "game screen layout"): the narrator is a floating window (toolbar button, shortcut A, Escape closes, open state in `S.ui.narr`) instead of a right-column panel; "PNJ de la scène" and "Investigateurs" fold like Journal and Notes. English for the labels the app adds: `APP_UI_EN` in `src/play/engineData.ts`.
 - Known, intended differences: in English the new app translates the ritual panel and rules sheet (the original left them in French until the language was switched by hand); the English glossary/translation race is normalised in the parity test.
 - Narrator: the engine's `claude.use("sample")` call is patched to `GRIMOIRE_HOST.sample` (`src/play/narrator.ts`, same contract: streaming `onText`, abort, error codes), backed by the `narrate` Edge Function (`_shared/narrate.ts`: validation, prompt-cache split at "CONTEXTE ACTUEL DE LA PARTIE"). `NARRATOR_MONTHLY_LIMIT` (300) per account in `ai_usage`. No global `window.claude` shim: the engine's saves list only loads when `window.claude` is absent.
-- Not wired yet: "Sauvegarder la partie" snapshots (still browser-only), and investigators created or edited from inside a game (they stay in that game, not in the account).
+- Not wired yet: "Sauvegarder la partie" snapshots (still browser-only), and investigators created or edited from inside a game (they stay in that game, not in the account, and don't appear on players' phones).
+
+## Player companion (players' phones)
+
+Players open a link or QR code from the keeper on their phone, with no account: they follow and change their investigator's live points, keep a notebook, or create an investigator.
+
+- **Routes** (`src/companion/`, public, no app chrome): `/t/:token` picks an investigator (or redirects to the remembered one, `grimoire-companion-<token>`, or to a personal link's), `/t/:token/c/:id` Fiche (HP/SAN/Luck/MP − +, characteristics, skills), `…/carnet`, `…/profil`, `/t/:token/nouveau` (the keeper's `CharacterWizard` with a first-name field). A revoked link shows "Ce lien n'est plus valide…".
+- **Keeper side**: the engine toolbar's "Joueurs à la table" opens `TableLinksDialog` (`src/games/`, above the iframe): one table link (anyone joins or creates an investigator) and per-investigator personal links; create, QR, copy, revoke. Investigateurs page: "Carnet (n)" on each card opens `NotebookDialog` (`src/characters/notes.ts`: read, edit, delete the players' notes; owner RLS).
+- **Tables**: `table_links` (token, game, `character_id` null = table link, `revoked_at`), `character_notes` (1..2000 chars, owner RLS for all operations), `game_points` (live pv/san/chance/pm/checks per game and investigator, `source` keeper|phone, server `updated_at`). `games.channel` is the realtime topic id; revoking rotates it.
+- **RPCs**: phones call security-definer RPCs with the token (`companion_open`, `companion_set_point` (one field), `companion_add_note`, `companion_create_character`; errors `link_invalid`, `not_in_game`, `bad_value`, `party_full`). Keeper: `revoke_table_link`, and `save_game_state` (the game screen's save: keeps investigators a phone added since the last load unless the keeper removed them). `companion_owner` is service-role only (suggest-profile charges the game owner's quota for a table link).
+- **Realtime**: broadcast topic `companion:<games.channel>`, sent by DB triggers: `points` (full row, camelCase), `notes` and `member` (`{ characterId }`). The phone and the game screen (`GamePage.tsx`) listen; both refetch on (re)subscribe to catch up.
+- **Engine API**: `window.GRIMOIRE_ENGINE` (extraction patch, type `EngineApi` in `src/play/host.ts`): `setPoints(cid, v)`, `addMember(c, player, progress?)`, `setNotebooks(map)` (the folded "Carnet (n)" on investigator cards). The game screen writes the keeper's point changes to `game_points` (`source: 'keeper'`) and applies phone rows on load, so changes made while its tab is closed show when it reopens.
+- **Tests**: `supabase/tests/companion.test.ts` (`pnpm test:db`), `e2e/companion.spec.ts` (keeper + 390×844 phone contexts; shared flows in `e2e/helpers.ts`).
+- **Not wired / known limits**: investigators created inside the game screen don't appear on phones; two writers on the same field: last writer wins; no rate limit on notes (anyone with a link can write many); a table link lets anyone spend the keeper's AI profile-suggestion quota (`PROFILE_MONTHLY_LIMIT`).
 
 ## Story packs in Storage
 

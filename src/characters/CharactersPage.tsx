@@ -1,4 +1,5 @@
-import { UserPlus, Users } from 'lucide-react'
+import { NotebookPen, UserPlus, Users } from 'lucide-react'
+import { useState } from 'react'
 import { Link } from 'react-router'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Badge } from '@/components/ui/badge'
@@ -7,11 +8,15 @@ import { Card, CardDescription, CardFooter, CardHeader, CardTitle } from '@/comp
 import { Empty, EmptyContent, EmptyDescription, EmptyHeader, EmptyMedia, EmptyTitle } from '@/components/ui/empty'
 import { Skeleton } from '@/components/ui/skeleton'
 import { useT } from '@/i18n/t'
-import { useCharacters } from './api'
+import { useCharacters, type CharacterRow } from './api'
+import { NotebookDialog } from './NotebookDialog'
+import { useNoteCounts } from './notes'
 
 export function CharactersPage() {
   const t = useT()
   const { data, isPending, error } = useCharacters()
+  const counts = useNoteCounts()
+  const [notebook, setNotebook] = useState<CharacterRow | null>(null)
 
   return (
     <section className="flex flex-col gap-6">
@@ -58,11 +63,23 @@ export function CharactersPage() {
                   {c.data.hp !== undefined && <Badge variant="outline">{t('PV')} {c.data.hp}</Badge>}
                   {c.data.san !== undefined && <Badge variant="outline">SAN {c.data.san}</Badge>}
                   {c.data.luck !== undefined && <Badge variant="outline">{t('Chance')} {c.data.luck}</Badge>}
+                  <Button size="xs" variant="ghost" className="relative z-10 ml-auto" onClick={() => setNotebook(c)}>
+                    <NotebookPen data-icon="inline-start" />
+                    {t('Carnet ({n})', { n: counts.data?.[c.id] ?? 0 })}
+                  </Button>
                 </CardFooter>
               </Card>
             )
           })}
         </div>
+      )}
+      {notebook && (
+        <NotebookDialog
+          characterId={notebook.id}
+          name={notebook.data.name}
+          open
+          onOpenChange={(open) => !open && setNotebook(null)}
+        />
       )}
     </section>
   )
