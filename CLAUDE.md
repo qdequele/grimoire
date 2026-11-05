@@ -110,7 +110,7 @@ Reprendre la partie · Nouvelle partie (→ library) · **Histoires** (`/stories
 - Site: https://www.legrimoire.quest (Vercel project `grimoire`, deploys every push to `main`). Domain and DNS on Vercel.
 - Supabase project `fovyhcbasmmstkocavlp` (linked). Vercel's Supabase integration provides `NEXT_PUBLIC_SUPABASE_*`; `vite.config.ts` uses them when `VITE_SUPABASE_*` aren't set.
 - Hosted Auth requires e-mail confirmation (local doesn't). E-mails go through Resend (SMTP, sender on legrimoire.quest; DKIM/SPF/DMARC records on Vercel DNS).
-- E-mail templates: `pnpm emails` (`scripts/gen-email-templates.mjs`) writes `supabase/templates/*.html`, used locally via `config.toml`. The hosted project doesn't read them: paste each one (and its subject) in Authentication → Emails → Templates after a change. French or English from `user_metadata.lang`, set at sign-up.
+- E-mail templates: `pnpm emails` (`scripts/gen-email-templates.mjs`) writes `supabase/templates/*.html`, used locally via `config.toml`. To update the hosted project: `pnpm emails:push --diff` (preview), then `pnpm emails:push` (asks before writing; `--yes` in agent runs). It pushes only the `[auth.email.template.*]` sections, never the local settings of `config.toml`. French or English from `user_metadata.lang`, set at sign-up.
 - Test e-mail addresses use `@example.com`: Supabase Auth rejects `.local` domains.
 
 ## Accounts, marketplace, import (Supabase)
