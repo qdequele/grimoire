@@ -69,6 +69,48 @@ export type Database = {
           },
         ]
       }
+      character_notes: {
+        Row: {
+          body: string
+          character_id: string
+          created_at: string
+          id: string
+          owner_id: string
+          updated_at: string
+        }
+        Insert: {
+          body: string
+          character_id: string
+          created_at?: string
+          id?: string
+          owner_id?: string
+          updated_at?: string
+        }
+        Update: {
+          body?: string
+          character_id?: string
+          created_at?: string
+          id?: string
+          owner_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "character_notes_character_fkey"
+            columns: ["character_id", "owner_id"]
+            isOneToOne: false
+            referencedRelation: "characters"
+            referencedColumns: ["id", "owner_id"]
+          },
+          {
+            foreignKeyName: "character_notes_owner_id_fkey"
+            columns: ["owner_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       characters: {
         Row: {
           created_at: string
@@ -83,7 +125,7 @@ export type Database = {
           created_at?: string
           data: Json
           id?: string
-          name?: string | null
+          name?: never
           owner_id?: string
           player_id?: string | null
           updated_at?: string
@@ -92,7 +134,7 @@ export type Database = {
           created_at?: string
           data?: Json
           id?: string
-          name?: string | null
+          name?: never
           owner_id?: string
           player_id?: string | null
           updated_at?: string
@@ -114,8 +156,70 @@ export type Database = {
           },
         ]
       }
+      game_points: {
+        Row: {
+          chance: number | null
+          character_id: string
+          checks: string[]
+          game_id: string
+          owner_id: string
+          pm: number | null
+          pv: number | null
+          san: number | null
+          source: string
+          updated_at: string
+        }
+        Insert: {
+          chance?: number | null
+          character_id: string
+          checks?: string[]
+          game_id: string
+          owner_id?: string
+          pm?: number | null
+          pv?: number | null
+          san?: number | null
+          source: string
+          updated_at?: string
+        }
+        Update: {
+          chance?: number | null
+          character_id?: string
+          checks?: string[]
+          game_id?: string
+          owner_id?: string
+          pm?: number | null
+          pv?: number | null
+          san?: number | null
+          source?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "game_points_character_id_fkey"
+            columns: ["character_id"]
+            isOneToOne: false
+            referencedRelation: "characters"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "game_points_game_id_fkey"
+            columns: ["game_id"]
+            isOneToOne: false
+            referencedRelation: "games"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "game_points_owner_id_fkey"
+            columns: ["owner_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       games: {
         Row: {
+          channel: string
           created_at: string
           finished_at: string | null
           id: string
@@ -125,6 +229,7 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          channel?: string
           created_at?: string
           finished_at?: string | null
           id?: string
@@ -134,6 +239,7 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          channel?: string
           created_at?: string
           finished_at?: string | null
           id?: string
@@ -229,12 +335,12 @@ export type Database = {
           copied_from?: string | null
           created_at?: string
           id?: string
-          lang?: string | null
+          lang?: never
           owner_id?: string | null
           pack_files?: string[]
           published_at?: string | null
-          summary?: string | null
-          title?: string | null
+          summary?: never
+          title?: never
           updated_at?: string
           visibility?: Database["public"]["Enums"]["story_visibility"]
         }
@@ -243,12 +349,12 @@ export type Database = {
           copied_from?: string | null
           created_at?: string
           id?: string
-          lang?: string | null
+          lang?: never
           owner_id?: string | null
           pack_files?: string[]
           published_at?: string | null
-          summary?: string | null
-          title?: string | null
+          summary?: never
+          title?: never
           updated_at?: string
           visibility?: Database["public"]["Enums"]["story_visibility"]
         }
@@ -326,12 +432,65 @@ export type Database = {
           },
         ]
       }
+      table_links: {
+        Row: {
+          character_id: string | null
+          created_at: string
+          game_id: string
+          id: string
+          owner_id: string
+          revoked_at: string | null
+          token: string
+        }
+        Insert: {
+          character_id?: string | null
+          created_at?: string
+          game_id: string
+          id?: string
+          owner_id?: string
+          revoked_at?: string | null
+          token?: string
+        }
+        Update: {
+          character_id?: string | null
+          created_at?: string
+          game_id?: string
+          id?: string
+          owner_id?: string
+          revoked_at?: string | null
+          token?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "table_links_character_id_fkey"
+            columns: ["character_id"]
+            isOneToOne: false
+            referencedRelation: "characters"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "table_links_game_id_fkey"
+            columns: ["game_id"]
+            isOneToOne: false
+            referencedRelation: "games"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "table_links_owner_id_fkey"
+            columns: ["owner_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      is_admin: { Args: never; Returns: boolean }
+      is_admin: { Args: Record<PropertyKey, never>; Returns: boolean }
+      revoke_table_link: { Args: { p_link: string }; Returns: undefined }
     }
     Enums: {
       import_status: "running" | "succeeded" | "failed"
@@ -351,12 +510,12 @@ export type Tables<
   DefaultSchemaTableNameOrOptions extends
     | keyof (DefaultSchema["Tables"] & DefaultSchema["Views"])
     | { schema: keyof DatabaseWithoutInternals },
-  TableName extends DefaultSchemaTableNameOrOptions extends {
+  TableName extends (DefaultSchemaTableNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
     ? keyof (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
         DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Views"])
-    : never = never,
+    : never) = never,
 > = DefaultSchemaTableNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
@@ -378,13 +537,12 @@ export type Tables<
 
 export type TablesInsert<
   DefaultSchemaTableNameOrOptions extends
-    | keyof DefaultSchema["Tables"]
-    | { schema: keyof DatabaseWithoutInternals },
-  TableName extends DefaultSchemaTableNameOrOptions extends {
+    keyof DefaultSchema["Tables"] | { schema: keyof DatabaseWithoutInternals },
+  TableName extends (DefaultSchemaTableNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
     ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
-    : never = never,
+    : never) = never,
 > = DefaultSchemaTableNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
@@ -403,13 +561,12 @@ export type TablesInsert<
 
 export type TablesUpdate<
   DefaultSchemaTableNameOrOptions extends
-    | keyof DefaultSchema["Tables"]
-    | { schema: keyof DatabaseWithoutInternals },
-  TableName extends DefaultSchemaTableNameOrOptions extends {
+    keyof DefaultSchema["Tables"] | { schema: keyof DatabaseWithoutInternals },
+  TableName extends (DefaultSchemaTableNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
     ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
-    : never = never,
+    : never) = never,
 > = DefaultSchemaTableNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
@@ -428,13 +585,12 @@ export type TablesUpdate<
 
 export type Enums<
   DefaultSchemaEnumNameOrOptions extends
-    | keyof DefaultSchema["Enums"]
-    | { schema: keyof DatabaseWithoutInternals },
-  EnumName extends DefaultSchemaEnumNameOrOptions extends {
+    keyof DefaultSchema["Enums"] | { schema: keyof DatabaseWithoutInternals },
+  EnumName extends (DefaultSchemaEnumNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
     ? keyof DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"]
-    : never = never,
+    : never) = never,
 > = DefaultSchemaEnumNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
@@ -447,11 +603,11 @@ export type CompositeTypes<
   PublicCompositeTypeNameOrOptions extends
     | keyof DefaultSchema["CompositeTypes"]
     | { schema: keyof DatabaseWithoutInternals },
-  CompositeTypeName extends PublicCompositeTypeNameOrOptions extends {
+  CompositeTypeName extends (PublicCompositeTypeNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
     ? keyof DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"]
-    : never = never,
+    : never) = never,
 > = PublicCompositeTypeNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
@@ -471,4 +627,3 @@ export const Constants = {
     },
   },
 } as const
-
