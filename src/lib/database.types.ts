@@ -493,6 +493,14 @@ export type Database = {
         Args: { p_body: string; p_character: string; p_token: string }
         Returns: string
       }
+      companion_broadcast: {
+        Args: { p_channel: string; p_event: string; p_payload: Json }
+        Returns: undefined
+      }
+      companion_create_character: {
+        Args: { p_data: Json; p_player_name: string; p_token: string }
+        Returns: string
+      }
       companion_link: {
         Args: { p_token: string }
         Returns: {

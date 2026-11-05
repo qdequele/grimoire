@@ -282,3 +282,153 @@ describe('companion RPCs (anonymous)', () => {
     expect((await alice.client.rpc('companion_owner', { p_token: l.token })).error).not.toBeNull()
   })
 })
+
+// ------------------------------------------------------------------ create from a link, live broadcast
+describe('companion: create an investigator and broadcast', () => {
+  it('a player creates an investigator that joins the game', async () => {
+    const g = await newGame(alice, [{ name: 'One' }])
+    const l = await link(alice, g.gameId)
+    const { data, error } = await anon.rpc('companion_create_character', {
+      p_token: l.token,
+      p_data: { name: 'Newcomer', hp: 11, san: 55, luck: 45, mp: 9 },
+      p_player_name: 'Zoé',
+    })
+    expect(error).toBeNull()
+    const id = data as unknown as string
+    expect(id).toEqual(expect.any(String))
+
+    const game = (await alice.client.from('games').select('state').eq('id', g.gameId).single()).data!
+    const party = (game.state as { party: Array<{ characterId: string }> }).party
+    expect(party.map((m) => m.characterId)).toEqual([...g.ids, id])
+
+    const ch = (await alice.client.from('characters').select('owner_id, player_id, data').eq('id', id).single()).data!
+    expect(ch.owner_id).toBe(alice.id)
+    expect(ch.player_id).not.toBeNull()
+    const pl = (await alice.client.from('players').select('name').eq('id', ch.player_id!).single()).data!
+    expect(pl.name).toBe('Zoé')
+
+    const pts = (await alice.client.from('game_points').select('*').eq('game_id', g.gameId).eq('character_id', id).single()).data!
+    expect(pts).toMatchObject({ pv: 11, san: 55, chance: 45, pm: 9, source: 'phone', owner_id: alice.id })
+
+    // Defaults when the sheet gives no points.
+    const d = await anon.rpc('companion_create_character', { p_token: l.token, p_data: { name: 'Bare' }, p_player_name: '' })
+    expect(d.error).toBeNull()
+    const dp = (await alice.client.from('game_points').select('pv, san, chance, pm').eq('character_id', d.data as unknown as string).single()).data!
+    expect(dp).toEqual({ pv: 10, san: 50, chance: 50, pm: 10 })
+    const dc = (await alice.client.from('characters').select('player_id').eq('id', d.data as unknown as string).single()).data!
+    expect(dc.player_id).toBeNull()
+
+    // The new investigator shows up when the link is opened.
+    const o = (await anon.rpc('companion_open', { p_token: l.token })).data as unknown as Opened
+    expect(o.party.map((p) => p.id)).toContain(id)
+  })
+
+  it("the player's typed name reuses the keeper's player, case-insensitively", async () => {
+    const g = await newGame(alice, [{ name: 'One' }])
+    const l = await link(alice, g.gameId)
+    const lea = await alice.client.from('players').insert({ name: 'Léa' }).select('id').single()
+    expect(lea.error).toBeNull()
+    const before = (await alice.client.from('players').select('id')).data!.length
+    const { data, error } = await anon.rpc('companion_create_character', {
+      p_token: l.token, p_data: { name: 'Léa’s investigator' }, p_player_name: ' léa ',
+    })
+    expect(error).toBeNull()
+    const ch = (await alice.client.from('characters').select('player_id').eq('id', data as unknown as string).single()).data!
+    expect(ch.player_id).toBe(lea.data!.id)
+    expect((await alice.client.from('players').select('id')).data).toHaveLength(before)
+  })
+
+  it("personal links can't create, and bad data is refused", async () => {
+    const g = await newGame(alice, [{ name: 'One' }])
+    const personal = await link(alice, g.gameId, g.ids[0])
+    const r = await anon.rpc('companion_create_character', { p_token: personal.token, p_data: { name: 'X' }, p_player_name: '' })
+    expect(r.error?.message).toContain('not_in_game')
+    const table = await link(alice, g.gameId)
+    for (const p_data of [{ name: '  ' }, {}, [], 'x'] as Json[]) {
+      const bad = await anon.rpc('companion_create_character', { p_token: table.token, p_data, p_player_name: '' })
+      expect(bad.error?.message).toContain('bad_value')
+    }
+    const nope = await anon.rpc('companion_create_character', { p_token: 'nope', p_data: { name: 'X' }, p_player_name: '' })
+    expect(nope.error?.message).toContain('link_invalid')
+  })
+
+  it('a 13th investigator is refused', async () => {
+    const g = await newGame(alice, Array.from({ length: 12 }, (_, i) => ({ name: `I${i}` })))
+    const l = await link(alice, g.gameId)
+    const r = await anon.rpc('companion_create_character', { p_token: l.token, p_data: { name: 'Late' }, p_player_name: '' })
+    expect(r.error?.message).toContain('party_full')
+  })
+
+  it("anonymous visitors can't write the tables to create a character", async () => {
+    const r = await anon.from('characters').insert({ data: { name: 'Sneaky' } })
+    expect(r.error).not.toBeNull()
+  })
+
+  async function waitFor<T>(subscribe: (resolve: (v: T) => void) => Promise<() => Promise<void>>, act: () => Promise<void>): Promise<T> {
+    let off: () => Promise<void> = async () => {}
+    try {
+      return await new Promise<T>((resolve, reject) => {
+        const timer = setTimeout(() => reject(new Error('no broadcast within 5 s')), 5000)
+        subscribe((v) => { clearTimeout(timer); resolve(v) })
+          .then((o) => { off = o; return act() })
+          .catch(reject)
+      })
+    } finally {
+      await off()
+    }
+  }
+
+  async function listen(channel: string, event: string, onMessage: (payload: unknown) => void) {
+    const client = createClient<Database>(url, anonKey, { auth: { persistSession: false } })
+    const ch = client.channel(`companion:${channel}`)
+    ch.on('broadcast', { event }, (m) => onMessage(m.payload))
+    await new Promise<void>((resolve, reject) => {
+      const timer = setTimeout(() => reject(new Error('not SUBSCRIBED within 5 s')), 5000)
+      ch.subscribe((status) => {
+        if (status === 'SUBSCRIBED') { clearTimeout(timer); resolve() }
+        else if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT') { clearTimeout(timer); reject(new Error(status)) }
+      })
+    })
+    return async () => { await client.removeChannel(ch); await client.realtime.disconnect() }
+  }
+
+  it("points changes are broadcast on the game's topic", async () => {
+    const g = await newGame(alice, [{ name: 'One', hp: 12 }])
+    const l = await link(alice, g.gameId)
+    const channel = (await alice.client.from('games').select('channel').eq('id', g.gameId).single()).data!.channel
+    const payload = await waitFor<Record<string, unknown>>(
+      (resolve) => listen(channel, 'points', (p) => resolve(p as Record<string, unknown>)),
+      async () => {
+        const { error } = await anon.rpc('companion_set_points', { p_token: l.token, p_character: g.ids[0], p_pv: 7, p_san: 44, p_chance: 30, p_pm: 5 })
+        expect(error).toBeNull()
+      },
+    )
+    expect(payload).toMatchObject({ characterId: g.ids[0], pv: 7, san: 44, chance: 30, pm: 5, checks: [], source: 'phone' })
+    expect(payload.updatedAt).toEqual(expect.any(String))
+  })
+
+  it('notes and new members are broadcast too', async () => {
+    const g = await newGame(alice, [{ name: 'One' }])
+    const l = await link(alice, g.gameId)
+    const channel = (await alice.client.from('games').select('channel').eq('id', g.gameId).single()).data!.channel
+    const note = await waitFor<Record<string, unknown>>(
+      (resolve) => listen(channel, 'notes', (p) => resolve(p as Record<string, unknown>)),
+      async () => {
+        const { error } = await anon.rpc('companion_add_note', { p_token: l.token, p_character: g.ids[0], p_body: 'live' })
+        expect(error).toBeNull()
+      },
+    )
+    expect(note).toMatchObject({ characterId: g.ids[0] })
+
+    let created = ''
+    const member = await waitFor<Record<string, unknown>>(
+      (resolve) => listen(channel, 'member', (p) => resolve(p as Record<string, unknown>)),
+      async () => {
+        const { data, error } = await anon.rpc('companion_create_character', { p_token: l.token, p_data: { name: 'Live' }, p_player_name: '' })
+        expect(error).toBeNull()
+        created = data as unknown as string
+      },
+    )
+    expect(member).toMatchObject({ characterId: created })
+  })
+})
