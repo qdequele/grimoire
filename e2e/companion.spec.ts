@@ -206,12 +206,22 @@ test("a player creates an investigator from the phone; it joins the keeper's gam
   await expect(tableDialog(keeper).getByRole('button', { name: 'Créer le lien de Bravo' })).toBeVisible()
 })
 
-test('revoking the link shows "link no longer valid" on the phone after reload', async ({ browser, baseURL }) => {
+test('revoking the link shows "link no longer valid" on the phone at once; a phone on another link stays live', async ({ browser, baseURL }) => {
   const { keeper, game, tableUrl, phone } = await setUpTable(browser, baseURL)
   await pick(phone, tableUrl, 'Alpha')
 
+  // A second phone on Alpha's personal link.
   await game.locator('#qaTable').click()
   const dialog = tableDialog(keeper)
+  await dialog.getByRole('button', { name: 'Créer le lien de Alpha' }).click()
+  const personalCode = dialog.locator('code').filter({ hasNotText: tableUrl })
+  await expect(personalCode).toHaveText(/\/t\/[\w-]+$/)
+  const personalUrl = (await personalCode.textContent()) ?? ''
+  const other = await openPhone(browser, baseURL)
+  await other.goto(personalUrl)
+  await expect(other.getByRole('heading', { name: 'Alpha', level: 1 })).toBeVisible()
+  await expect(other.getByText('En direct avec le gardien')).toBeVisible()
+
   await dialog.getByRole('button', { name: 'Révoquer et remplacer' }).click()
   await expect(dialog.locator('code').first()).not.toHaveText(tableUrl)
 
@@ -221,6 +231,15 @@ test('revoking the link shows "link no longer valid" on the phone after reload',
   await expect(phone.getByRole('alert')).toHaveText("Ce lien n'est plus valide. Demande un nouveau code au gardien.")
   await phone.goto(tableUrl)
   await expect(phone.getByRole('alert')).toHaveText("Ce lien n'est plus valide. Demande un nouveau code au gardien.")
+
+  // The personal link moved to the game's new channel: still live both ways.
+  await dialog.getByRole('button', { name: 'Fermer' }).click()
+  await expect(other.getByText('En direct avec le gardien')).toBeVisible(LIVE)
+  await unfold(game, 'Alpha')
+  await card(game, 'Alpha').locator('button[data-k="san"][data-d="-1"]').click()
+  await expect(phoneStat(other, 'SAN')).toHaveText('59', LIVE)
+  await tap(other, 'Retirer 1 PV')
+  await expect(engineStat(game, 'Alpha', 'pv')).toHaveText('12/13', LIVE)
 })
 
 test("phone changes made while the keeper's tab is closed are there when the game reopens", async ({ browser, baseURL }) => {
@@ -244,8 +263,11 @@ test("phone changes made while the keeper's tab is closed are there when the gam
 test('broadcasts are hints: forged ones change nothing on the game screen, and phones clamp what they show', async ({ browser, baseURL }) => {
   const { keeper, game, tableUrl, phone } = await setUpTable(browser, baseURL)
   await pick(phone, tableUrl, 'Alpha')
+  await expect(phone.getByText('En direct avec le gardien')).toBeVisible()
   await unfold(game, 'Alpha')
-  await expect(engineStat(game, 'Alpha', 'pv')).toHaveText('13/13')
+  await tap(phone, 'Retirer 1 PV')
+  await expect(engineStat(game, 'Alpha', 'pv')).toHaveText('12/13', LIVE)
+  await expect(phoneStat(phone, 'PV')).toHaveText('12 / 13')
 
   // Anyone holding a link learns the channel from companion_open and can send on it.
   const forger = await (await browser.newContext({ baseURL })).newPage()
@@ -277,7 +299,7 @@ test('broadcasts are hints: forged ones change nothing on the game screen, and p
   await expect(phoneStat(phone, 'SAN')).toHaveText('0', LIVE)
   // …the game screen re-reads the database, which still holds nothing from a phone.
   await keeper.waitForTimeout(1_500)
-  await expect(engineStat(game, 'Alpha', 'pv')).toHaveText('13/13')
+  await expect(engineStat(game, 'Alpha', 'pv')).toHaveText('12/13')
   await expect(engineStat(game, 'Alpha', 'san')).toHaveText('60')
   await expect(game.locator('#invView .nm')).toHaveText(['Alpha'])
 
