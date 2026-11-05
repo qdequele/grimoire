@@ -74,6 +74,7 @@ A **scene** is one screen in the app.
 | `sfx` | Sound-effect buttons for this scene. |
 | `next` | Likely next scene ids (defaults to the following scene). |
 | `images` | `{ src, caption, keeperOnly }` maps or pictures. |
+| `screen` | What the table's ambiance screen shows during this scene (see §4.5). |
 | `optional` | `true` for skippable scenes. |
 | `notesFirst` | Show `notes` before the read-aloud text. |
 | `notesAfter` | Reference blocks shown after the flow. |
@@ -141,6 +142,21 @@ All long text fields accept a small, safe subset — **no HTML**:
 | `\n` | Line break (in handouts) |
 
 Dice (`1D6`) and SAN losses (`1/1D4`) are detected automatically and get glossary tooltips.
+
+### 4.5 Ambiance screen
+
+The keeper can open an **ambiance screen** on a TV or tablet in the middle of the table: a slowly living picture for the current scene, and the handouts the keeper pushes to it. A scene may say what it shows:
+
+```json
+"screen": { "image": "images/harbour-fog.jpg", "preset": "fog" }
+```
+
+| Field | Meaning |
+|---|---|
+| `image` | Background picture (relative path in `images/`), shown full screen with a slow pan and zoom. Never a spoiler: players see it. |
+| `preset` | Living layers over it: `fog`, `rain`, `candle`, `night`, `storm`, `dust`. |
+
+Both are optional. Without `preset`, the app picks one from the scene's `ambience` sounds (rain → `rain`, fireplace → `candle`…). Without `image`, it uses the scene's first `images` entry marked `"keeperOnly": false`, else a generated background in the preset's colours. Handouts with an `image` (or only `text`) can be pushed to the screen by the keeper.
 
 ## 5. NPCs and creatures
 

@@ -393,6 +393,28 @@
           "type": "boolean",
           "default": false,
           "description": "Show the story's npcTable in this scene."
+        },
+        "screen": {
+          "type": "object",
+          "additionalProperties": false,
+          "description": "What the table's ambiance screen shows during this scene.",
+          "properties": {
+            "image": {
+              "type": "string",
+              "description": "Background picture, relative path in images/. Players see it."
+            },
+            "preset": {
+              "enum": [
+                "fog",
+                "rain",
+                "candle",
+                "night",
+                "storm",
+                "dust"
+              ],
+              "description": "Living layers over the picture. Default: picked from the scene's ambience sounds."
+            }
+          }
         }
       }
     },
