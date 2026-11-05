@@ -265,7 +265,10 @@ test('broadcasts are hints: forged ones change nothing on the game screen, and p
   await pick(phone, tableUrl, 'Alpha')
   await expect(phone.getByText('En direct avec le gardien')).toBeVisible()
   await unfold(game, 'Alpha')
+  // The tap, and the refetch after it (it would overwrite what the forged broadcast shows).
+  const refetched = phone.waitForResponse((r) => r.url().includes('/rest/v1/rpc/companion_open') && r.ok())
   await tap(phone, 'Retirer 1 PV')
+  await refetched
   await expect(engineStat(game, 'Alpha', 'pv')).toHaveText('12/13', LIVE)
   await expect(phoneStat(phone, 'PV')).toHaveText('12 / 13')
 
@@ -290,13 +293,19 @@ test('broadcasts are hints: forged ones change nothing on the game screen, and p
     const ch = supabase.channel(`companion:${view.game.channel}`)
     await new Promise<void>((resolve) => ch.subscribe((status) => status === 'SUBSCRIBED' && resolve()))
     const characterId = view.party[0].id
-    await ch.send({ type: 'broadcast', event: 'points', payload: { characterId, pv: 500, san: 0, chance: 0, pm: 0, checks: [], source: 'phone', updatedAt: new Date().toISOString() } })
-    await ch.send({ type: 'broadcast', event: 'member', payload: { characterId: crypto.randomUUID() } })
+    // Dated ahead: the phone drops payloads older than what it holds (the server's clock may lead ours).
+    await ch.send({ type: 'broadcast', event: 'points', payload: { characterId, pv: 500, san: 0, chance: 0, pm: 0, checks: [], source: 'phone', updatedAt: new Date(Date.now() + 60_000).toISOString() } })
+    ;(window as unknown as { forged: Channel }).forged = ch
   }, token)
 
   // The phone shows the forged values within the server's bounds (HP at most the sheet's 13)…
   await expect(phoneStat(phone, 'PV')).toHaveText('13 / 13', LIVE)
   await expect(phoneStat(phone, 'SAN')).toHaveText('0', LIVE)
+  // (A member hint makes phones refetch, so it goes after the phone checks.)
+  await forger.evaluate(async () => {
+    const ch = (window as unknown as { forged: { send: (m: object) => Promise<unknown> } }).forged
+    await ch.send({ type: 'broadcast', event: 'member', payload: { characterId: crypto.randomUUID() } })
+  })
   // …the game screen re-reads the database, which still holds nothing from a phone.
   await keeper.waitForTimeout(1_500)
   await expect(engineStat(game, 'Alpha', 'pv')).toHaveText('12/13')
