@@ -31,8 +31,10 @@
 }
 
 /* Slow pan and zoom on the picture */
-.scr-kb {
+.scr-cover {
   object-fit: cover;
+}
+.scr-kb {
   transform-origin: 50% 50%;
   will-change: transform;
   animation: scr-kb var(--drift, 100s) ease-in-out infinite alternate;

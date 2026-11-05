@@ -567,6 +567,7 @@ export const EN: Record<string, string> = {
   'Brouillard': 'Fog',
   'Pluie': 'Rain',
   'Chandelle': 'Candlelight',
+  'Âtre': 'Hearth',
   'Nuit': 'Night',
   'Orage': 'Storm',
   'Poussière': 'Dust',

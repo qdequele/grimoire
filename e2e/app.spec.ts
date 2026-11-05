@@ -250,10 +250,10 @@ test('ambiance screen: follows the scene, shows the handouts the keeper pushes, 
   await expect(stage).toHaveAttribute('data-scene-key', /^fog\|/)
   await expect(tv.getByRole('button', { name: 'Toucher pour lancer l’écran' })).toBeVisible()
 
-  // The keeper moves on: the screen follows (a fireplace and a clock: candle light)
+  // The keeper moves on: the screen follows (a fireplace and a clock: the hearth)
   await page.keyboard.press('Escape')
   await game.locator('#scene .scene-foot .btn.prim[data-go]').click()
-  await expect(stage).toHaveAttribute('data-scene-key', /^candle\|/)
+  await expect(stage).toHaveAttribute('data-scene-key', /^hearth\|/)
 
   // Push this scene's handout: it appears on the screen, on paper
   await game.locator('#qaScreen').click()

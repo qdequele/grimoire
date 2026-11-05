@@ -64,7 +64,7 @@ describe('helpers', () => {
   })
 
   it('pack paths become Storage refs', () => {
-    expect(toScreenScene({ preset: 'rain', image: 'images/x.jpg', sounds: [] }, 'owner/story')).toEqual({
+    expect(toScreenScene({ preset: 'rain', image: 'images/x.jpg', sounds: [], fire: null }, 'owner/story')).toEqual({
       preset: 'rain', image: { bucket: 'story-packs', path: 'owner/story/images/x.jpg' }, sounds: [],
     })
   })
@@ -94,5 +94,27 @@ describe('parseScreen', () => {
     expect(s.scene).toBeNull()
     expect(s.override).toBeNull()
     expect(s.handout?.image).toEqual({ bucket: 'story-packs', path: 'p' })
+  })
+})
+
+describe('fire place (hearth)', () => {
+  const hearth: ScreenScene = { preset: 'hearth', image: storm.image, sounds: ['fireplace'], fire: { x: 0.4, y: 0.8, width: 0.3 } }
+
+  it('travels from the scene to the saved state and back', () => {
+    const scene = toScreenScene({ preset: 'hearth', image: 'images/hall.jpg', sounds: [], fire: { x: 0.4, y: 0.8, width: 0.3 } }, 'u/s')
+    expect(scene.fire).toEqual({ x: 0.4, y: 0.8, width: 0.3 })
+    expect(toScreenScene({ preset: 'fog', image: null, sounds: [], fire: null }, 'u/s')).not.toHaveProperty('fire')
+    const saved = JSON.parse(JSON.stringify(run({ type: 'scene', scene: hearth })))
+    expect(parseScreen(saved).scene).toEqual(hearth)
+  })
+
+  it('drops a broken fire place from the row', () => {
+    const saved = { ...INITIAL_SCREEN, scene: { ...hearth, fire: { x: 3, y: 0.8, width: 0.3 } } }
+    expect(parseScreen(saved).scene).not.toHaveProperty('fire')
+  })
+
+  it('moving the fire is a new background', () => {
+    expect(sceneKey(hearth)).not.toBe(sceneKey({ ...hearth, fire: { x: 0.6, y: 0.8, width: 0.3 } }))
+    expect(screenReducer(run({ type: 'scene', scene: hearth }), { type: 'scene', scene: { ...hearth, fire: { x: 0.6, y: 0.8, width: 0.3 } } }).scene?.fire?.x).toBe(0.6)
   })
 })

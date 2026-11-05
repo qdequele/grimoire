@@ -1,7 +1,7 @@
 // Ambiance screen, pure part: presets (what living layers a scene gets) and scene → ambiance.
 // No DOM, no Supabase: shared by the keeper's game screen (which decides) and the screen (which draws).
 
-export const PRESETS = ['fog', 'rain', 'candle', 'night', 'storm', 'dust'] as const
+export const PRESETS = ['fog', 'rain', 'candle', 'hearth', 'night', 'storm', 'dust'] as const
 export type PresetId = (typeof PRESETS)[number]
 
 export const isPreset = (v: unknown): v is PresetId => typeof v === 'string' && (PRESETS as readonly string[]).includes(v)
@@ -11,6 +11,7 @@ export const PRESET_LABEL: Record<PresetId, string> = {
   fog: 'Brouillard',
   rain: 'Pluie',
   candle: 'Chandelle',
+  hearth: 'Âtre',
   night: 'Nuit',
   storm: 'Orage',
   dust: 'Poussière',
@@ -34,15 +35,18 @@ export interface PresetLook {
   lightning: boolean
   /** One pan-and-zoom pass, in seconds (alternates back and forth). */
   drift: number
+  /** A live fire (flames, embers, its flickering light) at the scene's fire place. */
+  fire: boolean
 }
 
 export const LOOKS: Record<PresetId, PresetLook> = {
-  fog: { palette: ['#0b1114', '#22323a', '#5f7479'], fog: 0.85, grain: 0.07, vignette: 0.6, flicker: false, particles: null, lightning: false, drift: 110 },
-  rain: { palette: ['#060b12', '#13263a', '#3d5a74'], fog: 0.35, grain: 0.06, vignette: 0.65, flicker: false, particles: 'rain', lightning: false, drift: 95 },
-  candle: { palette: ['#0b0604', '#3b1d0b', '#a8621f'], fog: 0.15, grain: 0.08, vignette: 0.8, flicker: true, particles: 'embers', lightning: false, drift: 120 },
-  night: { palette: ['#04050b', '#111933', '#34457a'], fog: 0.3, grain: 0.06, vignette: 0.75, flicker: false, particles: 'dust', lightning: false, drift: 120 },
-  storm: { palette: ['#05060a', '#1a1d2a', '#4b5068'], fog: 0.45, grain: 0.07, vignette: 0.7, flicker: false, particles: 'rain', lightning: true, drift: 80 },
-  dust: { palette: ['#0d0a06', '#3a2e1e', '#a08658'], fog: 0.2, grain: 0.1, vignette: 0.55, flicker: false, particles: 'dust', lightning: false, drift: 100 },
+  fog: { palette: ['#0b1114', '#22323a', '#5f7479'], fog: 0.85, grain: 0.07, vignette: 0.6, flicker: false, particles: null, lightning: false, drift: 110, fire: false },
+  rain: { palette: ['#060b12', '#13263a', '#3d5a74'], fog: 0.35, grain: 0.06, vignette: 0.65, flicker: false, particles: 'rain', lightning: false, drift: 95, fire: false },
+  candle: { palette: ['#0b0604', '#3b1d0b', '#a8621f'], fog: 0.15, grain: 0.08, vignette: 0.8, flicker: true, particles: 'embers', lightning: false, drift: 120, fire: false },
+  hearth: { palette: ['#070302', '#2a0f05', '#8a3a10'], fog: 0.08, grain: 0.08, vignette: 0.8, flicker: false, particles: null, lightning: false, drift: 120, fire: true },
+  night: { palette: ['#04050b', '#111933', '#34457a'], fog: 0.3, grain: 0.06, vignette: 0.75, flicker: false, particles: 'dust', lightning: false, drift: 120, fire: false },
+  storm: { palette: ['#05060a', '#1a1d2a', '#4b5068'], fog: 0.45, grain: 0.07, vignette: 0.7, flicker: false, particles: 'rain', lightning: true, drift: 80, fire: false },
+  dust: { palette: ['#0d0a06', '#3a2e1e', '#a08658'], fog: 0.2, grain: 0.1, vignette: 0.55, flicker: false, particles: 'dust', lightning: false, drift: 100, fire: false },
 }
 
 /**
@@ -52,7 +56,8 @@ export const LOOKS: Record<PresetId, PresetLook> = {
 const SOUND_RULES: Array<[PresetId, string[]]> = [
   ['storm', ['storm']],
   ['rain', ['rain', 'rain-heavy', 'rain-window']],
-  ['candle', ['fireplace', 'clock', 'crowd-indoor']],
+  ['hearth', ['fireplace']],
+  ['candle', ['clock', 'crowd-indoor']],
   ['night', ['wind-howling', 'night-crickets', 'village-night']],
   ['fog', ['wind', 'crows']],
   ['dust', ['nature-day', 'village-day', 'street']],
@@ -87,6 +92,27 @@ export const AMBIENCE_FILE: Record<string, string> = {
 export const soundUrls = (ids: readonly string[]): string[] =>
   ids.filter((id) => AMBIENCE_FILE[id]).map((id) => `/sons/${AMBIENCE_FILE[id]}.mp3`)
 
+// ------------------------------------------------------------------ fire place (hearth preset)
+
+/** Where the fire burns in the picture: base centre and width, as fractions of the picture (0 to 1). */
+export interface FirePlace {
+  x: number
+  y: number
+  width: number
+}
+
+/** Bottom centre: a hearth seen from the room, or the generated background's glow. */
+export const DEFAULT_FIRE: FirePlace = { x: 0.5, y: 0.9, width: 0.34 }
+
+const fraction = (v: unknown): v is number => typeof v === 'number' && Number.isFinite(v) && v >= 0 && v <= 1
+
+/** A valid fire place, or null (missing or out-of-range numbers). */
+export function asFire(v: unknown): FirePlace | null {
+  if (!v || typeof v !== 'object') return null
+  const { x, y, width } = v as Record<string, unknown>
+  return fraction(x) && fraction(y) && fraction(width) && width > 0 ? { x, y, width } : null
+}
+
 // ------------------------------------------------------------------ scene → ambiance
 
 /** Loose view of a story scene: only what the screen needs (spec/story.schema.json). */
@@ -95,7 +121,7 @@ export interface StoryScene {
   ambience?: string[]
   handouts?: string[]
   images?: Array<{ src: string; caption?: string; keeperOnly?: boolean }>
-  screen?: { image?: string; preset?: string }
+  screen?: { image?: string; preset?: string; fire?: unknown }
 }
 export interface StoryForScreen {
   acts: Array<{ scenes: StoryScene[] }>
@@ -107,6 +133,8 @@ export interface SceneAmbiance {
   preset: PresetId
   image: string | null
   sounds: string[]
+  /** Where the fire is in the picture (hearth preset); null: DEFAULT_FIRE. */
+  fire: FirePlace | null
 }
 
 export const findScene = (story: StoryForScreen, sceneId: string | undefined): StoryScene | undefined =>
@@ -124,5 +152,5 @@ export function sceneAmbiance(story: StoryForScreen, sceneId: string | undefined
   const preset = isPreset(scene?.screen?.preset) ? scene.screen.preset : presetFromSounds(scene?.ambience)
   const shared = scene?.images?.find((i) => i.keeperOnly === false && has(i.src))?.src
   const image = has(scene?.screen?.image) ? scene.screen.image : (shared ?? null)
-  return { preset, image, sounds: (scene?.ambience ?? []).slice(0, 3) }
+  return { preset, image, sounds: (scene?.ambience ?? []).slice(0, 3), fire: asFire(scene?.screen?.fire) }
 }

@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState, type CSSProperties, type ReactNode } from 'react'
 import { cn } from '@/lib/utils'
-import { LOOKS, type PresetId } from './ambiance'
+import { DEFAULT_FIRE, LOOKS, type PresetId } from './ambiance'
+import { Hearth } from './Hearth'
 import { Particles } from './Particles'
 import { sceneKey, type ScreenHandout, type ScreenScene } from './state'
 import './screen.css'
@@ -54,6 +55,7 @@ interface Layer { id: number; key: string; scene: ScreenScene | null; url: strin
 function SceneLayer({ layer, reduced, onShown }: { layer: Layer; reduced: boolean; onShown: () => void }) {
   const preset: PresetId = layer.scene?.preset ?? 'fog'
   const look = LOOKS[preset]
+  const fire = layer.scene?.fire ?? DEFAULT_FIRE
   const style = {
     '--c0': look.palette[0],
     '--c1': look.palette[1],
@@ -72,11 +74,16 @@ function SceneLayer({ layer, reduced, onShown }: { layer: Layer; reduced: boolea
       onAnimationEnd={(e) => e.target === e.currentTarget && onShown()}
     >
       {layer.url ? (
-        <img className="scr-fill scr-kb" src={layer.url} alt="" draggable={false} />
+        // The fire sits inside the pan-and-zoom, so it stays on the picture's hearth.
+        <div className="scr-fill scr-kb">
+          <img className="scr-fill scr-cover" src={layer.url} alt="" draggable={false} />
+          {look.fire && <Hearth fire={fire} imageUrl={layer.url} still={reduced} />}
+        </div>
       ) : (
         <div className="scr-fill scr-abstract">
           <div className="scr-blob a" />
           <div className="scr-blob b" />
+          {look.fire && <Hearth fire={fire} imageUrl={null} still={reduced} />}
         </div>
       )}
       {look.flicker && <div className="scr-fill scr-flicker" />}

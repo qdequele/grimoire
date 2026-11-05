@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import SOUNDS from '../../spec/sounds.json'
 import sample from '../../stories/the-silent-light/story.json'
-import { AMBIENCE_FILE, LOOKS, PRESETS, presetFromSounds, sceneAmbiance, soundUrls, type StoryForScreen } from './ambiance'
+import { AMBIENCE_FILE, asFire, LOOKS, PRESETS, presetFromSounds, sceneAmbiance, soundUrls, type StoryForScreen } from './ambiance'
 
 const story = (scene: Record<string, unknown>): StoryForScreen => ({ acts: [{ scenes: [{ id: 's', ...scene }] }] })
 
@@ -9,7 +9,8 @@ describe('presetFromSounds', () => {
   it('picks the most dramatic sound of the scene', () => {
     expect(presetFromSounds(['wind', 'storm'])).toBe('storm')
     expect(presetFromSounds(['fireplace', 'rain-window'])).toBe('rain')
-    expect(presetFromSounds(['clock', 'fireplace'])).toBe('candle')
+    expect(presetFromSounds(['clock', 'fireplace'])).toBe('hearth')
+    expect(presetFromSounds(['clock'])).toBe('candle')
     expect(presetFromSounds(['wind-howling'])).toBe('night')
     expect(presetFromSounds(['village-day', 'wind'])).toBe('fog')
     expect(presetFromSounds(['street'])).toBe('dust')
@@ -29,12 +30,12 @@ describe('presetFromSounds', () => {
 describe('sceneAmbiance', () => {
   it("uses the scene's screen field first", () => {
     const s = story({ ambience: ['storm'], screen: { preset: 'candle', image: 'images/a.jpg' } })
-    expect(sceneAmbiance(s, 's', ['images/a.jpg'])).toEqual({ preset: 'candle', image: 'images/a.jpg', sounds: ['storm'] })
+    expect(sceneAmbiance(s, 's', ['images/a.jpg'])).toEqual({ preset: 'candle', image: 'images/a.jpg', sounds: ['storm'], fire: null })
   })
 
   it('ignores an unknown preset and a picture the pack does not have', () => {
     const s = story({ ambience: ['rain'], screen: { preset: 'disco', image: 'images/missing.jpg' } })
-    expect(sceneAmbiance(s, 's', [])).toEqual({ preset: 'rain', image: null, sounds: ['rain'] })
+    expect(sceneAmbiance(s, 's', [])).toEqual({ preset: 'rain', image: null, sounds: ['rain'], fire: null })
   })
 
   it('shows scene images to players only when marked keeperOnly: false', () => {
@@ -45,7 +46,7 @@ describe('sceneAmbiance', () => {
   })
 
   it('an unknown scene gets the default ambiance', () => {
-    expect(sceneAmbiance(story({}), 'nope', [])).toEqual({ preset: 'fog', image: null, sounds: [] })
+    expect(sceneAmbiance(story({}), 'nope', [])).toEqual({ preset: 'fog', image: null, sounds: [], fire: null })
   })
 
   it('the sample story gets varied presets from its sounds', () => {
@@ -63,5 +64,24 @@ describe('sounds', () => {
 
   it('skips sounds the screen cannot play', () => {
     expect(soundUrls(['rain', 'my-own'])).toEqual(['/sons/amb-pluie.mp3'])
+  })
+})
+
+describe('fire place (hearth)', () => {
+  it('keeps a fire place made of fractions, rejects anything else', () => {
+    expect(asFire({ x: 0.4, y: 0.8, width: 0.3 })).toEqual({ x: 0.4, y: 0.8, width: 0.3 })
+    expect(asFire({ x: 1.2, y: 0.8, width: 0.3 })).toBeNull()
+    expect(asFire({ x: 0.4, y: 0.8, width: 0 })).toBeNull()
+    expect(asFire({ x: '0.4', y: 0.8, width: 0.3 })).toBeNull()
+    expect(asFire(null)).toBeNull()
+  })
+
+  it("reads the scene's fire place", () => {
+    const s = story({ ambience: ['fireplace'], screen: { fire: { x: 0.3, y: 0.7, width: 0.2 } } })
+    expect(sceneAmbiance(s, 's', [])).toEqual({ preset: 'hearth', image: null, sounds: ['fireplace'], fire: { x: 0.3, y: 0.7, width: 0.2 } })
+  })
+
+  it('only the hearth draws a fire', () => {
+    expect(PRESETS.filter((p) => LOOKS[p].fire)).toEqual(['hearth'])
   })
 })

@@ -1,7 +1,7 @@
 // What the ambiance screen shows (games.screen), and how the keeper's actions change it. Pure.
 // The keeper's game screen owns this state: it reduces actions, signs the image URLs and saves it;
 // the screen only reads it (screen_open, then Realtime broadcasts of every change).
-import { isPreset, type PresetId, type SceneAmbiance } from './ambiance'
+import { asFire, isPreset, type FirePlace, type PresetId, type SceneAmbiance } from './ambiance'
 
 /** A picture in Storage. `url` is a short-lived signed URL the keeper adds when publishing. */
 export interface ImageRef {
@@ -15,6 +15,8 @@ export interface ScreenScene {
   image: ImageRef | null
   /** Library ambience ids, played by the screen when `sound` is on. */
   sounds: string[]
+  /** Where the fire is in the picture (hearth preset); absent: the default place. */
+  fire?: FirePlace
 }
 
 export interface ScreenHandout {
@@ -76,17 +78,24 @@ export function shownScene(state: ScreenState): ScreenScene | null {
 }
 
 /** Identity of a background on screen: a new key crossfades, the same key keeps the layers running. */
-export const sceneKey = (s: ScreenScene | null): string => (s ? `${s.preset}|${s.image?.bucket ?? ''}|${s.image?.path ?? ''}` : 'idle')
+export const sceneKey = (s: ScreenScene | null): string =>
+  s ? `${s.preset}|${s.image?.bucket ?? ''}|${s.image?.path ?? ''}${s.fire ? `|${s.fire.x},${s.fire.y},${s.fire.width}` : ''}` : 'idle'
 
 const sameImage = (a: ImageRef | null, b: ImageRef | null) => a?.bucket === b?.bucket && a?.path === b?.path
 const sameScene = (a: ScreenScene | null, b: ScreenScene | null) =>
-  !!a && !!b && a.preset === b.preset && sameImage(a.image, b.image) && a.sounds.join() === b.sounds.join()
+  !!a && !!b && a.preset === b.preset && sameImage(a.image, b.image) && a.sounds.join() === b.sounds.join() &&
+  JSON.stringify(a.fire ?? null) === JSON.stringify(b.fire ?? null)
 const sameHandout = (a: ScreenHandout, b: ScreenHandout) =>
   a.key === b.key && a.title === b.title && a.text === b.text && sameImage(a.image, b.image)
 
 /** Scene ambiance (pack paths) → what the screen state stores (Storage refs). */
 export function toScreenScene(a: SceneAmbiance, packFolder: string): ScreenScene {
-  return { preset: a.preset, image: a.image ? { bucket: 'story-packs', path: `${packFolder}/${a.image}` } : null, sounds: a.sounds }
+  return {
+    preset: a.preset,
+    image: a.image ? { bucket: 'story-packs', path: `${packFolder}/${a.image}` } : null,
+    sounds: a.sounds,
+    ...(a.fire ? { fire: a.fire } : {}),
+  }
 }
 
 /** Every picture of the state, to sign before publishing. */
@@ -123,7 +132,8 @@ function asScene(v: unknown): ScreenScene | null {
   const o = obj(v)
   if (!o || !isPreset(o.preset)) return null
   const sounds = Array.isArray(o.sounds) ? o.sounds.filter((x): x is string => typeof x === 'string') : []
-  return { preset: o.preset, image: asImage(o.image), sounds }
+  const fire = asFire(o.fire)
+  return { preset: o.preset, image: asImage(o.image), sounds, ...(fire ? { fire } : {}) }
 }
 
 function asHandout(v: unknown): ScreenHandout | null {
