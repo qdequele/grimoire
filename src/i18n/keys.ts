@@ -4,6 +4,7 @@ import { join } from 'node:path'
 import {
   CHARACTERISTIC_INFO, CREDIT_TIERS, NAME_ORIGINS, OCCUPATIONS, PROFILE_FIELDS, SKILLS,
 } from '@/rules/d100'
+import { PRESET_LABEL } from '@/screen/ambiance'
 
 /** Texts that reach t() from data rather than from a t('…') literal in the code. */
 export function dataKeys(): string[] {
@@ -36,6 +37,7 @@ export function dataKeys(): string[] {
     "L'aide IA n'est pas configurée sur ce serveur.", "Le service d'IA est occupé. Réessaie dans une minute.",
     'Connecte-toi pour utiliser l’aide IA.', 'Pas de suggestion possible pour ce profil.', 'Réponse de l’IA illisible. Réessaie.',
     "Ce lien n'est plus valide.",
+    ...Object.values(PRESET_LABEL), // ambiance screen presets
   ].filter(Boolean)
 }
 

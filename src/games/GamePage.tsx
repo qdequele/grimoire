@@ -13,6 +13,9 @@ import type { EngineApi, LegacyState, NotebookEntry } from '@/play/host'
 import { sample } from '@/play/narrator'
 import { gameKeys, useGame, type GameRow, type GameState } from './api'
 import { TableLinksDialog, type TableMember } from './TableLinksDialog'
+import { ScreenControl, screenStory } from './screen'
+import { ScreenDialog } from './ScreenDialog'
+import { parseScreen } from '@/screen/state'
 import { useT } from '@/i18n/t'
 
 const SAVE_DELAY = 800
@@ -89,6 +92,8 @@ export function GamePage() {
   const [ready, setReady] = useState(false)
   const [tableOpen, setTableOpen] = useState(false)
   const [members, setMembers] = useState<TableMember[]>([])
+  const [screenOpen, setScreenOpen] = useState(false)
+  const [screen, setScreen] = useState<ScreenControl | null>(null)
   const iframe = useRef<HTMLIFrameElement>(null)
   const live = useRef<Live | null>(null)
 
@@ -109,6 +114,9 @@ export function GamePage() {
       .map((p) => all.find((c) => c.id === p.characterId))
       .filter((c): c is CharacterRow => !!c)
     const accountIds = new Set(party.map((c) => c.id))
+    // Ambiance screen: follows the engine's scene, the keeper pushes handouts from the dialog.
+    const screenControl = new ScreenControl(g.id, screenStory(start.game.story), g.screen ? parseScreen(g.screen) : null)
+    const sceneOf = (S: LegacyState) => ((S.scen ?? {}) as Record<string, { scene?: string } | undefined>)[storyId]?.scene
     const toMember = (c: CharacterRow): TableMember => ({ id: c.id, name: c.data.name, player: c.player?.name ?? undefined })
 
     // Points last written to (or received from) game_points, per account investigator.
@@ -357,6 +365,7 @@ export function GamePage() {
             const r = db.get(cid)
             return [cid, r ? { pv: r.pv, san: r.san, chance: r.chance, pm: r.pm, checks: [...r.checks] } : v]
           }))
+          screenControl.sceneChanged(sceneOf(S))
           return S
         },
         save: (s) => {
@@ -367,6 +376,7 @@ export function GamePage() {
             /* storage full or blocked: the account copy still goes through */
           }
           pending = copy
+          screenControl.sceneChanged(sceneOf(copy))
           clearTimeout(timer)
           timer = setTimeout(flush, SAVE_DELAY)
         },
@@ -376,6 +386,7 @@ export function GamePage() {
           navigate('/')
         },
         openTable: () => setTableOpen(true),
+        openScreen: () => setScreenOpen(true),
         sample,
       }
       live.current = {
@@ -385,6 +396,7 @@ export function GamePage() {
         catchUp: () => void catchUp().catch((error) => console.error('Catch-up failed', error)),
       }
       setMembers(party.map(toMember))
+      setScreen(screenControl)
       window.addEventListener('pagehide', onHide)
       setReady(true)
     })()
@@ -395,6 +407,8 @@ export function GamePage() {
       window.removeEventListener('pagehide', onHide)
       onHide()
       live.current = null
+      screenControl.dispose()
+      setScreen(null)
       delete window.__grimoirePlay
       setReady(false)
     }
@@ -455,6 +469,9 @@ export function GamePage() {
     <>
       <iframe ref={iframe} src="/play.html" title={t('Partie')} className="fixed inset-0 h-svh w-full border-0" />
       <TableLinksDialog gameId={id} party={members} open={tableOpen} onOpenChange={setTableOpen} />
+      {screen && start?.game.story && (
+        <ScreenDialog gameId={id} control={screen} story={screenStory(start.game.story)} open={screenOpen} onOpenChange={setScreenOpen} />
+      )}
     </>
   )
 }

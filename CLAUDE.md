@@ -7,7 +7,7 @@ Keeper's companion web app for d100 investigation/horror tabletop games. Built i
 ```
 src/                  NEW app: Vite + React 19 + TypeScript (strict) + Tailwind v4 + shadcn/ui (base-nova)
   engine/             pure game rules, no UI: dice, success levels, damage. Unit-tested (Vitest).
-  auth/ characters/ stories/ games/ import/ home/ companion/   features, co-located (page + TanStack Query hooks in api.ts)
+  auth/ characters/ stories/ games/ import/ home/ companion/ screen/   features, co-located (page + TanStack Query hooks in api.ts)
   lib/supabase.ts     typed client; lib/database.types.ts is generated (`pnpm db:types` → scripts/gen-db-types.mjs)
   components/ui/      shadcn components (add with `pnpm dlx shadcn@latest add <name>`)
   App.tsx             router (React Router) + providers
@@ -105,6 +105,15 @@ Every story also exists as a story pack (spec/STORY_FORMAT.md) in the private `s
 - Download: story page → "Télécharger le pack (.zip)" (`downloadPack`).
 - `pnpm packs:sync` writes story.json for every story (backfill; `pnpm db:reset` runs it, the seed can't write Storage).
 - The game engine doesn't show pack images or story sounds yet: they are stored and downloadable.
+
+## Ambiance screen (TV / tablet at the table)
+
+- `/screen/:token` (`src/screen/`): full-screen, no account. A slowly living background for the current scene (still picture with slow pan and zoom, or a generated gradient) plus preset layers (`fog`, `rain`, `candle`, `night`, `storm`, `dust`: fog bands, grain, vignette, flicker, one small particle canvas, lightning), crossfade between scenes, handouts on "paper" over a dimmed scene. Transforms and opacity only; `prefers-reduced-motion` stops the motion. A tap starts full screen, sound and the Wake Lock; the cursor hides when idle.
+- Same mechanism as the player companion, separate pieces: `screen_links` (one active per game, revocable), anonymous `screen_open(token)` → `{ channel, screen }` only, Realtime broadcast of `games.screen` on `screen:<games.screen_channel>` (trigger). Revoking rotates `screen_channel` only, so phones stay connected. A screen token is not a companion token.
+- `games.screen` is `ScreenState` (`src/screen/state.ts`: pure reducer, follow vs pinned, preset override, handout). The keeper's game screen owns it: `ScreenControl` (`src/games/screen.ts`) follows the engine's scene through `PlayHost.save`/`loadState` (no engine patch for that), signs picture URLs (8 h, renewed hourly while the game is open) and writes `games.screen`. The screen never reads Storage itself.
+- Scene → ambiance: `sceneAmbiance` (`src/screen/ambiance.ts`): the scene's `screen: { image, preset }` (spec §4.5), else a preset from its `ambience` sounds and its first `images` entry with `keeperOnly: false`. Pictures missing from `pack_files` are ignored.
+- Keeper UI: toolbar button `#qaScreen` (extraction patch) → `ScreenDialog` (link + QR, follow, preset, sound, push/clear handouts: story handouts, scene images, pictures uploaded to the private `screen-images` bucket, `<owner>/<game>/…`).
+- Tests: `src/screen/*.test.ts`, `supabase/tests/screen.test.ts` (`pnpm test:db`), "ambiance screen" in `e2e/app.spec.ts` (two pages).
 
 ## Main menu
 

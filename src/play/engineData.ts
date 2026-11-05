@@ -60,6 +60,7 @@ const APP_UI_EN: Record<string, string> = {
   Investigateurs: 'Investigators',
   'Joueurs à la table': 'Players at the table',
   Carnet: 'Notebook',
+  "Écran d'ambiance": 'Ambiance screen',
 }
 const I18N: EngineGlobals['I18N'] = {
   ...(PRIVATE.I18N ?? FALLBACK.I18N),
