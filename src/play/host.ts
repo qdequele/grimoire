@@ -51,8 +51,8 @@ export interface NotebookEntry { id: string; body: string; createdAt: string }
 export interface EngineApi {
   /** Set live values of the party slot of this investigator (current story); also S.prog[cid].san. Saves and re-renders. */
   setPoints(cid: string, v: { pv: number; san: number; chance: number; pm: number }): void
-  /** Add an account investigator (legacy character from toLegacyCharacter) to the current party, if not there. */
-  addMember(c: unknown, player: string): void
+  /** Add an account investigator (legacy character from toLegacyCharacter) to the current party, if not there. `progress` is the account's characters.data.progress; the player is found or created in S.players. */
+  addMember(c: unknown, player: string, progress?: Record<string, unknown>): void
   /** Notebooks shown on the investigator cards, by character id. */
   setNotebooks(n: Record<string, NotebookEntry[]>): void
 }

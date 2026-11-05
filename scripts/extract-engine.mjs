@@ -288,15 +288,31 @@ patch(
 let NOTEBOOKS={};
 const notesOf=cid=>NOTEBOOKS[cid]||[];
 const openCarnets=new Set();
+/* Re-render without the keeper losing the field they type in (phones update at any time). */
+function keepFocus(fn){const a=document.activeElement,ok=a&&a.id&&/^(INPUT|TEXTAREA)$/.test(a.tagName),
+  m=ok?{id:a.id,v:a.value,s:a.selectionStart,e:a.selectionEnd}:null;
+  fn();
+  if(m){const el=document.getElementById(m.id);if(el&&el!==document.activeElement){el.focus();}
+    if(el){if(el.value!==m.v)el.value=m.v;try{el.setSelectionRange(m.s,m.e);}catch(e){}}}}
+function fillCarnets(){
+  document.querySelectorAll("#invView .inv").forEach(card=>{const t=card.querySelector("[data-tog]"),body=card.querySelector(".ibody");if(!t||!body)return;
+    const old=body.querySelector("details.carnet");if(old)old.remove();
+    const cid=t.dataset.tog,notes=notesOf(cid).slice().sort((a,b)=>String(b.createdAt).localeCompare(String(a.createdAt)));if(!notes.length)return;
+    const d=document.createElement("details");d.className="carnet";d.open=openCarnets.has(cid);
+    d.addEventListener("toggle",()=>{d.open?openCarnets.add(cid):openCarnets.delete(cid);});
+    d.innerHTML='<summary><span>Carnet</span> <span>('+notes.length+')</span></summary>'+notes.map(n=>'<div class="cnote"><small>'+esc(new Date(n.createdAt).toLocaleString(LANG==="en"?"en-GB":"fr-FR",{day:"numeric",month:"short",hour:"2-digit",minute:"2-digit"}))+'</small> '+esc(n.body)+'</div>').join("");
+    body.appendChild(d);});}
 window.GRIMOIRE_ENGINE={
   setPoints(cid,v){const sl=ST().party.find(p=>p.cid===cid);if(!sl)return;
     sl.pv=v.pv;sl.san=v.san;sl.chance=v.chance;sl.pm=v.pm;P_(cid).san=v.san;
-    save();renderInv();if(ST().mode==="combat")renderCombat();},
-  addMember(c,player){if(!c||ST().party.some(p=>p.cid===c.id))return;
+    save();keepFocus(()=>{renderInv();if(ST().mode==="combat")renderCombat();});},
+  addMember(c,player,progress){if(!c||ST().party.some(p=>p.cid===c.id))return;
     if(!S.chars.some(x=>x.id===c.id))S.chars.push(c);
-    P_(c.id);const sl=mkSlot(c);sl.player=player||"";ensureGroups();sl.grp=ST().active;
-    ST().party.push(sl);save();renderPlay();},
-  setNotebooks(n){NOTEBOOKS=n||{};renderInv();renderCtx();},
+    const name=(player||"").trim(),pl=name?addPlayer(name):null;
+    S.prog[c.id]={skills:{},checks:[],hist:[],...(progress||{}),player:name,owner:pl?pl.id:null};
+    const sl=mkSlot(c);sl.player=name;if(pl)sl.pid=pl.id;ensureGroups();sl.grp=ST().active;
+    ST().party.push(sl);save();keepFocus(()=>renderPlay());},
+  setNotebooks(n){NOTEBOOKS=n||{};fillCarnets();},
 };
 try{route()}catch(e){}`,
   'API exposed to the app: live points, new party members, notebooks',
@@ -304,13 +320,7 @@ try{route()}catch(e){}`,
 // Notebook section on the investigator cards (folded, newest first).
 patch(
   '$("#invView").addEventListener("click",e=>{\n  const b=e.target.closest("button");if(!b)return;const P=ST().party;',
-  `{const _riN=renderInv;renderInv=function(){_riN();
-  document.querySelectorAll("#invView .inv").forEach(card=>{const t=card.querySelector("[data-tog]"),body=card.querySelector(".ibody");if(!t||!body)return;
-    const cid=t.dataset.tog,notes=notesOf(cid).slice().sort((a,b)=>String(b.createdAt).localeCompare(String(a.createdAt)));if(!notes.length)return;
-    const d=document.createElement("details");d.className="carnet";d.open=openCarnets.has(cid);
-    d.addEventListener("toggle",()=>{d.open?openCarnets.add(cid):openCarnets.delete(cid);});
-    d.innerHTML='<summary><span>Carnet</span> <span>('+notes.length+')</span></summary>'+notes.map(n=>'<div class="cnote"><small>'+esc(new Date(n.createdAt).toLocaleString(LANG==="en"?"en-GB":"fr-FR",{day:"numeric",month:"short",hour:"2-digit",minute:"2-digit"}))+'</small> '+esc(n.body)+'</div>').join("");
-    body.appendChild(d);});};}
+  `{const _riN=renderInv;renderInv=function(){_riN();fillCarnets();};}
 $("#invView").addEventListener("click",e=>{
   const b=e.target.closest("button");if(!b)return;const P=ST().party;`,
   'notebooks on the investigator cards',

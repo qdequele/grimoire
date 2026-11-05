@@ -208,6 +208,27 @@ test('game screen: the original engine runs a story, rolls, saves to the account
   await game.locator('[data-ptog="investigateurs"]').click()
   await expect(game.locator('#invView .nm')).toHaveText('Vera Holt')
 
+  // Phones update points and notebooks while the keeper types: focus, caret and text stay; notes are text
+  await game.locator('#invView .tog').first().click()
+  const note = game.locator('#invView textarea').first()
+  await note.click()
+  await note.pressSequentially('hello')
+  const live = page.frames().find((f) => f.url().includes('play.html'))!
+  await live.evaluate(() => {
+    const g = eval as (s: string) => unknown
+    const S = g('S') as { chars: Array<{ id: string }> }
+    const api = (window as unknown as { GRIMOIRE_ENGINE: { setPoints: (c: string, v: object) => void; setNotebooks: (n: object) => void } }).GRIMOIRE_ENGINE
+    const cid = S.chars[0].id
+    api.setPoints(cid, { pv: 3, san: 20, chance: 30, pm: 4 })
+    api.setNotebooks({ [cid]: [{ id: 'n1', body: '<img src=x onerror=window.__xss=1>', createdAt: new Date().toISOString() }] })
+  })
+  await expect(note).toBeFocused()
+  await expect(note).toHaveValue('hello')
+  await expect(game.locator('#invView .stat .v').first()).toContainText('3')
+  await expect(game.locator('#invView .carnet')).toContainText('<img src=x onerror=window.__xss=1>')
+  await expect(game.locator('#invView .carnet img')).toHaveCount(0)
+  expect(await live.evaluate(() => (window as unknown as { __xss?: number }).__xss)).toBeUndefined()
+
   // Next scene, then reload without the browser copy: the account copy brings it back
   const gameSaved = page.waitForResponse((r) => r.request().method() === 'PATCH' && r.url().includes('/rest/v1/games'))
   await game.locator('#scene .scene-foot .btn.prim[data-go]').click()
