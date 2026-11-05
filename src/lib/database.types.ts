@@ -497,9 +497,14 @@ export type Database = {
         Args: { p_channel: string; p_event: string; p_payload: Json }
         Returns: undefined
       }
+      companion_clean_character: { Args: { p_data: Json }; Returns: Json }
       companion_create_character: {
         Args: { p_data: Json; p_player_name: string; p_token: string }
         Returns: string
+      }
+      companion_int: {
+        Args: { p: Json; p_hi: number; p_lo: number }
+        Returns: number
       }
       companion_link: {
         Args: { p_token: string }
@@ -531,17 +536,11 @@ export type Database = {
         }
         Returns: undefined
       }
-      companion_set_points: {
-        Args: {
-          p_chance: number
-          p_character: string
-          p_pm: number
-          p_pv: number
-          p_san: number
-          p_token: string
-        }
-        Returns: undefined
+      companion_sheet_int: {
+        Args: { p: Json; p_default: number }
+        Returns: number
       }
+      companion_text: { Args: { p: Json; p_max: number }; Returns: string }
       is_admin: { Args: Record<PropertyKey, never>; Returns: boolean }
       revoke_table_link: { Args: { p_link: string }; Returns: undefined }
       save_game_state: {
