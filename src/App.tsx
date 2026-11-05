@@ -1,5 +1,5 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import { createBrowserRouter, Navigate, RouterProvider, useLocation } from 'react-router'
+import { createBrowserRouter, Navigate, RouterProvider, useLocation, useParams } from 'react-router'
 import { AppLayout, RequireAuth } from '@/AppLayout'
 import { AuthProvider } from '@/auth/auth'
 import { LoginPage } from '@/auth/LoginPage'
@@ -25,6 +25,12 @@ function Moved({ to }: { to: string }) {
   return <Navigate to={{ pathname: to, search: useLocation().search }} replace />
 }
 
+/** One GamePage per game: going from /games/a to /games/b starts the new game from scratch. */
+function GameRoute() {
+  const { id } = useParams()
+  return <GamePage key={id} />
+}
+
 const STORY_TABS = [
   { to: '/stories', label: 'Bibliothèque', end: true },
   { to: '/stories/mine', label: 'Mes histoires' },
@@ -40,7 +46,7 @@ const queryClient = new QueryClient({ defaultOptions: { queries: { staleTime: 30
 const router = createBrowserRouter([
   { path: '/login', element: <LoginPage /> },
   // Full-screen game screen, outside the app chrome.
-  { path: '/games/:id', element: <RequireAuth><GamePage /></RequireAuth> },
+  { path: '/games/:id', element: <RequireAuth><GameRoute /></RequireAuth> },
   // Player companion: public pages opened from a table link (no account).
   {
     path: '/t/:token',

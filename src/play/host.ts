@@ -65,9 +65,9 @@ export interface PlayHost {
   save: (state: LegacyState) => void
   /** Back to the app's menu. */
   quit: () => void
-  /** The narrator's text generation (what claude.use("sample") gave in claude.ai). */
   /** Open the "players at the table" dialog. */
   openTable?: () => void
+  /** The narrator's text generation (what claude.use("sample") gave in claude.ai). */
   sample?: (messages: SampleMessage[], opts?: SampleOptions) => Promise<{ text: string }>
 }
 

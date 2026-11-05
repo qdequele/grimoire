@@ -4,6 +4,7 @@
 -- 2. companion_set_point reads the sheet's numbers without casts that can fail.
 -- 3. revoke_table_link tells the devices on the old topic that the channel moved.
 -- 4. companion_set_points (whole-row write, replaced by companion_set_point) is dropped.
+-- 5. save_game_state stamps the server's time of the save in the state.
 
 -- A whole number within p_lo..p_hi (5.0 counts as 5), else bad_value. The type is checked before
 -- any cast. Internal.
@@ -286,6 +287,33 @@ begin
   perform public.companion_broadcast(v_channel, 'rotate', '{}'::jsonb);
   update public.games set channel = gen_random_uuid() where id = v_game;
 end;
+$$;
+
+-- The keeper's save, as in 20261106090300, now stamped with the server's time (state.serverSavedAt, ms).
+-- On reopening, the game screen applies the phone points written after it. games.updated_at can't
+-- say this: a phone creating an investigator, or a revoke, also changes the row.
+create or replace function public.save_game_state(p_game uuid, p_state jsonb, p_removed uuid[]) returns void
+language sql security invoker set search_path = '' as $$
+  update public.games g
+  set state = jsonb_set(
+    coalesce(p_state, '{}'::jsonb) || jsonb_build_object('serverSavedAt', floor(extract(epoch from clock_timestamp()) * 1000)),
+    '{party}',
+    (case when jsonb_typeof(p_state -> 'party') = 'array' then p_state -> 'party' else '[]'::jsonb end)
+    || coalesce((
+      select jsonb_agg(m.member order by m.pos)
+      from jsonb_array_elements(
+        case when jsonb_typeof(g.state -> 'party') = 'array' then g.state -> 'party' else '[]'::jsonb end
+      ) with ordinality as m(member, pos)
+      where not exists (
+          select 1 from jsonb_array_elements(
+            case when jsonb_typeof(p_state -> 'party') = 'array' then p_state -> 'party' else '[]'::jsonb end
+          ) as e(member)
+          where e.member ->> 'characterId' = m.member ->> 'characterId'
+        )
+        and (m.member ->> 'characterId') <> all (coalesce(p_removed, '{}')::text[])
+    ), '[]'::jsonb),
+    true)
+  where g.id = p_game;
 $$;
 
 drop function public.companion_set_points(text, uuid, int, int, int, int);

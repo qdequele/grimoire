@@ -215,6 +215,8 @@ test('revoking the link shows "link no longer valid" on the phone after reload',
   await dialog.getByRole('button', { name: 'Révoquer et remplacer' }).click()
   await expect(dialog.locator('code').first()).not.toHaveText(tableUrl)
 
+  // The revoke tells the phones on the old channel (rotate): no reload needed.
+  await expect(phone.getByRole('alert')).toHaveText("Ce lien n'est plus valide. Demande un nouveau code au gardien.", LIVE)
   await phone.reload()
   await expect(phone.getByRole('alert')).toHaveText("Ce lien n'est plus valide. Demande un nouveau code au gardien.")
   await phone.goto(tableUrl)
@@ -237,4 +239,90 @@ test("phone changes made while the keeper's tab is closed are there when the gam
   await unfold(game, 'Alpha')
   await expect(engineStat(game, 'Alpha', 'pv')).toHaveText('12/13', LIVE)
   await expect(engineStat(game, 'Alpha', 'san')).toHaveText('59', LIVE)
+})
+
+test('broadcasts are hints: forged ones change nothing on the game screen, and phones clamp what they show', async ({ browser, baseURL }) => {
+  const { keeper, game, tableUrl, phone } = await setUpTable(browser, baseURL)
+  await pick(phone, tableUrl, 'Alpha')
+  await unfold(game, 'Alpha')
+  await expect(engineStat(game, 'Alpha', 'pv')).toHaveText('13/13')
+
+  // Anyone holding a link learns the channel from companion_open and can send on it.
+  const forger = await (await browser.newContext({ baseURL })).newPage()
+  await forger.goto('/login')
+  const token = tableUrl.split('/t/')[1]
+  await forger.evaluate(async (token) => {
+    // The app's own client, as the dev server serves it.
+    interface Channel {
+      subscribe: (cb: (status: string) => void) => void
+      send: (m: { type: 'broadcast'; event: string; payload: object }) => Promise<unknown>
+    }
+    interface Client {
+      rpc: (fn: string, args: object) => Promise<{ data: unknown }>
+      channel: (topic: string) => Channel
+    }
+    const path = '/src/lib/supabase.ts'
+    const { supabase } = (await import(/* @vite-ignore */ path)) as { supabase: Client }
+    const { data } = await supabase.rpc('companion_open', { p_token: token })
+    const view = data as { game: { channel: string }; party: Array<{ id: string }> }
+    const ch = supabase.channel(`companion:${view.game.channel}`)
+    await new Promise<void>((resolve) => ch.subscribe((status) => status === 'SUBSCRIBED' && resolve()))
+    const characterId = view.party[0].id
+    await ch.send({ type: 'broadcast', event: 'points', payload: { characterId, pv: 500, san: 0, chance: 0, pm: 0, checks: [], source: 'phone', updatedAt: new Date().toISOString() } })
+    await ch.send({ type: 'broadcast', event: 'member', payload: { characterId: crypto.randomUUID() } })
+  }, token)
+
+  // The phone shows the forged values within the server's bounds (HP at most the sheet's 13)…
+  await expect(phoneStat(phone, 'PV')).toHaveText('13 / 13', LIVE)
+  await expect(phoneStat(phone, 'SAN')).toHaveText('0', LIVE)
+  // …the game screen re-reads the database, which still holds nothing from a phone.
+  await keeper.waitForTimeout(1_500)
+  await expect(engineStat(game, 'Alpha', 'pv')).toHaveText('13/13')
+  await expect(engineStat(game, 'Alpha', 'san')).toHaveText('60')
+  await expect(game.locator('#invView .nm')).toHaveText(['Alpha'])
+
+  // A real tap still goes through, from the server's values.
+  await phone.reload()
+  await expect(phoneStat(phone, 'SAN')).toHaveText('60')
+  await tap(phone, 'Retirer 1 SAN')
+  await expect(engineStat(game, 'Alpha', 'san')).toHaveText('59', LIVE)
+})
+
+test("a keeper change that never reached the live points is written on the next save, and nothing is when they agree", async ({ browser, baseURL }) => {
+  const { keeperContext, keeper, game, gameId, tableUrl, phone } = await setUpTable(browser, baseURL)
+  const pointsWrite = (page: Page) =>
+    page.waitForResponse((r) => r.url().includes('/rest/v1/game_points') && r.request().method() === 'POST' && r.ok())
+  await unfold(game, 'Alpha')
+  const first = pointsWrite(keeper)
+  await card(game, 'Alpha').locator('button[data-k="san"][data-d="-1"]').click()
+  await first
+
+  // The next change reaches the game's state but not game_points (as when the tab closes first).
+  await keeper.route('**/rest/v1/game_points**', (r) => (r.request().method() === 'POST' ? r.abort() : r.continue()))
+  const saved = keeper.waitForResponse((r) => r.url().includes('/rest/v1/rpc/save_game_state') && r.ok())
+  await card(game, 'Alpha').locator('button[data-k="san"][data-d="-1"]').click()
+  await expect(engineStat(game, 'Alpha', 'san')).toHaveText('58')
+  await saved
+  await keeper.close()
+
+  const again = await keeperContext.newPage()
+  watch(again)
+  const reopened = await openGame(again, gameId)
+  await unfold(reopened, 'Alpha')
+  await expect(engineStat(reopened, 'Alpha', 'san')).toHaveText('58')
+  const frame = () => again.frames().find((f) => f.url().includes('play.html'))!
+  const repaired = pointsWrite(again)
+  await frame().evaluate(() => (eval('save') as () => void)())
+  const body = (await repaired).request().postDataJSON() as Array<{ san: number }> | { san: number }
+  expect(Array.isArray(body) ? body[0].san : body.san).toBe(58)
+  await pick(phone, tableUrl, 'Alpha')
+  await expect(phoneStat(phone, 'SAN')).toHaveText('58')
+
+  // Database and game agree: a save sends no points.
+  let writes = 0
+  again.on('request', (r) => { if (r.url().includes('/rest/v1/game_points') && r.method() === 'POST') writes++ })
+  const stateSaved = again.waitForResponse((r) => r.url().includes('/rest/v1/rpc/save_game_state') && r.ok())
+  await frame().evaluate(() => (eval('save') as () => void)())
+  await stateSaved
+  expect(writes).toBe(0)
 })

@@ -306,9 +306,11 @@ export function useCreateCharacter(token: string) {
 // ------------------------------------------------------------------ live
 
 /**
- * Listens to the game's channel: `points` (keeper or phone) go straight into the cache, `notes` and
- * `member` refetch. Returns true while subscribed (the "live with the keeper" badge).
- * After a revoke the channel rotates and this one goes quiet: the next refetch says link_invalid.
+ * Listens to the game's channel: `points` (keeper or phone) go straight into the cache, clamped to
+ * what the server accepts (anyone with a link can send on this public topic; writes are re-checked
+ * by the RPCs), `notes` and `member` refetch. Returns true while subscribed (the "live" badge).
+ * A revoke sends `rotate` on the old topic before moving the game: refetching gives a still-valid
+ * link the new channel (this hook resubscribes) and a revoked one the invalid-link state.
  */
 export function useCompanionLive(token: string, channel: string | undefined): boolean {
   const qc = useQueryClient()
@@ -330,12 +332,13 @@ export function useCompanionLive(token: string, channel: string | undefined): bo
         // A keeper change arriving mid-taps keeps the tapped fields' pending values (it may predate them).
         const member = view.party.find((m) => m.id === row.characterId)!
         const mine = pointsOf(view, member)
-        const merged = { ...row }
+        const merged = { ...row, ...clampPoints(row, member.data.hp ?? 10) }
         for (const f of tappedFields(qc, token, row.characterId)) merged[f] = mine[f]
         qc.setQueryData<CompanionView>(key, patchPoints(view, merged))
       })
       .on('broadcast', { event: 'notes' }, () => void qc.invalidateQueries({ queryKey: key }))
       .on('broadcast', { event: 'member' }, () => void qc.invalidateQueries({ queryKey: key }))
+      .on('broadcast', { event: 'rotate' }, () => void qc.invalidateQueries({ queryKey: key }))
       .subscribe((status) => {
         setLive(status === 'SUBSCRIBED')
         // Changes made while we were not listening.

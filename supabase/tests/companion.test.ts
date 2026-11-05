@@ -635,6 +635,18 @@ describe('companion: keeper saves', () => {
     expect(await partyOf(g.gameId)).toEqual([A])
   })
 
+  it("a save is stamped with the server's time, after the points written before it", async () => {
+    const g = await newGame(alice, [{ name: 'A' }])
+    const l = await link(alice, g.gameId)
+    expect((await anon.rpc('companion_set_point', { p_token: l.token, p_character: g.ids[0], p_field: 'pm', p_value: 3 })).error).toBeNull()
+    const s = await alice.client.rpc('save_game_state', { p_game: g.gameId, p_state: { party: [{ characterId: g.ids[0] }], serverSavedAt: 1 }, p_removed: [] })
+    expect(s.error).toBeNull()
+    const state = (await alice.client.from('games').select('state').eq('id', g.gameId).single()).data!.state as { serverSavedAt: number }
+    const pts = (await alice.client.from('game_points').select('updated_at').eq('character_id', g.ids[0]).single()).data!
+    expect(state.serverSavedAt).toBeGreaterThanOrEqual(Date.parse(pts.updated_at))
+    expect(state.serverSavedAt).toBeLessThan(Date.parse(pts.updated_at) + 60_000)
+  })
+
   it("only the game's owner can save it", async () => {
     const g = await newGame(alice, [{ name: 'A' }])
     await bob.client.rpc('save_game_state', { p_game: g.gameId, p_state: { party: [] }, p_removed: g.ids })

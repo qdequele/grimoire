@@ -46,22 +46,6 @@ const toPointsRow = (r: PointsDbRow): PointsRow => ({
   updatedAt: r.updated_at,
 })
 
-/** A `points` broadcast (Realtime adds keys such as `id`: only the ones used are checked). */
-function asPointsEvent(p: Record<string, unknown>): PointsRow | null {
-  const n = (k: string) => typeof p[k] === 'number'
-  if (typeof p.characterId !== 'string' || !n('pv') || !n('san') || !n('chance') || !n('pm')) return null
-  return {
-    characterId: p.characterId,
-    pv: p.pv as number,
-    san: p.san as number,
-    chance: p.chance as number,
-    pm: p.pm as number,
-    checks: Array.isArray(p.checks) ? p.checks.filter((c): c is string => typeof c === 'string') : [],
-    source: p.source === 'phone' ? 'phone' : 'keeper',
-    updatedAt: typeof p.updatedAt === 'string' ? p.updatedAt : new Date().toISOString(),
-  }
-}
-
 async function fetchNotes(characterIds: string[]): Promise<Record<string, NotebookEntry[]>> {
   const out: Record<string, NotebookEntry[]> = Object.fromEntries(characterIds.map((id) => [id, []]))
   if (!characterIds.length) return out
@@ -76,13 +60,17 @@ async function fetchNotes(characterIds: string[]): Promise<Record<string, Notebo
 }
 
 /** What the live channel needs from the running game (set once the game has started). */
+/**
+ * Broadcasts on the game's topic are public (any link holder can send one): they are only hints.
+ * Each one makes the game screen read the database under the keeper's own access rules.
+ */
 interface Live {
   /** Runs `fn` with the engine API, now or as soon as the engine has started. */
   withEngine: (fn: (e: EngineApi) => void) => void
-  onPoints: (row: PointsRow) => void
+  /** Re-read this investigator's game_points row. */
+  onPoints: (characterId: string) => void
   onNotes: (characterId: string) => void
-  onMember: (characterId: string) => void
-  /** After (re)subscribing: catch up on what happened while not listening. */
+  /** After (re)subscribing, or a `member` hint: catch up on what happened while not listening. */
   catchUp: () => void
 }
 
@@ -290,6 +278,32 @@ export function GamePage() {
         console.error('New investigator load failed', error)
       }
     }
+    // One read at a time per investigator, so rows are handled in the order they were read.
+    const pointsReads = new Map<string, Promise<void>>()
+    const onPointsRow = (r: PointsRow) => {
+      if (r.source === 'phone') return applyPhone(r)
+      const cid = r.characterId
+      withEngine((e) => {
+        if (!accountIds.has(cid)) return
+        const mine = lastWritten.get(cid)
+        const action = keeperEchoAction(mine, r, phoneSinceWrite.has(cid))
+        if (action === 'repair' && mine) upsertPoints([{ characterId: cid, ...mine }])
+        else if (action === 'adopt') {
+          const v = { pv: r.pv, san: r.san, chance: r.chance, pm: r.pm }
+          lastWritten.set(cid, { ...v, checks: mine?.checks ?? r.checks })
+          e.setPoints(cid, v)
+        }
+      })
+    }
+    const readPoints = (characterId: string) => {
+      const next = (pointsReads.get(characterId) ?? Promise.resolve()).then(async () => {
+        const { data, error } = await supabase
+          .from('game_points').select('*').eq('game_id', g.id).eq('character_id', characterId).maybeSingle()
+        if (error) throw error
+        if (!disposed && data) onPointsRow(toPointsRow(data))
+      }).catch((error) => console.error('Points load failed', error))
+      pointsReads.set(characterId, next)
+    }
     const catchUp = async () => {
       const [gs, ps] = await Promise.all([
         supabase.from('games').select('state').eq('id', g.id).single(),
@@ -322,6 +336,9 @@ export function GamePage() {
       if (points.error) console.error('Points load failed', points.error)
       const rows = (points.data ?? []).map(toPointsRow)
       rows.forEach(notePoints)
+      // Phone rows written after the keeper's last account save are newer than the saved state.
+      // Both times are the server's (save_game_state stamps serverSavedAt).
+      const since = Number(g.state.serverSavedAt) || Date.parse(g.updated_at) || 0
       notebooks = notes
       withEngine((e) => e.setNotebooks(notebooks))
 
@@ -332,8 +349,14 @@ export function GamePage() {
           const saved = newest(g.state.legacy, g.id)
           let S = saved ? withAccountProgress(saved, list) : freshState(f, { storyId, party: list })
           S = addMissingMembers(S, f, storyId, list)
-          S = applyPoints(S, storyId, rows, Number(saved?.savedAt ?? 0))
-          lastWritten = accountPoints(S)
+          S = applyPoints(S, storyId, rows, since)
+          // What game_points holds, so keeper changes that never reached it (tab closed before the
+          // write) go out with the first save. Investigators without a row: the state, nothing to send.
+          const db = new Map(rows.map((r) => [r.characterId, r]))
+          lastWritten = new Map([...accountPoints(S)].map(([cid, v]) => {
+            const r = db.get(cid)
+            return [cid, r ? { pv: r.pv, san: r.san, chance: r.chance, pm: r.pm, checks: [...r.checks] } : v]
+          }))
           return S
         },
         save: (s) => {
@@ -357,23 +380,8 @@ export function GamePage() {
       }
       live.current = {
         withEngine,
-        onPoints: (r) => {
-          if (r.source === 'phone') return applyPhone(r)
-          const cid = r.characterId
-          withEngine((e) => {
-            if (!accountIds.has(cid)) return
-            const mine = lastWritten.get(cid)
-            const action = keeperEchoAction(mine, r, phoneSinceWrite.has(cid))
-            if (action === 'repair' && mine) upsertPoints([{ characterId: cid, ...mine }])
-            else if (action === 'adopt') {
-              const v = { pv: r.pv, san: r.san, chance: r.chance, pm: r.pm }
-              lastWritten.set(cid, { ...v, checks: mine?.checks ?? r.checks })
-              e.setPoints(cid, v)
-            }
-          })
-        },
+        onPoints: readPoints,
         onNotes: (cid) => accountIds.has(cid) && refreshNotes(cid),
-        onMember: (cid) => void addMember(cid),
         catchUp: () => void catchUp().catch((error) => console.error('Catch-up failed', error)),
       }
       setMembers(party.map(toMember))
@@ -392,31 +400,35 @@ export function GamePage() {
     }
   }, [start, navigate, qc])
 
-  // Live changes from the players' phones. The channel changes when a link is revoked.
+  // Live changes from the players' phones. The channel changes when a link is revoked (`rotate`:
+  // refetch the game, the new channel resubscribes). Payloads are hints: see Live.
   const channel = game.data?.channel
   useEffect(() => {
-    if (!ready || !channel) return
+    if (!ready || !channel || !id) return
+    const characterIdOf = (payload: unknown) => {
+      const cid = (payload as Record<string, unknown> | null)?.characterId
+      return typeof cid === 'string' ? cid : null
+    }
     const ch = supabase
       .channel(`companion:${channel}`)
       .on('broadcast', { event: 'points' }, ({ payload }) => {
-        const r = asPointsEvent(payload as Record<string, unknown>)
-        if (r) live.current?.onPoints(r)
+        const cid = characterIdOf(payload)
+        if (cid) live.current?.onPoints(cid)
       })
       .on('broadcast', { event: 'notes' }, ({ payload }) => {
-        const cid = (payload as Record<string, unknown>).characterId
-        if (typeof cid === 'string') live.current?.onNotes(cid)
+        const cid = characterIdOf(payload)
+        if (cid) live.current?.onNotes(cid)
       })
-      .on('broadcast', { event: 'member' }, ({ payload }) => {
-        const cid = (payload as Record<string, unknown>).characterId
-        if (typeof cid === 'string') live.current?.onMember(cid)
-      })
+      // Only investigators listed in the game's party in the database join (catchUp reads it).
+      .on('broadcast', { event: 'member' }, () => live.current?.catchUp())
+      .on('broadcast', { event: 'rotate' }, () => void qc.invalidateQueries({ queryKey: gameKeys.one(id) }))
       .subscribe((status) => {
         if (status === 'SUBSCRIBED') live.current?.catchUp()
       })
     return () => {
       void supabase.removeChannel(ch)
     }
-  }, [ready, channel])
+  }, [ready, channel, id, qc])
 
   if (game.error) {
     return (
