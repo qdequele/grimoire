@@ -2,7 +2,7 @@ import { Link } from 'react-router'
 import { Badge } from '@/components/ui/badge'
 import { Card, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card'
 import { useT } from '@/i18n/t'
-import { sceneCount, type StoryRow } from './api'
+import { CREATOR_TAG, sceneCount, type StoryRow } from './api'
 
 export function StoryCard({ story }: { story: StoryRow }) {
   const t = useT()
@@ -23,7 +23,9 @@ export function StoryCard({ story }: { story: StoryRow }) {
         <Badge variant="outline">{t.n(sceneCount(story.content), '{n} scène', '{n} scènes')}</Badge>
         {players && <Badge variant="outline">{players}</Badge>}
         {meta.duration && <Badge variant="outline">{meta.duration}</Badge>}
-        {meta.license === 'private' && <Badge variant="outline">{t('Import privé')}</Badge>}
+        {meta.license === 'private' && (
+          <Badge variant="outline">{meta.tags?.includes(CREATOR_TAG) ? t('Création privée') : t('Import privé')}</Badge>
+        )}
       </CardFooter>
     </Card>
   )

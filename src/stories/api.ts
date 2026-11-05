@@ -19,12 +19,16 @@ export interface StoryContent {
     setting?: string
     author?: string
     license?: string
+    tags?: string[]
     contentWarnings?: string[]
   }
   overview?: { secret?: string; steps?: string[] }
   acts: Array<{ id: string; title: string; scenes: Array<{ id: string; title: string; lead?: string }> }>
   npcs?: Array<{ id: string; name: string; role?: string }>
 }
+
+/** meta.tags entry of stories written with the story creator (set by the create-story function). */
+export const CREATOR_TAG = 'grimoire-creator'
 
 export type StoryRow = Omit<Tables<'stories'>, 'content'> & { content: StoryContent }
 

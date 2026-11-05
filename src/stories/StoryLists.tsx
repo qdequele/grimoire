@@ -1,4 +1,4 @@
-import { BookOpen, FileUp, Store } from 'lucide-react'
+import { BookOpen, FileUp, Feather, Store } from 'lucide-react'
 import type { ReactNode } from 'react'
 import { Link } from 'react-router'
 import { Alert, AlertDescription } from '@/components/ui/alert'
@@ -67,11 +67,17 @@ export function MyStoriesPage() {
   return (
     <section className="flex flex-col gap-6">
       <header className="flex flex-wrap items-center justify-between gap-4">
-        <p className="text-muted-foreground">{t('Visibles par toi seul : tes imports et tes copies de la bibliothèque.')}</p>
-        <Button render={<Link to="/stories/import" />} nativeButton={false}>
-          <FileUp data-icon="inline-start" />
-          {t('Importer une histoire')}
-        </Button>
+        <p className="text-muted-foreground">{t('Visibles par toi seul : tes créations, tes imports et tes copies de la bibliothèque.')}</p>
+        <div className="flex flex-wrap gap-2">
+          <Button render={<Link to="/stories/create" />} nativeButton={false}>
+            <Feather data-icon="inline-start" />
+            {t('Créer une histoire')}
+          </Button>
+          <Button variant="outline" render={<Link to="/stories/import" />} nativeButton={false}>
+            <FileUp data-icon="inline-start" />
+            {t('Importer une histoire')}
+          </Button>
+        </div>
       </header>
       <StoryGrid
         stories={data}
@@ -83,11 +89,12 @@ export function MyStoriesPage() {
               <EmptyMedia variant="icon"><BookOpen /></EmptyMedia>
               <EmptyTitle>{t('Aucune histoire personnelle')}</EmptyTitle>
               <EmptyDescription>
-                {t("Importe les pages d'un scénario que tu possèdes, ou copie une histoire de la bibliothèque pour l'adapter.")}
+                {t("Crée une histoire originale avec l'aide de l'IA, importe les pages d'un scénario que tu possèdes, ou copie une histoire de la bibliothèque pour l'adapter.")}
               </EmptyDescription>
             </EmptyHeader>
-            <EmptyContent>
-              <Button render={<Link to="/stories/import" />} nativeButton={false}>{t('Importer une histoire')}</Button>
+            <EmptyContent className="flex-row flex-wrap justify-center">
+              <Button render={<Link to="/stories/create" />} nativeButton={false}>{t('Créer une histoire')}</Button>
+              <Button variant="outline" render={<Link to="/stories/import" />} nativeButton={false}>{t('Importer une histoire')}</Button>
             </EmptyContent>
           </Empty>
         }
