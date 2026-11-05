@@ -132,16 +132,23 @@ export function GamePage() {
     // The engine API appears in the iframe once its script has run: queue calls until then.
     const queue: Array<(e: EngineApi) => void> = []
     const engine = () => iframe.current?.contentWindow?.GRIMOIRE_ENGINE
+    const run = (fn: (e: EngineApi) => void, e: EngineApi) => {
+      try {
+        fn(e)
+      } catch (error) {
+        console.error('Live update failed', error)
+      }
+    }
     const withEngine = (fn: (e: EngineApi) => void) => {
       const e = engine()
-      if (e && !queue.length) fn(e)
+      if (e && !queue.length) run(fn, e)
       else queue.push(fn)
     }
     const poll = setInterval(() => {
       const e = engine()
       if (!e) return
       clearInterval(poll)
-      for (const fn of queue.splice(0)) fn(e)
+      for (const fn of queue.splice(0)) run(fn, e)
     }, ENGINE_POLL)
 
     let timer: ReturnType<typeof setTimeout> | undefined
@@ -167,19 +174,22 @@ export function GamePage() {
       const ids = new Set(partyIds(legacy, storyId, accountIds))
       return new Map([...pointsFromState(legacy, storyId)].filter(([cid]) => ids.has(cid)))
     }
+    /** Keeper values to game_points. updated_at is the server's (trigger): client clocks drift. */
+    const upsertPoints = (rows: ReturnType<typeof diffPoints>) => {
+      if (!rows.length) return
+      void supabase
+        .from('game_points')
+        .upsert(rows.map((p) => ({
+          game_id: g.id, character_id: p.characterId, pv: p.pv, san: p.san, chance: p.chance, pm: p.pm,
+          checks: p.checks, source: 'keeper',
+        })))
+        .then(({ error }) => error && console.error('Points save failed', error))
+    }
     const savePoints = (legacy: LegacyState) => {
       const now = accountPoints(legacy)
       const changed = diffPoints(now, lastWritten)
       lastWritten = now
-      if (!changed.length) return
-      const at = new Date().toISOString()
-      void supabase
-        .from('game_points')
-        .upsert(changed.map((p) => ({
-          game_id: g.id, character_id: p.characterId, pv: p.pv, san: p.san, chance: p.chance, pm: p.pm,
-          checks: p.checks, source: 'keeper', updated_at: at,
-        })))
-        .then(({ error }) => error && console.error('Points save failed', error))
+      upsertPoints(changed)
     }
     const flush = () => {
       if (!pending) return
@@ -188,37 +198,48 @@ export function GamePage() {
       saveProgress(legacy)
       savePoints(legacy)
       const scen = (legacy.scen as Record<string, { scene?: string; done?: Record<string, boolean> }>)[storyId] ?? {}
+      const inEngine = partyIds(legacy, storyId, accountIds)
       const state: GameState = {
         ...g.state,
         scene: scen.scene ?? g.state.scene,
         done: Object.entries(scen.done ?? {}).filter(([, v]) => v).map(([k]) => k),
-        // The engine's party is the truth: investigators removed in the game leave, phone ones stay.
-        party: partyIds(legacy, storyId, accountIds).map((characterId) => ({ characterId })),
+        party: inEngine.map((characterId) => ({ characterId })),
         legacy,
       }
+      // The database keeps investigators who joined from a phone since (not yet in the engine);
+      // only the ones the keeper removed in the engine leave the party.
+      const removed = [...accountIds].filter((cid) => !inEngine.includes(cid))
       void supabase
-        .from('games')
-        .update({ state: state as unknown as Json })
-        .eq('id', g.id)
+        .rpc('save_game_state', { p_game: g.id, p_state: state as unknown as Json, p_removed: removed })
         .then(({ error }) => {
           if (error) console.error('Game save failed', error)
           else qc.invalidateQueries({ queryKey: gameKeys.all })
         })
     }
 
+    /** Only phone rows move `seen`: their updated_at is the time catch-up compares with. */
     const notePoints = (r: PointsRow) => {
+      if (r.source !== 'phone') return
       const before = seen.get(r.characterId)
       if (!before || Date.parse(r.updatedAt) > Date.parse(before)) seen.set(r.characterId, r.updatedAt)
     }
     /** Phone values into the engine, recorded as written so the next save doesn't send them back as the keeper's. */
+    const setPhone = (e: EngineApi, r: PointsRow) => {
+      const v = { pv: r.pv, san: r.san, chance: r.chance, pm: r.pm }
+      if (accountIds.has(r.characterId)) {
+        lastWritten.set(r.characterId, { ...v, checks: lastWritten.get(r.characterId)?.checks ?? r.checks })
+      }
+      e.setPoints(r.characterId, v)
+    }
+    const newer = (a: PointsRow | undefined, b: PointsRow | undefined) =>
+      !a ? b : !b ? a : Date.parse(b.updatedAt) > Date.parse(a.updatedAt) ? b : a
+    // Phone points for an investigator still joining: kept until the engine has them.
+    const early = new Map<string, PointsRow>()
     const applyPhone = (r: PointsRow) => {
       notePoints(r)
       withEngine((e) => {
-        const v = { pv: r.pv, san: r.san, chance: r.chance, pm: r.pm }
-        if (accountIds.has(r.characterId)) {
-          lastWritten.set(r.characterId, { ...v, checks: lastWritten.get(r.characterId)?.checks ?? r.checks })
-        }
-        e.setPoints(r.characterId, v)
+        if (!accountIds.has(r.characterId) && joining.has(r.characterId)) early.set(r.characterId, newer(early.get(r.characterId), r)!)
+        else setPhone(e, r)
       })
     }
     const refreshNotes = (characterId: string) => {
@@ -230,6 +251,8 @@ export function GamePage() {
         })
         .catch((error) => console.error('Notebook load failed', error))
     }
+    // Investigators joining (or joined): accountIds only gets them once the engine has them,
+    // so a save in between doesn't count them as removed.
     const joining = new Set<string>()
     const addMember = async (characterId: string) => {
       if (accountIds.has(characterId) || joining.has(characterId)) return
@@ -240,19 +263,27 @@ export function GamePage() {
           supabase.from('game_points').select('*').eq('game_id', g.id).eq('character_id', characterId).maybeSingle(),
         ])
         if (c.error) throw c.error
-        if (disposed || accountIds.has(characterId)) return
+        if (disposed) return
         const row = c.data as unknown as CharacterRow
-        party.push(row)
-        accountIds.add(characterId)
-        written.set(row.id, JSON.stringify(row.data.progress ?? null))
         setMembers((m) => [...m, toMember(row)])
-        withEngine((e) => e.addMember(toLegacyCharacter(row.id, row.data), row.player?.name ?? '', row.data.progress))
-        if (p.data) applyPhone(toPointsRow(p.data))
+        withEngine((e) => {
+          if (accountIds.has(row.id)) return
+          const legacy = toLegacyCharacter(row.id, row.data)
+          party.push(row)
+          accountIds.add(row.id)
+          written.set(row.id, JSON.stringify(row.data.progress ?? null))
+          e.addMember(legacy, row.player?.name ?? '', row.data.progress)
+          const r = newer(p.data ? toPointsRow(p.data) : undefined, early.get(row.id))
+          early.delete(row.id)
+          if (r) {
+            notePoints(r)
+            setPhone(e, r)
+          }
+        })
         refreshNotes(characterId)
       } catch (error) {
-        console.error('New investigator load failed', error)
-      } finally {
         joining.delete(characterId)
+        console.error('New investigator load failed', error)
       }
     }
     const catchUp = async () => {
@@ -323,8 +354,12 @@ export function GamePage() {
       live.current = {
         withEngine,
         onPoints: (r) => {
-          if (r.source === 'phone') applyPhone(r)
-          else notePoints(r)
+          if (r.source === 'phone') return applyPhone(r)
+          // A keeper write that landed after a newer phone write (or our own older write): put back what we hold.
+          const mine = lastWritten.get(r.characterId)
+          if (mine && diffPoints(new Map([[r.characterId, r]]), new Map([[r.characterId, mine]])).length) {
+            upsertPoints([{ characterId: r.characterId, ...mine }])
+          }
         },
         onNotes: (cid) => accountIds.has(cid) && refreshNotes(cid),
         onMember: (cid) => void addMember(cid),

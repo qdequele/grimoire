@@ -535,6 +535,10 @@ export type Database = {
       }
       is_admin: { Args: Record<PropertyKey, never>; Returns: boolean }
       revoke_table_link: { Args: { p_link: string }; Returns: undefined }
+      save_game_state: {
+        Args: { p_game: string; p_removed: string[]; p_state: Json }
+        Returns: undefined
+      }
     }
     Enums: {
       import_status: "running" | "succeeded" | "failed"

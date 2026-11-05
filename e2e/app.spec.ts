@@ -230,7 +230,7 @@ test('game screen: the original engine runs a story, rolls, saves to the account
   expect(await live.evaluate(() => (window as unknown as { __xss?: number }).__xss)).toBeUndefined()
 
   // Next scene, then reload without the browser copy: the account copy brings it back
-  const gameSaved = page.waitForResponse((r) => r.request().method() === 'PATCH' && r.url().includes('/rest/v1/games'))
+  const gameSaved = page.waitForResponse((r) => r.url().includes('/rest/v1/rpc/save_game_state') && r.ok())
   await game.locator('#scene .scene-foot .btn.prim[data-go]').click()
   await expect(game.locator('#scene h2')).not.toHaveText('The harbour')
   const second = (await game.locator('#scene h2').textContent()) ?? ''

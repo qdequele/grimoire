@@ -101,8 +101,9 @@ const CHAR_FR: Record<string, string> = { STR: 'FOR', CON: 'CON', SIZ: 'TAI', DE
 
 /** A keeper's investigator in the legacy engine's character format. */
 export function toLegacyCharacter(id: string, c: CharacterData) {
-  const car = Object.fromEntries(Object.entries(c.characteristics).map(([k, v]) => [CHAR_FR[k] ?? k, v]))
-  const sk = Object.entries(c.skills)
+  // Sheets created from a phone may hold only a name (companion_create_character accepts it).
+  const car = Object.fromEntries(Object.entries(c.characteristics ?? {}).map(([k, v]) => [CHAR_FR[k] ?? k, v]))
+  const sk = Object.entries(c.skills ?? {})
     .map(([key, v]) => `${skillKeyLabel(key)} ${v}`)
     .join(' · ')
   const bg = Object.fromEntries(
@@ -117,7 +118,7 @@ export function toLegacyCharacter(id: string, c: CharacterData) {
     san: c.san ?? 50,
     chance: c.luck ?? 50,
     pm: c.mp ?? 10,
-    dex: c.characteristics.DEX ?? 50,
+    dex: c.characteristics?.DEX ?? 50,
     imp: c.damageBonus,
     car,
     sk,

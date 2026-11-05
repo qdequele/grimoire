@@ -464,3 +464,50 @@ describe('companion: create an investigator and broadcast', () => {
     }
   })
 })
+
+describe('companion: keeper saves', () => {
+  const partyOf = async (gameId: string) =>
+    ((await alice.client.from('games').select('state').eq('id', gameId).single()).data!.state as { party: Array<{ characterId: string }> })
+      .party.map((m) => m.characterId)
+
+  it("saving the engine's state keeps investigators who joined from a phone, unless removed", async () => {
+    const g = await newGame(alice, [{ name: 'A' }])
+    const [A] = g.ids
+    const l = await link(alice, g.gameId)
+    const { data, error } = await anon.rpc('companion_create_character', { p_token: l.token, p_data: { name: 'B' }, p_player_name: '' })
+    expect(error).toBeNull()
+    const B = data as unknown as string
+
+    // The keeper's engine hasn't seen B yet.
+    const engineState = { scene: 'start', done: ['x'], party: [{ characterId: A }], legacy: { v: 1 } }
+    const s1 = await alice.client.rpc('save_game_state', { p_game: g.gameId, p_state: engineState, p_removed: [] })
+    expect(s1.error).toBeNull()
+    expect(await partyOf(g.gameId)).toEqual([A, B])
+    const saved = (await alice.client.from('games').select('state').eq('id', g.gameId).single()).data!.state
+    expect(saved).toMatchObject({ scene: 'start', done: ['x'], legacy: { v: 1 } })
+    // B still reaches the game from the phone.
+    expect((await anon.rpc('companion_set_points', { p_token: l.token, p_character: B, p_pv: 5, p_san: 5, p_chance: 5, p_pm: 5 })).error).toBeNull()
+
+    // Removed by the keeper in the engine: gone.
+    const s2 = await alice.client.rpc('save_game_state', { p_game: g.gameId, p_state: engineState, p_removed: [B] })
+    expect(s2.error).toBeNull()
+    expect(await partyOf(g.gameId)).toEqual([A])
+  })
+
+  it("only the game's owner can save it", async () => {
+    const g = await newGame(alice, [{ name: 'A' }])
+    await bob.client.rpc('save_game_state', { p_game: g.gameId, p_state: { party: [] }, p_removed: g.ids })
+    expect(await partyOf(g.gameId)).toEqual(g.ids)
+    const r = await anon.rpc('save_game_state', { p_game: g.gameId, p_state: { party: [] }, p_removed: g.ids })
+    expect(r.error).not.toBeNull()
+  })
+
+  it('points get the server time, not the client one', async () => {
+    const g = await newGame(alice, [{ name: 'A' }])
+    const r = await alice.client.from('game_points').upsert({
+      game_id: g.gameId, character_id: g.ids[0], pv: 1, san: 1, chance: 1, pm: 1, source: 'keeper', updated_at: '2099-01-01T00:00:00Z',
+    }).select('updated_at').single()
+    expect(r.error).toBeNull()
+    expect(Date.parse(r.data!.updated_at)).toBeLessThan(Date.parse('2090-01-01T00:00:00Z'))
+  })
+})
