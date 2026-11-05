@@ -8,6 +8,7 @@ import { PlayersPage } from '@/characters/PlayersPage'
 import { CharacterWizardPage } from '@/characters/wizard/CharacterWizardPage'
 import { Toaster } from '@/components/ui/sonner'
 import { CompanionLayout } from '@/companion/CompanionLayout'
+import { NewInvestigatorPage } from '@/companion/NewInvestigatorPage'
 import { Notebook } from '@/companion/Notebook'
 import { PickPage } from '@/companion/PickPage'
 import { ProfileTab, SheetPage, SheetTab } from '@/companion/SheetPage'
@@ -46,6 +47,7 @@ const router = createBrowserRouter([
     element: <CompanionLayout />,
     children: [
       { index: true, element: <PickPage /> },
+      { path: 'nouveau', element: <NewInvestigatorPage /> },
       {
         path: 'c/:characterId',
         element: <SheetPage />,

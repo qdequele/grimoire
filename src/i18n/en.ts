@@ -509,4 +509,10 @@ export const EN: Record<string, string> = {
   'Carnet de {name}': "{name}'s notebook",
   'Écrire une note…': 'Write a note…',
   'Carnet vide.': 'Empty notebook.',
+  'Ton prénom': 'Your first name',
+  '{name} rejoint la partie.': '{name} joins the game.',
+  'La table est complète : le gardien ne peut pas accueillir un investigateur de plus.': 'The table is full: the keeper cannot take one more investigator.',
+  'Vérifie la fiche : une valeur a été refusée.': 'Check the sheet: a value was refused.',
+  'Ce lien ne permet pas de créer un investigateur.': 'This link cannot create an investigator.',
+  "Ce lien n'est plus valide.": 'This link is no longer valid.',
 }

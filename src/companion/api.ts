@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react'
 import { toast } from 'sonner'
 import type { CharacterData } from '@/characters/character'
 import { currentT } from '@/i18n/t'
+import type { Json } from '@/lib/database.types'
 import { supabase } from '@/lib/supabase'
 import type { Points, PointsRow } from '@/play/companion'
 import { clampPoints } from './sheet'
@@ -276,6 +277,29 @@ export function useAddNote(token: string) {
       call(() => supabase.rpc('companion_add_note', { p_token: token, p_character: characterId, p_body: body })),
     onError: (e) => onWriteError(qc, token, e),
     onSettled: () => qc.invalidateQueries({ queryKey: companionKeys.one(token) }),
+  })
+}
+
+/**
+ * A player creates their investigator from a table link: it joins the game at once. On success this
+ * device remembers it and the view is refetched (awaited, so its sheet exists when navigating to it).
+ * Errors are left to the page (each code has its own message); `link_invalid` refetches like other writes.
+ */
+export function useCreateCharacter(token: string) {
+  const qc = useQueryClient()
+  return useMutation<string, CompanionError, { data: CharacterData; playerName: string }>({
+    mutationFn: ({ data, playerName }) =>
+      call(() => supabase.rpc('companion_create_character', { p_token: token, p_data: data as unknown as Json, p_player_name: playerName })),
+    onSuccess: async (id) => {
+      rememberCharacter(token, id)
+      await qc.invalidateQueries({ queryKey: companionKeys.one(token) })
+    },
+    onError: (e) => {
+      if (e.code === 'link_invalid') {
+        forgetCharacter(token)
+        void qc.invalidateQueries({ queryKey: companionKeys.one(token) })
+      }
+    },
   })
 }
 

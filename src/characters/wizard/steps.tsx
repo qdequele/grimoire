@@ -29,8 +29,7 @@ import {
   type NameGender,
 } from '@/engine/creation'
 import { cn } from '@/lib/utils'
-import { usePlayers } from '@/characters/api'
-import { PlayerField } from './PlayerField'
+import { useWizardHost } from './host'
 import {
   CHARACTERISTIC_ARRAY,
   CHARACTERISTIC_INFO,
@@ -65,6 +64,7 @@ const short = (t: T, k: (typeof CHARACTERISTICS)[number]) => t(CHARACTERISTIC_IN
 
 export function ConceptStep({ draft: d, update }: StepProps) {
   const t = useT()
+  const { PlayerInput } = useWizardHost()
   const [gender, setGender] = useState<NameGender>('any')
   const [origin, setOrigin] = useState('ne')
   const [ideas, setIdeas] = useState<string[]>([])
@@ -123,7 +123,7 @@ export function ConceptStep({ draft: d, update }: StepProps) {
         )}
 
         <div className="grid gap-4 sm:grid-cols-2">
-          <PlayerField value={d.playerId ?? ''} onChange={(playerId) => update({ playerId })} />
+          <PlayerInput value={d.playerId ?? ''} onChange={(playerId) => update({ playerId })} />
         </div>
         <Field>
           <FieldLabel htmlFor="w-link">{t("Lien avec l'histoire")}</FieldLabel>
@@ -330,7 +330,7 @@ export function OccupationStep({ draft: d, update }: StepProps) {
         <TableBody>
           {d.occupationSkills.map((id) => (
             <TableRow key={id}>
-              <TableCell>
+              <TableCell className="whitespace-normal">
                 <div className="flex flex-wrap items-center gap-2">
                   <span className="text-gold">{label(t, d, id)}</span>
                   <SpecialtyInput draft={d} update={update} id={id} />
@@ -338,11 +338,11 @@ export function OccupationStep({ draft: d, update }: StepProps) {
               </TableCell>
               <TableCell className="text-right font-mono">{baseValue(id, d.characteristics)}</TableCell>
               <TableCell>
-                <ValueSelect id={`ov-${id}`} label={t('Valeur de {skill}', { skill: label(t, d, id) })} value={d.occupationValues[id]} pool={OCCUPATION_ARRAY} left={left} onChange={(v) => setValue(id, v)} />
+                <ValueSelect id={`ov-${id}`} label={t('Valeur de {skill}', { skill: label(t, d, id) })} value={d.occupationValues[id]} pool={OCCUPATION_ARRAY} left={left} onChange={(v) => setValue(id, v)} className="w-20" />
               </TableCell>
               <TableCell className="text-right">
                 {o.skills.includes(id) ? (
-                  <span className="text-xs text-muted-foreground">{t('imposée')}</span>
+                  <span className="text-xs whitespace-nowrap text-muted-foreground">{t('imposée')}</span>
                 ) : (
                   <Button type="button" variant="ghost" size="icon-xs" aria-label={t('Retirer {name}', { name: label(t, d, id) })} onClick={() => remove(id)}>
                     <X />
@@ -352,7 +352,7 @@ export function OccupationStep({ draft: d, update }: StepProps) {
             </TableRow>
           ))}
           <TableRow>
-            <TableCell>
+            <TableCell className="whitespace-normal">
               <span className="text-gold">{t('Crédit')}</span>
               {d.occupationValues['credit-rating'] !== undefined && (
                 <span className="text-muted-foreground"> · {t(creditTier(d.occupationValues['credit-rating']))}</span>
@@ -360,7 +360,7 @@ export function OccupationStep({ draft: d, update }: StepProps) {
             </TableCell>
             <TableCell className="text-right font-mono">0</TableCell>
             <TableCell>
-              <ValueSelect id="ov-credit-rating" label={t('Valeur du Crédit')} value={d.occupationValues['credit-rating']} pool={OCCUPATION_ARRAY} left={left} onChange={(v) => setValue('credit-rating', v)} />
+              <ValueSelect id="ov-credit-rating" label={t('Valeur du Crédit')} value={d.occupationValues['credit-rating']} pool={OCCUPATION_ARRAY} left={left} onChange={(v) => setValue('credit-rating', v)} className="w-20" />
             </TableCell>
             <TableCell />
           </TableRow>
@@ -468,7 +468,7 @@ export function issueText(t: T, i: Issue): string {
 
 export function SummaryStep({ draft: d, goTo }: StepProps) {
   const t = useT()
-  const playerName = usePlayers().data?.find((p) => p.id === d.playerId)?.name
+  const playerName = useWizardHost().usePlayerName(d.playerId)
   const v = derivedValues(d.characteristics)
   const { issues, warnings } = checkDraft(d)
   const skills = [...d.occupationSkills, ...d.personalInterests]

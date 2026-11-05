@@ -7,16 +7,15 @@ import { Spinner } from '@/components/ui/spinner'
 import { Textarea } from '@/components/ui/textarea'
 import { occupationOf, skillTotal, type CreationDraft } from '@/engine/creation'
 import { functionErrorMessage } from '@/lib/functions'
-import { supabase } from '@/lib/supabase'
 import { PROFILE_FIELDS, skillLabel, type ProfileField } from '@/rules/d100'
+import { useWizardHost, type ProfileRequest } from './host'
 import { Tuto } from './parts'
 import type { StepProps } from './steps'
 import { Rich } from '@/i18n/Rich'
 import { tMsg, useT } from '@/i18n/t'
 import type { Lang } from '@/settings/lang'
 
-/** What the suggest-profile function needs to know (see supabase/functions/_shared/profile.ts). */
-function profileRequest(d: CreationDraft, lang: Lang, field?: ProfileField) {
+function profileRequest(d: CreationDraft, lang: Lang, field?: ProfileField): ProfileRequest {
   const skills = [...d.occupationSkills, ...d.personalInterests]
     .map((id) => ({ label: skillLabel(id, d.specialties[id]), value: skillTotal(id, d) }))
     .sort((a, b) => b.value - a.value)
@@ -26,7 +25,7 @@ function profileRequest(d: CreationDraft, lang: Lang, field?: ProfileField) {
     name: d.name,
     occupation: occupationOf(d).label,
     age: d.age,
-    link: d.link,
+    storyLink: d.link,
     characteristics: d.characteristics,
     skills,
     profile: d.profile,
@@ -37,6 +36,7 @@ function profileRequest(d: CreationDraft, lang: Lang, field?: ProfileField) {
 
 export function ProfileStep({ draft: d, update }: StepProps) {
   const t = useT()
+  const { suggestProfile } = useWizardHost()
   // 'all' while filling every empty field, or the id of the field being regenerated.
   const [busy, setBusy] = useState<'all' | ProfileField | null>(null)
   const empty = PROFILE_FIELDS.filter((f) => !d.profile[f.id]?.trim()).length
@@ -44,12 +44,7 @@ export function ProfileStep({ draft: d, update }: StepProps) {
   async function suggest(field?: ProfileField) {
     setBusy(field ?? 'all')
     try {
-      const { data, error } = await supabase.functions.invoke<{ suggestions: Partial<Record<ProfileField, string>> }>(
-        'suggest-profile',
-        { body: profileRequest(d, t.lang, field) },
-      )
-      if (error) throw error
-      const suggestions = data?.suggestions ?? {}
+      const suggestions = await suggestProfile(profileRequest(d, t.lang, field))
       if (!Object.keys(suggestions).length) toast.info(t('Pas de nouvelle idée cette fois. Réessaie.'))
       update((x) => ({ ...x, profile: { ...x.profile, ...suggestions } }))
     } catch (e) {

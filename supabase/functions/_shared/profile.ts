@@ -21,7 +21,8 @@ export interface ProfileRequest {
   name: string
   occupation: string
   age: number
-  link: string
+  /** The investigator's link with the story. */
+  storyLink: string
   /** e.g. { STR: 50, APP: 80 } */
   characteristics: Record<string, number>
   /** Best skills, already labelled, e.g. ["Bibliothèque 70", "Psychologie 60"]. */
@@ -36,7 +37,10 @@ export interface ProfileRequest {
 
 const clip = (s: unknown, n: number) => (typeof s === 'string' ? s.trim().slice(0, n) : '')
 
-/** Validate and cap untrusted input from the browser. Returns an error message or the clean request. */
+/**
+ * Validate and cap untrusted input from the browser. Returns an error message or the clean request.
+ * `link` (a player's table link token, read by the function) is ignored: it must never reach the prompt.
+ */
 export function parseProfileRequest(body: unknown): ProfileRequest | string {
   if (!body || typeof body !== 'object') return 'Body must be a JSON object.'
   const b = body as Record<string, unknown>
@@ -59,7 +63,7 @@ export function parseProfileRequest(body: unknown): ProfileRequest | string {
     name: clip(b.name, 80),
     occupation: clip(b.occupation, 80),
     age: typeof b.age === 'number' && b.age > 0 && b.age < 150 ? Math.round(b.age) : 0,
-    link: clip(b.link, 400),
+    storyLink: clip(b.storyLink, 400),
     characteristics: chars,
     skills: Array.isArray(b.skills) ? b.skills.slice(0, 12).map((s) => clip(s, 60)).filter(Boolean) : [],
     profile,
@@ -98,7 +102,7 @@ function describe(r: ProfileRequest): string {
       ? `Caractéristiques (sur 100, 50 = moyenne) : ${Object.entries(r.characteristics).map(([k, v]) => `${k} ${v}`).join(', ')}`
       : '',
     r.skills.length ? `Meilleures compétences : ${r.skills.join(', ')}` : '',
-    r.link ? `Lien avec l'histoire : ${r.link}` : '',
+    r.storyLink ? `Lien avec l'histoire : ${r.storyLink}` : '',
   ]
   return facts.filter(Boolean).join('\n')
 }

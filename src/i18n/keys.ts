@@ -35,6 +35,7 @@ export function dataKeys(): string[] {
     // suggest-profile function messages
     "L'aide IA n'est pas configurée sur ce serveur.", "Le service d'IA est occupé. Réessaie dans une minute.",
     'Connecte-toi pour utiliser l’aide IA.', 'Pas de suggestion possible pour ce profil.', 'Réponse de l’IA illisible. Réessaie.',
+    "Ce lien n'est plus valide.",
   ].filter(Boolean)
 }
 

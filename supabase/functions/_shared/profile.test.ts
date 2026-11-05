@@ -3,7 +3,7 @@ import { PROFILE_FIELDS as APP_FIELDS } from '../../../src/rules/d100'
 import { parseProfileRequest, pickSuggestions, PROFILE_FIELDS, profileSchema, profileUserPrompt, type ProfileRequest } from './profile'
 
 const request = (over: Partial<ProfileRequest> = {}): ProfileRequest => ({
-  name: 'Ada Lark', occupation: 'Journaliste', age: 31, link: 'Ancienne étudiante du professeur',
+  name: 'Ada Lark', occupation: 'Journaliste', age: 31, storyLink: 'Ancienne étudiante du professeur',
   characteristics: { APP: 80, POW: 40 }, skills: ['Bibliothèque 70', 'Psychologie 60'],
   profile: { ideology: 'La vérité finit toujours par sortir' }, ...over,
 })
@@ -34,6 +34,13 @@ describe('parseProfileRequest', () => {
     expect(r.profile).toEqual({ ideology: 'Dieu est mort' })
   })
 
+  it('ignores a table link token: it never reaches the prompt', () => {
+    const r = parseProfileRequest({ name: 'Ada', link: 'secret-token', storyLink: 'Ancienne étudiante' }) as ProfileRequest
+    expect(r.storyLink).toBe('Ancienne étudiante')
+    expect(JSON.stringify(r)).not.toContain('secret-token')
+    expect(profileUserPrompt(r)).not.toContain('secret-token')
+  })
+
   it('rejects an unknown field to regenerate', () => {
     expect(parseProfileRequest({ field: 'shoeSize' })).toMatch(/field must be one of/)
   })
@@ -44,6 +51,7 @@ describe('profileUserPrompt', () => {
     const p = profileUserPrompt(request())
     expect(p).toContain('Journaliste')
     expect(p).toContain('APP 80')
+    expect(p).toContain('Ancienne étudiante du professeur')
     expect(p).toContain('Idéologie : La vérité finit toujours par sortir')
     expect(p).toContain('Remplis les champs vides')
   })
