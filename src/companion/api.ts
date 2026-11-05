@@ -6,6 +6,7 @@ import type { CharacterData } from '@/characters/character'
 import { currentT } from '@/i18n/t'
 import { supabase } from '@/lib/supabase'
 import type { Points, PointsRow } from '@/play/companion'
+import { clampPoints } from './sheet'
 
 export interface CompanionNote { id: string; characterId: string; body: string; createdAt: string }
 export interface CompanionMember { id: string; data: CharacterData; player: string | null }
@@ -189,45 +190,81 @@ function enqueue<T>(key: string, run: () => Promise<T>): Promise<T> {
   return next
 }
 
+export interface PointTap {
+  characterId: string
+  field: keyof Points
+  /** +1 / −1 from the tile's buttons. */
+  delta: number
+}
+
+/** The tapped field's value from the latest cache (keeper changes included), plus delta, clamped. */
+function tappedValue(view: CompanionView | undefined, characterId: string, field: keyof Points, delta: number): number | null {
+  const member = view?.party.find((m) => m.id === characterId)
+  if (!member) return null
+  const cur = pointsOf(view, member)
+  const base: Points = { pv: cur.pv, san: cur.san, chance: cur.chance, pm: cur.pm }
+  return clampPoints({ ...base, [field]: base[field] + delta }, member.data.hp ?? 10)[field]
+}
+
+function patchField(view: CompanionView, characterId: string, field: keyof Points, value: number): CompanionView {
+  const member = view.party.find((m) => m.id === characterId)
+  if (!member) return view
+  const cur = pointsOf(view, member)
+  // Server time comes with the refetch: keep the last known one so keeper changes still compare.
+  return patchPoints(view, { ...cur, [field]: value, source: 'phone' })
+}
+
+/** Points writes of this link still running for one investigator. */
+const pointsInFlight = (qc: QueryClient, token: string, characterId: string): number =>
+  qc.isMutating({
+    mutationKey: pointsMutationKey(token),
+    predicate: (m) => (m.state.variables as PointTap | undefined)?.characterId === characterId,
+  })
+
+/** Fields with a tap still running for one investigator. */
+const tappedFields = (qc: QueryClient, token: string, characterId: string): Set<keyof Points> =>
+  new Set(
+    qc.getMutationCache()
+      .findAll({ mutationKey: pointsMutationKey(token), status: 'pending' })
+      .map((m) => m.state.variables as PointTap | undefined)
+      .filter((v): v is PointTap => v?.characterId === characterId)
+      .map((v) => v.field),
+  )
+
 /**
- * Sets an investigator's points. The cache is updated at once (compute each tap from the cache,
- * not from a render value: see `pointsOf`), rolled back with a toast if the server refuses.
+ * One tap on an investigator's HP / SAN / Luck / MP. The cache changes at once (only that field),
+ * rolled back with a toast if the server refuses. Taps are queued per investigator; each sends only
+ * its field, with the cache's value when it runs, so a keeper change to another field is never undone.
  */
 export function useSetPoints(token: string) {
   const qc = useQueryClient()
   const key = companionKeys.one(token)
-  return useMutation<void, CompanionError, { characterId: string; points: Points }, { before?: PointsRow }>({
+  return useMutation<void, CompanionError, PointTap, { before: number | null }>({
     mutationKey: pointsMutationKey(token),
-    mutationFn: ({ characterId, points }) =>
-      enqueue(`${token}:${characterId}`, () =>
-        call(() => supabase.rpc('companion_set_points', {
-          p_token: token, p_character: characterId, p_pv: points.pv, p_san: points.san, p_chance: points.chance, p_pm: points.pm,
-        })).then(() => undefined)),
-    onMutate: async ({ characterId, points }) => {
+    mutationFn: ({ characterId, field }) =>
+      enqueue(`${token}:${characterId}`, async () => {
+        // The optimistic value (this tap and the ones before it), on top of what the keeper set since.
+        const value = tappedValue(qc.getQueryData<CompanionView>(key), characterId, field, 0)
+        if (value === null) throw new CompanionError('not_in_game')
+        await call(() => supabase.rpc('companion_set_point', { p_token: token, p_character: characterId, p_field: field, p_value: value }))
+      }),
+    onMutate: async ({ characterId, field, delta }) => {
       await qc.cancelQueries({ queryKey: key })
       const view = qc.getQueryData<CompanionView>(key)
-      const before = view?.points.find((p) => p.characterId === characterId)
-      if (view) {
-        qc.setQueryData<CompanionView>(key, patchPoints(view, {
-          // Server time comes with the refetch: keep the last known one so keeper changes still compare.
-          characterId, ...points,
-          checks: before?.checks ?? [], source: 'phone', updatedAt: before?.updatedAt ?? '',
-        }))
-      }
+      const member = view?.party.find((m) => m.id === characterId)
+      const before = view && member ? pointsOf(view, member)[field] : null
+      const next = tappedValue(view, characterId, field, delta)
+      if (view && next !== null) qc.setQueryData<CompanionView>(key, patchField(view, characterId, field, next))
       return { before }
     },
-    onError: (e, { characterId }, ctx) => {
+    onError: (e, { characterId, field }, ctx) => {
       const view = qc.getQueryData<CompanionView>(key)
-      if (view) {
-        qc.setQueryData<CompanionView>(key, ctx?.before
-          ? patchPoints(view, ctx.before)
-          : { ...view, points: view.points.filter((p) => p.characterId !== characterId) })
-      }
+      if (view && ctx?.before != null) qc.setQueryData<CompanionView>(key, patchField(view, characterId, field, ctx.before))
       onWriteError(qc, token, e)
     },
-    onSettled: () => {
-      // Once the last tap is through, fetch the server's values (this mutation still counts as running).
-      if (qc.isMutating({ mutationKey: pointsMutationKey(token) }) <= 1) void qc.invalidateQueries({ queryKey: key })
+    onSettled: (_d, _e, { characterId }) => {
+      // Once this investigator's last tap is through, fetch the server's values (this one still counts as running).
+      if (pointsInFlight(qc, token, characterId) <= 1) void qc.invalidateQueries({ queryKey: key })
     },
   })
 }
@@ -261,12 +298,17 @@ export function useCompanionLive(token: string, channel: string | undefined): bo
         const row = asPointsRow((payload ?? {}) as Record<string, unknown>)
         if (!row) return
         // Echoes of our own taps in flight would undo the taps made since: the refetch after the last one settles it.
-        if (row.source === 'phone' && qc.isMutating({ mutationKey: pointsMutationKey(token) }) > 0) return
+        if (row.source === 'phone' && pointsInFlight(qc, token, row.characterId) > 0) return
         const view = qc.getQueryData<CompanionView>(key)
         if (!view || !view.party.some((m) => m.id === row.characterId)) return
         const current = view.points.find((p) => p.characterId === row.characterId)
         if (current?.updatedAt && row.updatedAt && Date.parse(row.updatedAt) < Date.parse(current.updatedAt)) return
-        qc.setQueryData<CompanionView>(key, patchPoints(view, row))
+        // A keeper change arriving mid-taps keeps the tapped fields' pending values (it may predate them).
+        const member = view.party.find((m) => m.id === row.characterId)!
+        const mine = pointsOf(view, member)
+        const merged = { ...row }
+        for (const f of tappedFields(qc, token, row.characterId)) merged[f] = mine[f]
+        qc.setQueryData<CompanionView>(key, patchPoints(view, merged))
       })
       .on('broadcast', { event: 'notes' }, () => void qc.invalidateQueries({ queryKey: key }))
       .on('broadcast', { event: 'member' }, () => void qc.invalidateQueries({ queryKey: key }))

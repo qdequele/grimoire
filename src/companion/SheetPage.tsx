@@ -1,17 +1,16 @@
 import { Check, Minus, Plus } from 'lucide-react'
 import { useEffect } from 'react'
 import { Link, Navigate, NavLink, Outlet, useOutletContext, useParams } from 'react-router'
-import { useQueryClient } from '@tanstack/react-query'
 import { Button } from '@/components/ui/button'
 import { skillName, useT } from '@/i18n/t'
 import { cn } from '@/lib/utils'
 import type { Points } from '@/play/companion'
 import { CHARACTERISTIC_INFO, CHARACTERISTICS, PROFILE_FIELDS } from '@/rules/d100'
 import { Masthead } from '@/theme/Masthead'
-import { companionKeys, pointsOf, rememberCharacter, useSetPoints, type CompanionMember, type CompanionView } from './api'
+import { pointsOf, rememberCharacter, useSetPoints, type CompanionMember } from './api'
 import { useCompanionContext, type CompanionContext } from './CompanionLayout'
 import type { PickState } from './PickPage'
-import { clampPoints, skillRows } from './sheet'
+import { skillRows } from './sheet'
 
 export interface SheetContext extends CompanionContext {
   member: CompanionMember
@@ -114,22 +113,15 @@ const STATS: Array<{ key: keyof Points; label: string }> = [
   { key: 'pm', label: 'PM' },
 ]
 
-/** HP / SAN / Luck / MP with − / +. Each tap starts from the cache, so quick taps all count. */
+/** HP / SAN / Luck / MP with − / +. Each tap is a ±1 on the latest value, so quick taps all count. */
 function StatTiles({ member }: { member: CompanionMember }) {
   const t = useT()
   const { token, view } = useSheetContext()
-  const qc = useQueryClient()
   const setPoints = useSetPoints(token)
   const maxHp = member.data.hp ?? 10
   const now = pointsOf(view, member)
 
-  const tap = (key: keyof Points, delta: number) => {
-    const cur = pointsOf(qc.getQueryData<CompanionView>(companionKeys.one(token)), member)
-    const base: Points = { pv: cur.pv, san: cur.san, chance: cur.chance, pm: cur.pm }
-    const next = clampPoints({ ...base, [key]: base[key] + delta }, maxHp)
-    if (next[key] === base[key]) return
-    setPoints.mutate({ characterId: member.id, points: next })
-  }
+  const tap = (field: keyof Points, delta: number) => setPoints.mutate({ characterId: member.id, field, delta })
 
   return (
     <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">

@@ -522,6 +522,15 @@ export type Database = {
       companion_open: { Args: { p_token: string }; Returns: Json }
       companion_owner: { Args: { p_token: string }; Returns: string }
       companion_party: { Args: { p_game: string }; Returns: string[] }
+      companion_set_point: {
+        Args: {
+          p_character: string
+          p_field: string
+          p_token: string
+          p_value: number
+        }
+        Returns: undefined
+      }
       companion_set_points: {
         Args: {
           p_chance: number

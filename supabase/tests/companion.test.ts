@@ -240,6 +240,53 @@ describe('companion RPCs (anonymous)', () => {
     expect((await call({ p_pm: -1 })).error?.message).toContain('bad_value')
   })
 
+  it('set_point writes one field and keeps a keeper change made in the meantime', async () => {
+    const g = await newGame(alice, [{ name: 'One', hp: 11, progress: { san: 52 } }])
+    const l = await link(alice, g.gameId)
+    const set = (p_field: string, p_value: number) =>
+      anon.rpc('companion_set_point', { p_token: l.token, p_character: g.ids[0], p_field, p_value })
+    const row = async () =>
+      (await alice.client.from('game_points').select('*').eq('game_id', g.gameId).eq('character_id', g.ids[0]).single()).data!
+
+    // No row yet: the others start from the sheet (current SAN from the progression).
+    expect((await set('chance', 40)).error).toBeNull()
+    expect(await row()).toMatchObject({ pv: 11, san: 52, chance: 40, pm: 10, source: 'phone' })
+
+    // The keeper applies damage, then the phone's queued SAN tap lands: the damage stays.
+    const keeper = await alice.client.from('game_points').update({ pv: 4, source: 'keeper' }).eq('game_id', g.gameId).eq('character_id', g.ids[0])
+    expect(keeper.error).toBeNull()
+    expect((await set('san', 53)).error).toBeNull()
+    expect(await row()).toMatchObject({ pv: 4, san: 53, chance: 40, pm: 10, source: 'phone' })
+    const ch = (await alice.client.from('characters').select('data').eq('id', g.ids[0]).single()).data!.data as { progress: Record<string, unknown> }
+    expect(ch.progress.san).toBe(53)
+  })
+
+  it('set_point refuses unknown fields and out-of-bounds values', async () => {
+    const g = await newGame(alice, [{ name: 'One', hp: 12 }])
+    const l = await link(alice, g.gameId)
+    const set = (p_field: string, p_value: number) =>
+      anon.rpc('companion_set_point', { p_token: l.token, p_character: g.ids[0], p_field, p_value })
+    expect((await set('checks', 1)).error?.message).toContain('bad_value')
+    expect((await set('PV', 1)).error?.message).toContain('bad_value')
+    expect((await set('pv', 12)).error).toBeNull()
+    expect((await set('pv', 13)).error?.message).toContain('bad_value')
+    expect((await set('pv', -1)).error?.message).toContain('bad_value')
+    expect((await set('san', 99)).error).toBeNull()
+    expect((await set('san', 100)).error?.message).toContain('bad_value')
+    expect((await set('chance', 100)).error?.message).toContain('bad_value')
+    expect((await set('pm', -1)).error?.message).toContain('bad_value')
+  })
+
+  it('set_point: a personal link writes only its investigator, a revoked one nothing', async () => {
+    const g = await newGame(alice, [{ name: 'One' }, { name: 'Two' }])
+    const l = await link(alice, g.gameId, g.ids[0])
+    const set = (p_character: string) => anon.rpc('companion_set_point', { p_token: l.token, p_character, p_field: 'pm', p_value: 3 })
+    expect((await set(g.ids[1])).error?.message).toContain('not_in_game')
+    expect((await set(g.ids[0])).error).toBeNull()
+    await alice.client.rpc('revoke_table_link', { p_link: l.id })
+    expect((await set(g.ids[0])).error?.message).toContain('link_invalid')
+  })
+
   it('a deleted investigator disappears from the companion', async () => {
     const g = await newGame(alice, [{ name: 'One' }, { name: 'Two' }])
     const l = await link(alice, g.gameId)
