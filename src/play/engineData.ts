@@ -139,6 +139,13 @@ export function withAccountProgress(S: LegacyState, party: Array<{ id: string; d
   return { ...S, prog }
 }
 
+/** The id of the player with this name (case-insensitive), added to `players` (mutated) if new. */
+export function findOrAddPlayer(players: Array<{ id: string; name: string }>, name: string): string {
+  let p = players.find((x) => x.name.toLowerCase() === name.toLowerCase())
+  if (!p) players.push((p = { id: `p-${players.length + 1}`, name }))
+  return p.id
+}
+
 export interface NewGame {
   storyId: string
   /** player: the name of who plays them, if anyone. */
@@ -159,12 +166,7 @@ export function freshState(f: EngineFactories, game: NewGame): LegacyState {
   S.prog = S.prog ?? {}
   for (const c of game.party) {
     const name = c.player?.trim()
-    let owner: string | null = null
-    if (name) {
-      let p = S.players.find((x) => x.name.toLowerCase() === name.toLowerCase())
-      if (!p) S.players.push((p = { id: `p-${S.players.length + 1}`, name }))
-      owner = p.id
-    }
+    const owner = name ? findOrAddPlayer(S.players, name) : null
     S.prog[c.id] = { skills: {}, checks: [], hist: [], ...(c.data.progress ?? {}), player: name ?? '', owner }
   }
   // mkSlot reads the player from the engine's state, which doesn't exist yet: set it here.
