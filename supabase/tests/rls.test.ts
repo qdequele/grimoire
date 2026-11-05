@@ -157,6 +157,19 @@ describe('imports', () => {
     expect((await bob.client.from('story_imports').select('id').eq('id', row!.id)).data).toEqual([])
   })
 
+  it("users can't create, change or delete story creations (the creator's quota), only read their own", async () => {
+    const ins = await alice.client.from('story_creations').insert({ owner_id: alice.id, brief: {} })
+    expect(ins.error).not.toBeNull()
+
+    const { data: row } = await service.from('story_creations').insert({ owner_id: alice.id, brief: {} }).select('id').single()
+    await alice.client.from('story_creations').update({ outline_count: 0, status: 'succeeded' }).eq('id', row!.id)
+    await alice.client.from('story_creations').delete().eq('id', row!.id)
+    const { data } = await service.from('story_creations').select('status').eq('id', row!.id)
+    expect(data).toEqual([{ status: 'outlined' }])
+    expect((await alice.client.from('story_creations').select('id').eq('id', row!.id)).data).toHaveLength(1)
+    expect((await bob.client.from('story_creations').select('id').eq('id', row!.id)).data).toEqual([])
+  })
+
   it('uploads are confined to your own folder', async () => {
     const png = new Blob([new Uint8Array([137, 80, 78, 71])], { type: 'image/png' })
     const own = await alice.client.storage.from('import-pages').upload(`${alice.id}/t/001.png`, png)
