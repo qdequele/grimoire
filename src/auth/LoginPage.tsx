@@ -30,21 +30,28 @@ export function LoginPage() {
   const schema = useMemo(() => makeSchema(t), [t])
   const [mode, setMode] = useState<Mode>('signin')
   const [error, setError] = useState<string | null>(null)
+  // Where accounts need an e-mail confirmation (hosted Supabase), sign-up returns no session.
+  const [confirmTo, setConfirmTo] = useState<string | null>(null)
   const form = useForm<Values>({ resolver: zodResolver(schema), defaultValues: { email: '', password: '', displayName: '' } })
 
   if (session) return <Navigate to="/" replace />
 
   async function onSubmit(values: Values) {
     setError(null)
-    const { error } =
-      mode === 'signin'
-        ? await supabase.auth.signInWithPassword({ email: values.email, password: values.password })
-        : await supabase.auth.signUp({
-            email: values.email,
-            password: values.password,
-            options: { data: { display_name: values.displayName ?? '' } },
-          })
+    setConfirmTo(null)
+    if (mode === 'signin') {
+      const { error } = await supabase.auth.signInWithPassword({ email: values.email, password: values.password })
+      if (error) setError(error.message)
+      return
+    }
+    const { data, error } = await supabase.auth.signUp({
+      email: values.email,
+      password: values.password,
+      // The confirmation link brings the keeper back to this site, signed in.
+      options: { data: { display_name: values.displayName ?? '' }, emailRedirectTo: window.location.origin },
+    })
     if (error) setError(error.message)
+    else if (!data.session) setConfirmTo(values.email)
   }
 
   const { errors, isSubmitting } = form.formState
@@ -85,6 +92,13 @@ export function LoginPage() {
                 />
                 <FieldError errors={[errors.password]} />
               </Field>
+              {confirmTo && (
+                <Alert>
+                  <AlertDescription>
+                    {t('Compte créé. Ouvre le lien envoyé à {email} pour le confirmer, puis connecte-toi.', { email: confirmTo })}
+                  </AlertDescription>
+                </Alert>
+              )}
               {error && (
                 <Alert variant="destructive">
                   <AlertDescription>{t(error)}</AlertDescription>
