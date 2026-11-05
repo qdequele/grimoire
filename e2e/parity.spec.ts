@@ -76,7 +76,7 @@ async function renderAll(target: Page | import('@playwright/test').Frame) {
 
 async function newAppScenes(page: Page, scenario: string, lang: string) {
   const admin = createClient(url!, serviceKey!, { auth: { persistSession: false } })
-  const email = `parity-${crypto.randomUUID()}@test.local`
+  const email = `parity-${crypto.randomUUID()}@example.com`
   const { data: created, error } = await admin.auth.admin.createUser({ email, password: 'correct-horse-battery', email_confirm: true })
   if (error) throw error
   const owner = created.user.id

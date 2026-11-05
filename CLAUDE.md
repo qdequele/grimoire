@@ -105,6 +105,14 @@ Reprendre la partie · Nouvelle partie (→ library) · **Histoires** (`/stories
 - `src/i18n/en.test.ts` scans the code for `t('…')` literals (+ `dataKeys()` in `keys.ts` for texts that come from data or props) and fails on a missing, unused or placeholder-mismatched English entry. When you add a text: wrap it in `t()`, add its English line.
 - Story content is never translated: a story keeps its own language.
 
+## Production
+
+- Site: https://www.legrimoire.quest (Vercel project `grimoire`, deploys every push to `main`). Domain and DNS on Vercel.
+- Supabase project `fovyhcbasmmstkocavlp` (linked). Vercel's Supabase integration provides `NEXT_PUBLIC_SUPABASE_*`; `vite.config.ts` uses them when `VITE_SUPABASE_*` aren't set.
+- Hosted Auth requires e-mail confirmation (local doesn't). E-mails go through Resend (SMTP, sender on legrimoire.quest; DKIM/SPF/DMARC records on Vercel DNS).
+- E-mail templates: `pnpm emails` (`scripts/gen-email-templates.mjs`) writes `supabase/templates/*.html`, used locally via `config.toml`. The hosted project doesn't read them: paste each one (and its subject) in Authentication → Emails → Templates after a change. French or English from `user_metadata.lang`, set at sign-up.
+- Test e-mail addresses use `@example.com`: Supabase Auth rejects `.local` domains.
+
 ## Accounts, marketplace, import (Supabase)
 
 - **Only the keeper has an account.** Investigators belong to the keeper's account; players don't log in.

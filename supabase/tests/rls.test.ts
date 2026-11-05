@@ -17,7 +17,7 @@ const story = (title: string, license = 'CC-BY-4.0'): Json => ({
 })
 
 async function signUp(label: string): Promise<{ client: Client; id: string }> {
-  const email = `${label}-${crypto.randomUUID()}@test.local`
+  const email = `${label}-${crypto.randomUUID()}@example.com`
   const client = createClient<Database>(url, anonKey, { auth: { persistSession: false } })
   const { data, error } = await client.auth.signUp({ email, password: 'correct-horse-battery' })
   if (error || !data.user) throw error ?? new Error('no user')

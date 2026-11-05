@@ -42,7 +42,7 @@ beforeAll(async () => {
   })
   await new Promise<void>((r) => mock.listen(MOCK_PORT, '0.0.0.0', r))
   const user: SupabaseClient<Database> = createClient<Database>(url, anonKey, { auth: { persistSession: false } })
-  const { data, error } = await user.auth.signUp({ email: `narrator-${crypto.randomUUID()}@test.local`, password: 'correct-horse-battery' })
+  const { data, error } = await user.auth.signUp({ email: `narrator-${crypto.randomUUID()}@example.com`, password: 'correct-horse-battery' })
   if (error) throw error
   token = data.session!.access_token
   userId = data.user!.id

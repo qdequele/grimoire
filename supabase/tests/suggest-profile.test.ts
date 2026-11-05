@@ -41,7 +41,7 @@ beforeAll(async () => {
   })
   await new Promise<void>((r) => mock.listen(MOCK_PORT, '0.0.0.0', r))
   user = createClient<Database>(url, anonKey, { auth: { persistSession: false } })
-  const { data, error } = await user.auth.signUp({ email: `profile-${crypto.randomUUID()}@test.local`, password: 'correct-horse-battery' })
+  const { data, error } = await user.auth.signUp({ email: `profile-${crypto.randomUUID()}@example.com`, password: 'correct-horse-battery' })
   if (error) throw error
   userId = data.user!.id
 })

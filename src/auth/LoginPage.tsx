@@ -48,7 +48,8 @@ export function LoginPage() {
       email: values.email,
       password: values.password,
       // The confirmation link brings the keeper back to this site, signed in.
-      options: { data: { display_name: values.displayName ?? '' }, emailRedirectTo: window.location.origin },
+      // lang: the e-mails (supabase/templates) follow the keeper's language.
+      options: { data: { display_name: values.displayName ?? '', lang: t.lang }, emailRedirectTo: window.location.origin },
     })
     if (error) setError(error.message)
     else if (!data.session) setConfirmTo(values.email)

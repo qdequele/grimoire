@@ -22,7 +22,7 @@ async function signUp(page: Page, name = 'Keeper') {
   await expect(page).toHaveURL(/\/login$/)
   await page.getByRole('tab', { name: 'Créer un compte' }).click()
   await page.getByLabel('Nom affiché').fill(name)
-  await page.getByLabel('E-mail').fill(`e2e-${crypto.randomUUID()}@test.local`)
+  await page.getByLabel('E-mail').fill(`e2e-${crypto.randomUUID()}@example.com`)
   await page.getByLabel('Mot de passe').fill('correct-horse-battery')
   await page.getByRole('button', { name: 'Créer mon compte' }).click()
   await expect(page.getByText(`Bonsoir, ${name}`)).toBeVisible()
