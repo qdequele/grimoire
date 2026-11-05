@@ -21,3 +21,6 @@ playwright-report/
 .env*.local
 supabase/functions/.env
 supabase/.temp/
+.vercel
+.env*
+!.env.example
