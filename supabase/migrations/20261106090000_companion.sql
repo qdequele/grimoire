@@ -6,6 +6,9 @@ create extension if not exists pgcrypto with schema extensions;
 -- Lets notes point to (investigator, owner): a note can only belong to its keeper's investigators.
 alter table public.characters add constraint characters_id_owner_key unique (id, owner_id);
 
+-- Same for links and points: they can only reference their own keeper's games.
+alter table public.games add constraint games_id_owner_key unique (id, owner_id);
+
 -- Realtime topic of a game is `companion:<channel>`. Revoking a link rotates it, which locks revoked devices out.
 alter table public.games add column channel uuid not null default gen_random_uuid();
 
@@ -13,12 +16,17 @@ alter table public.games add column channel uuid not null default gen_random_uui
 create table public.table_links (
   id            uuid primary key default gen_random_uuid(),
   owner_id      uuid not null default auth.uid() references public.profiles (id) on delete cascade,
-  game_id       uuid not null references public.games (id) on delete cascade,
-  character_id  uuid references public.characters (id) on delete cascade,
+  game_id       uuid not null,
+  character_id  uuid,
   -- 24 random bytes, base64url without padding: 32 URL-safe characters.
   token         text not null unique default translate(rtrim(encode(extensions.gen_random_bytes(24), 'base64'), '='), '+/', '-_'),
   revoked_at    timestamptz,
-  created_at    timestamptz not null default now()
+  created_at    timestamptz not null default now(),
+  -- Composite FKs (MATCH SIMPLE: a null character_id is allowed) so a link can't point at another keeper's rows.
+  constraint table_links_game_fkey foreign key (game_id, owner_id)
+    references public.games (id, owner_id) on delete cascade,
+  constraint table_links_character_fkey foreign key (character_id, owner_id)
+    references public.characters (id, owner_id) on delete cascade
 );
 
 create unique index table_links_one_table_link_key on public.table_links (game_id)
@@ -46,8 +54,8 @@ create trigger character_notes_touch before update on public.character_notes
 
 -- Live points of an investigator in a game (hit points, sanity, luck, magic points).
 create table public.game_points (
-  game_id       uuid not null references public.games (id) on delete cascade,
-  character_id  uuid not null references public.characters (id) on delete cascade,
+  game_id       uuid not null,
+  character_id  uuid not null,
   owner_id      uuid not null default auth.uid() references public.profiles (id) on delete cascade,
   pv            int,
   san           int,
@@ -57,7 +65,11 @@ create table public.game_points (
   source        text not null,
   updated_at    timestamptz not null default now(),
   primary key (game_id, character_id),
-  constraint game_points_source_check check (source in ('keeper', 'phone'))
+  constraint game_points_source_check check (source in ('keeper', 'phone')),
+  constraint game_points_game_fkey foreign key (game_id, owner_id)
+    references public.games (id, owner_id) on delete cascade,
+  constraint game_points_character_fkey foreign key (character_id, owner_id)
+    references public.characters (id, owner_id) on delete cascade
 );
 
 create index game_points_owner_idx on public.game_points (owner_id);

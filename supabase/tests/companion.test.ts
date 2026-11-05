@@ -72,6 +72,21 @@ describe('companion', () => {
     expect(error).not.toBeNull()
   })
 
+  it("links and points can't point at someone else's game or investigator", async () => {
+    const onGame = await alice.client.from('table_links').insert({ game_id: b.gameId })
+    expect(onGame.error).not.toBeNull()
+    const onCharacter = await alice.client.from('table_links').insert({ game_id: a.gameId, character_id: b.characterId })
+    expect(onCharacter.error).not.toBeNull()
+    const pointsOnGame = await alice.client
+      .from('game_points')
+      .insert({ game_id: b.gameId, character_id: a.characterId, source: 'keeper' })
+    expect(pointsOnGame.error).not.toBeNull()
+    const pointsOnCharacter = await alice.client
+      .from('game_points')
+      .insert({ game_id: a.gameId, character_id: b.characterId, source: 'keeper' })
+    expect(pointsOnCharacter.error).not.toBeNull()
+  })
+
   it('tokens are long and URL-safe', async () => {
     const { data, error } = await alice.client.from('table_links').select('token')
     expect(error).toBeNull()
