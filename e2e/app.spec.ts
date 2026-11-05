@@ -1,5 +1,6 @@
 import { createServer, type Server } from 'node:http'
-import { readFileSync } from 'node:fs'
+import { mkdirSync, readFileSync, writeFileSync } from 'node:fs'
+import { strFromU8, strToU8, unzipSync, zipSync } from 'fflate'
 import { expect, test, type Page } from '@playwright/test'
 
 // The new app against the local Supabase stack (`supabase start`, plus
@@ -27,14 +28,24 @@ async function signUp(page: Page, name = 'Keeper') {
   await expect(page.getByText(`Bonsoir, ${name}`)).toBeVisible()
 }
 
-/** Walks the 7-step creation wizard (the legacy app's rules) for a journalist. */
-async function createJournalist(page: Page, name: string) {
+/** Picks the investigator's player in the wizard, creating the player if needed. */
+async function choosePlayer(page: Page, player: string) {
+  const select = page.getByRole('combobox', { name: 'Joueur' })
+  if (await select.locator('option', { hasText: player }).count()) return select.selectOption({ label: player })
+  await select.selectOption({ label: '+ Nouveau joueur…' })
+  await page.getByPlaceholder('Prénom').fill(player)
+  await page.getByRole('button', { name: 'Ajouter', exact: true }).click()
+  await expect(page.getByRole('combobox', { name: 'Joueur' }).locator('option:checked')).toHaveText(player)
+}
+
+/** Walks the 7-step creation wizard (the legacy app's rules) for a journalist. player null: keep the one already chosen. */
+async function createJournalist(page: Page, name: string, player: string | null = 'Camille') {
   const next = (label: string) => page.getByRole('button', { name: new RegExp(label, 'i') }).last().click()
 
   // 1. Concept (Journaliste is the default occupation)
   await expect(page.getByRole('heading', { name: 'Créer un investigateur' })).toBeVisible()
   await page.getByLabel('Nom', { exact: true }).fill(name)
-  await page.getByLabel('Joueur').fill('Camille')
+  if (player) await choosePlayer(page, player)
   await next('Caractéristiques')
 
   // 2. Characteristics: place the fixed values, roll luck
@@ -74,6 +85,9 @@ async function createJournalist(page: Page, name: string) {
   // 7. Summary and save
   await expect(page.getByText('Tout est prêt')).toBeVisible()
   await page.getByRole('button', { name: 'Enregistrer le personnage' }).click()
+  // Saved: the wizard goes back to the list. Navigating away earlier would cancel the save.
+  await expect(page).toHaveURL(/\/characters(\/joueurs)?$/)
+  await expect(page.getByText(name, { exact: true }).first()).toBeVisible()
 }
 
 test('signed-out visitors are sent to the login page', async ({ page }) => {
@@ -91,6 +105,7 @@ test('login form validates input', async ({ page }) => {
 })
 
 test('keeper creates an investigator, then plays a marketplace story', async ({ page }) => {
+  test.setTimeout(90_000) // long flow: wizard, then game(s)
   await signUp(page)
 
   await page.getByRole('link', { name: /^Investigateurs/ }).click()
@@ -101,7 +116,8 @@ test('keeper creates an investigator, then plays a marketplace story', async ({ 
   await expect(page.getByText('SAN 60')).toBeVisible() // = POW
 
   // Marketplace story → start a game with that investigator
-  await page.getByRole('link', { name: 'Bibliothèque' }).click()
+  await page.getByRole('link', { name: 'Histoires', exact: true }).click()
+  await expect(page.getByRole('link', { name: 'Bibliothèque' })).toHaveAttribute('aria-current', 'page')
   const card = page.getByRole('link', { name: 'The Silent Light' })
   await expect(card).toBeVisible()
   await card.click()
@@ -118,6 +134,7 @@ test('keeper creates an investigator, then plays a marketplace story', async ({ 
 })
 
 test('creation draft survives a reload, and editing reopens the wizard', async ({ page }) => {
+  test.setTimeout(90_000) // long flow: wizard, then game(s)
   await signUp(page)
   await page.goto('/characters/new')
   await page.getByLabel('Nom', { exact: true }).fill('Brouillon Test')
@@ -143,14 +160,15 @@ test('creation draft survives a reload, and editing reopens the wizard', async (
   await page.getByRole('link', { name: 'Edith Vale' }).click()
   await expect(page.getByRole('heading', { name: 'Modifier un investigateur' })).toBeVisible()
   await expect(page.getByLabel('Nom', { exact: true })).toHaveValue('Edith Vale')
-  await expect(page.getByLabel('Joueur')).toHaveValue('Camille')
+  await expect(page.getByRole('combobox', { name: 'Joueur' }).locator('option:checked')).toHaveText('Camille')
 })
 
 test('game screen: the original engine runs a story, rolls, saves to the account and returns to the menu', async ({ page }) => {
+  test.setTimeout(90_000) // long flow: wizard, then game(s)
   await signUp(page)
   await page.goto('/characters/new')
   await createJournalist(page, 'Vera Holt')
-  await page.goto('/marketplace')
+  await page.goto('/stories')
   await page.getByRole('link', { name: 'The Silent Light' }).click()
   await page.getByLabel(/Vera Holt/).check()
   await page.getByRole('button', { name: 'Lancer la partie' }).click()
@@ -170,6 +188,25 @@ test('game screen: the original engine runs a story, rolls, saves to the account
   await expect(game.locator('#pick .pres li').first()).toBeVisible()
   await game.locator('#pkClose').click()
   await expect(game.locator('#jList li').first()).toBeVisible()
+
+  // The narrator is a floating window from the toolbar, like the dice and the sounds
+  const narrator = game.locator('#narrPanel')
+  await expect(narrator).toBeHidden()
+  await game.locator('#qaNarr').click()
+  await expect(narrator).toBeVisible()
+  await expect(game.locator('#qaNarr')).toHaveAttribute('aria-pressed', 'true')
+  await game.locator('#narrClose').click()
+  await expect(narrator).toBeHidden()
+  await game.locator('#scene').press('a') // keyboard shortcut
+  await expect(narrator).toBeVisible()
+  await game.locator('body').press('Escape')
+  await expect(narrator).toBeHidden()
+
+  // Investigators fold like the journal and the notes
+  await game.locator('[data-ptog="investigateurs"]').click()
+  await expect(game.locator('#invView')).toBeHidden()
+  await game.locator('[data-ptog="investigateurs"]').click()
+  await expect(game.locator('#invView .nm')).toHaveText('Vera Holt')
 
   // Next scene, then reload without the browser copy: the account copy brings it back
   const gameSaved = page.waitForResponse((r) => r.request().method() === 'PATCH' && r.url().includes('/rest/v1/games'))
@@ -200,7 +237,7 @@ test('game screen: the original engine runs a story, rolls, saves to the account
   await expect(page.getByRole('link', { name: /Reprendre la partie/ })).toBeVisible()
 
   // …and found again when the same investigator starts another game.
-  await page.goto('/marketplace')
+  await page.goto('/stories')
   await page.getByRole('link', { name: 'The Silent Light' }).click()
   await page.getByLabel(/Vera Holt/).check()
   await page.getByRole('button', { name: 'Lancer la partie' }).click()
@@ -213,14 +250,160 @@ test('game screen: the original engine runs a story, rolls, saves to the account
   expect(history).toContain('Survived the lighthouse')
 })
 
+test('story packs: import a .zip with its files, download it back, re-import updates, folders of packs', async ({ page }, testInfo) => {
+  const story = JSON.parse(readFileSync('stories/the-silent-light/story.json', 'utf8'))
+  story.meta.id = 'lighthouse-pack'
+  story.meta.title = 'Lighthouse Pack'
+  const map = new Uint8Array([137, 80, 78, 71, 13, 10, 26, 10, 1, 2, 3])
+  const zip = Buffer.from(zipSync({ 'lighthouse/story.json': strToU8(JSON.stringify(story)), 'lighthouse/images/map.png': map }))
+
+  await signUp(page)
+  await page.goto('/stories/import')
+  await page.getByTestId('pack-zip-input').setInputFiles({ name: 'lighthouse.zip', mimeType: 'application/zip', buffer: zip })
+  const list = page.getByRole('list', { name: 'Packs à importer' })
+  await expect(list.getByText('Lighthouse Pack')).toBeVisible()
+  await expect(list.getByText('6 scènes')).toBeVisible()
+  await expect(list.getByText('1 fichier')).toBeVisible()
+  await page.getByRole('button', { name: 'Importer 1 histoire' }).click()
+  await expect(list.getByText('Importée')).toBeVisible()
+
+  // The story, with its pack in Storage
+  await list.getByRole('link', { name: 'Ouvrir' }).click()
+  await expect(page.getByRole('heading', { name: 'Lighthouse Pack', level: 1 })).toBeVisible()
+  await expect(page.getByText('Pack : story.json + 1 fichier')).toBeVisible()
+
+  // Download gives back the same files
+  const [download] = await Promise.all([page.waitForEvent('download'), page.getByRole('button', { name: 'Télécharger le pack (.zip)' }).click()])
+  expect(download.suggestedFilename()).toBe('lighthouse-pack.zip')
+  const back = unzipSync(new Uint8Array(readFileSync(await download.path())))
+  expect(JSON.parse(strFromU8(back['story.json'])).meta.title).toBe('Lighthouse Pack')
+  expect([...back['images/map.png']]).toEqual([...map])
+
+  // Same pack again: updates the story instead of duplicating it
+  await page.goto('/stories/import')
+  await page.getByTestId('pack-zip-input').setInputFiles({ name: 'lighthouse.zip', mimeType: 'application/zip', buffer: zip })
+  await expect(list.getByText('remplacera l’histoire existante')).toBeVisible()
+  await page.getByRole('button', { name: 'Importer 1 histoire' }).click()
+  await expect(list.getByText('Mise à jour')).toBeVisible()
+  await page.goto('/stories/mine')
+  await expect(page.getByRole('link', { name: 'Lighthouse Pack' })).toHaveCount(1)
+
+  // A folder holding several pack folders imports them all
+  const dir = testInfo.outputPath('scans')
+  for (const [id, title] of [['pack-one', 'Pack One'], ['pack-two', 'Pack Two']]) {
+    mkdirSync(`${dir}/${id}/images`, { recursive: true })
+    writeFileSync(`${dir}/${id}/story.json`, JSON.stringify({ ...story, meta: { ...story.meta, id, title } }))
+    writeFileSync(`${dir}/${id}/images/cover.png`, map)
+  }
+  await page.goto('/stories/import')
+  await page.getByTestId('pack-dir-input').setInputFiles(dir)
+  await expect(list.getByText('Pack One')).toBeVisible()
+  await expect(list.getByText('Pack Two')).toBeVisible()
+  await page.getByRole('button', { name: 'Importer 2 histoires' }).click()
+  await expect(list.getByText('Importée')).toHaveCount(2)
+})
+
 test('keeper copies a marketplace story into their own stories', async ({ page }) => {
   await signUp(page)
-  await page.goto('/marketplace')
+  await page.goto('/stories')
   await page.getByRole('link', { name: 'The Silent Light' }).click()
   await page.getByRole('button', { name: 'Copier dans mes histoires' }).click()
   await expect(page.getByText('Mon histoire')).toBeVisible()
+  await page.getByRole('link', { name: 'Histoires', exact: true }).click()
   await page.getByRole('link', { name: 'Mes histoires' }).click()
   await expect(page.getByRole('link', { name: 'The Silent Light' })).toBeVisible()
+})
+
+test('main menu: stories, investigators with their players, settings', async ({ page }) => {
+  test.setTimeout(90_000) // includes the creation wizard
+  await signUp(page)
+  const menu = page.getByRole('list').first()
+  await expect(menu.getByRole('link')).toHaveText([/^Nouvelle partie/, /^Histoires/, /^Investigateurs/, /^Réglages/])
+
+  // Histoires: library, my stories, import
+  await menu.getByRole('link', { name: /^Histoires/ }).click()
+  const storyTabs = page.getByRole('navigation', { name: 'Histoires' })
+  await expect(storyTabs.getByRole('link')).toHaveText(['Bibliothèque', 'Mes histoires', 'Importer'])
+  await expect(storyTabs.getByRole('link', { name: 'Mes histoires' })).toHaveAttribute('aria-current', 'page')
+  await storyTabs.getByRole('link', { name: 'Importer' }).click()
+  await expect(page.getByRole('tab', { name: 'Packs Grimoire' })).toBeVisible()
+
+  // Investigateurs → Joueurs: add a player, create their investigator from their card
+  await page.getByRole('link', { name: 'Investigateurs', exact: true }).first().click()
+  await page.getByRole('navigation', { name: 'Investigateurs' }).getByRole('link', { name: 'Joueurs' }).click()
+  await expect(page.getByText('Aucun joueur')).toBeVisible()
+  await page.getByRole('textbox', { name: 'Prénom' }).fill('Jo')
+  await page.getByRole('button', { name: 'Ajouter un joueur' }).click()
+  const jo = page.getByRole('article', { name: 'Jo' })
+  await expect(jo.getByText('0 personnage')).toBeVisible()
+  await page.getByRole('textbox', { name: 'Prénom' }).fill(' jo ')
+  await page.getByRole('button', { name: 'Ajouter un joueur' }).click()
+  await expect(page.getByText('Tu as déjà un joueur avec ce prénom.')).toBeVisible()
+
+  await jo.getByRole('button', { name: 'Créer un personnage' }).click()
+  await expect(page.getByRole('combobox', { name: 'Joueur' }).locator('option:checked')).toHaveText('Jo')
+  await createJournalist(page, 'Nell Price', null)
+  await expect(page).toHaveURL(/\/characters\/joueurs$/)
+  await expect(jo.getByText('1 personnage')).toBeVisible()
+  await jo.getByRole('button', { name: /Nell Price/ }).click()
+  await expect(jo.getByText('Pas encore joué.')).toBeVisible()
+
+  // Rename; remove → the investigator stays, without player
+  await jo.getByRole('button', { name: 'Renommer' }).click()
+  await jo.getByRole('textbox', { name: 'Prénom' }).fill('Joanna')
+  await jo.getByRole('button', { name: 'Renommer' }).click()
+  const joanna = page.getByRole('article', { name: 'Joanna' })
+  await expect(joanna).toBeVisible()
+  await page.getByRole('navigation', { name: 'Investigateurs' }).getByRole('link', { name: 'Investigateurs' }).click()
+  await expect(page.getByText('joué par Joanna')).toBeVisible()
+  await page.getByRole('navigation', { name: 'Investigateurs' }).getByRole('link', { name: 'Joueurs' }).click()
+  await joanna.getByRole('button', { name: 'Retirer' }).click()
+  await joanna.getByRole('button', { name: 'Oui' }).click()
+  await expect(page.getByRole('heading', { name: 'Sans joueur' })).toBeVisible()
+
+  // Réglages: theme and language, remembered
+  await page.getByRole('link', { name: 'Réglages' }).click()
+  await page.getByRole('tab', { name: 'Classique' }).click()
+  await expect(page.locator('html')).toHaveAttribute('data-skin', 'classic')
+  await page.getByRole('tab', { name: 'English' }).click()
+  await page.reload()
+  await expect(page.locator('html')).toHaveAttribute('data-skin', 'classic')
+  await expect(page.getByRole('tab', { name: 'English' })).toHaveAttribute('aria-selected', 'true')
+  expect(await page.evaluate(() => localStorage.getItem('gardien-lang'))).toBe('en')
+})
+
+test('the whole app follows the language chosen in settings', async ({ page }) => {
+  await signUp(page)
+  await page.getByRole('link', { name: /^Réglages/ }).click()
+  await page.getByRole('tab', { name: 'English' }).click()
+  await expect(page.getByRole('heading', { name: 'Settings', level: 1 })).toBeVisible()
+  await expect(page.locator('html')).toHaveAttribute('lang', 'en')
+
+  await page.getByRole('link', { name: 'Grimoire' }).click()
+  await expect(page.getByText('Good evening, Keeper')).toBeVisible()
+  const menu = page.getByRole('list').first()
+  await expect(menu.getByRole('link')).toHaveText([/^New game/, /^Stories/, /^Investigators/, /^Settings/])
+
+  await menu.getByRole('link', { name: /^Stories/ }).click()
+  await expect(page.getByRole('navigation', { name: 'Stories' }).getByRole('link')).toHaveText(['Library', 'My stories', 'Import'])
+  await page.getByRole('link', { name: 'Library' }).click()
+  await page.getByRole('link', { name: 'The Silent Light' }).click()
+  await expect(page.getByRole('button', { name: 'Start the game' })).toBeVisible()
+
+  // Creation wizard: rules texts and skill names in English too
+  await page.goto('/characters/new')
+  await expect(page.getByRole('heading', { name: 'Create an investigator' })).toBeVisible()
+  await expect(page.getByLabel('Occupation')).toContainText('Private eye')
+  await page.getByRole('navigation', { name: 'Creation steps' }).getByRole('button', { name: /Occupation skills/ }).click()
+  await expect(page.getByLabel('Skill to add')).toContainText('Spot Hidden')
+
+  await page.goto('/characters/joueurs')
+  await expect(page.getByRole('button', { name: 'Add a player' })).toBeVisible()
+
+  // Back to French
+  await page.goto('/settings')
+  await page.getByRole('tab', { name: 'Français' }).click()
+  await expect(page.getByRole('heading', { name: 'Réglages', level: 1 })).toBeVisible()
 })
 
 test.describe('AI features (fake Claude API)', () => {
@@ -288,15 +471,17 @@ test.describe('AI features (fake Claude API)', () => {
   })
 
   test('the narrator answers inside the game, through Claude', async ({ page }) => {
+    test.setTimeout(90_000) // long flow: wizard, then game(s)
     await signUp(page)
     await page.goto('/characters/new')
     await createJournalist(page, 'Nora Quill')
-    await page.goto('/marketplace')
+    await page.goto('/stories')
     await page.getByRole('link', { name: 'The Silent Light' }).click()
     await page.getByLabel(/Nora Quill/).check()
     await page.getByRole('button', { name: 'Lancer la partie' }).click()
     const game = page.frameLocator('iframe[title="Partie"]')
     await expect(game.locator('#scene h2')).toHaveText('The harbour')
+    await game.locator('#qaNarr').click()
     await game.locator('#ninput').fill('Décris le port pour les joueurs.')
     await game.locator('#ninput').press('Enter')
     await expect(game.locator('#nlog .na').last()).toHaveText('Les vagues battent la jetée.')
@@ -304,7 +489,9 @@ test.describe('AI features (fake Claude API)', () => {
 
   test('keeper imports page images into a private story', async ({ page }) => {
     await signUp(page)
-    await page.getByRole('link', { name: /^Importer une histoire/ }).click()
+    await page.getByRole('link', { name: /^Histoires/ }).click()
+    await page.getByRole('link', { name: 'Importer', exact: true }).click()
+    await page.getByRole('tab', { name: 'Pages scannées (IA)' }).click()
     const png = Buffer.from([137, 80, 78, 71, 13, 10, 26, 10])
     await page.getByTestId('page-input').setInputFiles([1, 2, 3].map((n) => ({ name: `page-${n}.png`, mimeType: 'image/png', buffer: png })))
     await expect(page.getByAltText('Page 3')).toBeVisible()
@@ -318,6 +505,7 @@ test.describe('AI features (fake Claude API)', () => {
     await expect(page.getByText('Mon histoire')).toBeVisible()
     await expect(page.getByText('Front room')).toBeVisible()
 
+    await page.getByRole('link', { name: 'Histoires', exact: true }).click()
     await page.getByRole('link', { name: 'Mes histoires' }).click()
     await expect(page.getByRole('link', { name: 'Clockwork' })).toBeVisible()
     await expect(page.getByText('Import privé')).toBeVisible()

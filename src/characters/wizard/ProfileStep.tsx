@@ -11,9 +11,12 @@ import { supabase } from '@/lib/supabase'
 import { PROFILE_FIELDS, skillLabel, type ProfileField } from '@/rules/d100'
 import { Tuto } from './parts'
 import type { StepProps } from './steps'
+import { Rich } from '@/i18n/Rich'
+import { tMsg, useT } from '@/i18n/t'
+import type { Lang } from '@/settings/lang'
 
 /** What the suggest-profile function needs to know (see supabase/functions/_shared/profile.ts). */
-function profileRequest(d: CreationDraft, field?: ProfileField) {
+function profileRequest(d: CreationDraft, lang: Lang, field?: ProfileField) {
   const skills = [...d.occupationSkills, ...d.personalInterests]
     .map((id) => ({ label: skillLabel(id, d.specialties[id]), value: skillTotal(id, d) }))
     .sort((a, b) => b.value - a.value)
@@ -28,10 +31,12 @@ function profileRequest(d: CreationDraft, field?: ProfileField) {
     skills,
     profile: d.profile,
     field,
+    lang,
   }
 }
 
 export function ProfileStep({ draft: d, update }: StepProps) {
+  const t = useT()
   // 'all' while filling every empty field, or the id of the field being regenerated.
   const [busy, setBusy] = useState<'all' | ProfileField | null>(null)
   const empty = PROFILE_FIELDS.filter((f) => !d.profile[f.id]?.trim()).length
@@ -41,14 +46,14 @@ export function ProfileStep({ draft: d, update }: StepProps) {
     try {
       const { data, error } = await supabase.functions.invoke<{ suggestions: Partial<Record<ProfileField, string>> }>(
         'suggest-profile',
-        { body: profileRequest(d, field) },
+        { body: profileRequest(d, t.lang, field) },
       )
       if (error) throw error
       const suggestions = data?.suggestions ?? {}
-      if (!Object.keys(suggestions).length) toast.info('Pas de nouvelle idée cette fois. Réessaie.')
+      if (!Object.keys(suggestions).length) toast.info(t('Pas de nouvelle idée cette fois. Réessaie.'))
       update((x) => ({ ...x, profile: { ...x.profile, ...suggestions } }))
     } catch (e) {
-      toast.error(await functionErrorMessage(e, 'Suggestion impossible.'))
+      toast.error(tMsg(t, await functionErrorMessage(e, 'Suggestion impossible.')))
     } finally {
       setBusy(null)
     }
@@ -57,32 +62,26 @@ export function ProfileStep({ draft: d, update }: StepProps) {
   return (
     <>
       <Tuto>
-        <p>
-          Quelques affirmations courtes. Deux ou trois suffisent pour commencer. Le gardien s'en sert : une folie
-          passagère peut par exemple faire voir une <b>personne importante</b> dans un inconnu.
-        </p>
-        <p>
-          L'IA peut proposer des idées à partir de l'occupation, des caractéristiques et du lien avec l'histoire. Ce que
-          tu as déjà écrit est gardé, et tout reste modifiable.
-        </p>
+        <p><Rich text={t("Quelques affirmations courtes. Deux ou trois suffisent pour commencer. Le gardien s'en sert : une folie passagère peut par exemple faire voir une **personne importante** dans un inconnu.")} /></p>
+        <p>{t("L'IA peut proposer des idées à partir de l'occupation, des caractéristiques et du lien avec l'histoire. Ce que tu as déjà écrit est gardé, et tout reste modifiable.")}</p>
       </Tuto>
       <div>
         <Button type="button" variant="outline" onClick={() => suggest()} disabled={busy !== null || empty === 0}>
           {busy === 'all' ? <Spinner data-icon="inline-start" /> : <Sparkles data-icon="inline-start" />}
-          {empty === PROFILE_FIELDS.length ? 'Suggérer avec l’IA' : `Compléter les ${empty} champ${empty > 1 ? 's' : ''} vide${empty > 1 ? 's' : ''}`}
+          {empty === PROFILE_FIELDS.length ? t('Suggérer avec l’IA') : t.n(empty, 'Compléter le champ vide', 'Compléter les {n} champs vides')}
         </Button>
       </div>
       <div className="grid gap-4 sm:grid-cols-2">
         {PROFILE_FIELDS.map((f) => (
           <Field key={f.id}>
             <div className="flex items-center justify-between gap-2">
-              <FieldLabel htmlFor={`bg-${f.id}`}>{f.label}</FieldLabel>
+              <FieldLabel htmlFor={`bg-${f.id}`}>{t(f.label)}</FieldLabel>
               <Button
                 type="button"
                 variant="ghost"
                 size="icon-xs"
-                aria-label={`Autre idée pour ${f.label}`}
-                title="Autre idée"
+                aria-label={t('Autre idée pour {field}', { field: t(f.label) })}
+                title={t('Autre idée')}
                 disabled={busy !== null}
                 onClick={() => suggest(f.id)}
               >
@@ -91,7 +90,7 @@ export function ProfileStep({ draft: d, update }: StepProps) {
             </div>
             <Textarea
               id={`bg-${f.id}`}
-              placeholder={f.placeholder}
+              placeholder={t(f.placeholder)}
               value={d.profile[f.id] ?? ''}
               aria-busy={busy === f.id || (busy === 'all' && !d.profile[f.id])}
               onChange={(e) => update((x) => ({ ...x, profile: { ...x.profile, [f.id]: e.target.value } }))}

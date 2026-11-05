@@ -262,6 +262,17 @@ Deno.serve(async (req) => {
       storyId = data.id
     }
 
+    // Every story also lives as a pack in Storage (story-packs/<owner>/<story>/story.json).
+    if (storyId) {
+      const { error } = await admin.storage
+        .from('story-packs')
+        .upload(`${userId}/${storyId}/story.json`, new Blob([JSON.stringify(story, null, 2) + '\n'], { type: 'application/json' }), {
+          upsert: true,
+          contentType: 'application/json',
+        })
+      if (error) console.error('story pack write failed', error)
+    }
+
     await admin
       .from('story_imports')
       .update({

@@ -1,4 +1,5 @@
-import { useSkin } from './skin'
+import { useT } from '@/i18n/t'
+import { SKIN_LABEL, useSkin } from './skin'
 
 /** Fan ornament above the title in the Art Deco skin (an original drawing in the legacy style). */
 function Fan() {
@@ -29,9 +30,10 @@ export function Masthead({ eyebrow, title, subtitle }: { eyebrow: string; title:
 
 /** Quote column of the legacy home screen: display font, gold rule on the left. */
 export function Epigraph({ quote, note }: { quote: string; note?: string }) {
+  const t = useT()
   return (
     <blockquote className="flex flex-col gap-3 border-l border-gold/60 pl-5">
-      <p className="font-heading text-2xl leading-snug text-balance">« {quote} »</p>
+      <p className="font-heading text-2xl leading-snug text-balance">{t('« {quote} »', { quote })}</p>
       {note && <p className="text-sm text-muted-foreground">{note}</p>}
     </blockquote>
   )
@@ -39,6 +41,7 @@ export function Epigraph({ quote, note }: { quote: string; note?: string }) {
 
 /** "Thème : Art déco" link, uppercase and underlined like the legacy home. */
 export function SkinToggle() {
+  const t = useT()
   const { skin, toggle } = useSkin()
   return (
     <button
@@ -46,7 +49,7 @@ export function SkinToggle() {
       onClick={toggle}
       className="w-fit text-xs tracking-[0.2em] text-muted-foreground uppercase underline underline-offset-4 hover:text-foreground"
     >
-      Thème : {skin === 'deco' ? 'Art déco' : 'Classique'}
+      {t('Thème : {skin}', { skin: t(SKIN_LABEL[skin]) })}
     </button>
   )
 }

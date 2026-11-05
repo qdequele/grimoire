@@ -23,6 +23,7 @@
     </div>
     <div class="qa-g qa-tools" aria-label="Outils">
     <button class="btn ico" id="qaDice" aria-label="Dés" title="Dés (D)" aria-pressed="false"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2.5 21 8v8l-9 5.5L3 16V8z"/><path d="M3 8l9 5.5L21 8M12 13.5v8"/><circle cx="12" cy="8" r="1.2" class="pip"/><circle cx="7.5" cy="14" r="1.1" class="pip"/><circle cx="16.5" cy="14" r="1.1" class="pip"/></svg></button>
+    <button class="btn ico" id="qaNarr" aria-label="Narrateur" title="Narrateur (A)" aria-pressed="false"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5.5h16v10.5H10l-4.5 3.5V16H4z"/><path d="M8 9.5h8M8 12.5h5"/></svg></button>
     <button class="btn ico" id="qaSnd" aria-label="Sons" title="Sons (S)" aria-pressed="false"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9.5h3.5L12 5.5v13l-4.5-4H4z"/><path d="M15.5 9a4 4 0 0 1 0 6M18 6.5a7.5 7.5 0 0 1 0 11" class="wave"/></svg><span class="live" id="sndLive" hidden></span></button>
     </div>
   </div>
@@ -48,13 +49,12 @@
   <nav class="acts" id="nav" aria-label="Déroulé des scènes"></nav>
   <main class="scene" id="scene"></main>
   <aside class="side">
-    <section class="panel npcp" id="npcPanel" hidden><h3><span>PNJ de la scène</span> <button class="lnk" id="npcPanelCbt">⚔ Combat</button></h3><div id="npcCards"></div></section>
-    <section class="panel">
-      <h3>Investigateurs <span class="tabs"><button class="on" data-v="inv">Suivi</button><button data-v="who" id="tabWho">Qui sait quoi</button></span></h3>
+    <section class="panel npcp" id="npcPanel" hidden><h3><button class="ptog" data-ptog="pnj" aria-expanded="true"><span class="chev"></span>PNJ de la scène</button> <button class="lnk" id="npcPanelCbt">⚔ Combat</button></h3><div id="npcCards"></div></section>
+    <section class="panel" id="invPanel">
+      <h3><button class="ptog" data-ptog="investigateurs" aria-expanded="true"><span class="chev"></span>Investigateurs</button> <span class="tabs"><button class="on" data-v="inv">Suivi</button><button data-v="who" id="tabWho">Qui sait quoi</button></span></h3>
       <div id="invView"></div>
       <div class="addrow"><button class="lnk" id="gmEdit2">Changer les joueurs : menu ☰ Partie › Modifier la partie</button></div>
     </section>
-    <section class="panel narr" id="narrPanel" aria-label="Narrateur"><h3><button class="ptog" data-ptog="narrateur" aria-expanded="true"><span class="chev"></span>Narrateur</button></h3><div id="narrBody"></div></section>
     <section class="panel ritual" id="ritPanel">
       <h3 id="ritTitle"></h3>
       <div class="line"><span>PM versés</span><b class="t" id="pmVal">0</b><span>/ <span id="ritMax"></span></span>
@@ -118,6 +118,7 @@
     </section>
 <button class="fab" id="fab" aria-label="Ouvrir les dés"><span class="d20">⚂</span> Dés</button>
 <section class="sndfloat" id="sndPanel" hidden aria-label="Sons"><h3><span>Sons et ambiances</span><button class="x" id="sndClose" aria-label="Fermer les sons">×</button></h3><div id="sndBody"></div></section>
+<section class="narr" id="narrPanel" hidden aria-label="Narrateur"><h3><span>Narrateur</span><button class="x" id="narrClose" aria-label="Fermer le narrateur">×</button></h3><div id="narrBody"></div></section>
 <button class="fab fab-l" id="sndFab" aria-label="Ouvrir les sons"><span class="d20">♪</span> Sons</button>
 
 <div class="pickdlg" id="pick" hidden role="dialog" aria-modal="true"><div class="pick-box" id="pickBox"></div></div>

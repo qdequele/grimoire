@@ -76,9 +76,34 @@ The in-game interface is the legacy app's own engine, so it behaves exactly like
 - Rules texts, glossary, bouts of madness, narrator instructions, translations and the original book references live in `private/engine-data.json` (gitignored), loaded with `import.meta.glob` when present; neutral fallbacks otherwise.
 - Your legacy scenarios: `pnpm stories:convert -- --upload <email>` (`scripts/convert-legacy.ts`) converts `private/legacy-dump/` into private stories in `private/stories/` and uploads them. The dump is taken from the running legacy page (see the scripts' headers).
 - Tests: `src/play/legacy/roundtrip.test.ts` (legacy data → story → engine data, field for field), `pnpm e2e:parity` (original vs new app, every scene and panel, FR + EN), and the "game screen" test in `e2e/app.spec.ts` (rolls, account save, quit, progression across games).
+- Layout changes from the original (extraction patches, "game screen layout"): the narrator is a floating window (toolbar button, shortcut A, Escape closes, open state in `S.ui.narr`) instead of a right-column panel; "PNJ de la scène" and "Investigateurs" fold like Journal and Notes. English for the labels the app adds: `APP_UI_EN` in `src/play/engineData.ts`.
 - Known, intended differences: in English the new app translates the ritual panel and rules sheet (the original left them in French until the language was switched by hand); the English glossary/translation race is normalised in the parity test.
 - Narrator: the engine's `claude.use("sample")` call is patched to `GRIMOIRE_HOST.sample` (`src/play/narrator.ts`, same contract: streaming `onText`, abort, error codes), backed by the `narrate` Edge Function (`_shared/narrate.ts`: validation, prompt-cache split at "CONTEXTE ACTUEL DE LA PARTIE"). `NARRATOR_MONTHLY_LIMIT` (300) per account in `ai_usage`. No global `window.claude` shim: the engine's saves list only loads when `window.claude` is absent.
 - Not wired yet: "Sauvegarder la partie" snapshots (still browser-only), and investigators created or edited from inside a game (they stay in that game, not in the account).
+
+## Story packs in Storage
+
+Every story also exists as a story pack (spec/STORY_FORMAT.md) in the private `story-packs` bucket: `<owner id>/<story id>/story.json`, `images/…`, `sounds/…` (`marketplace/<story id>/…` for marketplace stories, writable by admins only). `stories.content` stays what the app reads; `stories.pack_files` lists the pack's other files.
+
+- Import: Importer → "Packs Grimoire" (`src/import/PackImport.tsx`): one or more .zip, or a folder (a folder of pack folders imports them all; `splitPacks`). `src/stories/pack.ts` reads and checks packs (blocking errors vs schema warnings), `useImportPack` creates the private story, or updates the one with the same `meta.id` (its games keep working), then `writePack` uploads every file.
+- Kept in sync: pack import, copy (`copyPackFiles`), delete (`deletePack`), AI import (the function writes story.json), the legacy converter. Any new code path that saves `stories.content` must also write the pack's story.json (`writeStoryJson`).
+- Download: story page → "Télécharger le pack (.zip)" (`downloadPack`).
+- `pnpm packs:sync` writes story.json for every story (backfill; `pnpm db:reset` runs it, the seed can't write Storage).
+- The game engine doesn't show pack images or story sounds yet: they are stored and downloadable.
+
+## Main menu
+
+Reprendre la partie · Nouvelle partie (→ library) · **Histoires** (`/stories`: tabs Bibliothèque, Mes histoires `/stories/mine`, Importer `/stories/import`) · **Investigateurs** (`/characters`: tabs Investigateurs, Joueurs `/characters/joueurs`) · **Réglages** (`/settings`: theme, language). Sections share `src/theme/Section.tsx` (title + tab nav + Outlet). `/marketplace` and `/import` redirect to their new place.
+
+- **Players** (`players` table): a first name, owned by the keeper. `characters.player_id` (FK on `(player_id, owner_id)`, so only your own players; deleting a player sets it to null). Investigators' progression stays in `characters.data.progress`; the Joueurs page reads it with `progressSummary`. The engine gets the player's name via `NewGame.party[].player`.
+- **Language** (`src/settings/lang.ts`) is the `gardien-lang` key the game engine also reads: one setting for the app, the game screen, the default AI-import language and the AI profile suggestions.
+
+## Translations (French source, English dictionary)
+
+- The code is written in French and every visible text goes through `t()` (`src/i18n/t.ts`, `useT()` in components): the French text is the key, `src/i18n/en.ts` its English version. `t('Bonsoir, {name}', { name })`, plurals `t.n(n, '{n} joueur', '{n} joueurs')`, dates `t.date()`, sentences with bold parts `<Rich text={t('… **gras** …')} />`.
+- Rules data (`src/rules/d100.ts`) stays French and is translated where shown. Skills have their own entries (`compétence:…`, via `skillName`/`skillText`) because some labels are also ordinary words (Bibliothèque, Lancer).
+- `src/i18n/en.test.ts` scans the code for `t('…')` literals (+ `dataKeys()` in `keys.ts` for texts that come from data or props) and fails on a missing, unused or placeholder-mismatched English entry. When you add a text: wrap it in `t()`, add its English line.
+- Story content is never translated: a story keeps its own language.
 
 ## Accounts, marketplace, import (Supabase)
 

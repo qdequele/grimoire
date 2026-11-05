@@ -1,11 +1,12 @@
 import { Link } from 'react-router'
 import { useProfile } from '@/auth/auth'
-import { useCharacters } from '@/characters/api'
+import { useCharacters, usePlayers } from '@/characters/api'
 import { Button } from '@/components/ui/button'
 import { useMyGames } from '@/games/api'
+import { useT } from '@/i18n/t'
 import { cn } from '@/lib/utils'
 import { useMyStories } from '@/stories/api'
-import { Epigraph, Masthead, SkinToggle } from '@/theme/Masthead'
+import { Epigraph, Masthead } from '@/theme/Masthead'
 
 /** A legacy home-menu entry: diamond bullet, display-font label, small line underneath. */
 function MenuItem({ to, label, meta, primary }: { to: string; label: string; meta?: string; primary?: boolean }) {
@@ -22,58 +23,65 @@ function MenuItem({ to, label, meta, primary }: { to: string; label: string; met
   )
 }
 
-const plural = (n: number, one: string, many = `${one}s`) => `${n} ${n > 1 ? many : one}`
-const ago = (iso: string) => new Date(iso).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })
 
 export function HomePage() {
+  const t = useT()
   const profile = useProfile()
   const games = useMyGames()
   const stories = useMyStories()
   const characters = useCharacters()
+  const players = usePlayers()
   const last = games.data?.[0]
   const name = profile.data?.display_name
 
   return (
     <div className="grid gap-12 lg:grid-cols-2 lg:gap-16">
       <div className="flex flex-col gap-10">
-        <Masthead eyebrow="Écran du gardien" title="Grimoire" subtitle={name ? `Bonsoir, ${name}` : 'Bonsoir'} />
+        <Masthead eyebrow={t('Écran du gardien')} title="Grimoire" subtitle={name ? t('Bonsoir, {name}', { name }) : t('Bonsoir')} />
         <ul className="flex flex-col gap-6">
           {last && (
             <MenuItem
               to={`/games/${last.id}`}
-              label="Reprendre la partie"
-              meta={`${last.story?.content.meta.title ?? 'Histoire supprimée'} · ${ago(last.updated_at)}`}
+              label={t('Reprendre la partie')}
+              meta={`${last.story?.content.meta.title ?? t('Histoire supprimée')} · ${t.date(last.updated_at)}`}
               primary
             />
           )}
-          <MenuItem to="/marketplace" label="Nouvelle partie" meta="choisir l'histoire puis les investigateurs" primary={!last} />
-          <MenuItem to="/stories" label="Mes histoires" meta={stories.data ? plural(stories.data.length, 'histoire') : undefined} />
-          <MenuItem to="/characters" label="Investigateurs" meta={characters.data ? plural(characters.data.length, 'investigateur') : undefined} />
-          <MenuItem to="/import" label="Importer une histoire" meta="depuis les pages d'un scénario que tu possèdes" />
+          <MenuItem to="/stories" label={t('Nouvelle partie')} meta={t("choisir l'histoire puis les investigateurs")} primary={!last} />
+          <MenuItem
+            to="/stories/mine"
+            label={t('Histoires')}
+            meta={[t('bibliothèque'), stories.data && t.n(stories.data.length, '{n} histoire personnelle', '{n} histoires personnelles'), t('import')].filter(Boolean).join(' · ')}
+          />
+          <MenuItem
+            to="/characters"
+            label={t('Investigateurs')}
+            meta={characters.data && players.data ? `${t.n(characters.data.length, '{n} investigateur', '{n} investigateurs')} · ${t.n(players.data.length, '{n} joueur', '{n} joueurs')}` : undefined}
+          />
+          <MenuItem to="/settings" label={t('Réglages')} meta={t('thème, langue')} />
         </ul>
-        <SkinToggle />
       </div>
 
       <div className="flex flex-col gap-4 lg:pt-2">
         {games.data?.length ? (
           <>
-            <p className="eyebrow">Parties en cours</p>
+            <p className="eyebrow">{t('Parties en cours')}</p>
             {games.data.map((g) => (
               <article key={g.id} className="flex flex-col gap-2 border border-border bg-card p-4">
-                <h3 className="font-heading text-xl">{g.story?.content.meta.title ?? 'Histoire supprimée'}</h3>
+                <h3 className="font-heading text-xl">{g.story?.content.meta.title ?? t('Histoire supprimée')}</h3>
                 <p className="text-sm text-muted-foreground">
-                  {ago(g.updated_at)} · {plural(g.state.party.length, 'investigateur')}
+                  {t.date(g.updated_at)} · {t.n(g.state.party.length, '{n} investigateur', '{n} investigateurs')}
                 </p>
                 <Button className="w-fit" size="sm" render={<Link to={`/games/${g.id}`} />} nativeButton={false}>
-                  Reprendre
+                  {t('Reprendre')}
                 </Button>
               </article>
             ))}
           </>
         ) : (
           <Epigraph
-            quote="La lampe du phare s'est éteinte il y a trois nuits. Quelqu'un doit aller voir."
-            note="Aucune partie en cours. Crée tes investigateurs, puis lance une nouvelle partie."
+            quote={t("La lampe du phare s'est éteinte il y a trois nuits. Quelqu'un doit aller voir.")}
+            note={t('Aucune partie en cours. Crée tes investigateurs, puis lance une nouvelle partie.')}
           />
         )}
       </div>

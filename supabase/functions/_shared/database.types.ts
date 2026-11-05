@@ -76,6 +76,7 @@ export type Database = {
           id: string
           name: string | null
           owner_id: string
+          player_id: string | null
           updated_at: string
         }
         Insert: {
@@ -84,6 +85,7 @@ export type Database = {
           id?: string
           name?: string | null
           owner_id?: string
+          player_id?: string | null
           updated_at?: string
         }
         Update: {
@@ -92,6 +94,7 @@ export type Database = {
           id?: string
           name?: string | null
           owner_id?: string
+          player_id?: string | null
           updated_at?: string
         }
         Relationships: [
@@ -101,6 +104,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "characters_player_fkey"
+            columns: ["player_id", "owner_id"]
+            isOneToOne: false
+            referencedRelation: "players"
+            referencedColumns: ["id", "owner_id"]
           },
         ]
       }
@@ -149,6 +159,35 @@ export type Database = {
           },
         ]
       }
+      players: {
+        Row: {
+          created_at: string
+          id: string
+          name: string
+          owner_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          name: string
+          owner_id?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          name?: string
+          owner_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "players_owner_id_fkey"
+            columns: ["owner_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           created_at: string
@@ -178,6 +217,7 @@ export type Database = {
           id: string
           lang: string | null
           owner_id: string | null
+          pack_files: string[]
           published_at: string | null
           summary: string | null
           title: string | null
@@ -191,6 +231,7 @@ export type Database = {
           id?: string
           lang?: string | null
           owner_id?: string | null
+          pack_files?: string[]
           published_at?: string | null
           summary?: string | null
           title?: string | null
@@ -204,6 +245,7 @@ export type Database = {
           id?: string
           lang?: string | null
           owner_id?: string | null
+          pack_files?: string[]
           published_at?: string | null
           summary?: string | null
           title?: string | null

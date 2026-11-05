@@ -101,7 +101,7 @@ async function newAppScenes(page: Page, scenario: string, lang: string) {
   await page.waitForURL(APP + '/')
   await page.evaluate((l) => localStorage.setItem('gardien-lang', l), lang)
   await page.goto(`${APP}/games/${game!.id}`)
-  await expect(page.frameLocator('iframe[title="Partie"]').locator('#scene h2')).toBeVisible({ timeout: 15000 })
+  await expect(page.frameLocator('iframe[src$="play.html"]').locator('#scene h2')).toBeVisible({ timeout: 15000 })
   const frame = page.frame({ url: /play\.html/ })!
   return renderAll(frame)
 }
@@ -117,10 +117,13 @@ for (const [scenario, lang] of SCENARIOS) {
     // boxes land in a timing-dependent place, and the scene NPC panel title comes out as "PNJ de la
     // scène", "Scene NPCs" or "Scene <abbr>NPCs</abbr>". English is compared without glossary boxes
     // and with that title settled; the glossary itself is compared strictly in French.
+    // The new app's scene NPCs panel folds: its title is a toggle button instead of a span.
+    const FOLD = (html: string) =>
+      html.replace(/<button class="ptog" data-ptog="pnj" aria-expanded="(?:true|false)"><span class="chev"><\/span>(.*?)<\/button>/, '<span>$1</span>')
     const KNOWN = (html: string) =>
       lang === 'en'
-        ? html.replace(/<abbr class="gl"[^>]*>(.*?)<\/abbr>/g, '$1').replace('<span>PNJ de la scène</span>', '<span>Scene NPCs</span>')
-        : html
+        ? FOLD(html).replace(/<abbr class="gl"[^>]*>(.*?)<\/abbr>/g, '$1').replace('<span>PNJ de la scène</span>', '<span>Scene NPCs</span>')
+        : FOLD(html)
     // Also in English, the original showed the ritual panel and the rules sheet in French until the
     // language was switched by hand; the new app shows them in English. Compared in French only.
     if (lang === 'en') {

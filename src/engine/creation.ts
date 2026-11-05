@@ -23,7 +23,8 @@ export interface CreationDraft {
   name: string
   occupation: string
   age: number
-  player: string
+  /** players.id of who plays them, '' = nobody yet. */
+  playerId: string
   /** Link with the story or the other investigators. */
   link: string
   /** undefined = not placed yet. */
@@ -43,7 +44,7 @@ export interface CreationDraft {
 export function newDraft(occupationId = 'journalist'): CreationDraft {
   return applyOccupation(
     {
-      name: '', occupation: occupationId, age: 25, player: '', link: '',
+      name: '', occupation: occupationId, age: 25, playerId: '', link: '',
       characteristics: {}, rolled: false,
       occupationSkills: [], occupationValues: {}, personalInterests: [], specialties: {}, profile: {},
     },

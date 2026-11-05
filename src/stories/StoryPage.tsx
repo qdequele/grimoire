@@ -1,4 +1,4 @@
-import { Copy, Play, Trash2, UserPlus } from 'lucide-react'
+import { Copy, Download, Play, Trash2, UserPlus } from 'lucide-react'
 import { useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router'
 import { toast } from 'sonner'
@@ -14,8 +14,11 @@ import { Skeleton } from '@/components/ui/skeleton'
 import { Spinner } from '@/components/ui/spinner'
 import { useStartGame } from '@/games/api'
 import { useCopyStory, useDeleteStory, useStory } from './api'
+import { downloadPack } from './packStorage'
+import { useT } from '@/i18n/t'
 
 export function StoryPage() {
+  const t = useT()
   const { id } = useParams()
   const { session } = useAuth()
   const navigate = useNavigate()
@@ -26,11 +29,12 @@ export function StoryPage() {
   const deleteStory = useDeleteStory()
   const [party, setParty] = useState<string[]>([])
   const [confirmDelete, setConfirmDelete] = useState(false)
+  const [downloading, setDownloading] = useState(false)
 
   if (error) {
     return (
       <Alert variant="destructive">
-        <AlertDescription>Histoire introuvable.</AlertDescription>
+        <AlertDescription>{t('Histoire introuvable.')}</AlertDescription>
       </Alert>
     )
   }
@@ -45,20 +49,36 @@ export function StoryPage() {
       const gameId = await startGame.mutateAsync({ story: story!, characterIds: party })
       navigate(`/games/${gameId}`)
     } catch (e) {
-      toast.error((e as Error).message)
+      toast.error(t((e as Error).message))
     }
   }
 
   async function copy() {
     const copied = await copyStory.mutateAsync(story!)
-    toast.success('Copie ajoutée à tes histoires.')
+    toast.success(t('Copie ajoutée à tes histoires.'))
     navigate(`/stories/${copied.id}`)
   }
 
+  async function download() {
+    setDownloading(true)
+    try {
+      const zip = await downloadPack(story!)
+      const a = document.createElement('a')
+      a.href = URL.createObjectURL(zip)
+      a.download = `${story!.content.meta.id}.zip`
+      a.click()
+      URL.revokeObjectURL(a.href)
+    } catch (e) {
+      toast.error(t('Téléchargement impossible : {error}', { error: (e as Error).message }))
+    } finally {
+      setDownloading(false)
+    }
+  }
+
   async function remove() {
-    await deleteStory.mutateAsync(story!.id)
-    toast.success('Histoire supprimée.')
-    navigate('/stories')
+    await deleteStory.mutateAsync(story!)
+    toast.success(t('Histoire supprimée.'))
+    navigate('/stories/mine')
   }
 
   return (
@@ -66,7 +86,7 @@ export function StoryPage() {
       <div className="flex flex-col gap-6">
         <header className="flex flex-col gap-3">
           <div className="flex flex-wrap gap-2">
-            <Badge variant="secondary">{mine ? 'Mon histoire' : 'Bibliothèque'}</Badge>
+            <Badge variant="secondary">{mine ? t('Mon histoire') : t('Bibliothèque')}</Badge>
             <Badge variant="outline">{meta.lang.toUpperCase()}</Badge>
             {meta.era && <Badge variant="outline">{meta.era}</Badge>}
             {meta.duration && <Badge variant="outline">{meta.duration}</Badge>}
@@ -74,22 +94,22 @@ export function StoryPage() {
           <h1 className="font-heading text-4xl">{meta.title}</h1>
           {meta.summary && <p className="text-lg text-muted-foreground">{meta.summary}</p>}
           {meta.contentWarnings?.length ? (
-            <p className="text-sm text-muted-foreground">Avertissements : {meta.contentWarnings.join(', ')}</p>
+            <p className="text-sm text-muted-foreground">{t('Avertissements : {list}', { list: meta.contentWarnings.join(', ') })}</p>
           ) : null}
         </header>
 
         {overview?.secret && (
           <Card>
             <CardHeader>
-              <CardTitle>Pour le gardien</CardTitle>
-              <CardDescription>Le secret de l'histoire. Ne pas lire aux joueurs.</CardDescription>
+              <CardTitle>{t('Pour le gardien')}</CardTitle>
+              <CardDescription>{t("Le secret de l'histoire. Ne pas lire aux joueurs.")}</CardDescription>
             </CardHeader>
             <CardContent>{overview.secret}</CardContent>
           </Card>
         )}
 
         <section className="flex flex-col gap-4">
-          <h2 className="font-heading text-2xl">Scènes</h2>
+          <h2 className="font-heading text-2xl">{t('Scènes')}</h2>
           {acts.map((act) => (
             <div key={act.id} className="flex flex-col gap-2">
               <h3 className="font-medium">{act.title}</h3>
@@ -109,8 +129,8 @@ export function StoryPage() {
       <aside className="flex flex-col gap-4">
         <Card>
           <CardHeader>
-            <CardTitle>Lancer une partie</CardTitle>
-            <CardDescription>Choisis les investigateurs de la table.</CardDescription>
+            <CardTitle>{t('Lancer une partie')}</CardTitle>
+            <CardDescription>{t('Choisis les investigateurs de la table.')}</CardDescription>
           </CardHeader>
           <CardContent className="flex flex-col gap-4">
             {characters.data?.length ? (
@@ -126,29 +146,38 @@ export function StoryPage() {
                     />
                     <FieldLabel htmlFor={`party-${c.id}`} className="font-normal">
                       {c.data.name}
-                      {c.data.occupation && <span className="text-muted-foreground"> · {c.data.occupation}</span>}
+                      {c.data.occupation && <span className="text-muted-foreground"> · {t(c.data.occupation)}</span>}
                     </FieldLabel>
                   </Field>
                 ))}
               </div>
             ) : (
-              <p className="text-sm text-muted-foreground">Tu n'as pas encore d'investigateur.</p>
+              <p className="text-sm text-muted-foreground">{t("Tu n'as pas encore d'investigateur.")}</p>
             )}
             <Button variant="outline" render={<Link to="/characters/new" />} nativeButton={false}>
               <UserPlus data-icon="inline-start" />
-              Créer un investigateur
+              {t('Créer un investigateur')}
             </Button>
             <Button onClick={start} disabled={!party.length || startGame.isPending}>
               {startGame.isPending ? <Spinner data-icon="inline-start" /> : <Play data-icon="inline-start" />}
-              Lancer la partie
+              {t('Lancer la partie')}
             </Button>
           </CardContent>
         </Card>
 
+        <Button variant="outline" onClick={download} disabled={downloading}>
+          {downloading ? <Spinner data-icon="inline-start" /> : <Download data-icon="inline-start" />}
+          {t('Télécharger le pack (.zip)')}
+        </Button>
+        {story.pack_files.length > 0 && (
+          <p className="text-xs text-muted-foreground">
+            {t.n(story.pack_files.length, 'Pack : story.json + {n} fichier', 'Pack : story.json + {n} fichiers')}
+          </p>
+        )}
         {!mine && (
           <Button variant="outline" onClick={copy} disabled={copyStory.isPending}>
             <Copy data-icon="inline-start" />
-            Copier dans mes histoires
+            {t('Copier dans mes histoires')}
           </Button>
         )}
         {mine && (
@@ -156,16 +185,16 @@ export function StoryPage() {
             <Separator />
             {confirmDelete ? (
               <div className="flex flex-col gap-2">
-                <p className="text-sm">Supprimer définitivement cette histoire ? Les parties liées seront supprimées.</p>
+                <p className="text-sm">{t('Supprimer définitivement cette histoire ? Les parties liées seront supprimées.')}</p>
                 <div className="flex gap-2">
-                  <Button variant="destructive" onClick={remove} disabled={deleteStory.isPending}>Supprimer</Button>
-                  <Button variant="ghost" onClick={() => setConfirmDelete(false)}>Annuler</Button>
+                  <Button variant="destructive" onClick={remove} disabled={deleteStory.isPending}>{t('Supprimer')}</Button>
+                  <Button variant="ghost" onClick={() => setConfirmDelete(false)}>{t('Annuler')}</Button>
                 </div>
               </div>
             ) : (
               <Button variant="ghost" onClick={() => setConfirmDelete(true)}>
                 <Trash2 data-icon="inline-start" />
-                Supprimer l'histoire
+                {t("Supprimer l'histoire")}
               </Button>
             )}
           </>

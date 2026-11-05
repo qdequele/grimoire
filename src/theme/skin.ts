@@ -15,13 +15,14 @@ function initialSkin(): Skin {
 
 interface SkinState {
   skin: Skin
+  setSkin: (skin: Skin) => void
   toggle: () => void
 }
 
 export const useSkin = create<SkinState>((set, get) => ({
   skin: initialSkin(),
-  toggle: () => {
-    const skin: Skin = get().skin === 'deco' ? 'classic' : 'deco'
+  toggle: () => get().setSkin(get().skin === 'deco' ? 'classic' : 'deco'),
+  setSkin: (skin) => {
     document.documentElement.dataset.skin = skin
     try {
       localStorage.setItem(KEY, skin)

@@ -30,6 +30,8 @@ export interface ProfileRequest {
   profile: Partial<Profile>
   /** Only regenerate this field (the ↻ button). Otherwise fill every empty field. */
   field?: ProfileKey
+  /** Language to write in (the keeper's app language). */
+  lang: 'fr' | 'en'
 }
 
 const clip = (s: unknown, n: number) => (typeof s === 'string' ? s.trim().slice(0, n) : '')
@@ -62,6 +64,7 @@ export function parseProfileRequest(body: unknown): ProfileRequest | string {
     skills: Array.isArray(b.skills) ? b.skills.slice(0, 12).map((s) => clip(s, 60)).filter(Boolean) : [],
     profile,
     field,
+    lang: b.lang === 'en' ? 'en' : 'fr',
   }
 }
 
@@ -80,7 +83,7 @@ export const PROFILE_SYSTEM_PROMPT = `Tu aides un gardien (meneur de jeu) à cr�
 Tu écris le profil de l'investigateur : six affirmations courtes que le gardien utilisera en partie (une folie passagère peut faire voir la personne importante dans un inconnu, le bien précieux peut être perdu, l'idéologie mise à l'épreuve).
 
 Règles :
-- En français, une seule phrase courte par champ, souvent sans verbe. Le ton des exemples : « Sa sœur, Mary », « Jamais sans son pistolet », « La science a réponse à tout ».
+- Dans la langue demandée (français sauf indication contraire), une seule phrase courte par champ, souvent sans verbe. Le ton des exemples : « Sa sœur, Mary », « Jamais sans son pistolet », « La science a réponse à tout ».
 - Concret et précis : des noms propres, des lieux réels de l'époque, des objets qu'on peut perdre. Pas de généralités.
 - Cohérent avec ce qu'on sait : occupation, âge, caractéristiques marquantes (une APP très haute ou un POU faible se voient), meilleures compétences, lien avec l'histoire.
 - Les champs déjà écrits par le gardien sont la vérité : garde-les mot pour mot et accorde le reste avec eux.
@@ -114,7 +117,8 @@ export function profileUserPrompt(r: ProfileRequest): string {
     describe(r),
     written ? `Déjà écrit par le gardien :\n${written}` : 'Aucun champ du profil n’est encore écrit.',
     task,
-  ].join('\n\n')
+    r.lang === 'en' ? 'Écris les champs en anglais (English), dans le même ton (« His sister, Mary », « Never without his pistol »).' : '',
+  ].filter(Boolean).join('\n\n')
 }
 
 /**

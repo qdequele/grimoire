@@ -168,3 +168,53 @@ describe('imports', () => {
     await alice.client.storage.from('import-pages').remove([`${alice.id}/t/001.png`])
   })
 })
+
+describe('story packs (Storage)', () => {
+  const json = () => new Blob(['{}'], { type: 'application/json' })
+
+  it('a keeper writes and reads only their own packs', async () => {
+    const own = await alice.client.storage.from('story-packs').upload(`${alice.id}/s1/story.json`, json(), { upsert: true })
+    expect(own.error).toBeNull()
+    expect((await alice.client.storage.from('story-packs').download(`${alice.id}/s1/story.json`)).error).toBeNull()
+    expect((await bob.client.storage.from('story-packs').download(`${alice.id}/s1/story.json`)).error).not.toBeNull()
+    expect((await bob.client.storage.from('story-packs').upload(`${alice.id}/s1/images/x.png`, json())).error).not.toBeNull()
+    await bob.client.storage.from('story-packs').remove([`${alice.id}/s1/story.json`])
+    expect((await alice.client.storage.from('story-packs').download(`${alice.id}/s1/story.json`)).error).toBeNull()
+  })
+
+  it('everyone reads marketplace packs, only admins write them', async () => {
+    const path = `marketplace/${marketplaceId}/story.json`
+    expect((await admin.client.storage.from('story-packs').upload(path, json(), { upsert: true })).error).toBeNull()
+    expect((await bob.client.storage.from('story-packs').download(path)).error).toBeNull()
+    expect((await alice.client.storage.from('story-packs').upload(`marketplace/${marketplaceId}/images/x.png`, json())).error).not.toBeNull()
+  })
+})
+
+describe('players', () => {
+  it('are private to their keeper, with one name per keeper', async () => {
+    const p = await alice.client.from('players').insert({ name: 'Camille' }).select('id, owner_id').single()
+    expect(p.error).toBeNull()
+    expect(p.data!.owner_id).toBe(alice.id)
+    expect((await bob.client.from('players').select('id').eq('id', p.data!.id)).data).toEqual([])
+    expect((await alice.client.from('players').insert({ name: ' camille ' })).error?.code).toBe('23505')
+    expect((await bob.client.from('players').insert({ name: 'Camille' })).error).toBeNull()
+    expect((await bob.client.from('players').insert({ owner_id: alice.id, name: 'Forged' })).error).not.toBeNull()
+  })
+
+  it("an investigator can only be given to one of its keeper's players", async () => {
+    const mine = await alice.client.from('players').insert({ name: 'Dominique' }).select('id').single()
+    const theirs = await bob.client.from('players').insert({ name: 'Eden' }).select('id').single()
+    const c = await alice.client.from('characters').insert({ data: { name: 'Ada' }, player_id: mine.data!.id }).select('id').single()
+    expect(c.error).toBeNull()
+    const steal = await alice.client.from('characters').update({ player_id: theirs.data!.id }).eq('id', c.data!.id)
+    expect(steal.error).not.toBeNull()
+  })
+
+  it('removing a player keeps their investigators, without player', async () => {
+    const p = await alice.client.from('players').insert({ name: 'Frédérique' }).select('id').single()
+    const c = await alice.client.from('characters').insert({ data: { name: 'Bea' }, player_id: p.data!.id }).select('id').single()
+    expect((await alice.client.from('players').delete().eq('id', p.data!.id)).error).toBeNull()
+    const { data } = await alice.client.from('characters').select('player_id, owner_id').eq('id', c.data!.id).single()
+    expect(data).toEqual({ player_id: null, owner_id: alice.id })
+  })
+})

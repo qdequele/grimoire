@@ -11,6 +11,7 @@ import { engineGlobals, freshState, withAccountProgress } from '@/play/engineDat
 import type { LegacyState } from '@/play/host'
 import { sample } from '@/play/narrator'
 import { gameKeys, useGame, type GameState } from './api'
+import { useT } from '@/i18n/t'
 
 const SAVE_DELAY = 800
 const localKey = (gameId: string) => `grimoire-game-${gameId}`
@@ -32,6 +33,7 @@ function newest(remote: LegacyState | undefined, gameId: string): LegacyState | 
  * game's story, investigators and saved state. Every change is saved to the account.
  */
 export function GamePage() {
+  const t = useT()
   const { id } = useParams()
   const navigate = useNavigate()
   const qc = useQueryClient()
@@ -93,7 +95,7 @@ export function GamePage() {
     window.__grimoirePlay = {
       data: engineGlobals(story),
       loadState: (f) => {
-        const members = party.map((c) => ({ id: c.id, data: c.data }))
+        const members = party.map((c) => ({ id: c.id, data: c.data, player: c.player?.name }))
         const saved = newest(g.state.legacy, g.id)
         return saved ? withAccountProgress(saved, members) : freshState(f, { storyId, party: members })
       },
@@ -132,14 +134,14 @@ export function GamePage() {
   if (game.error) {
     return (
       <Alert variant="destructive" className="m-8 w-auto">
-        <AlertDescription>Partie introuvable.</AlertDescription>
+        <AlertDescription>{t('Partie introuvable.')}</AlertDescription>
       </Alert>
     )
   }
   if (game.data && !game.data.story) {
     return (
       <Alert variant="destructive" className="m-8 w-auto">
-        <AlertDescription>L'histoire de cette partie n'est plus disponible.</AlertDescription>
+        <AlertDescription>{t("L'histoire de cette partie n'est plus disponible.")}</AlertDescription>
       </Alert>
     )
   }
@@ -150,5 +152,5 @@ export function GamePage() {
       </div>
     )
   }
-  return <iframe src="/play.html" title="Partie" className="fixed inset-0 h-svh w-full border-0" />
+  return <iframe src="/play.html" title={t('Partie')} className="fixed inset-0 h-svh w-full border-0" />
 }

@@ -70,7 +70,7 @@ function show(v){if(HV[v]){S.hv=v;v="accueil";}if(!S.hv)S.hv="menu";
   if(v==="jouer"&&(!S.cur||!SC()||!SC().acts))v="accueil";
   S.view=v;save();
   $("#vHome").hidden=v!=="accueil";$("#vPlay").hidden=v!=="jouer";$("#vCreate").hidden=v!=="creer";$("#vRules").hidden=v!=="regles";$("#vSetup").hidden=v!=="nouvelle";if(v==="nouvelle"&&!S.setup)v="accueil";
-  const play=v==="jouer";["#fab","#sndFab","#clock","#menuBtn"].forEach(s=>{if($(s))$(s).hidden=!play;});closeMenu();if(!play)["#dicePanel","#sndPanel"].forEach(s=>{if($(s))$(s).hidden=true;});$("#backHome").hidden=(v==="accueil"&&S.hv==="menu")||v==="jouer";$(".ctx-title").hidden=v==="accueil"&&S.hv==="menu";$("header.top").hidden=v==="accueil"&&S.hv==="menu";$("#qa").hidden=!play;$("#ctx").hidden=!play;
+  const play=v==="jouer";["#fab","#sndFab","#clock","#menuBtn"].forEach(s=>{if($(s))$(s).hidden=!play;});closeMenu();if(!play)["#dicePanel","#sndPanel","#narrPanel"].forEach(s=>{if($(s))$(s).hidden=true;});$("#backHome").hidden=(v==="accueil"&&S.hv==="menu")||v==="jouer";$(".ctx-title").hidden=v==="accueil"&&S.hv==="menu";$("header.top").hidden=v==="accueil"&&S.hv==="menu";$("#qa").hidden=!play;$("#ctx").hidden=!play;
   $("#hTitle").textContent=play?SC().t:"Écran du Gardien";
   $("#subTitle").hidden=!!play;$("#subTitle").textContent=play?"":v==="creer"?"Création d'investigateur":v==="regles"?"Règles de base":v==="nouvelle"?"Nouvelle partie · étape 2 sur 2":({parties:"Parties enregistrées",joueurs:"Joueurs",histoire:"Nouvelle partie"}[S.hv]||"Menu principal");
   if(v==="nouvelle")renderSetup();
@@ -488,8 +488,8 @@ $("#fab").onclick=()=>{const p=$("#dicePanel");p.hidden=!p.hidden;$("#fab").setA
 $("#diceClose").onclick=()=>{$("#dicePanel").hidden=true;$("#fab").setAttribute("aria-expanded","false");};
 document.addEventListener("keydown",e=>{if(e.key!=="Escape")return;
   if(!$("#gMenu").hidden){closeMenu();return;}
-  const open=["#dicePanel","#sndPanel"].filter(s=>$(s)&&!$(s).hidden);
-  if(open.length){open.forEach(s=>$(s).hidden=true);return;}
+  const open=["#dicePanel","#sndPanel","#narrPanel"].filter(s=>$(s)&&!$(s).hidden);
+  if(open.length){open.forEach(s=>s==="#narrPanel"?toggleNarr(false):$(s).hidden=true);return;}
   if(S.view==="jouer"&&!/INPUT|TEXTAREA|SELECT/.test(document.activeElement?.tagName||""))openMenu();});
 
 /* ---------- Combat ---------- */
@@ -909,9 +909,10 @@ async function narrSend(text){
     if(e.code==="not_granted"||e.code==="sampling_disabled"||e.code==="not_declared")sampleFn=null;}
   finally{narrBusy=false;save();renderNarr();}
 }
-function toggleNarr(force){const p=$("#narrPanel");p.hidden=force===undefined?!p.hidden:!force;if(!p.hidden){renderNarr();setTimeout(()=>$("#ninput")?.focus(),50);}}
+function toggleNarr(force){const p=$("#narrPanel");p.hidden=force===undefined?!p.hidden:!force;if(!S.ui)S.ui={};S.ui.narr=!p.hidden;save();if(!p.hidden){renderNarr();setTimeout(()=>$("#ninput")?.focus(),50);}}
 
 
+$("#qaNarr").onclick=()=>toggleNarr();$("#narrClose").onclick=()=>toggleNarr(false);
 $("#narrPanel").addEventListener("submit",e=>{e.preventDefault();const t=$("#ninput").value;narrSend(t);});
 $("#narrPanel").addEventListener("keydown",e=>{if(e.target.id==="ninput"&&e.key==="Enter"&&!e.shiftKey){e.preventDefault();narrSend(e.target.value);}});
 $("#narrPanel").addEventListener("click",async e=>{const b=e.target.closest("button");if(!b)return;const st=ST();
@@ -1171,7 +1172,7 @@ const _tick=tick;tick=function(){_tick();const c=$("#gmClock");if(c)c.textConten
 const _saveHint=saveHint;saveHint=function(){_saveHint();const el=$("#saveHint");if(el&&S.savedAt)el.textContent=`${DB?"compte Claude":"ce navigateur"} · auto ${new Date(S.savedAt).toLocaleTimeString("fr-FR",{hour:"2-digit",minute:"2-digit"})}`;};
 
 /* Etat des boutons Dés / Sons dans la barre */
-setInterval(()=>{const d=$("#dicePanel"),s=$("#sndPanel");if(d)$("#qaDice").setAttribute("aria-pressed",String(!d.hidden));if(s)$("#qaSnd").setAttribute("aria-pressed",String(!s.hidden));
+setInterval(()=>{const d=$("#dicePanel"),s=$("#sndPanel");if(d)$("#qaDice").setAttribute("aria-pressed",String(!d.hidden));if(s)$("#qaSnd").setAttribute("aria-pressed",String(!s.hidden));const nw=$("#narrPanel");if(nw)$("#qaNarr").setAttribute("aria-pressed",String(!nw.hidden));
   const live=Object.keys(SND.amb||{}).length+Object.keys(typeof MYPLAY!=="undefined"?MYPLAY:{}).length;$("#sndLive").hidden=!live;$("#sndLive").title=live?`${live} ambiance${live>1?"s":""} en cours`:"";},400);
 
 /* ---------- Joueurs et préparation de partie ---------- */
@@ -1424,7 +1425,7 @@ $("#vHome").addEventListener("click",e=>{const a=e.target.closest("[data-abandon
 
 /* Panneaux repliables : journal et notes */
 if(!S.ui)S.ui={};
-function applyPanels(){[["narrateur","#narrPanel"],["journal","#jPanel"],["notes",".panel.notes"]].forEach(([k,sel])=>{const p=$(sel);if(!p)return;const closed=!!S.ui["c_"+k];
+function applyPanels(){[["pnj","#npcPanel"],["investigateurs","#invPanel"],["journal","#jPanel"],["notes",".panel.notes"]].forEach(([k,sel])=>{const p=$(sel);if(!p)return;const closed=!!S.ui["c_"+k];
   p.classList.toggle("collapsed",closed);const b=p.querySelector(`[data-ptog="${k}"]`);if(b)b.setAttribute("aria-expanded",String(!closed));});}
 document.addEventListener("click",e=>{const b=e.target.closest("[data-ptog]");if(!b)return;const k=b.dataset.ptog;S.ui["c_"+k]=!S.ui["c_"+k];save();applyPanels();});
 applyPanels();
@@ -1494,7 +1495,7 @@ const _show=show;show=function(v){if(v==="regles"){const r=document.querySelecto
 Object.values(S.scen).forEach(st=>{if(st.mode==="combat")st.mode="scene";});
 const _rcx=renderCtx;renderCtx=function(){_rcx();const b=$("#qaCombat");if(!b)return;const on=S.cur&&ST().combat&&ST().combat.on;b.innerHTML=(on?`⚔ Combat · round ${ST().combat.round}`:"⚔ Combat");b.setAttribute("aria-pressed",String(!$("#cbtSheet").hidden));};
 
-const _rp3=renderPlay;renderPlay=function(){_rp3();$("#narrPanel").hidden=false;renderNarr();applyPanels();};
+const _rp3=renderPlay;renderPlay=function(){_rp3();$("#narrPanel").hidden=!(S.ui&&S.ui.narr);renderNarr();applyPanels();};
 
 /* ---------- Panneau des dés repensé ---------- */
 let dTab="test";
@@ -1572,6 +1573,7 @@ route();
    r:()=>{$("#rulesSheet").hidden?openRulesSheet():closeSheet("rulesSheet");},
    j:()=>togglePanel("journal"),
    n:()=>togglePanel("notes"),
+   a:()=>toggleNarr(),
    ArrowLeft:()=>{const b=document.querySelector("#scene .scene-foot [data-go]:first-child");if(b&&b.textContent.trim().startsWith("←"))b.click();},
    ArrowRight:()=>{const b=[...document.querySelectorAll("#scene .scene-foot [data-go]")].find(x=>x.textContent.trim().endsWith("→"));if(b)b.click();}
   }[k];

@@ -47,10 +47,15 @@ if (i > 0) {
       .eq('owner_id', user.id)
       .eq('content->meta->>id', metaId)
       .maybeSingle()
-    const { error: e } = existing
-      ? await admin.from('stories').update({ content: story }).eq('id', existing.id)
-      : await admin.from('stories').insert({ owner_id: user.id, visibility: 'private', content: story })
+    const { data: saved, error: e } = existing
+      ? await admin.from('stories').update({ content: story }).eq('id', existing.id).select('id').single()
+      : await admin.from('stories').insert({ owner_id: user.id, visibility: 'private', content: story }).select('id').single()
     if (e) throw e
+    // …and its pack in Storage, like every story.
+    const { error: pe } = await admin.storage
+      .from('story-packs')
+      .upload(`${user.id}/${saved.id}/story.json`, new Blob([JSON.stringify(story, null, 2) + '\n'], { type: 'application/json' }), { upsert: true, contentType: 'application/json' })
+    if (pe) throw pe
     console.log(`${existing ? 'updated' : 'added'} "${(story.meta as { title: string }).title}" for ${email}`)
   }
 }

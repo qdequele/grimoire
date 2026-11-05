@@ -51,6 +51,19 @@ const FALLBACK: Pick<EngineGlobals, 'I18N' | 'RULES' | 'GLOSS' | 'FOLIES' | 'NAR
   }),
 }
 
+/** English for the labels the app adds to the game screen (scripts/extract-engine.mjs). */
+const APP_UI_EN: Record<string, string> = {
+  Narrateur: 'Narrator',
+  'Narrateur (A)': 'Narrator (A)',
+  'Fermer le narrateur': 'Close narrator',
+  'PNJ de la scène': 'Scene NPCs',
+  Investigateurs: 'Investigators',
+}
+const I18N: EngineGlobals['I18N'] = {
+  ...(PRIVATE.I18N ?? FALLBACK.I18N),
+  ui: { ...APP_UI_EN, ...PRIVATE.I18N?.ui },
+}
+
 export const hasPrivateRules = Object.keys(PRIVATE).length > 0
 
 // ------------------------------------------------------------------ story
@@ -62,6 +75,7 @@ export function engineGlobals(story: StoryForEngine): EngineGlobals {
   return {
     ...FALLBACK,
     ...PRIVATE,
+    I18N,
     SCENARIOS: [e.SCENARIO],
     BEASTS: { [story.meta.id]: e.BEASTS },
     INV0: e.INV0,
@@ -125,7 +139,8 @@ export function withAccountProgress(S: LegacyState, party: Array<{ id: string; d
 
 export interface NewGame {
   storyId: string
-  party: Array<{ id: string; data: CharacterData }>
+  /** player: the name of who plays them, if anyone. */
+  party: Array<{ id: string; data: CharacterData; player?: string }>
 }
 
 /** A fresh legacy state, straight into the game with the chosen investigators. */
@@ -141,7 +156,7 @@ export function freshState(f: EngineFactories, game: NewGame): LegacyState {
   S.players = []
   S.prog = S.prog ?? {}
   for (const c of game.party) {
-    const name = c.data.player?.trim()
+    const name = c.player?.trim()
     let owner: string | null = null
     if (name) {
       let p = S.players.find((x) => x.name.toLowerCase() === name.toLowerCase())

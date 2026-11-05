@@ -7,9 +7,10 @@ import { Skeleton } from '@/components/ui/skeleton'
 import { Spinner } from '@/components/ui/spinner'
 import { checkDraft, derivedValues, finalSkills, ISSUE_STEP, newDraft, occupationOf, type CreationDraft } from '@/engine/creation'
 import { cn } from '@/lib/utils'
-import { useCharacter, useDeleteCharacter, useSaveCharacter } from '../api'
+import { useCharacter, useDeleteCharacter, useSaveCharacter, type CharacterRow } from '../api'
 import type { CharacterData } from '../character'
 import { STEPS, type StepProps } from './steps'
+import { useT } from '@/i18n/t'
 
 // Unsaved new investigator, kept per browser so a reload doesn't lose it (like the legacy S.draft).
 const DRAFT_KEY = 'grimoire-character-draft'
@@ -34,8 +35,9 @@ function saveLocalDraft(d: CreationDraft | null) {
 }
 
 /** An investigator made before the wizard existed: rebuild what we can. */
-function draftFromCharacter(c: CharacterData): CreationDraft {
-  return c.creation ?? { ...newDraft('custom'), name: c.name, age: c.age ?? 25, characteristics: c.characteristics, luck: c.luck, rolled: true }
+function draftFromCharacter({ data: c, player_id }: CharacterRow): CreationDraft {
+  const d = c.creation ?? { ...newDraft('custom'), name: c.name, age: c.age ?? 25, characteristics: c.characteristics, luck: c.luck, rolled: true }
+  return { ...d, playerId: player_id ?? '' }
 }
 
 export function toCharacterData(d: CreationDraft): CharacterData {
@@ -44,7 +46,6 @@ export function toCharacterData(d: CreationDraft): CharacterData {
     name: d.name.trim(),
     occupation: occupationOf(d).label,
     age: d.age,
-    player: d.player.trim() || undefined,
     link: d.link.trim() || undefined,
     characteristics: d.characteristics,
     hp: v.hp,
@@ -61,6 +62,7 @@ export function toCharacterData(d: CreationDraft): CharacterData {
 }
 
 export function CharacterWizardPage() {
+  const t = useT()
   const { id } = useParams()
   const editing = !!id && id !== 'new'
   const navigate = useNavigate()
@@ -69,11 +71,18 @@ export function CharacterWizardPage() {
   const existing = useCharacter(editing ? id : undefined)
   const save = useSaveCharacter()
   const remove = useDeleteCharacter()
-  const [draft, setDraft] = useState<CreationDraft | null>(() => (editing ? null : loadLocalDraft()))
+  // "Créer un personnage" from a player's card: /characters/new?joueur=<player id>.
+  // Kept from the first render: changing step rewrites the query string.
+  const [forPlayer] = useState(() => params.get('joueur'))
+  const [draft, setDraft] = useState<CreationDraft | null>(() => {
+    if (editing) return null
+    const d = loadLocalDraft()
+    return forPlayer ? { ...d, playerId: forPlayer } : d
+  })
   const [confirm, setConfirm] = useState<'reset' | 'delete' | null>(null)
 
   useEffect(() => {
-    if (editing && existing.data && !draft) setDraft(draftFromCharacter(existing.data.data))
+    if (editing && existing.data && !draft) setDraft(draftFromCharacter(existing.data))
   }, [editing, existing.data, draft])
 
   if (!draft) return <Skeleton className="h-96" />
@@ -101,19 +110,19 @@ export function CharacterWizardPage() {
     try {
       // Editing the sheet keeps what the investigator earned in play.
       const progress = editing ? existing.data?.data.progress : undefined
-      await save.mutateAsync({ id: editing ? id : undefined, data: { ...toCharacterData(draft!), ...(progress ? { progress } : {}) } })
+      await save.mutateAsync({ id: editing ? id : undefined, data: { ...toCharacterData(draft!), ...(progress ? { progress } : {}) }, playerId: draft!.playerId || null })
       if (!editing) saveLocalDraft(null)
-      toast.success(`${draft!.name.trim()} est enregistré.`)
-      navigate('/characters')
+      toast.success(t('{name} est enregistré.', { name: draft!.name.trim() }))
+      navigate(forPlayer ? '/characters/joueurs' : '/characters')
     } catch (e) {
-      toast.error((e as Error).message)
+      toast.error(t((e as Error).message))
     }
   }
 
   return (
     <div className="grid grid-cols-1 gap-8 lg:grid-cols-[15rem_minmax(0,1fr)]">
-      <nav aria-label="Étapes de création" className="min-w-0">
-        <p className="eyebrow mb-3">{editing ? 'Modifier l’investigateur' : 'Création d’investigateur'}</p>
+      <nav aria-label={t('Étapes de création')} className="min-w-0">
+        <p className="eyebrow mb-3">{editing ? t('Modifier l’investigateur') : t('Création d’investigateur')}</p>
         <ol className="flex gap-1 overflow-x-auto lg:flex-col">
           {STEPS.map((s, i) => (
             <li key={s.title}>
@@ -127,10 +136,10 @@ export function CharacterWizardPage() {
                 )}
               >
                 <span className="font-mono text-xs">{i + 1}</span>
-                {s.title}
-                {stepStatus(i) === 'done' && <Check className="ml-auto size-3.5 self-center text-gold" aria-label="complet" />}
+                {t(s.title)}
+                {stepStatus(i) === 'done' && <Check className="ml-auto size-3.5 self-center text-gold" aria-label={t('complet')} />}
                 {stepStatus(i) === 'todo' && (
-                  <span className="ml-auto size-1.5 self-center rounded-full bg-gold" role="img" aria-label="à compléter" />
+                  <span className="ml-auto size-1.5 self-center rounded-full bg-gold" role="img" aria-label={t('à compléter')} />
                 )}
               </button>
             </li>
@@ -140,7 +149,7 @@ export function CharacterWizardPage() {
 
       <section className="flex max-w-4xl min-w-0 flex-col gap-5">
         <h1 className="font-heading text-4xl">
-          {step === 0 ? (editing ? 'Modifier un investigateur' : 'Créer un investigateur') : last ? draft.name || 'Sans nom' : title}
+          {step === 0 ? (editing ? t('Modifier un investigateur') : t('Créer un investigateur')) : last ? draft.name || t('Sans nom') : t(title)}
         </h1>
         <Component draft={draft} update={update} goTo={goTo} />
 
@@ -148,31 +157,31 @@ export function CharacterWizardPage() {
           <div className="flex flex-wrap items-center gap-2">
             <Button onClick={onSave} disabled={issues.length > 0 || save.isPending}>
               {save.isPending && <Spinner data-icon="inline-start" />}
-              {editing ? 'Enregistrer les modifications' : 'Enregistrer le personnage'}
+              {editing ? t('Enregistrer les modifications') : t('Enregistrer le personnage')}
             </Button>
             {confirm === null && !editing && (
-              <Button variant="ghost" onClick={() => setConfirm('reset')}>Recommencer à zéro</Button>
+              <Button variant="ghost" onClick={() => setConfirm('reset')}>{t('Recommencer à zéro')}</Button>
             )}
             {confirm === null && editing && (
-              <Button variant="ghost" onClick={() => setConfirm('delete')}>Supprimer</Button>
+              <Button variant="ghost" onClick={() => setConfirm('delete')}>{t('Supprimer')}</Button>
             )}
             {confirm === 'reset' && (
               <span className="flex items-center gap-2 text-sm">
-                Tout effacer ?
-                <Button variant="destructive" size="sm" onClick={() => { update(newDraft()); setConfirm(null); goTo(0) }}>Oui</Button>
-                <Button variant="ghost" size="sm" onClick={() => setConfirm(null)}>Non</Button>
+                {t('Tout effacer ?')}
+                <Button variant="destructive" size="sm" onClick={() => { update(newDraft()); setConfirm(null); goTo(0) }}>{t('Oui')}</Button>
+                <Button variant="ghost" size="sm" onClick={() => setConfirm(null)}>{t('Non')}</Button>
               </span>
             )}
             {confirm === 'delete' && (
               <span className="flex items-center gap-2 text-sm">
-                Supprimer ce personnage ?
+                {t('Supprimer ce personnage ?')}
                 <Button
                   variant="destructive" size="sm" disabled={remove.isPending}
-                  onClick={async () => { await remove.mutateAsync(id!); toast.success('Investigateur supprimé.'); navigate('/characters') }}
+                  onClick={async () => { await remove.mutateAsync(id!); toast.success(t('Investigateur supprimé.')); navigate('/characters') }}
                 >
-                  Oui
+                  {t('Oui')}
                 </Button>
-                <Button variant="ghost" size="sm" onClick={() => setConfirm(null)}>Non</Button>
+                <Button variant="ghost" size="sm" onClick={() => setConfirm(null)}>{t('Non')}</Button>
               </span>
             )}
           </div>
@@ -182,12 +191,12 @@ export function CharacterWizardPage() {
           {step > 0 ? (
             <Button variant="outline" onClick={() => goTo(step - 1)}>
               <ArrowLeft data-icon="inline-start" />
-              {STEPS[step - 1].title}
+              {t(STEPS[step - 1].title)}
             </Button>
           ) : <span />}
           {!last && (
             <Button className="ml-auto" onClick={() => goTo(step + 1)}>
-              {STEPS[step + 1].title}
+              {t(STEPS[step + 1].title)}
               <ArrowRight data-icon="inline-end" />
             </Button>
           )}

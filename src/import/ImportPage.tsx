@@ -1,7 +1,8 @@
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { FileUp, ImagePlus, X } from 'lucide-react'
 import { useMemo, useRef, useState } from 'react'
-import { Link } from 'react-router'
+import { Link, useSearchParams } from 'react-router'
+import { PackImport } from './PackImport'
 import { useAuth } from '@/auth/auth'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { Button } from '@/components/ui/button'
@@ -13,7 +14,9 @@ import { Spinner } from '@/components/ui/spinner'
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { functionErrorMessage } from '@/lib/functions'
 import { supabase } from '@/lib/supabase'
+import { useLang } from '@/settings/lang'
 import { storyKeys } from '@/stories/api'
+import { useT } from '@/i18n/t'
 
 /** Pages sent per Edge Function call: small enough to finish well inside its time limit. */
 const PAGES_PER_CALL = 2
@@ -49,13 +52,16 @@ function usePagesUsedThisMonth() {
 }
 
 export function ImportPage() {
+  const t = useT()
+  const [params, setParams] = useSearchParams()
+  const mode = params.get('mode') === 'pages' ? 'pages' : 'pack'
   const { session } = useAuth()
   const qc = useQueryClient()
   const used = usePagesUsedThisMonth()
   const inputRef = useRef<HTMLInputElement>(null)
   const [files, setFiles] = useState<File[]>([])
   const [title, setTitle] = useState('')
-  const [lang, setLang] = useState<'fr' | 'en'>('fr')
+  const [lang, setLang] = useState<'fr' | 'en'>(useLang.getState().lang)
   const [phase, setPhase] = useState<Phase>({ kind: 'idle' })
   const previews = useMemo(() => files.map((f) => URL.createObjectURL(f)), [files])
 
@@ -110,21 +116,31 @@ export function ImportPage() {
   const running = phase.kind === 'running'
 
   return (
-    <section className="mx-auto flex w-full max-w-3xl flex-col gap-6">
-      <header className="flex flex-col gap-1">
-        <h1 className="font-heading text-3xl">Importer une histoire</h1>
-        <p className="text-muted-foreground">
-          Photos ou captures des pages d'un scénario que tu possèdes. L'IA en fait une histoire jouable, privée, que tu
-          pourras relire et corriger. Les pages ne sont pas conservées.
-        </p>
+    <section className="flex w-full max-w-3xl flex-col gap-6">
+      <header className="flex flex-col gap-3">
+        <Tabs value={mode} onValueChange={(v) => setParams({ mode: v as string })}>
+          <TabsList>
+            <TabsTrigger value="pack">{t('Packs Grimoire')}</TabsTrigger>
+            <TabsTrigger value="pages">{t('Pages scannées (IA)')}</TabsTrigger>
+          </TabsList>
+        </Tabs>
+        {mode === 'pages' && (
+          <p className="text-muted-foreground">
+            {t("Photos ou captures des pages d'un scénario que tu possèdes. L'IA en fait une histoire jouable, privée, que tu pourras relire et corriger. Les pages ne sont pas conservées.")}
+          </p>
+        )}
       </header>
+
+      {mode === 'pack' && <PackImport />}
+      {mode === 'pages' && (
+      <>
 
       <Card>
         <CardHeader>
-          <CardTitle>Pages</CardTitle>
+          <CardTitle>{t('Pages')}</CardTitle>
           <CardDescription>
-            Dans l'ordre de lecture, {MAX_PAGES} au maximum.
-            {used.data !== undefined && ` ${used.data} page${used.data > 1 ? 's' : ''} importée${used.data > 1 ? 's' : ''} ce mois-ci.`}
+            {t("Dans l'ordre de lecture, {max} au maximum.", { max: MAX_PAGES })}
+            {used.data !== undefined && ` ${t.n(used.data, '{n} page importée ce mois-ci.', '{n} pages importées ce mois-ci.')}`}
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -138,9 +154,9 @@ export function ImportPage() {
               }}
             >
               <ImagePlus className="text-muted-foreground" />
-              <p className="text-sm text-muted-foreground">Dépose les images ici, ou</p>
+              <p className="text-sm text-muted-foreground">{t('Dépose les images ici, ou')}</p>
               <Button type="button" variant="outline" onClick={() => inputRef.current?.click()} disabled={running}>
-                Choisir des images
+                {t('Choisir des images')}
               </Button>
               <input
                 ref={inputRef}
@@ -160,14 +176,14 @@ export function ImportPage() {
               <ol className="grid grid-cols-3 gap-3 sm:grid-cols-5">
                 {files.map((f, i) => (
                   <li key={previews[i]} className="relative">
-                    <img src={previews[i]} alt={`Page ${i + 1}`} className="aspect-[3/4] w-full rounded-md border object-cover" />
+                    <img src={previews[i]} alt={t('Page {n}', { n: i + 1 })} className="aspect-[3/4] w-full rounded-md border object-cover" />
                     <span className="absolute bottom-1 left-1 rounded bg-background/80 px-1 text-xs">{i + 1}</span>
                     <Button
                       type="button"
                       size="icon-xs"
                       variant="secondary"
                       className="absolute top-1 right-1"
-                      aria-label={`Retirer la page ${i + 1}`}
+                      aria-label={t('Retirer la page {n}', { n: i + 1 })}
                       disabled={running}
                       onClick={() => setFiles((prev) => prev.filter((_, j) => j !== i))}
                     >
@@ -181,24 +197,24 @@ export function ImportPage() {
 
             <div className="grid gap-4 sm:grid-cols-[1fr_auto]">
               <Field>
-                <FieldLabel htmlFor="title">Titre</FieldLabel>
-                <Input id="title" value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Facultatif" />
+                <FieldLabel htmlFor="title">{t('Titre')}</FieldLabel>
+                <Input id="title" value={title} onChange={(e) => setTitle(e.target.value)} placeholder={t('Facultatif')} />
               </Field>
               <Field>
-                <FieldLabel>Langue de l'histoire</FieldLabel>
+                <FieldLabel>{t("Langue de l'histoire")}</FieldLabel>
                 <Tabs value={lang} onValueChange={(v) => setLang(v as 'fr' | 'en')}>
                   <TabsList>
                     <TabsTrigger value="fr">Français</TabsTrigger>
                     <TabsTrigger value="en">English</TabsTrigger>
                   </TabsList>
                 </Tabs>
-                <FieldDescription>Les textes sont écrits dans cette langue.</FieldDescription>
+                <FieldDescription>{t('Les textes sont écrits dans cette langue.')}</FieldDescription>
               </Field>
             </div>
 
             <Button onClick={run} disabled={!files.length || running}>
               {running ? <Spinner data-icon="inline-start" /> : <FileUp data-icon="inline-start" />}
-              Importer {files.length || ''} page{files.length > 1 ? 's' : ''}
+              {files.length ? t.n(files.length, 'Importer {n} page', 'Importer {n} pages') : t('Importer les pages')}
             </Button>
           </FieldGroup>
         </CardContent>
@@ -208,23 +224,22 @@ export function ImportPage() {
         <div className="flex flex-col gap-2" aria-live="polite">
           <Progress value={(phase.done / phase.total) * 100} />
           <p className="text-sm text-muted-foreground">
-            {phase.done} / {phase.total} pages converties. Compte environ une minute par lot de {PAGES_PER_CALL} pages.
+            {t('{done} / {total} pages converties. Compte environ une minute par lot de {batch} pages.', { done: phase.done, total: phase.total, batch: PAGES_PER_CALL })}
           </p>
         </div>
       )}
 
       {phase.kind === 'done' && (
         <Alert>
-          <AlertTitle>Import terminé</AlertTitle>
+          <AlertTitle>{t('Import terminé')}</AlertTitle>
           <AlertDescription className="flex flex-col gap-2">
             {phase.validationErrors.length > 0 && (
               <span>
-                {phase.validationErrors.length} point{phase.validationErrors.length > 1 ? 's' : ''} à vérifier dans l'histoire
-                (identifiants ou valeurs hors format).
+                {t.n(phase.validationErrors.length, "{n} point à vérifier dans l'histoire (identifiants ou valeurs hors format).", "{n} points à vérifier dans l'histoire (identifiants ou valeurs hors format).")}
               </span>
             )}
             {phase.storyId && (
-              <Link to={`/stories/${phase.storyId}`} className="underline underline-offset-4">Ouvrir l'histoire</Link>
+              <Link to={`/stories/${phase.storyId}`} className="underline underline-offset-4">{t("Ouvrir l'histoire")}</Link>
             )}
           </AlertDescription>
         </Alert>
@@ -232,16 +247,18 @@ export function ImportPage() {
 
       {phase.kind === 'error' && (
         <Alert variant="destructive">
-          <AlertTitle>L'import s'est arrêté</AlertTitle>
+          <AlertTitle>{t("L'import s'est arrêté")}</AlertTitle>
           <AlertDescription className="flex flex-col gap-2">
-            <span>{phase.message}</span>
+            <span>{t(phase.message)}</span>
             {phase.storyId && (
               <Link to={`/stories/${phase.storyId}`} className="underline underline-offset-4">
-                Voir ce qui a déjà été importé
+                {t('Voir ce qui a déjà été importé')}
               </Link>
             )}
           </AlertDescription>
         </Alert>
+      )}
+      </>
       )}
     </section>
   )

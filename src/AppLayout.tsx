@@ -1,4 +1,4 @@
-import { LogOut, Palette, UserRound } from 'lucide-react'
+import { LogOut, Settings, UserRound } from 'lucide-react'
 import type { ReactNode } from 'react'
 import { Link, Navigate, NavLink, Outlet, useLocation } from 'react-router'
 import { useAuth, useProfile } from '@/auth/auth'
@@ -14,23 +14,22 @@ import {
 } from '@/components/ui/dropdown-menu'
 import { Spinner } from '@/components/ui/spinner'
 import { supabase } from '@/lib/supabase'
+import { useT } from '@/i18n/t'
 import { cn } from '@/lib/utils'
-import { SKIN_LABEL, useSkin } from '@/theme/skin'
 
 const NAV = [
-  { to: '/marketplace', label: 'Bibliothèque' },
-  { to: '/stories', label: 'Mes histoires' },
+  { to: '/stories', label: 'Histoires' },
   { to: '/characters', label: 'Investigateurs' },
-  { to: '/import', label: 'Importer' },
+  { to: '/settings', label: 'Réglages' },
 ]
 
 function AccountMenu() {
+  const t = useT()
   const { session } = useAuth()
   const profile = useProfile()
-  const { skin, toggle } = useSkin()
   return (
     <DropdownMenu>
-      <DropdownMenuTrigger render={<Button variant="ghost" size="icon" aria-label="Compte" />}>
+      <DropdownMenuTrigger render={<Button variant="ghost" size="icon" aria-label={t('Compte')} />}>
         <UserRound />
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-auto min-w-56">
@@ -42,13 +41,13 @@ function AccountMenu() {
         </DropdownMenuGroup>
         <DropdownMenuSeparator />
         <DropdownMenuGroup>
-          <DropdownMenuItem onClick={toggle}>
-            <Palette />
-            Thème : {SKIN_LABEL[skin]}
+          <DropdownMenuItem render={<Link to="/settings" />}>
+            <Settings />
+            {t('Réglages')}
           </DropdownMenuItem>
           <DropdownMenuItem onClick={() => supabase.auth.signOut()}>
             <LogOut />
-            Se déconnecter
+            {t('Se déconnecter')}
           </DropdownMenuItem>
         </DropdownMenuGroup>
       </DropdownMenuContent>
@@ -72,6 +71,7 @@ export function RequireAuth({ children }: { children: ReactNode }) {
 
 /** Shell for every signed-in page. Signed-out visitors go to /login. */
 export function AppLayout() {
+  const t = useT()
   const { session, ready } = useAuth()
   // The home screen has its own big title block, like the legacy menu: no top bar there.
   const isHome = useLocation().pathname === '/'
@@ -107,7 +107,7 @@ export function AppLayout() {
                     )
                   }
                 >
-                  {n.label}
+                  {t(n.label)}
                 </NavLink>
               ))}
             </nav>

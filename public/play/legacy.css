@@ -657,11 +657,6 @@ header.top.bar2 .clock{display:inline-flex;align-items:center;height:34px;paddin
 .sh-b .cbt > .scene-head h2{display:none}
 @media (prefers-reduced-motion:reduce){.sheet,.sheetwrap{animation:none}}
 
-#narrPanel.narr{position:static!important;inset:auto;width:auto;max-height:none;background:var(--slab);border:1px solid var(--gold);border-radius:8px;padding:12px;box-shadow:none;display:block;z-index:auto!important}
-#narrPanel.narr > h3{font-family:var(--f-ui);font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--gold);margin:0 0 10px;font-weight:600}
-#narrPanel #narrBody{display:flex;flex-direction:column;gap:8px}
-#narrPanel .nlog{max-height:320px}
-#narrPanel .na{font-size:15px}
 
 /* Dés v2 */
 .dice2{width:min(440px,calc(100vw - 32px))!important;border:1px solid var(--verd)!important;background:#131c19!important;padding:0!important;display:flex;flex-direction:column;box-shadow:0 18px 60px #000d,0 0 0 1px #72b8a333!important}
@@ -837,3 +832,10 @@ header.top.bar2 #menuBtn{width:42px;justify-content:center;padding-inline:0}
 html[data-skin="deco"] .sc-say .read{margin-bottom:6px}
 html[data-skin="deco"] .scene-cols{gap:14px}
 html[data-skin="deco"] .npcc-h b{font-family:"Josefin Sans",sans-serif;letter-spacing:.06em;color:var(--gold)}
+
+/* Grimoire: floating narrator, collapsible side panels */
+#narrPanel.narr{top:auto;right:calc(18px + env(safe-area-inset-right,0px));bottom:calc(18px + env(safe-area-inset-bottom,0px));width:min(440px,calc(100vw - 32px));height:min(640px,calc(100vh - 110px))}
+@media (min-width:960px){body:has(#dicePanel:not([hidden])) #narrPanel.narr{right:calc(18px + min(440px,100vw - 32px) + 12px)}}
+.npcp h3 .ptog,#invPanel h3 .ptog{margin-right:auto}
+#invPanel h3{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.panel.collapsed .tabs{display:none}
