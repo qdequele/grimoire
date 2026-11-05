@@ -10,6 +10,7 @@ declare
   v_player uuid;
   v_id uuid;
   v_channel uuid;
+  v_key text;
 begin
   if v_link.character_id is not null then
     raise exception 'not_in_game';
@@ -19,6 +20,17 @@ begin
      or char_length(v_player_name) > 80 then
     raise exception 'bad_value';
   end if;
+
+  -- Points on the sheet, when present, are whole numbers in 0..99 (set_points casts them later).
+  foreach v_key in array array['hp', 'san', 'luck', 'mp'] loop
+    if p_data ? v_key and (
+      jsonb_typeof(p_data -> v_key) is distinct from 'number'
+      or (p_data ->> v_key)::numeric <> trunc((p_data ->> v_key)::numeric)
+      or (p_data ->> v_key)::numeric not between 0 and 99
+    ) then
+      raise exception 'bad_value';
+    end if;
+  end loop;
 
   -- Serialise concurrent creations on the same game.
   select g.channel into v_channel from public.games g
@@ -56,10 +68,10 @@ begin
   insert into public.game_points (game_id, character_id, owner_id, pv, san, chance, pm, source)
   values (
     v_link.game_id, v_id, v_link.owner_id,
-    case when jsonb_typeof(p_data -> 'hp') = 'number' then least(greatest(round((p_data ->> 'hp')::numeric), 0), 99)::int else 10 end,
-    case when jsonb_typeof(p_data -> 'san') = 'number' then least(greatest(round((p_data ->> 'san')::numeric), 0), 99)::int else 50 end,
-    case when jsonb_typeof(p_data -> 'luck') = 'number' then least(greatest(round((p_data ->> 'luck')::numeric), 0), 99)::int else 50 end,
-    case when jsonb_typeof(p_data -> 'mp') = 'number' then least(greatest(round((p_data ->> 'mp')::numeric), 0), 99)::int else 10 end,
+    coalesce((p_data ->> 'hp')::int, 10),
+    coalesce((p_data ->> 'san')::int, 50),
+    coalesce((p_data ->> 'luck')::int, 50),
+    coalesce((p_data ->> 'mp')::int, 10),
     'phone'
   );
 
@@ -109,6 +121,7 @@ begin
   for v_game in
     select g.channel from public.games g
     where g.finished_at is null
+      and g.owner_id = coalesce(new.owner_id, old.owner_id)
       and jsonb_typeof(g.state -> 'party') = 'array'
       and g.state -> 'party' @> jsonb_build_array(jsonb_build_object('characterId', v_character))
   loop

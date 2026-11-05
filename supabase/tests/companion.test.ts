@@ -348,6 +348,10 @@ describe('companion: create an investigator and broadcast', () => {
       const bad = await anon.rpc('companion_create_character', { p_token: table.token, p_data, p_player_name: '' })
       expect(bad.error?.message).toContain('bad_value')
     }
+    for (const extra of [{ hp: 11.5 }, { hp: 'abc' }, { san: 100 }, { luck: -1 }, { mp: null }] as Json[]) {
+      const bad = await anon.rpc('companion_create_character', { p_token: table.token, p_data: { name: 'X', ...(extra as object) }, p_player_name: '' })
+      expect(bad.error?.message).toContain('bad_value')
+    }
     const nope = await anon.rpc('companion_create_character', { p_token: 'nope', p_data: { name: 'X' }, p_player_name: '' })
     expect(nope.error?.message).toContain('link_invalid')
   })
@@ -430,5 +434,33 @@ describe('companion: create an investigator and broadcast', () => {
       },
     )
     expect(member).toMatchObject({ characterId: created })
+  })
+
+  it("notes pings don't leak to another keeper's game that lists the character", async () => {
+    const g = await newGame(alice, [{ name: 'One' }])
+    const l = await link(alice, g.gameId)
+    const { data: st } = await bob.client.from('stories').select('id').limit(1).single()
+    const bobGame = await bob.client
+      .from('games').insert({ story_id: st!.id, state: { party: [{ characterId: g.ids[0] }] } }).select('channel').single()
+    expect(bobGame.error).toBeNull()
+    const aliceChannel = (await alice.client.from('games').select('channel').eq('id', g.gameId).single()).data!.channel
+
+    const onBob: unknown[] = []
+    const offBob = await listen(bobGame.data!.channel, 'notes', (p) => onBob.push(p))
+    try {
+      const got = await waitFor<Record<string, unknown>>(
+        (resolve) => listen(aliceChannel, 'notes', (p) => resolve(p as Record<string, unknown>)),
+        async () => {
+          const { error } = await anon.rpc('companion_add_note', { p_token: l.token, p_character: g.ids[0], p_body: 'private' })
+          expect(error).toBeNull()
+        },
+      )
+      expect(got).toMatchObject({ characterId: g.ids[0] })
+      // Alice's ping arrived: bob's would have been sent in the same statement.
+      await new Promise((r) => setTimeout(r, 500))
+      expect(onBob).toEqual([])
+    } finally {
+      await offBob()
+    }
   })
 })
