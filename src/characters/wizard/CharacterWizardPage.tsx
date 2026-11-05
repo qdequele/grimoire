@@ -3,17 +3,12 @@ import { useNavigate, useParams, useSearchParams } from 'react-router'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
-import { newDraft, type CreationDraft } from '@/engine/creation'
+import type { CreationDraft } from '@/engine/creation'
 import { useT } from '@/i18n/t'
-import { useCharacter, useDeleteCharacter, useSaveCharacter, type CharacterRow } from '../api'
+import { useCharacter, useDeleteCharacter, useSaveCharacter } from '../api'
 import { CharacterWizard, toCharacterData } from './CharacterWizard'
+import { draftFromCharacter } from './draft'
 import { keeperWizardHost, loadLocalDraft, saveLocalDraft, WizardHostProvider } from './host'
-
-/** An investigator made before the wizard existed: rebuild what we can. */
-function draftFromCharacter({ data: c, player_id }: CharacterRow): CreationDraft {
-  const d = c.creation ?? { ...newDraft('custom'), name: c.name, age: c.age ?? 25, characteristics: c.characteristics, luck: c.luck, rolled: true }
-  return { ...d, playerId: player_id ?? '' }
-}
 
 function DeleteAction({ id }: { id: string }) {
   const t = useT()

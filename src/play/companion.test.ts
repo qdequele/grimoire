@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import type { CharacterData } from '@/characters/character'
 import { addMissingMembers, applyPoints, diffPoints, keeperEchoAction, partyIds, pointsFromState, type PointsRow } from './companion'
+import { toLegacyCharacter } from './engineData'
 import type { LegacyState } from './host'
 
 const slot = (cid: string, v = 10) => ({ cid, player: '', pv: v, san: v + 1, chance: v + 2, pm: v + 3, state: '', note: '' })
@@ -113,5 +114,27 @@ describe('companion helpers', () => {
       expect(writes).toBe(0)
       expect(tabs[1].last).toEqual(p(1))
     })
+  })
+})
+
+describe('toLegacyCharacter', () => {
+  it('keeps only numbers and a well-formed damage bonus (the engine renders them as they are)', () => {
+    const hostile = {
+      name: 'X',
+      hp: '<b>' as unknown as number,
+      mp: 7,
+      characteristics: { DEX: '<img src=x>' as unknown as number, STR: 60, POW: Infinity },
+      damageBonus: '<script>',
+      skills: {},
+    } satisfies CharacterData
+    const c = toLegacyCharacter('id', hostile)
+    expect(c).toMatchObject({ pv: 10, pm: 7, dex: 50, imp: undefined, car: { FOR: 60 } })
+    expect(c.car).toEqual({ FOR: 60 })
+    expect(toLegacyCharacter('id', { ...hostile, damageBonus: '+1D4' }).imp).toBe('+1D4')
+  })
+
+  it('accepts a sheet with only a name', () => {
+    const c = toLegacyCharacter('id', { name: 'Bare' } as CharacterData)
+    expect(c).toMatchObject({ pv: 10, san: 50, chance: 50, pm: 10, dex: 50, car: {}, sk: '' })
   })
 })

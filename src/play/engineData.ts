@@ -99,10 +99,23 @@ export function engineGlobals(story: StoryForEngine): EngineGlobals {
 
 const CHAR_FR: Record<string, string> = { STR: 'FOR', CON: 'CON', SIZ: 'TAI', DEX: 'DEX', APP: 'APP', INT: 'INT', POW: 'POU', EDU: 'ÉDU' }
 
+/** A finite number, else the default (the engine puts these values in its HTML as they are). */
+const numOr = (v: unknown, fallback: number): number => {
+  const n = typeof v === 'number' || typeof v === 'string' ? Number(v) : NaN
+  return Number.isFinite(n) ? n : fallback
+}
+/** Damage bonus as the creation wizard writes it ("+1D4", "-1", "0"); anything else is dropped. */
+const DAMAGE_BONUS = /^[-+0-9dD ]{0,12}$/
+
 /** A keeper's investigator in the legacy engine's character format. */
 export function toLegacyCharacter(id: string, c: CharacterData) {
   // Sheets created from a phone may hold only a name (companion_create_character accepts it).
-  const car = Object.fromEntries(Object.entries(c.characteristics ?? {}).map(([k, v]) => [CHAR_FR[k] ?? k, v]))
+  // Values are coerced: the engine renders them without escaping (the extraction escapes them too).
+  const car = Object.fromEntries(
+    Object.entries(c.characteristics ?? {})
+      .map(([k, v]): [string, number] => [CHAR_FR[k] ?? k, numOr(v, NaN)])
+      .filter(([, v]) => Number.isFinite(v)),
+  )
   const sk = Object.entries(c.skills ?? {})
     .map(([key, v]) => `${skillKeyLabel(key)} ${v}`)
     .join(' · ')
@@ -114,12 +127,12 @@ export function toLegacyCharacter(id: string, c: CharacterData) {
     custom: true,
     n: c.name,
     job: [c.occupation, c.age ? `${c.age} ans` : ''].filter(Boolean).join(', '),
-    pv: c.hp ?? 10,
-    san: c.san ?? 50,
-    chance: c.luck ?? 50,
-    pm: c.mp ?? 10,
-    dex: c.characteristics?.DEX ?? 50,
-    imp: c.damageBonus,
+    pv: numOr(c.hp, 10),
+    san: numOr(c.san, 50),
+    chance: numOr(c.luck, 50),
+    pm: numOr(c.mp, 10),
+    dex: numOr(c.characteristics?.DEX, 50),
+    imp: typeof c.damageBonus === 'string' && DAMAGE_BONUS.test(c.damageBonus) ? c.damageBonus : undefined,
     car,
     sk,
     bg,

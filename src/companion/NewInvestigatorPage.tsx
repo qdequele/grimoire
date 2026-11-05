@@ -12,6 +12,7 @@ import { useT, type T } from '@/i18n/t'
 import { Masthead } from '@/theme/Masthead'
 import { companionKeys, forgetCharacter, rememberedCharacter, useCreateCharacter, type CompanionErrorCode } from './api'
 import { useCompanionContext } from './CompanionLayout'
+import { companionSheet } from './sheet'
 
 /** The first name typed on the phone: page state, not one of the keeper's players. */
 const PlayerNameContext = createContext<{ name: string; setName: (name: string) => void }>({ name: '', setName: () => {} })
@@ -86,7 +87,7 @@ export function NewInvestigatorPage() {
 
   async function onSave(draft: CreationDraft) {
     try {
-      const id = await create.mutateAsync({ data: toCharacterData(draft), playerName: name.trim() })
+      const id = await create.mutateAsync({ data: companionSheet(toCharacterData(draft)), playerName: name.trim() })
       saveLocalDraft(draftKey, null)
       toast.success(t('{name} rejoint la partie.', { name: draft.name.trim() }))
       navigate(`/t/${token}/c/${id}`)

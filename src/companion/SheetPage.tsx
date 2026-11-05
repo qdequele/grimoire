@@ -180,17 +180,19 @@ export function SheetTab() {
     <div className="flex flex-col gap-6">
       <StatTiles member={member} />
 
-      {chars.length > 0 && (
+      {(chars.length > 0 || derived.length > 0) && (
         <section className="flex flex-col gap-2">
           <h2 className="eyebrow">{t('Caractéristiques')}</h2>
-          <dl className="grid grid-cols-4 gap-px border border-border bg-border">
-            {chars.map((c) => (
-              <div key={c} className="flex flex-col items-center bg-card py-2">
-                <dt className="text-[0.625rem] font-semibold tracking-[0.14em] text-muted-foreground uppercase">{t(CHARACTERISTIC_INFO[c].short)}</dt>
-                <dd className="font-mono text-lg">{d.characteristics[c]}</dd>
-              </div>
-            ))}
-          </dl>
+          {chars.length > 0 && (
+            <dl className="grid grid-cols-4 gap-px border border-border bg-border">
+              {chars.map((c) => (
+                <div key={c} className="flex flex-col items-center bg-card py-2">
+                  <dt className="text-[0.625rem] font-semibold tracking-[0.14em] text-muted-foreground uppercase">{t(CHARACTERISTIC_INFO[c].short)}</dt>
+                  <dd className="font-mono text-lg">{d.characteristics?.[c]}</dd>
+                </div>
+              ))}
+            </dl>
+          )}
           {derived.length > 0 && (
             <p className="text-sm text-muted-foreground">
               {derived.map((x) => `${t(x.label)} ${x.value}`).join(' · ')}

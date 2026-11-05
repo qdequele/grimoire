@@ -157,6 +157,29 @@ test('game screen: the original engine runs a story, rolls, saves to the account
   await expect(game.locator('#invView .carnet img')).toHaveCount(0)
   expect(await live.evaluate(() => (window as unknown as { __xss?: number }).__xss)).toBeUndefined()
 
+  // An investigator whose values hold markup (as a hostile phone sheet would, past the database's
+  // checks and toLegacyCharacter): the engine's own renders escape them.
+  const bad = '<img src=x onerror=window.__xss=2>'
+  const leaked = await live.evaluate((bad) => {
+    const g = eval as (s: string) => unknown
+    const api = (window as unknown as { GRIMOIRE_ENGINE: { addMember: (c: object, player: string) => void } }).GRIMOIRE_ENGINE
+    const c = { id: 'hostile', custom: true, n: 'Hostile', job: 'x', pv: 10, san: 50, chance: 50, pm: 10, dex: bad, imp: bad,
+      car: { FOR: bad, CON: bad, TAI: bad, DEX: bad, APP: bad, INT: bad, POU: bad, ÉDU: bad }, sk: '', bg: {} }
+    api.addMember(c, '')
+    // The investigator's sheet (home list and card), rendered off-screen: an <img> would load and fire.
+    const box = document.createElement('div')
+    box.innerHTML = (g('charCard') as (c: object) => string)(c)
+    ;(g('renderHome') as () => void)()
+    return box.querySelectorAll('img').length + document.querySelectorAll('img[src="x"]').length
+  }, bad)
+  expect(leaked).toBe(0)
+  const hostileCard = game.locator('#invView .inv').filter({ hasText: 'Hostile' })
+  await hostileCard.locator('.tog').click()
+  await expect(hostileCard.locator('.job')).toContainText(bad)
+  await expect(game.locator('img[src="x"]')).toHaveCount(0)
+  await page.waitForTimeout(200) // an onerror handler would have run by now
+  expect(await live.evaluate(() => (window as unknown as { __xss?: number }).__xss)).toBeUndefined()
+
   // Next scene, then reload without the browser copy: the account copy brings it back
   const gameSaved = page.waitForResponse((r) => r.url().includes('/rest/v1/rpc/save_game_state') && r.ok())
   await game.locator('#scene .scene-foot .btn.prim[data-go]').click()

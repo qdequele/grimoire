@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import type { CharacterData } from '@/characters/character'
-import { clampPoints, skillRows } from './sheet'
+import { clampPoints, companionSheet, skillRows } from './sheet'
 
 const data = (over: Partial<CharacterData> = {}): CharacterData => ({
   name: 'X',
@@ -29,5 +29,12 @@ describe('clampPoints', () => {
   it('clampPoints keeps values within 0..maxHp and 0..99', () => {
     expect(clampPoints({ pv: 14, san: 120, chance: -3, pm: 50 }, 11)).toEqual({ pv: 11, san: 99, chance: 0, pm: 50 })
     expect(clampPoints({ pv: -1, san: 0, chance: 99, pm: 100 }, 11)).toEqual({ pv: 0, san: 0, chance: 99, pm: 99 })
+  })
+})
+
+describe('companionSheet', () => {
+  it('brings skills and age within what the server accepts', () => {
+    const d = companionSheet({ name: 'Z', age: 200, characteristics: {}, skills: { own: 110, spot: 45 } })
+    expect(d).toMatchObject({ age: 150, skills: { own: 99, spot: 45 } })
   })
 })

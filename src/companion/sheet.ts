@@ -26,6 +26,7 @@ export function skillRows(data: CharacterData, liveChecks: string[] = []): Skill
   const improved = progress.skills && typeof progress.skills === 'object' ? (progress.skills as Record<string, unknown>) : {}
   const checks = new Set([...strings(progress.checks), ...liveChecks])
   return Object.entries(data.skills ?? {})
+    .filter((e): e is [string, number] => typeof e[1] === 'number')
     .map(([key, base]) => {
       const label = skillKeyLabel(key)
       const value = typeof improved[label] === 'number' ? (improved[label] as number) : base
@@ -39,4 +40,16 @@ const clamp = (v: number, max: number) => Math.min(max, Math.max(0, Math.round(v
 /** Points the server accepts: HP within 0..maxHp, the others within 0..99. */
 export function clampPoints(p: Points, maxHp: number): Points {
   return { pv: clamp(p.pv, maxHp), san: clamp(p.san, 99), chance: clamp(p.chance, 99), pm: clamp(p.pm, 99) }
+}
+
+/**
+ * The wizard's sheet as companion_create_character accepts it: skills within 0..99 (a personal
+ * interest can push a skill past 99), age within 0..150.
+ */
+export function companionSheet(data: CharacterData): CharacterData {
+  return {
+    ...data,
+    ...(data.age === undefined ? {} : { age: Math.min(150, Math.max(0, Math.round(data.age))) }),
+    skills: Object.fromEntries(Object.entries(data.skills ?? {}).map(([k, v]) => [k, clamp(v, 99)])),
+  }
 }

@@ -90,6 +90,12 @@ function patch(from, to, why) {
   if (n !== 1) throw new Error(`Patch "${why}" matched ${n} times`)
   js = js.replace(from, to)
 }
+/** Like patch, for a fragment that appears exactly `count` times (every one is changed). */
+function patchAll(from, to, count, why) {
+  const n = js.split(from).length - 1
+  if (n !== count) throw new Error(`Patch "${why}" matched ${n} times, expected ${count}`)
+  js = js.split(from).join(to)
+}
 
 patch(
   'try{S=JSON.parse(localStorage.getItem(KEY));}catch(e){S=null;}',
@@ -279,6 +285,26 @@ patch(
   'collapsible scene NPCs and investigators',
 )
 
+// ------------------------------------------------------------------ escaping investigator values
+// Investigators now come from the account, and a table link lets a player create one: the values the
+// original engine trusted (its own wizard made them) are escaped where they go into innerHTML.
+// esc() escapes & < > and the double quote, so it is also safe inside value="…" attributes.
+// The app also coerces them (toLegacyCharacter), and the database validates phone sheets.
+patchAll('<div class="v">${c.dex}</div>', '<div class="v">${esc(c.dex)}</div>', 2, 'escape DEX on the investigator sheets')
+patchAll('<div class="v" style="font-size:13px">${c.imp}</div>', '<div class="v" style="font-size:13px">${esc(c.imp)}</div>', 2, 'escape damage bonus on the investigator sheets')
+patchAll('<div class="v">${c.car[k[0]]}</div>', '<div class="v">${esc(c.car[k[0]])}</div>', 2, 'escape characteristics on the investigator sheets')
+for (const k of ['pv', 'chance', 'pm']) {
+  patchAll(`<div class="v">\${c.${k}}</div>`, `<div class="v">\${esc(c.${k})}</div>`, 2, `escape ${k} on the investigator sheets`)
+}
+patch('<div class="k">SAN</div><div class="v">${c.san}</div>', '<div class="k">SAN</div><div class="v">${esc(c.san)}</div>', 'escape SAN on the investigator sheet')
+patchAll('${esc(n)} ${v}</button>', '${esc(n)} ${esc(v)}</button>', 2, 'escape skill values on the party cards (base values come from characteristics)')
+patch('${esc(b.job)} · DEX ${b.dex}', '${esc(b.job)} · DEX ${esc(b.dex)}', 'escape DEX on the party cards')
+patch('value="${carOf(b)[k]||""}"', 'value="${esc(carOf(b)[k]||"")}"', 'escape characteristics in the party cards\' inputs')
+patch('${esc(c.n)} · DEX ${c.dex}', '${esc(c.n)} · DEX ${esc(c.dex)}', 'escape DEX in the combat picker')
+patch('<div class="ini">${r.dex}<small>DEX</small></div>', '<div class="ini">${esc(r.dex)}<small>DEX</small></div>', 'escape DEX in the combat order')
+// The dice result's detail line is plain text built with investigator and opponent names.
+patch('<div class="det">${det}</div>', '<div class="det">${esc(det)}</div>', 'escape the dice result detail (names)')
+
 // ------------------------------------------------------------------ player companion
 // Players' phones change points and write notebooks; the app pushes them through GRIMOIRE_ENGINE.
 // Nothing changes until setNotebooks/setPoints/addMember are called.
@@ -304,7 +330,7 @@ function fillCarnets(){
     body.appendChild(d);});}
 window.GRIMOIRE_ENGINE={
   setPoints(cid,v){const sl=ST().party.find(p=>p.cid===cid);if(!sl)return;
-    sl.pv=v.pv;sl.san=v.san;sl.chance=v.chance;sl.pm=v.pm;P_(cid).san=v.san;
+    const n=x=>{x=Number(x);return Number.isFinite(x)?Math.round(x):0};sl.pv=n(v.pv);sl.san=n(v.san);sl.chance=n(v.chance);sl.pm=n(v.pm);P_(cid).san=sl.san;
     save();keepFocus(()=>{renderInv();if(ST().mode==="combat")renderCombat();});},
   addMember(c,player,progress){if(!c||ST().party.some(p=>p.cid===c.id))return;
     if(!S.chars.some(x=>x.id===c.id))S.chars.push(c);
