@@ -7,6 +7,10 @@ import { CharactersPage } from '@/characters/CharactersPage'
 import { PlayersPage } from '@/characters/PlayersPage'
 import { CharacterWizardPage } from '@/characters/wizard/CharacterWizardPage'
 import { Toaster } from '@/components/ui/sonner'
+import { CompanionLayout } from '@/companion/CompanionLayout'
+import { Notebook } from '@/companion/Notebook'
+import { PickPage } from '@/companion/PickPage'
+import { ProfileTab, SheetPage, SheetTab } from '@/companion/SheetPage'
 import { GamePage } from '@/games/GamePage'
 import { HomePage } from '@/home/HomePage'
 import { ImportPage } from '@/import/ImportPage'
@@ -36,6 +40,23 @@ const router = createBrowserRouter([
   { path: '/login', element: <LoginPage /> },
   // Full-screen game screen, outside the app chrome.
   { path: '/games/:id', element: <RequireAuth><GamePage /></RequireAuth> },
+  // Player companion: public pages opened from a table link (no account).
+  {
+    path: '/t/:token',
+    element: <CompanionLayout />,
+    children: [
+      { index: true, element: <PickPage /> },
+      {
+        path: 'c/:characterId',
+        element: <SheetPage />,
+        children: [
+          { index: true, element: <SheetTab /> },
+          { path: 'carnet', element: <Notebook /> },
+          { path: 'profil', element: <ProfileTab /> },
+        ],
+      },
+    ],
+  },
   {
     element: <AppLayout />,
     children: [
