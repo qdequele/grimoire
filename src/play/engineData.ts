@@ -58,6 +58,8 @@ const APP_UI_EN: Record<string, string> = {
   'Fermer le narrateur': 'Close narrator',
   'PNJ de la scène': 'Scene NPCs',
   Investigateurs: 'Investigators',
+  'Joueurs à la table': 'Players at the table',
+  Carnet: 'Notebook',
 }
 const I18N: EngineGlobals['I18N'] = {
   ...(PRIVATE.I18N ?? FALLBACK.I18N),

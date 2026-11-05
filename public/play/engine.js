@@ -295,6 +295,13 @@ function renderAdd(){const inP=new Set(ST().party.map(p=>p.cid));const av=allCha
   $("#addSel").innerHTML=av.length?av.map(c=>`<option value="${c.id}">${esc(c.n)} · ${c.custom?"créé":"prétiré"}</option>`).join(""):`<option value="">Tous les personnages sont dans la partie</option>`;
   $("#addBtn").disabled=!av.length;}
 if(false)$("#addBtn").onclick=()=>{const id=$("#addSel").value;const c=charById(id);if(!c)return;const sl=mkSlot(c);ensureGroups();sl.grp=ST().active;ST().party.push(sl);save();renderInv();renderAdd();renderNav();toast(`${c.n} rejoint la partie.`);};
+{const _riN=renderInv;renderInv=function(){_riN();
+  document.querySelectorAll("#invView .inv").forEach(card=>{const t=card.querySelector("[data-tog]"),body=card.querySelector(".ibody");if(!t||!body)return;
+    const cid=t.dataset.tog,notes=notesOf(cid).slice().sort((a,b)=>String(b.createdAt).localeCompare(String(a.createdAt)));if(!notes.length)return;
+    const d=document.createElement("details");d.className="carnet";d.open=openCarnets.has(cid);
+    d.addEventListener("toggle",()=>{d.open?openCarnets.add(cid):openCarnets.delete(cid);});
+    d.innerHTML='<summary><span>Carnet</span> <span>('+notes.length+')</span></summary>'+notes.map(n=>'<div class="cnote"><small>'+esc(new Date(n.createdAt).toLocaleString(LANG==="en"?"en-GB":"fr-FR",{day:"numeric",month:"short",hour:"2-digit",minute:"2-digit"}))+'</small> '+esc(n.body)+'</div>').join("");
+    body.appendChild(d);});};}
 $("#invView").addEventListener("click",e=>{
   const b=e.target.closest("button");if(!b)return;const P=ST().party;
   if(b.dataset.k){const i=+b.dataset.i,k=b.dataset.k;P[i][k]=Math.max(0,P[i][k]+ +b.dataset.d);
@@ -878,7 +885,8 @@ INVESTIGATEURS :
 ${inv}
 ${st.combat&&st.combat.on?`\nCOMBAT EN COURS : round ${st.combat.round}, combattants ${st.combat.roster.map(r=>`${r.name} (${pvOf(r)}/${r.max} PV)`).join(", ")}`:""}
 JOURNAL RÉCENT : ${(ST().journal||[]).slice(0,15).map(x=>x.t).join(" | ")||"aucun"}
-NOTES DU GARDIEN : ${(st.notes||"").slice(-1500)||"aucune"}`;
+NOTES DU GARDIEN : ${(st.notes||"").slice(-1500)||"aucune"}
+CARNETS DES INVESTIGATEURS : ${(()=>{const t=st.party.map(p=>{const c=charById(p.cid),ns=notesOf(p.cid).slice().sort((a,b)=>String(a.createdAt).localeCompare(String(b.createdAt))).slice(-5);return c&&ns.length?c.n+": "+ns.map(n=>n.body).join(" | "):""}).filter(Boolean).join("\n");return t.slice(0,1500)||"aucun"})()}`;
 }
 const NARR_RULES_PRE=1;const NARR_RULES=GRIMOIRE_DATA.NARR_RULES;
 const NARR_QUICK=GRIMOIRE_DATA.NARR_QUICK;
@@ -912,7 +920,7 @@ async function narrSend(text){
 function toggleNarr(force){const p=$("#narrPanel");p.hidden=force===undefined?!p.hidden:!force;if(!S.ui)S.ui={};S.ui.narr=!p.hidden;save();if(!p.hidden){renderNarr();setTimeout(()=>$("#ninput")?.focus(),50);}}
 
 
-$("#qaNarr").onclick=()=>toggleNarr();$("#narrClose").onclick=()=>toggleNarr(false);
+$("#qaNarr").onclick=()=>toggleNarr();$("#qaTable").onclick=()=>{GRIMOIRE_HOST.openTable&&GRIMOIRE_HOST.openTable();};$("#narrClose").onclick=()=>toggleNarr(false);
 $("#narrPanel").addEventListener("submit",e=>{e.preventDefault();const t=$("#ninput").value;narrSend(t);});
 $("#narrPanel").addEventListener("keydown",e=>{if(e.target.id==="ninput"&&e.key==="Enter"&&!e.shiftKey){e.preventDefault();narrSend(e.target.value);}});
 $("#narrPanel").addEventListener("click",async e=>{const b=e.target.closest("button");if(!b)return;const st=ST();
@@ -1683,4 +1691,18 @@ if(LANG==="en"){i18nData();setTimeout(i18nAll,0);}langLabels();
 const FR_EN_SCEN=null;
 /* content removed by extract-engine.mjs */
 
+/* Grimoire: API for the app (player companion). Types: EngineApi in src/play/host.ts. */
+let NOTEBOOKS={};
+const notesOf=cid=>NOTEBOOKS[cid]||[];
+const openCarnets=new Set();
+window.GRIMOIRE_ENGINE={
+  setPoints(cid,v){const sl=ST().party.find(p=>p.cid===cid);if(!sl)return;
+    sl.pv=v.pv;sl.san=v.san;sl.chance=v.chance;sl.pm=v.pm;P_(cid).san=v.san;
+    save();renderInv();if(ST().mode==="combat")renderCombat();},
+  addMember(c,player){if(!c||ST().party.some(p=>p.cid===c.id))return;
+    if(!S.chars.some(x=>x.id===c.id))S.chars.push(c);
+    P_(c.id);const sl=mkSlot(c);sl.player=player||"";ensureGroups();sl.grp=ST().active;
+    ST().party.push(sl);save();renderPlay();},
+  setNotebooks(n){NOTEBOOKS=n||{};renderInv();renderCtx();},
+};
 try{route()}catch(e){}
