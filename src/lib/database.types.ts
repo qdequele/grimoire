@@ -489,6 +489,42 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      companion_add_note: {
+        Args: { p_body: string; p_character: string; p_token: string }
+        Returns: string
+      }
+      companion_link: {
+        Args: { p_token: string }
+        Returns: {
+          character_id: string | null
+          created_at: string
+          game_id: string
+          id: string
+          owner_id: string
+          revoked_at: string | null
+          token: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "table_links"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      companion_open: { Args: { p_token: string }; Returns: Json }
+      companion_owner: { Args: { p_token: string }; Returns: string }
+      companion_party: { Args: { p_game: string }; Returns: string[] }
+      companion_set_points: {
+        Args: {
+          p_chance: number
+          p_character: string
+          p_pm: number
+          p_pv: number
+          p_san: number
+          p_token: string
+        }
+        Returns: undefined
+      }
       is_admin: { Args: Record<PropertyKey, never>; Returns: boolean }
       revoke_table_link: { Args: { p_link: string }; Returns: undefined }
     }
