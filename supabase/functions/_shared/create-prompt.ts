@@ -1,7 +1,7 @@
 // Instructions for the story creator. The system prompt is the same for every call (outline,
 // scenes, ideas) and byte-for-byte stable, so it is served from the prompt cache; everything that
 // changes (the brief, the outline, what's written so far) goes in the user message.
-import { draftContext, type ImportDraft } from './import-draft.ts'
+import { draftContext, SCREEN_PLACES, SCREEN_PRESETS, SCREEN_TIMES, type ImportDraft } from './import-draft.ts'
 import { SAMPLE_STORY, SOUNDS, STORY_FORMAT_MD } from './spec-bundle.ts'
 import {
   IDEA_FIELDS,
@@ -58,13 +58,56 @@ The app shows one scene per screen: a one-line lead, "read to the players" parag
 - Rolls use the skill ids and characteristic codes listed in the format below (e.g. "spot-hidden", "library-use", "persuade", "STR"). SAN rolls use "success/failure" like "1/1D6"; damage uses dice like "1D6+1". Hard or extreme difficulty only when the fiction calls for it.
 - Use [[scene-id]] to link scenes and {{npc:id}} to mention NPCs in text.
 - Sounds: pick up to 3 ambience ids that fit each scene and any matching sound effects, from the allowed ids only. Leave them empty when nothing fits.
+- Ambiance screen: give each scene the drawn décor ("place") that matches where it happens, the atmosphere ("preset": weather and mood) and the time of day ("time"), from the lists under "Ambiance screen". Use "" for a place when none fits; the strong atmospheres (abyss, ritual, nightmare, bulb, blaze) only for the scenes that call for them.
 - Respect the keeper's lines and veils exactly: content they ask to avoid never appears, not even off-screen or hinted at.`
 
-/** Sound ids the library has (planned sounds left out). */
+/** What each ambiance screen value looks like, for the model. A test checks every value of the format is described. */
+export const PLACE_HINTS: Record<string, string> = {
+  church: 'a church or chapel seen from outside, a few graves',
+  graveyard: 'a graveyard behind an iron fence, a mausoleum',
+  crypt: 'vaults, a crypt, catacombs, a cellar, tunnels: an underground room with candles',
+  castle: 'a castle or fortress on a crag',
+  manor: 'a large old house, a manor, a mansion, seen from its grounds',
+  library: 'a library, archives, a study: shelves of books',
+  police: 'a police station, a jail, seen from the street',
+  forest: 'woods, a forest, a clearing',
+  harbour: 'a harbour, docks, a pier, the sea, a lighthouse',
+  street: 'a town street at night: houses, lit windows, street lamps',
+}
+export const TIME_HINTS: Record<string, string> = {
+  day: 'daylight: a bright sky (grey under rain, storm or snow), the sun, windows unlit',
+  dusk: 'dawn or dusk: violet sky, a warm glow at the horizon',
+  night: 'night: dark sky, the moon, lit windows and lamps',
+}
+export const PRESET_HINTS: Record<string, string> = {
+  fog: 'mist low over the ground',
+  rain: 'rain falling',
+  candle: 'warm flickering light from a candle or lamp',
+  hearth: 'a live fire in a fireplace',
+  night: 'deep blue night',
+  storm: 'heavy rain and lightning',
+  dust: 'dust motes in warm daylight',
+  snow: 'snow falling in a cold night',
+  abyss: 'deep water: green murk, light from the surface, bubbles',
+  ritual: 'a sickly green glow breathing, spores in the air: a ritual, a presence',
+  nightmare: 'dark reds, the screen throbbing like a heartbeat: dread, madness, a dream',
+  bulb: 'a bare electric bulb that keeps failing: asylum, hospital, basement',
+  blaze: 'a building on fire: red glow, smoke, embers',
+}
+
+/** Sound ids the library has (planned sounds left out), and the ambiance screen's values. */
 export const SOUND_RULES = `# Allowed sound ids
 
 Ambience: ${soundList(SOUNDS.ambience)}
-Sound effects: ${soundList(SOUNDS.sfx)}`
+Sound effects: ${soundList(SOUNDS.sfx)}
+
+# Ambiance screen
+
+The keeper can show each scene on a TV at the table: a drawn décor under a living atmosphere. A scene's "place", "preset" and "time" choose them (in story.json: "screen": { "place": …, "preset": …, "time": … }). The preset is the weather and the mood, the time the light: any preset goes with any time (rain by day, snow at night).
+
+Places: ${SCREEN_PLACES.map((p) => `${p} (${PLACE_HINTS[p] ?? p})`).join('; ')}
+Presets: ${SCREEN_PRESETS.map((p) => `${p} (${PRESET_HINTS[p] ?? p})`).join('; ')}
+Times: ${SCREEN_TIMES.map((p) => `${p} (${TIME_HINTS[p] ?? p})`).join('; ')}`
 
 export const EXAMPLE_INTRO = 'Match this level of detail and this tone for scenes, flow steps and NPCs (but not its plot: write something new):'
 

@@ -1,8 +1,9 @@
 import { useEffect, useRef, useState, type CSSProperties, type ReactNode } from 'react'
 import { cn } from '@/lib/utils'
-import { DEFAULT_FIRE, LOOKS, type PresetId } from './ambiance'
+import { DEFAULT_FIRE, LOOKS, paletteFor, type PresetEffect, type PresetId, type TimeOfDay } from './ambiance'
 import { Hearth } from './Hearth'
 import { Particles } from './Particles'
+import { Place } from './Places'
 import { sceneKey, type ScreenHandout, type ScreenScene } from './state'
 import './screen.css'
 
@@ -50,26 +51,62 @@ function Lightning() {
   return n ? <div key={n} className="scr-fill scr-lightning" /> : null
 }
 
+/** A preset's light effect: plain elements, everything is in screen.css (`.scr-fx-<effect>`). */
+function Effect({ effect }: { effect: PresetEffect }) {
+  return (
+    <div className={`scr-fill scr-fx scr-fx-${effect}`} data-effect={effect}>
+      {effect === 'shafts' && (
+        <>
+          <i />
+          <i />
+          <i />
+          <i />
+        </>
+      )}
+      {effect === 'aura' && (
+        <>
+          <i className="scr-aura-rays" />
+          <i className="scr-aura-glow" />
+        </>
+      )}
+      {effect === 'blaze' && (
+        <>
+          <i className="scr-blaze-low" />
+          <i className="scr-blaze-high" />
+        </>
+      )}
+    </div>
+  )
+}
+
 interface Layer { id: number; key: string; scene: ScreenScene | null; url: string | null }
 
 function SceneLayer({ layer, reduced, onShown }: { layer: Layer; reduced: boolean; onShown: () => void }) {
   const preset: PresetId = layer.scene?.preset ?? 'fog'
   const look = LOOKS[preset]
   const fire = layer.scene?.fire ?? DEFAULT_FIRE
+  // A drawn décor only when there is no picture: the picture is the place.
+  const place = layer.scene?.place ?? null
+  // Underground, no daylight: a crypt keeps its night colours.
+  const time: TimeOfDay = place === 'crypt' && !layer.url ? 'night' : (layer.scene?.time ?? look.time)
+  const palette = paletteFor(preset, time)
   const style = {
-    '--c0': look.palette[0],
-    '--c1': look.palette[1],
-    '--c2': look.palette[2],
+    '--c0': palette[0],
+    '--c1': palette[1],
+    '--c2': palette[2],
     '--drift': `${look.drift}s`,
     '--fog': look.fog,
     '--grain': look.grain,
-    '--vig': look.vignette,
+    '--vig': time === 'day' ? look.vignette * 0.55 : look.vignette,
+    '--fog-rgb': look.fogColor,
   } as CSSProperties
   return (
     <div
       className="scr-fill scr-layer"
       style={style}
       data-preset={preset}
+      data-time={time}
+      data-sky={look.overcast ? 'overcast' : 'clear'}
       data-image={layer.url ? 'yes' : 'no'}
       onAnimationEnd={(e) => e.target === e.currentTarget && onShown()}
     >
@@ -80,9 +117,9 @@ function SceneLayer({ layer, reduced, onShown }: { layer: Layer; reduced: boolea
           {look.fire && <Hearth fire={fire} imageUrl={layer.url} still={reduced} />}
         </div>
       ) : (
-        <div className="scr-fill scr-abstract">
+        <div className="scr-fill scr-abstract" data-place={place ?? undefined}>
           <div className="scr-blob a" />
-          <div className="scr-blob b" />
+          {place ? <Place place={place} /> : <div className="scr-blob b" />}
           {look.fire && <Hearth fire={fire} imageUrl={null} still={reduced} />}
         </div>
       )}
@@ -94,7 +131,9 @@ function SceneLayer({ layer, reduced, onShown }: { layer: Layer; reduced: boolea
           <i />
         </div>
       )}
-      {!reduced && look.particles && <Particles kind={look.particles} heavy={preset === 'storm'} />}
+      {/* Over the fog: the light shows in it. */}
+      {look.effect && <Effect effect={look.effect} />}
+      {!reduced && look.particles && <Particles kind={look.particles} density={look.density} />}
       {!reduced && look.lightning && <Lightning />}
       <div className="scr-fill scr-grain" />
       <div className="scr-fill scr-vignette" />

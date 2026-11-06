@@ -160,10 +160,32 @@ or, for a fire burning in the picture's fireplace:
 | Field | Meaning |
 |---|---|
 | `image` | Background picture (relative path in `images/`), shown full screen with a slow pan and zoom. Never a spoiler: players see it. |
-| `preset` | Living layers over it: `fog`, `rain`, `candle`, `hearth`, `night`, `storm`, `dust`. Default: picked from the scene's ambience sounds (`fireplace` → `hearth`). |
+| `preset` | Living layers over it (see below). Default: picked from the scene's ambience sounds (`fireplace` → `hearth`). |
+| `place` | Drawn scenery, shown when there is no picture: `church`, `graveyard`, `crypt`, `castle`, `manor`, `library`, `police` (a police station), `forest`, `harbour`, `street`. Its silhouettes take the preset's colours (a graveyard in the fog, a manor in the storm). Default: guessed from the scene's title ("The old church", "Le cimetière"…), else none. |
+| `time` | Time of day: `day`, `dusk` or `night`. It sets the light (sky colours, sun or moon, lit windows) and goes with any preset: a church in the `rain` by `day`, a street in the `snow` at `night`. Default: guessed from the scene's title ("Midnight", "L'aube"…) or its day/night sounds, else the preset's own (`night`, except `dust`: `day`). A `crypt` stays dark. |
 | `fire` | For `hearth`: where the fire burns in the picture, `x`/`y` the base centre and `width`, as fractions of the picture (0 to 1). The flames, embers and their flickering light are drawn there and follow the pan and zoom. Default: bottom centre. |
 
-All are optional. Without `preset`, the app picks one from the scene's `ambience` sounds (rain → `rain`, fireplace → `hearth`…). Without `image`, it uses the scene's first `images` entry marked `"keeperOnly": false`, else a generated background in the preset's colours. Handouts with an `image` (or only `text`) can be pushed to the screen by the keeper.
+Presets:
+
+| Preset | Looks like |
+|---|---|
+| `fog` | Mist drifting low over the ground |
+| `rain` | Rain falling, a little mist |
+| `candle` | Warm flickering light from below, a few embers |
+| `hearth` | A live fire (at `fire`), its light flickering |
+| `night` | Deep blue, motes in the dark |
+| `storm` | Heavy rain, lightning now and then |
+| `dust` | Dust motes in warm daylight |
+| `snow` | Snow falling in a cold night, pale mist |
+| `abyss` | Deep water: green-blue murk, light from the surface, bubbles rising |
+| `ritual` | A sickly green glow breathing at the centre, faint turning rays, drifting spores |
+| `nightmare` | Dark reds, heavy grain, the screen's edges throbbing like a heartbeat |
+| `bulb` | A bare electric bulb that keeps failing (asylum, hospital, basement) |
+| `blaze` | A building on fire: red glow from below, dark smoke, a storm of embers |
+
+The last six are never picked from sounds: set them in `screen.preset`, or the keeper chooses them during the game.
+
+All are optional. Without `preset`, the app picks one from the scene's `ambience` sounds (rain → `rain`, fireplace → `hearth`…). Without `image`, it uses the scene's first `images` entry marked `"keeperOnly": false`, else the drawn scenery of `place`, else a generated background in the preset's colours. A scene with a `place` and no `preset` or telling sounds gets that place's usual light (a library by candlelight, a street in the rain). Handouts with an `image` (or only `text`) can be pushed to the screen by the keeper.
 
 ## 5. NPCs and creatures
 

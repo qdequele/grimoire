@@ -11,7 +11,7 @@ import { NativeSelect, NativeSelectOption } from '@/components/ui/native-select'
 import { Skeleton } from '@/components/ui/skeleton'
 import { useT } from '@/i18n/t'
 import { cn } from '@/lib/utils'
-import { findScene, isPreset, PRESET_LABEL, PRESETS } from '@/screen/ambiance'
+import { findScene, isPlace, isPreset, isTime, LOOKS, PLACE_LABEL, PLACES, PRESET_LABEL, PRESETS, TIME_LABEL, TIMES } from '@/screen/ambiance'
 import type { ImageRef, ScreenHandout } from '@/screen/state'
 import {
   handoutImagePath, listUploads, screenUrl, uploadPicture, useCreateScreenLink, useReplaceScreenLink, useScreenLink,
@@ -218,6 +218,35 @@ export function ScreenDialog({ gameId, control, story, open, onOpenChange }: {
               {PRESETS.map((p) => <NativeSelectOption key={p} value={p}>{t(PRESET_LABEL[p])}</NativeSelectOption>)}
             </NativeSelect>
           </div>
+          <div className="flex items-center gap-2">
+            <label htmlFor="scr-place">{t('Décor')}</label>
+            <NativeSelect id="scr-place" value={state.placeOverride ?? ''}
+              onChange={(e) => {
+                const v = e.target.value
+                control.dispatch({ type: 'place', place: isPlace(v) || v === 'none' ? v : null })
+              }}>
+              <NativeSelectOption value="">
+                {state.scene?.place
+                  ? t('Selon la scène ({place})', { place: t(PLACE_LABEL[state.scene.place]) })
+                  : t('Selon la scène (aucun décor)')}
+              </NativeSelectOption>
+              <NativeSelectOption value="none">{t('Aucun décor')}</NativeSelectOption>
+              {PLACES.map((p) => <NativeSelectOption key={p} value={p}>{t(PLACE_LABEL[p])}</NativeSelectOption>)}
+            </NativeSelect>
+          </div>
+          <div className="flex items-center gap-2">
+            <label htmlFor="scr-time">{t('Moment')}</label>
+            <NativeSelect id="scr-time" value={state.timeOverride ?? ''}
+              onChange={(e) => control.dispatch({ type: 'time', time: isTime(e.target.value) ? e.target.value : null })}>
+              <NativeSelectOption value="">
+                {t('Selon la scène ({time})', { time: t(TIME_LABEL[state.scene?.time ?? LOOKS[state.override ?? state.scene?.preset ?? 'fog'].time]) })}
+              </NativeSelectOption>
+              {TIMES.map((x) => <NativeSelectOption key={x} value={x}>{t(TIME_LABEL[x])}</NativeSelectOption>)}
+            </NativeSelect>
+          </div>
+          {state.scene?.image && (state.placeOverride ?? state.scene.place) && state.placeOverride !== 'none' && (
+            <p className="text-sm text-muted-foreground">{t("Cette scène a une image : le décor dessiné ne s'affiche que sans image.")}</p>
+          )}
           <div className="flex items-center gap-2">
             <Checkbox id="scr-sound" checked={state.sound} onCheckedChange={(c) => control.dispatch({ type: 'sound', on: c === true })} />
             <label htmlFor="scr-sound">{t("Jouer les sons d'ambiance sur l'écran")}</label>

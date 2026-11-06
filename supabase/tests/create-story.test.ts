@@ -4,7 +4,7 @@ import { createServer, type Server } from 'node:http'
 import { createClient, type SupabaseClient } from '@supabase/supabase-js'
 import { afterAll, beforeAll, describe, expect, it } from 'vitest'
 import type { Database } from '../../src/lib/database.types'
-import { fakeAnswer, FAKE_IDEAS, FAKE_OUTLINE } from './fake-creator'
+import { fakeAnswer, FAKE_IDEAS, FAKE_OUTLINE, FAKE_SCREEN } from './fake-creator'
 
 const url = process.env.SUPABASE_URL!
 const anonKey = process.env.SUPABASE_ANON_KEY!
@@ -109,6 +109,12 @@ describe('create-story', () => {
     expect(meta).toMatchObject({ license: 'private', lang: 'en', players: { min: 2, max: 4 }, tags: ['grimoire-creator'], contentWarnings: ['missing people'] })
     const npc = (story!.content as { npcs: Array<Record<string, unknown>> }).npcs[0]
     expect(npc).toMatchObject({ id: 'miller', characteristics: { STR: 60 }, hp: 11 })
+    // The model's choices for the ambiance screen reach the story
+    const scenes = (story!.content as { acts: Array<{ scenes: Array<{ id: string; screen?: unknown }> }> }).acts.flatMap((x) => x.scenes)
+    expect(scenes.map((sc) => [sc.id, sc.screen ?? null])).toEqual([['arrival', FAKE_SCREEN.arrival], ['mill', null]])
+    const sceneSchema = JSON.stringify((requests.at(-1)!.body.output_config as { format: { schema: unknown } }).format.schema)
+    expect(sceneSchema).toContain('"crypt"')
+    expect(sceneSchema).toContain('"ritual"')
 
     // story.json written to the pack
     const { data: pack } = await service.storage.from('story-packs').download(`${userId}/${first.body.storyId}/story.json`)

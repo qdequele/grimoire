@@ -7,7 +7,7 @@
 //
 // Pure TypeScript, no Deno or browser APIs: used by the mcp Edge Function and unit-tested with Vitest.
 import { CRAFT_RULES, EXAMPLE_INTRO, FORBIDDEN_NAMES, ORIGINALITY_RULES, SOUND_RULES } from './create-prompt.ts'
-import { DIFFICULTIES, importDraftSchema, ROLL_TYPES, STAT_KEYS, type DraftNpc, type DraftRoll, type DraftScene, type ImportDraft } from './import-draft.ts'
+import { DIFFICULTIES, importDraftSchema, ROLL_TYPES, SCREEN_PLACES, SCREEN_PRESETS, SCREEN_TIMES, STAT_KEYS, type DraftNpc, type DraftRoll, type DraftScene, type ImportDraft } from './import-draft.ts'
 import { SAMPLE_STORY, SOUNDS, STORY_FORMAT_MD } from './spec-bundle.ts'
 import { BRIEF_LIMITS, LENGTHS, outlineSchema, THREATS, TONES } from './story-create.ts'
 
@@ -72,6 +72,7 @@ function roll(v: Json): DraftRoll {
 function scene(v: Json, sounds: typeof SOUND_IDS): DraftScene | null {
   const sceneId = id(v.id)
   if (!sceneId) return null
+  const screen = isObj(v.screen) ? v.screen : {}
   return {
     id: sceneId,
     title: text(v.title, 160) || sceneId,
@@ -94,6 +95,10 @@ function scene(v: Json, sounds: typeof SOUND_IDS): DraftScene | null {
     rolls: objs(v.rolls, 12).map(roll),
     ambience: texts(v.ambience, 3, 60).filter((s) => sounds.ambience.includes(s)),
     sfx: texts(v.sfx, 12, 60).filter((s) => sounds.sfx.includes(s)),
+    // The draft's place, preset and time, or story.json's screen: { place, preset, time }. Unknown values are dropped.
+    place: oneOf(v.place ?? screen.place, SCREEN_PLACES, ''),
+    preset: oneOf(v.preset ?? screen.preset, SCREEN_PRESETS, ''),
+    time: oneOf(v.time ?? screen.time, SCREEN_TIMES, ''),
     next: ids(v.next, 8),
   }
 }
@@ -244,7 +249,7 @@ export const sceneCount = (content: unknown) => asStory(content).acts.reduce((n,
 // ------------------------------------------------------------------ editing a story (story.json level)
 
 export const EDIT_OPS = [
-  'put_scene', 'remove_scene', 'put_act', 'remove_act', 'put_npc', 'remove_npc', 'put_handout', 'remove_handout', 'set_overview', 'set_info',
+  'put_scene', 'remove_scene', 'set_screen', 'put_act', 'remove_act', 'put_npc', 'remove_npc', 'put_handout', 'remove_handout', 'set_overview', 'set_info',
 ] as const
 export type EditOp = { op: (typeof EDIT_OPS)[number] } & Json
 
@@ -313,6 +318,17 @@ export function applyEdits(content: unknown, ops: unknown): Json {
           if (Array.isArray(sc.flow)) sc.flow = sc.flow.map((st) => (isObj(st) ? { ...st, goto: scrub(st.goto, gone) } : st))
         }
         for (const h of s.handouts ?? []) if (h.scene === gone) delete h.scene
+        break
+      }
+      case 'set_screen': {
+        // Only the ambiance screen of a scene, without sending the whole scene back. {} removes it.
+        const target = needId(op.id, 'id', n)
+        const sc = s.acts.flatMap((a) => a.scenes).find((x) => x.id === target)
+        if (!sc) throw new ToolError('not_found', `ops[${n}]: scene "${target}" does not exist.`)
+        if (!isObj(op.screen)) throw new ToolError('bad_request', `ops[${n}]: screen must be an object.`)
+        const screen = Object.fromEntries(Object.entries(op.screen).filter(([, v]) => v !== '' && v !== null && v !== undefined))
+        if (Object.keys(screen).length) sc.screen = screen
+        else delete sc.screen
         break
       }
       case 'put_act': {
@@ -405,7 +421,7 @@ You write the story; Grimoire checks it, saves it as a private story in the keep
 # Revising one of the keeper's stories
 
 1. list_my_stories, then get_story (part "summary" first: ids of every act, scene, NPC and handout; then the scenes or NPCs you need).
-2. edit_story with the "version" get_story returned and a list of operations. Scenes, NPCs and handouts are sent whole, in the story.json format of get_story (topic "format"): put_scene replaces the scene with the same id (or adds it to actId), put_npc and put_handout the same. remove_* also removes links to what is gone. All operations apply or none do; the result must pass the format's schema.
+2. edit_story with the "version" get_story returned and a list of operations. Scenes, NPCs and handouts are sent whole, in the story.json format of get_story (topic "format"): put_scene replaces the scene with the same id (or adds it to actId), put_npc and put_handout the same. remove_* also removes links to what is gone. set_screen changes only a scene's ambiance screen (décor, atmosphere and time of day, topic "sounds"). All operations apply or none do; the result must pass the format's schema.
 3. On "conflict", the story changed since you read it: call get_story again and redo the edit on the new version.
 
 Stories being written by a creation can't be edited until their last scene is written. Marketplace stories can't be edited.`
@@ -494,7 +510,7 @@ export function toolDefinitions(): ToolDef[] {
       name: 'grimoire_guide',
       title: 'Grimoire guide',
       description:
-        'How to write a Grimoire story: "workflow" (the steps and tools, read it first), "rules" (originality and what makes a good story, plus the brief presets), "format" (story.json), "sounds" (allowed sound ids), "example" (a complete story).',
+        'How to write a Grimoire story: "workflow" (the steps and tools, read it first), "rules" (originality and what makes a good story, plus the brief presets), "format" (story.json), "sounds" (allowed sound ids, and the ambiance screen\'s décors and atmospheres), "example" (a complete story).',
       inputSchema: { type: 'object', properties: { topic: { enum: [...GUIDE_TOPICS] } }, required: ['topic'], additionalProperties: false },
       annotations: { readOnlyHint: true, destructiveHint: false, openWorldHint: false },
     },
@@ -554,7 +570,7 @@ export function toolDefinitions(): ToolDef[] {
     {
       name: 'edit_story',
       title: 'Edit a story',
-      description: `Change one of the keeper's private stories (story.json format, see grimoire_guide "format"). Operations, applied in order, all or none: put_scene {scene, actId?, after?} adds or replaces a whole scene; remove_scene {id}; put_act {act: {id, title}, after?}; remove_act {id} (empty acts only); put_npc {npc, after?}; remove_npc {id}; put_handout {handout, after?}; remove_handout {id}; set_overview {overview}; set_info {info: ${INFO_FIELDS.join(', ')}}. Needs the version from get_story.`,
+      description: `Change one of the keeper's private stories (story.json format, see grimoire_guide "format"). Operations, applied in order, all or none: put_scene {scene, actId?, after?} adds or replaces a whole scene; remove_scene {id}; set_screen {id, screen: {place?, preset?, time?}} sets a scene's ambiance screen ({} removes it); put_act {act: {id, title}, after?}; remove_act {id} (empty acts only); put_npc {npc, after?}; remove_npc {id}; put_handout {handout, after?}; remove_handout {id}; set_overview {overview}; set_info {info: ${INFO_FIELDS.join(', ')}}. Needs the version from get_story.`,
       inputSchema: {
         type: 'object',
         properties: {
@@ -568,7 +584,12 @@ export function toolDefinitions(): ToolDef[] {
               type: 'object',
               properties: {
                 op: { enum: [...EDIT_OPS] },
-                id: { type: 'string', description: 'For remove_* operations.' },
+                id: { type: 'string', description: 'For remove_* operations, and the scene id for set_screen.' },
+                screen: {
+                  type: 'object',
+                  description: 'set_screen: the scene\'s ambiance screen (see grimoire_guide "sounds"). {} removes it.',
+                  properties: { place: { enum: [...SCREEN_PLACES] }, preset: { enum: [...SCREEN_PRESETS] }, time: { enum: [...SCREEN_TIMES] } },
+                },
                 actId: { type: 'string', description: 'put_scene: the act to put the scene in (default: where it is now).' },
                 after: { type: 'string', description: 'put_*: id of the item to insert after (default: at the end). Ignored when replacing.' },
                 scene: anyObject('put_scene: the whole scene, story.json format.'),

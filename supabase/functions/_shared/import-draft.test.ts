@@ -1,12 +1,16 @@
 import Ajv2020 from 'ajv/dist/2020'
 import { describe, expect, it } from 'vitest'
 import storySchema from '../../../spec/story.schema.json'
+import { PLACES, PRESETS, TIMES } from '../../../src/screen/ambiance'
 import {
   draftContext,
   draftToStory,
   emptyDraft,
   importDraftSchema,
   mergeDraft,
+  SCREEN_PLACES,
+  SCREEN_PRESETS,
+  SCREEN_TIMES,
   type DraftRoll,
   type DraftScene,
   type ImportDraft,
@@ -20,7 +24,7 @@ const noRoll: DraftRoll = {
 
 const scene = (id: string, title: string, extra: Partial<DraftScene> = {}): DraftScene => ({
   id, title, ref: '', lead: '', readAloud: [], flow: [], notes: [], npcs: [], handouts: [], rolls: [],
-  ambience: [], sfx: [], next: [], ...extra,
+  ambience: [], sfx: [], place: '', preset: '', time: '', next: [], ...extra,
 })
 
 // An original mini story, written for these tests.
@@ -104,6 +108,15 @@ describe('importDraftSchema', () => {
     walk(schema, (n) => forbidden.forEach((k) => expect(n).not.toHaveProperty(k)))
   })
 
+  it("takes the ambiance screen's values from the story format, the app's own lists", () => {
+    expect(SCREEN_PLACES).toEqual([...PLACES])
+    expect(SCREEN_PRESETS).toEqual([...PRESETS])
+    expect(SCREEN_TIMES).toEqual([...TIMES])
+    const text = JSON.stringify(schema)
+    expect(text).toContain(`"enum":${JSON.stringify(['', ...PLACES])}`)
+    expect(text).toContain(`"enum":${JSON.stringify(['', ...PRESETS])}`)
+  })
+
   it('only lets the model pick sound ids that exist', () => {
     const text = JSON.stringify(schema)
     expect(text).toContain('"enum":["rain","wind"]')
@@ -139,6 +152,20 @@ describe('draftToStory', () => {
     expect(leave).toEqual({ title: 'Leave' })
     expect(story.npcs[0]).toMatchObject({ characteristics: { DEX: 70 }, hp: 9, skills: { 'mechanical-repair': 80 } })
     expect(story.npcs[0]).not.toHaveProperty('kind') // 'person' is the default
+  })
+
+  it("writes the scene's ambiance screen, dropping what the format doesn't know", () => {
+    const d = { ...emptyDraft(), title: 'T', acts: [{ id: 'a', title: 'A', scenes: [
+      scene('crypt', 'Crypt', { place: 'crypt', preset: 'ritual', time: 'night' }),
+      scene('road', 'Road', { place: 'disco', preset: 'snow', time: 'noon' }),
+      scene('plain', 'Plain'),
+    ] }] }
+    const story = draftToStory(d, { id: 'x', lang: 'en' }) as { acts: Array<{ scenes: Array<Record<string, unknown>> }> }
+    const [crypt, road, plain] = story.acts[0].scenes
+    expect(crypt.screen).toEqual({ place: 'crypt', preset: 'ritual', time: 'night' })
+    expect(road.screen).toEqual({ preset: 'snow' })
+    expect(plain).not.toHaveProperty('screen')
+    expect(validate(story), JSON.stringify(validate.errors)).toBe(true)
   })
 
   it('keeps SAN and damage values only on the matching roll type', () => {
