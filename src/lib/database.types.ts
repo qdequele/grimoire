@@ -502,6 +502,7 @@ export type Database = {
         Args: { p_data: Json; p_player_name: string; p_token: string }
         Returns: string
       }
+      companion_has_markup: { Args: { p: string }; Returns: boolean }
       companion_int: {
         Args: { p: Json; p_hi: number; p_lo: number }
         Returns: number

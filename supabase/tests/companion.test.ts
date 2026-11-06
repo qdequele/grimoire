@@ -446,6 +446,52 @@ describe('companion: create an investigator and broadcast', () => {
     expect(pts.pv).toBe(5)
   })
 
+  it('skill keys must have the app shape, and names carry no HTML characters', async () => {
+    const g = await newGame(alice, [{ name: 'One' }])
+    const l = await link(alice, g.gameId)
+    const create = (p_data: Json, p_player_name = '') => anon.rpc('companion_create_character', { p_token: l.token, p_data, p_player_name })
+    const hostileKeys = [
+      '<img src=x onerror="window.__xss=1">', 'spot<b>', 'art-craft:<i>x</i>', 'art-craft:a&b', 'art-craft:"q"',
+      'Spot', '1spot', 'spot hidden', 'spot:', ':x', '',
+    ]
+    for (const key of hostileKeys) {
+      expect((await create({ name: 'X', skills: { [key]: 5 } })).error?.message, key).toContain('bad_value')
+    }
+    for (const name of ['<b>X</b>', 'A & B', 'Say "hi"', 'x>']) {
+      expect((await create({ name })).error?.message, name).toContain('bad_value')
+    }
+    for (const player of ['<img src=x onerror="window.__xss=1">', 'Bo&b', '"Q"']) {
+      expect((await create({ name: 'X' }, player)).error?.message, player).toContain('bad_value')
+    }
+    // The app's own keys, accents and apostrophes in specialties and names are fine.
+    const ok = await create({ name: "Ada O'Brien", skills: { 'spot-hidden': 5, 'science-2:Pharmacologie': 5, "art-craft:Peinture à l'huile": 5 } }, 'Zoé')
+    expect(ok.error).toBeNull()
+  })
+
+  it('texts are accepted at their length limit and refused one character over', async () => {
+    const g = await newGame(alice, [{ name: 'One' }])
+    const l = await link(alice, g.gameId)
+    const create = (p_data: Json, p_player_name = '') => anon.rpc('companion_create_character', { p_token: l.token, p_data, p_player_name })
+    const a = (n: number) => 'a'.repeat(n)
+    const key = (n: number) => `art-craft:${a(n - 'art-craft:'.length)}`
+    const atLimit = await create(
+      { name: a(80), occupation: a(200), link: a(200), profile: { traits: a(2000) }, skills: { [key(80)]: 5 } },
+      a(80),
+    )
+    expect(atLimit.error).toBeNull()
+    const over: Array<[Json, string]> = [
+      [{ name: a(81) }, ''],
+      [{ name: 'X', occupation: a(201) }, ''],
+      [{ name: 'X', link: a(201) }, ''],
+      [{ name: 'X', profile: { traits: a(2001) } }, ''],
+      [{ name: 'X', skills: { [key(81)]: 5 } }, ''],
+      [{ name: 'X' }, a(81)],
+    ]
+    for (const [p_data, player] of over) {
+      expect((await create(p_data, player)).error?.message, JSON.stringify(p_data).slice(0, 60)).toContain('bad_value')
+    }
+  })
+
   it('set_point reads a hand-edited sheet without failing', async () => {
     const g = await newGame(alice, [{ name: 'Text hp', hp: '12' }, { name: 'Half hp', hp: 11.5, luck: 'x' }])
     const l = await link(alice, g.gameId)
