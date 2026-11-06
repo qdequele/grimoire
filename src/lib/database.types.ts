@@ -224,6 +224,8 @@ export type Database = {
           finished_at: string | null
           id: string
           owner_id: string
+          screen: Json | null
+          screen_channel: string
           state: Json
           story_id: string
           updated_at: string
@@ -234,6 +236,8 @@ export type Database = {
           finished_at?: string | null
           id?: string
           owner_id?: string
+          screen?: Json | null
+          screen_channel?: string
           state?: Json
           story_id: string
           updated_at?: string
@@ -244,6 +248,8 @@ export type Database = {
           finished_at?: string | null
           id?: string
           owner_id?: string
+          screen?: Json | null
+          screen_channel?: string
           state?: Json
           story_id?: string
           updated_at?: string
@@ -314,6 +320,48 @@ export type Database = {
           is_admin?: boolean
         }
         Relationships: []
+      }
+      screen_links: {
+        Row: {
+          created_at: string
+          game_id: string
+          id: string
+          owner_id: string
+          revoked_at: string | null
+          token: string
+        }
+        Insert: {
+          created_at?: string
+          game_id: string
+          id?: string
+          owner_id?: string
+          revoked_at?: string | null
+          token?: string
+        }
+        Update: {
+          created_at?: string
+          game_id?: string
+          id?: string
+          owner_id?: string
+          revoked_at?: string | null
+          token?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "screen_links_game_fkey"
+            columns: ["game_id", "owner_id"]
+            isOneToOne: false
+            referencedRelation: "games"
+            referencedColumns: ["id", "owner_id"]
+          },
+          {
+            foreignKeyName: "screen_links_owner_id_fkey"
+            columns: ["owner_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       stories: {
         Row: {
@@ -543,11 +591,13 @@ export type Database = {
       }
       companion_text: { Args: { p: Json; p_max: number }; Returns: string }
       is_admin: { Args: Record<PropertyKey, never>; Returns: boolean }
+      revoke_screen_link: { Args: { p_link: string }; Returns: undefined }
       revoke_table_link: { Args: { p_link: string }; Returns: undefined }
       save_game_state: {
         Args: { p_game: string; p_removed: string[]; p_state: Json }
         Returns: undefined
       }
+      screen_open: { Args: { p_token: string }; Returns: Json }
     }
     Enums: {
       import_status: "running" | "succeeded" | "failed"

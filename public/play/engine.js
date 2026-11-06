@@ -914,7 +914,7 @@ async function narrSend(text){
 function toggleNarr(force){const p=$("#narrPanel");p.hidden=force===undefined?!p.hidden:!force;if(!S.ui)S.ui={};S.ui.narr=!p.hidden;save();if(!p.hidden){renderNarr();setTimeout(()=>$("#ninput")?.focus(),50);}}
 
 
-$("#qaNarr").onclick=()=>toggleNarr();$("#qaTable").onclick=()=>{GRIMOIRE_HOST.openTable&&GRIMOIRE_HOST.openTable();};$("#narrClose").onclick=()=>toggleNarr(false);
+$("#qaNarr").onclick=()=>toggleNarr();$("#qaTable").onclick=()=>{GRIMOIRE_HOST.openTable&&GRIMOIRE_HOST.openTable();};$("#qaScreen").onclick=()=>{GRIMOIRE_HOST.openScreen&&GRIMOIRE_HOST.openScreen();};$("#narrClose").onclick=()=>toggleNarr(false);
 $("#narrPanel").addEventListener("submit",e=>{e.preventDefault();const t=$("#ninput").value;narrSend(t);});
 $("#narrPanel").addEventListener("keydown",e=>{if(e.target.id==="ninput"&&e.key==="Enter"&&!e.shiftKey){e.preventDefault();narrSend(e.target.value);}});
 $("#narrPanel").addEventListener("click",async e=>{const b=e.target.closest("button");if(!b)return;const st=ST();
