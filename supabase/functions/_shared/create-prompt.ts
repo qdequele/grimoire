@@ -33,16 +33,19 @@ export const FORBIDDEN_NAMES = [
   'Deep Ones', 'Mi-Go', 'Shoggoth', 'Elder Things', 'R\'lyeh', 'Delta Green',
 ]
 
-export function createSystemPrompt(): string {
-  return `You write ORIGINAL scenarios for tabletop horror/investigation games using d100 percentile rules, as Grimoire stories that a game master (the "keeper") runs scene by scene in the Grimoire app.
+// The rules are exported section by section: the create-story function joins them into its system
+// prompt, and the MCP connector (story-mcp.ts) serves the same sections to ChatGPT or Claude through
+// its guide tool, so both ways of creating a story follow one set of rules.
 
-# Originality (non-negotiable)
+/** Originality rules: the same for Grimoire's own Claude and for a chat app writing through MCP. */
+export const ORIGINALITY_RULES = `# Originality (non-negotiable)
 
 - Invent everything: plot, places, people, entities, tomes, cults. Never retell, adapt or closely imitate a published scenario, campaign, novel or film, even if the keeper's answers resemble one: take the idea somewhere new.
 - Never use names from published games or fiction. In particular none of: ${FORBIDDEN_NAMES.join(', ')}. No entity, book or town from H. P. Lovecraft's stories or their imitators. Invent your own entities and forbidden books with fresh names. Real historical places and public events of the era are fine.
-- Rules vocabulary is generic d100: skills, characteristics, SAN (sanity), luck, hit points. Don't name any commercial game line. (Skill ids from the format below, such as "cthulhu-mythos" for forbidden lore, are technical ids and may be used in rolls; never write such names in the story's text.)
+- Rules vocabulary is generic d100: skills, characteristics, SAN (sanity), luck, hit points. Don't name any commercial game line. (Skill ids from the format below, such as "cthulhu-mythos" for forbidden lore, are technical ids and may be used in rolls; never write such names in the story's text.)`
 
-# What makes a good Grimoire story
+/** What a good, playable Grimoire story looks like. */
+export const CRAFT_RULES = `# What makes a good Grimoire story
 
 The app shows one scene per screen: a one-line lead, "read to the players" paragraphs, then the "scene flow": numbered steps in play order, each with at most one roll and what happens on success, failure, or a failed pushed roll. Rolls become buttons. The keeper glances at it mid-session, so it must be scannable and in play order.
 
@@ -55,13 +58,25 @@ The app shows one scene per screen: a one-line lead, "read to the players" parag
 - Rolls use the skill ids and characteristic codes listed in the format below (e.g. "spot-hidden", "library-use", "persuade", "STR"). SAN rolls use "success/failure" like "1/1D6"; damage uses dice like "1D6+1". Hard or extreme difficulty only when the fiction calls for it.
 - Use [[scene-id]] to link scenes and {{npc:id}} to mention NPCs in text.
 - Sounds: pick up to 3 ambience ids that fit each scene and any matching sound effects, from the allowed ids only. Leave them empty when nothing fits.
-- Respect the keeper's lines and veils exactly: content they ask to avoid never appears, not even off-screen or hinted at.
-- Fields you have nothing for: "" for text, [] for lists, 0 for bonus.
+- Respect the keeper's lines and veils exactly: content they ask to avoid never appears, not even off-screen or hinted at.`
 
-# Allowed sound ids
+/** Sound ids the library has (planned sounds left out). */
+export const SOUND_RULES = `# Allowed sound ids
 
 Ambience: ${soundList(SOUNDS.ambience)}
-Sound effects: ${soundList(SOUNDS.sfx)}
+Sound effects: ${soundList(SOUNDS.sfx)}`
+
+export const EXAMPLE_INTRO = 'Match this level of detail and this tone for scenes, flow steps and NPCs (but not its plot: write something new):'
+
+export function createSystemPrompt(): string {
+  return `You write ORIGINAL scenarios for tabletop horror/investigation games using d100 percentile rules, as Grimoire stories that a game master (the "keeper") runs scene by scene in the Grimoire app.
+
+${ORIGINALITY_RULES}
+
+${CRAFT_RULES}
+- Fields you have nothing for: "" for text, [] for lists, 0 for bonus.
+
+${SOUND_RULES}
 
 # The Grimoire story format (for reference: you output the simpler shape you're given)
 
@@ -69,7 +84,7 @@ ${STORY_FORMAT_MD}
 
 # A complete example story in the final format
 
-Match this level of detail and this tone for scenes, flow steps and NPCs (but not its plot: write something new):
+${EXAMPLE_INTRO}
 
 ${JSON.stringify(SAMPLE_STORY, null, 1)}`
 }

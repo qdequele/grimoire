@@ -46,6 +46,7 @@ export function useCreationsThisMonth() {
       const { count, error } = await supabase
         .from('story_creations')
         .select('id', { count: 'exact', head: true })
+        .eq('source', 'web') // creations from ChatGPT or Claude (MCP connector) have their own limit
         .gte('created_at', start.toISOString())
       if (error) throw error
       return count ?? 0

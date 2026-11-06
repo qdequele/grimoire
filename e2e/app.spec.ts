@@ -19,9 +19,17 @@ test.afterEach(() => {
   expect(errors, 'uncaught page errors').toEqual([])
 })
 
-test('signed-out visitors are sent to the login page', async ({ page }) => {
+test('signed-out visitors are sent to the login page, and back once signed in', async ({ page }) => {
   await page.goto('/characters')
-  await expect(page).toHaveURL(/\/login$/)
+  await expect(page).toHaveURL(/\/login\?next=%2Fcharacters$/)
+  await page.getByRole('tab', { name: 'Créer un compte' }).click()
+  await page.getByLabel('E-mail').fill(`e2e-${crypto.randomUUID()}@example.com`)
+  await page.getByLabel('Mot de passe').fill('correct-horse-battery')
+  await page.getByRole('button', { name: 'Créer mon compte' }).click()
+  await expect(page).toHaveURL(/\/characters$/)
+  // Only paths on this site: another origin falls back to the home page.
+  await page.goto('/login?next=%2F%2Fexample.com')
+  await expect(page).toHaveURL(/localhost:5173\/$/)
 })
 
 test('login form validates input', async ({ page }) => {

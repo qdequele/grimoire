@@ -3,6 +3,7 @@ import { createBrowserRouter, Navigate, RouterProvider, useLocation, useParams }
 import { AppLayout, RequireAuth } from '@/AppLayout'
 import { AuthProvider } from '@/auth/auth'
 import { LoginPage } from '@/auth/LoginPage'
+import { OAuthConsentPage } from '@/auth/OAuthConsentPage'
 import { CharactersPage } from '@/characters/CharactersPage'
 import { PlayersPage } from '@/characters/PlayersPage'
 import { CharacterWizardPage } from '@/characters/wizard/CharacterWizardPage'
@@ -48,6 +49,8 @@ const queryClient = new QueryClient({ defaultOptions: { queries: { staleTime: 30
 
 const router = createBrowserRouter([
   { path: '/login', element: <LoginPage /> },
+  // ChatGPT or Claude asks to use the MCP connector (Supabase Auth's OAuth server sends the keeper here).
+  { path: '/oauth/consent', element: <RequireAuth><OAuthConsentPage /></RequireAuth> },
   // Full-screen game screen, outside the app chrome.
   { path: '/games/:id', element: <RequireAuth><GameRoute /></RequireAuth> },
   // Ambiance screen: a TV or tablet in the middle of the table, opened from the keeper's link (no account).

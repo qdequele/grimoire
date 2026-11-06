@@ -677,4 +677,41 @@ export const EN: Record<string, string> = {
   'Écris d’abord le plan de l’histoire.': 'Write the story’s outline first.',
   'Les scènes demandées manquent dans la réponse de l’IA. Réessaie.': 'The requested scenes are missing from the AI answer. Try again.',
   'Création impossible.': 'Creation failed.',
+  'Tu peux aussi écrire une histoire avec ChatGPT ou Claude :': 'You can also write a story with ChatGPT or Claude:',
+  'les connecter': 'connect them',
+
+  // ---------------------------------------------------------------- ChatGPT and Claude (MCP connector, OAuth consent)
+  'ChatGPT et Claude': 'ChatGPT and Claude',
+  'Crée et modifie tes histoires en discutant avec ChatGPT ou Claude : ils écrivent, Grimoire vérifie et range l’histoire dans ta bibliothèque.':
+    'Create and revise your stories by chatting with ChatGPT or Claude: they write, Grimoire checks the story and puts it in your library.',
+  'Adresse du connecteur': 'Connector address',
+  'Adresse copiée.': 'Address copied.',
+  'Impossible de copier l’adresse.': 'Could not copy the address.',
+  '**Claude** (site ou application) : Réglages → Connecteurs → Ajouter un connecteur personnalisé. Colle l’adresse, puis connecte-toi à Grimoire.':
+    '**Claude** (website or app): Settings → Connectors → Add custom connector. Paste the address, then sign in to Grimoire.',
+  '**ChatGPT** : Réglages → Applications et connecteurs → Paramètres avancés → active le mode développeur, puis Créer. Colle l’adresse, choisis OAuth, puis connecte-toi à Grimoire.':
+    '**ChatGPT**: Settings → Apps & Connectors → Advanced settings → turn on developer mode, then Create. Paste the address, choose OAuth, then sign in to Grimoire.',
+  'Demande par exemple : « Crée-moi une histoire Grimoire dans un village de pêcheurs en 1925, pour trois joueurs. »':
+    'Then ask, for example: “Write me a Grimoire story in a fishing village in 1925, for three players.”',
+  'Compétence pour Claude (.zip)': 'Skill for Claude (.zip)',
+  'Facultatif : à ajouter dans Claude, Réglages → Capacités → Compétences.': 'Optional: add it in Claude, Settings → Capabilities → Skills.',
+  'Applications connectées': 'Connected apps',
+  'Aucune application connectée.': 'No app connected.',
+  'depuis le {date}': 'since {date}',
+  '{name} est déconnectée.': '{name} is disconnected.',
+  'Déconnecter': 'Disconnect',
+  'Connexion d’une application': 'Connecting an app',
+  'Ce lien d’autorisation est incomplet.': 'This authorization link is incomplete.',
+  'Cette demande d’autorisation n’est plus valide. Recommence depuis ChatGPT ou Claude.': 'This authorization request is no longer valid. Start again from ChatGPT or Claude.',
+  '{client} veut accéder à ton Grimoire.': '{client} wants to access your Grimoire.',
+  'Elle pourra': 'It will be able to',
+  'lire tes histoires privées ;': 'read your private stories;',
+  'créer des histoires et modifier tes histoires privées.': 'create stories and change your private stories.',
+  'Elle ne voit ni tes investigateurs, ni tes parties, ni ton mot de passe.': 'It doesn’t see your investigators, your games or your password.',
+  'Retour vers': 'Back to',
+  'Autoriser': 'Allow',
+  'Refuser': 'Deny',
+  'Tu pourras la déconnecter à tout moment dans Réglages.': 'You can disconnect it at any time in Settings.',
+  'Un nouveau scribe demande à entrer dans la bibliothèque.': 'A new scribe asks to enter the library.',
+  'N’autorise que les applications que tu viens de connecter toi-même.': 'Only allow apps you have just connected yourself.',
 }
