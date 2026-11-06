@@ -16,7 +16,8 @@
 import Anthropic from 'npm:@anthropic-ai/sdk@1.4.0'
 import { createClient, type SupabaseClient } from 'npm:@supabase/supabase-js@2.118.0'
 import { Ajv2020 } from 'npm:ajv@8.20.0/dist/2020.js'
-import { draftToStory, importDraftSchema, mergeDraft, type ImportDraft } from '../_shared/import-draft.ts'
+import { draftToStory, importDraftSchema, mergeDraft, normalizeDraft, type ImportDraft } from '../_shared/import-draft.ts'
+import { readJsonAnswer, schemaInstruction } from '../_shared/json-answer.ts'
 import type { Database, Json } from '../_shared/database.types.ts'
 import { createSystemPrompt, ideasUserPrompt, outlineUserPrompt, scenesUserPrompt } from '../_shared/create-prompt.ts'
 import { SOUNDS, STORY_SCHEMA } from '../_shared/spec-bundle.ts'
@@ -59,13 +60,11 @@ const validateStory = ajv.compile(STORY_SCHEMA)
 const SYSTEM = [{ type: 'text' as const, text: createSystemPrompt(), cache_control: { type: 'ephemeral' as const } }]
 const OUTLINE_FORMAT = { type: 'json_schema' as const, schema: outlineSchema() }
 const IDEAS_FORMAT = { type: 'json_schema' as const, schema: ideasSchema() }
-const SCENES_FORMAT = {
-  type: 'json_schema' as const,
-  schema: importDraftSchema({
-    ambience: SOUNDS.ambience.filter((s) => s.status !== 'planned').map((s) => s.id),
-    sfx: SOUNDS.sfx.filter((s) => s.status !== 'planned').map((s) => s.id),
-  }),
+const SOUND_IDS = {
+  ambience: SOUNDS.ambience.filter((s) => s.status !== 'planned').map((s) => s.id),
+  sfx: SOUNDS.sfx.filter((s) => s.status !== 'planned').map((s) => s.id),
 }
+const SCENES_FORMAT = { type: 'json_schema' as const, schema: importDraftSchema(SOUND_IDS) }
 
 type Admin = SupabaseClient<Database>
 type CreationRow = Database['public']['Tables']['story_creations']['Row']
@@ -84,22 +83,36 @@ const monthStart = () => {
   return d.toISOString()
 }
 
-/** One structured call to Claude: the parsed JSON and the usage. */
+/**
+ * One structured call to Claude: the parsed JSON and the usage. If the API refuses the schema
+ * (HTTP 400, e.g. "The compiled grammar is too large"), asks once more with the schema in the prompt
+ * instead (json-answer.ts). Callers check the answer's shape either way.
+ */
 async function ask(
   apiKey: string,
   opts: { format: { type: 'json_schema'; schema: Record<string, unknown> }; effort: 'low' | 'medium'; text: string; maxTokens: number },
 ) {
   const client = new Anthropic({ apiKey })
-  const stream = client.beta.messages.stream({
-    model: MODEL,
-    max_tokens: opts.maxTokens,
-    betas: ['server-side-fallback-2026-07-01'],
-    fallbacks: 'default',
-    output_config: { effort: opts.effort, format: opts.format },
-    system: SYSTEM,
-    messages: [{ role: 'user', content: opts.text }],
-  })
-  const message = await stream.finalMessage()
+  const call = (structured: boolean) =>
+    client.beta.messages
+      .stream({
+        model: MODEL,
+        max_tokens: opts.maxTokens,
+        betas: ['server-side-fallback-2026-07-01'],
+        fallbacks: 'default',
+        output_config: structured ? { effort: opts.effort, format: opts.format } : { effort: opts.effort },
+        system: SYSTEM,
+        messages: [{ role: 'user', content: structured ? opts.text : opts.text + schemaInstruction(opts.format.schema) }],
+      })
+      .finalMessage()
+  let message
+  try {
+    message = await call(true)
+  } catch (e) {
+    if (!(e instanceof Anthropic.APIError) || e.status !== 400) throw e
+    console.warn('create-story: schema refused, asking without structured outputs', e.message)
+    message = await call(false)
+  }
   const usage = {
     input: message.usage.input_tokens + (message.usage.cache_read_input_tokens ?? 0),
     output: message.usage.output_tokens,
@@ -108,7 +121,7 @@ async function ask(
   if (message.stop_reason === 'max_tokens') throw new Failure(422, 'too_long', 'Réponse trop longue. Réessaie.')
   const text = message.content.flatMap((b) => (b.type === 'text' ? [b.text] : [])).join('')
   try {
-    return { output: JSON.parse(text) as unknown, usage }
+    return { output: readJsonAnswer(text), usage }
   } catch {
     throw new Failure(502, 'invalid_output', 'Réponse de l’IA illisible. Réessaie.')
   }
@@ -238,7 +251,7 @@ async function write(apiKey: string, admin: Admin, userId: string, body: Record<
     await admin.from('story_creations').update({ status: 'failed', error: e instanceof Failure ? e.code : 'ai_error' }).eq('id', row.id)
     throw e
   }
-  const scenes = onlyScenes(output as ImportDraft, batch)
+  const scenes = onlyScenes(normalizeDraft(output, SOUND_IDS), batch)
   const before = writtenSceneIds(draft).size
   draft = orderLikeOutline(mergeDraft(draft, scenes), outline)
   const written = writtenSceneIds(draft).size

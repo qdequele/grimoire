@@ -24,8 +24,10 @@ import {
   emptyDraft,
   importDraftSchema,
   mergeDraft,
+  normalizeDraft,
   type ImportDraft,
 } from '../_shared/import-draft.ts'
+import { readJsonAnswer, schemaInstruction } from '../_shared/json-answer.ts'
 import type { Database, Json } from '../_shared/database.types.ts'
 import { importSystemPrompt, importUserText } from '../_shared/import-prompt.ts'
 import { SOUNDS, STORY_SCHEMA } from '../_shared/spec-bundle.ts'
@@ -89,13 +91,11 @@ const slugify = (s: string) =>
 
 const ajv = new Ajv2020({ allErrors: true, strict: false })
 const validateStory = ajv.compile(STORY_SCHEMA)
-const draftFormat = {
-  type: 'json_schema' as const,
-  schema: importDraftSchema({
-    ambience: SOUNDS.ambience.filter((s) => s.status !== 'planned').map((s) => s.id),
-    sfx: SOUNDS.sfx.filter((s) => s.status !== 'planned').map((s) => s.id),
-  }),
+const SOUND_IDS = {
+  ambience: SOUNDS.ambience.filter((s) => s.status !== 'planned').map((s) => s.id),
+  sfx: SOUNDS.sfx.filter((s) => s.status !== 'planned').map((s) => s.id),
 }
+const draftFormat = { type: 'json_schema' as const, schema: importDraftSchema(SOUND_IDS) }
 const SYSTEM_PROMPT = importSystemPrompt()
 
 Deno.serve(async (req) => {
@@ -187,32 +187,42 @@ Deno.serve(async (req) => {
     const accumulated = importRow.draft ?? emptyDraft()
     const last = input.firstPage + input.pagePaths.length - 1
     const client = new Anthropic({ apiKey })
-    const stream = client.beta.messages.stream({
-      model: MODEL,
-      max_tokens: 64000,
-      betas: ['server-side-fallback-2026-07-01'],
-      fallbacks: 'default',
-      output_config: { effort: 'medium', format: draftFormat },
-      system: [{ type: 'text', text: SYSTEM_PROMPT, cache_control: { type: 'ephemeral' } }],
-      messages: [
-        {
-          role: 'user',
-          content: [
-            ...images,
+    const userText = importUserText({
+      lang: input.lang,
+      context: draftContext(accumulated),
+      pageNumbers: `${input.firstPage}-${last} of ${input.totalPages}`,
+      titleHint: input.title,
+    })
+    // If the API refuses the schema (HTTP 400, e.g. "The compiled grammar is too large"), ask once
+    // more with the schema in the prompt instead (json-answer.ts); normalizeDraft checks the shape.
+    const call = (structured: boolean) =>
+      client.beta.messages
+        .stream({
+          model: MODEL,
+          max_tokens: 64000,
+          betas: ['server-side-fallback-2026-07-01'],
+          fallbacks: 'default',
+          output_config: structured ? { effort: 'medium', format: draftFormat } : { effort: 'medium' },
+          system: [{ type: 'text', text: SYSTEM_PROMPT, cache_control: { type: 'ephemeral' } }],
+          messages: [
             {
-              type: 'text',
-              text: importUserText({
-                lang: input.lang,
-                context: draftContext(accumulated),
-                pageNumbers: `${input.firstPage}-${last} of ${input.totalPages}`,
-                titleHint: input.title,
-              }),
+              role: 'user',
+              content: [
+                ...images,
+                { type: 'text', text: structured ? userText : userText + schemaInstruction(draftFormat.schema) },
+              ],
             },
           ],
-        },
-      ],
-    })
-    const message = await stream.finalMessage()
+        })
+        .finalMessage()
+    let message
+    try {
+      message = await call(true)
+    } catch (e) {
+      if (!(e instanceof Anthropic.APIError) || e.status !== 400) throw e
+      console.warn('import-story: schema refused, asking without structured outputs', e.message)
+      message = await call(false)
+    }
 
     if (message.stop_reason === 'refusal') {
       await markFailed(admin, importRow.id, 'refused')
@@ -225,7 +235,7 @@ Deno.serve(async (req) => {
     const text = message.content.flatMap((b) => (b.type === 'text' ? [b.text] : [])).join('')
     let batch: ImportDraft
     try {
-      batch = JSON.parse(text) as ImportDraft
+      batch = normalizeDraft(readJsonAnswer(text), SOUND_IDS)
     } catch {
       await markFailed(admin, importRow.id, 'invalid_output')
       return fail(502, 'invalid_output', 'The AI answer could not be read. Try this batch again.')

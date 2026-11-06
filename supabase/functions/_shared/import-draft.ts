@@ -122,8 +122,23 @@ const obj = (properties: Record<string, JsonSchema>, description?: string): Json
   additionalProperties: false,
 })
 
-/** The schema sent as output_config.format. Sound ids are passed in so only real ids can be chosen. */
-export function importDraftSchema(sounds: { ambience: string[]; sfx: string[] }): JsonSchema {
+/** The sound ids the model may use (only the files that exist, not the "planned" ones). */
+export interface SoundIds {
+  ambience: string[]
+  sfx: string[]
+}
+
+const ref = (name: string): JsonSchema => ({ $ref: `#/$defs/${name}` })
+
+/**
+ * The schema sent as output_config.format.
+ *
+ * Kept small on purpose: Anthropic compiles it into a grammar and refuses the request ("The compiled
+ * grammar is too large") past a size it doesn't publish. So each object is defined once in $defs and
+ * referenced (roll appears in steps and in scenes), and the long id lists (sounds, stat keys) are
+ * plain strings listed in the description. normalizeDraft() drops any value outside those lists.
+ */
+export function importDraftSchema(sounds: SoundIds): JsonSchema {
   const id = str('kebab-case id, unique in its list, e.g. "the-lamp". Reuse existing ids for links.')
   const text = str('Rich text: **bold**, *italic*, [[scene-id]] links, {{npc:id}} refs. "" if none.')
   const roll = obj({
@@ -140,7 +155,7 @@ export function importDraftSchema(sounds: { ambience: string[]; sfx: string[] })
   const step = obj({
     title: str('What this step is, e.g. "Search the keeper\'s room".'),
     text,
-    roll: arr(roll, 'Zero or one roll for this step.'),
+    roll: arr(ref('roll'), 'Zero or one roll for this step.'),
     success: text,
     failure: text,
     pushed: text,
@@ -153,13 +168,13 @@ export function importDraftSchema(sounds: { ambience: string[]; sfx: string[] })
     ref: str('Source page, e.g. "p. 12", or "".'),
     lead: text,
     readAloud: arr(text, 'Paragraphs to read to the players, REWORDED from the source.'),
-    flow: arr(step, 'The scene in play order: one step per decision or roll.'),
+    flow: arr(ref('step'), 'The scene in play order: one step per decision or roll.'),
     notes: arr(obj({ title: str(), items: arr(text) }), 'Reference blocks: room contents, timelines.'),
     npcs: arr(id, 'NPC ids present.'),
     handouts: arr(id),
-    rolls: arr(roll, 'Quick rolls not tied to a step (damage, SAN).'),
-    ambience: arr({ enum: sounds.ambience }, 'Up to 3 ambience sounds.'),
-    sfx: arr({ enum: sounds.sfx }),
+    rolls: arr(ref('roll'), 'Quick rolls not tied to a step (damage, SAN).'),
+    ambience: arr(str(), `Up to 3 ambience sound ids, only from: ${sounds.ambience.join(', ')}.`),
+    sfx: arr(str(), `Sound effect ids, only from: ${sounds.sfx.join(', ')}.`),
     next: arr(id, 'Likely next scenes, or [] for the following one.'),
   })
   const npc = obj({
@@ -170,31 +185,156 @@ export function importDraftSchema(sounds: { ambience: string[]; sfx: string[] })
     description: text,
     personality: text,
     knows: arr(text, 'What they can reveal.'),
-    stats: arr(obj({ key: { enum: [...STAT_KEYS] }, value: int() }), 'Only the stats the source gives.'),
+    stats: arr(obj({ key: str(`One of: ${STAT_KEYS.join(', ')}.`), value: int() }), 'Only the stats the source gives.'),
     damageBonus: str('e.g. "+1D4", or "".'),
     attacks: arr(obj({ name: str(), skill: int('Percent.'), damage: str('Dice.'), note: str() })),
     skills: arr(obj({ id: str('Skill id.'), value: int() })),
     sanLoss: str('SAN loss for seeing them, e.g. "0/1D6", or "".'),
     special: arr(text, 'Powers, immunities, weaknesses.'),
   })
-  return obj({
-    title: str('Story title (keep the existing one if already known).'),
-    summary: text,
-    era: str(),
-    setting: str(),
-    duration: str(),
-    overview: obj({
-      secret: text,
-      steps: arr(text),
-      mustNotMiss: arr(text),
-      branches: arr(text),
-      ifStuck: arr(text),
-      keeperTips: arr(text),
+  return {
+    ...obj({
+      title: str('Story title (keep the existing one if already known).'),
+      summary: text,
+      era: str(),
+      setting: str(),
+      duration: str(),
+      overview: obj({
+        secret: text,
+        steps: arr(text),
+        mustNotMiss: arr(text),
+        branches: arr(text),
+        ifStuck: arr(text),
+        keeperTips: arr(text),
+      }),
+      acts: arr(obj({ id, title: str(), scenes: arr(ref('scene')) }), 'Acts found in THESE pages only.'),
+      npcs: arr(ref('npc'), 'NPCs and creatures first described in THESE pages.'),
+      handouts: arr(obj({ id, title: str(), text, scene: str('Scene id where found, or "".') })),
     }),
-    acts: arr(obj({ id, title: str(), scenes: arr(scene) }), 'Acts found in THESE pages only.'),
-    npcs: arr(npc, 'NPCs and creatures first described in THESE pages.'),
-    handouts: arr(obj({ id, title: str(), text, scene: str('Scene id where found, or "".') })),
-  })
+    $defs: { roll, step, scene, npc },
+  }
+}
+
+// ------------------------------------------------------------------ reading the model's answer
+
+type Raw = Record<string, unknown>
+const asObj = (v: unknown): Raw => (v && typeof v === 'object' && !Array.isArray(v) ? (v as Raw) : {})
+const asStr = (v: unknown): string => (typeof v === 'string' ? v : typeof v === 'number' ? String(v) : '')
+const asInt = (v: unknown): number => {
+  const n = typeof v === 'number' ? v : typeof v === 'string' ? Number(v) : NaN
+  return Number.isFinite(n) ? Math.round(n) : 0
+}
+const asArr = <T>(v: unknown, f: (x: unknown) => T): T[] => (Array.isArray(v) ? v.map(f) : [])
+const strs = (v: unknown): string[] => asArr(v, asStr).filter((x) => x !== '')
+const oneOf = <T extends string>(v: unknown, allowed: readonly T[], fallback: T): T =>
+  (allowed as readonly string[]).includes(asStr(v)) ? (asStr(v) as T) : fallback
+
+function toDraftRoll(v: unknown): DraftRoll {
+  const r = asObj(v)
+  return {
+    type: oneOf(r.type, ROLL_TYPES, 'skill'),
+    options: strs(r.options),
+    difficulty: oneOf(r.difficulty, DIFFICULTIES, 'regular'),
+    bonus: asInt(r.bonus),
+    san: asStr(r.san),
+    dice: asStr(r.dice),
+    label: asStr(r.label),
+    againstNpc: asStr(r.againstNpc),
+    againstSkill: asStr(r.againstSkill),
+  }
+}
+
+function toDraftScene(v: unknown, sounds: SoundIds): DraftScene {
+  const s = asObj(v)
+  return {
+    id: asStr(s.id),
+    title: asStr(s.title),
+    ref: asStr(s.ref),
+    lead: asStr(s.lead),
+    readAloud: strs(s.readAloud),
+    flow: asArr(s.flow, (x) => {
+      const st = asObj(x)
+      return {
+        title: asStr(st.title),
+        text: asStr(st.text),
+        roll: asArr(st.roll, toDraftRoll).slice(0, 1),
+        success: asStr(st.success),
+        failure: asStr(st.failure),
+        pushed: asStr(st.pushed),
+        extra: asStr(st.extra),
+        goto: strs(st.goto),
+      }
+    }),
+    notes: asArr(s.notes, (x) => ({ title: asStr(asObj(x).title), items: strs(asObj(x).items) })),
+    npcs: strs(s.npcs),
+    handouts: strs(s.handouts),
+    rolls: asArr(s.rolls, toDraftRoll),
+    ambience: strs(s.ambience).filter((x) => sounds.ambience.includes(x)),
+    sfx: strs(s.sfx).filter((x) => sounds.sfx.includes(x)),
+    next: strs(s.next),
+  }
+}
+
+function toDraftNpc(v: unknown): DraftNpc {
+  const n = asObj(v)
+  return {
+    id: asStr(n.id),
+    name: asStr(n.name),
+    kind: oneOf(n.kind, ['person', 'creature'] as const, 'person'),
+    role: asStr(n.role),
+    description: asStr(n.description),
+    personality: asStr(n.personality),
+    knows: strs(n.knows),
+    stats: asArr(n.stats, asObj).flatMap((x) =>
+      (STAT_KEYS as readonly string[]).includes(asStr(x.key))
+        ? [{ key: asStr(x.key) as (typeof STAT_KEYS)[number], value: asInt(x.value) }]
+        : [],
+    ),
+    damageBonus: asStr(n.damageBonus),
+    attacks: asArr(n.attacks, (x) => {
+      const a = asObj(x)
+      return { name: asStr(a.name), skill: asInt(a.skill), damage: asStr(a.damage), note: asStr(a.note) }
+    }),
+    skills: asArr(n.skills, asObj).flatMap((x) => (asStr(x.id) ? [{ id: asStr(x.id), value: asInt(x.value) }] : [])),
+    sanLoss: asStr(n.sanLoss),
+    special: strs(n.special),
+  }
+}
+
+/**
+ * The model's answer as a well-formed draft: missing fields get their "absent" value, values of the
+ * wrong type are dropped, sound ids and stat keys outside their lists are removed. Items without an id
+ * are dropped. Needed because the schema no longer lists those ids, and because the fallback without
+ * structured outputs (see json-answer.ts) gives no guarantee at all.
+ */
+export function normalizeDraft(raw: unknown, sounds: SoundIds): ImportDraft {
+  const d = asObj(raw)
+  const o = asObj(d.overview)
+  const hasId = <T extends { id: string }>(x: T) => x.id !== ''
+  return {
+    title: asStr(d.title),
+    summary: asStr(d.summary),
+    era: asStr(d.era),
+    setting: asStr(d.setting),
+    duration: asStr(d.duration),
+    overview: {
+      secret: asStr(o.secret),
+      steps: strs(o.steps),
+      mustNotMiss: strs(o.mustNotMiss),
+      branches: strs(o.branches),
+      ifStuck: strs(o.ifStuck),
+      keeperTips: strs(o.keeperTips),
+    },
+    acts: asArr(d.acts, (x) => {
+      const a = asObj(x)
+      return { id: asStr(a.id), title: asStr(a.title), scenes: asArr(a.scenes, (s) => toDraftScene(s, sounds)).filter(hasId) }
+    }).filter(hasId),
+    npcs: asArr(d.npcs, toDraftNpc).filter(hasId),
+    handouts: asArr(d.handouts, (x) => {
+      const h = asObj(x)
+      return { id: asStr(h.id), title: asStr(h.title), text: asStr(h.text), scene: asStr(h.scene) }
+    }).filter(hasId),
+  }
 }
 
 // ------------------------------------------------------------------ merging batches
