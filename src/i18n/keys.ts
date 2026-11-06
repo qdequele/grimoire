@@ -1,6 +1,7 @@
 // Every French text the screens can show, for the completeness test (en.test.ts). Node only.
 import { readdirSync, readFileSync, statSync } from 'node:fs'
 import { join } from 'node:path'
+import { ERA_CHOICES, LENGTHS, PLACE_CHOICES, THREATS, TONES } from '@/stories/create/brief'
 import {
   CHARACTERISTIC_INFO, CREDIT_TIERS, NAME_ORIGINS, OCCUPATIONS, PROFILE_FIELDS, SKILLS,
 } from '@/rules/d100'
@@ -16,6 +17,15 @@ export function dataKeys(): string[] {
     ...PROFILE_FIELDS.flatMap((f) => [f.label, f.placeholder]),
     ...CREDIT_TIERS.map(([, label]) => label),
     ...Object.values(NAME_ORIGINS).map((o) => o.label),
+    // Story creator: choices, suggestions, step titles and labels passed as props
+    ...[...TONES, ...THREATS, ...LENGTHS].flatMap((x) => [x.label, x.hint]),
+    ...ERA_CHOICES, ...PLACE_CHOICES,
+    'Créer', 'Cadre', 'Ambiance', 'Intrigue', 'Table', 'Plan', 'Écriture',
+    'Ton', 'Menace', 'Durée', 'Époque', 'Lieu', 'Le mystère', 'Idées et incontournables', 'Au choix de l’IA', 'surprends-moi',
+    // create-story function messages
+    'Cette histoire ne peut pas être écrite. Change quelques réponses et réessaie.', 'Réponse trop longue. Réessaie.',
+    'Création introuvable.', 'Les scènes sont déjà en cours d’écriture.', 'Le plan reçu est incomplet. Réessaie.',
+    'Écris d’abord le plan de l’histoire.', 'Les scènes demandées manquent dans la réponse de l’IA. Réessaie.', 'Création impossible.',
     'Art déco', 'Classique', // SKIN_LABEL (theme/skin.ts touches the DOM on import)
     // Labels passed as props, then translated by the component (Section, NameForm, Stat, nav).
     'Histoires', 'Bibliothèque', 'Mes histoires', 'Importer', 'Investigateurs', 'Joueurs', 'Réglages',

@@ -318,23 +318,32 @@ export interface StoryMetaInput {
   id: string
   lang: string
   source?: string
+  /** Set by the story creator (the import leaves them out). */
+  players?: { min: number; max: number }
+  contentWarnings?: string[]
+  tags?: string[]
+  /** Title when the draft has none. */
+  fallbackTitle?: string
 }
 
-/** Build a story.json (format grimoire-story/1) from a draft. Imported stories are always private. */
+/** Build a story.json (format grimoire-story/1) from a draft. Imported and created stories are always private. */
 export function draftToStory(d: ImportDraft, meta: StoryMetaInput): Json {
   return compact({
     format: 'grimoire-story/1',
     meta: compact({
       id: meta.id,
-      title: d.title || 'Imported story',
+      title: d.title || meta.fallbackTitle || 'Imported story',
       lang: meta.lang,
       summary: d.summary,
+      players: meta.players,
       era: d.era,
       setting: d.setting,
       duration: d.duration,
       system: 'd100',
       source: meta.source,
       license: 'private',
+      tags: meta.tags,
+      contentWarnings: meta.contentWarnings,
     }),
     overview: compact(d.overview as unknown as Json),
     acts: d.acts

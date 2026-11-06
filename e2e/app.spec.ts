@@ -2,6 +2,7 @@ import { createServer, type Server } from 'node:http'
 import { mkdirSync, readFileSync, writeFileSync } from 'node:fs'
 import { strFromU8, strToU8, unzipSync, zipSync } from 'fflate'
 import { expect, test } from '@playwright/test'
+import { fakeAnswer } from '../supabase/tests/fake-creator.ts'
 import { createJournalist, signUp } from './helpers.ts'
 
 // The new app against the local Supabase stack (`supabase start`, plus
@@ -364,7 +365,7 @@ test('main menu: stories, investigators with their players, settings', async ({ 
   // Histoires: library, my stories, import
   await menu.getByRole('link', { name: /^Histoires/ }).click()
   const storyTabs = page.getByRole('navigation', { name: 'Histoires' })
-  await expect(storyTabs.getByRole('link')).toHaveText(['Bibliothèque', 'Mes histoires', 'Importer'])
+  await expect(storyTabs.getByRole('link')).toHaveText(['Bibliothèque', 'Mes histoires', 'Créer', 'Importer'])
   await expect(storyTabs.getByRole('link', { name: 'Mes histoires' })).toHaveAttribute('aria-current', 'page')
   await storyTabs.getByRole('link', { name: 'Importer' }).click()
   await expect(page.getByRole('tab', { name: 'Packs Grimoire' })).toBeVisible()
@@ -426,7 +427,7 @@ test('the whole app follows the language chosen in settings', async ({ page }) =
   await expect(menu.getByRole('link')).toHaveText([/^New game/, /^Stories/, /^Investigators/, /^Settings/])
 
   await menu.getByRole('link', { name: /^Stories/ }).click()
-  await expect(page.getByRole('navigation', { name: 'Stories' }).getByRole('link')).toHaveText(['Library', 'My stories', 'Import'])
+  await expect(page.getByRole('navigation', { name: 'Stories' }).getByRole('link')).toHaveText(['Library', 'My stories', 'Create', 'Import'])
   await page.getByRole('link', { name: 'Library' }).click()
   await page.getByRole('link', { name: 'The Silent Light' }).click()
   await expect(page.getByRole('button', { name: 'Start the game' })).toBeVisible()
@@ -475,12 +476,12 @@ test.describe('AI features (fake Claude API)', () => {
       let raw = ''
       req.on('data', (c) => (raw += c))
       req.on('end', () => {
-        // The import streams a structured draft; the narrator streams free text; profile
-        // suggestions are a plain JSON message.
+        // The story creator and the import stream structured JSON; the narrator streams free
+        // text; profile suggestions are a plain JSON message.
         const body = JSON.parse(raw || '{}')
         if (body.stream) {
           res.writeHead(200, { 'content-type': 'text/event-stream' })
-          res.end(events(body.output_config?.format ? draft : 'Les vagues battent la jetée.'))
+          res.end(events(fakeAnswer(body) ?? (body.output_config?.format ? draft : 'Les vagues battent la jetée.')))
         } else {
           res.writeHead(200, { 'content-type': 'application/json' })
           res.end(JSON.stringify({
@@ -550,5 +551,44 @@ test.describe('AI features (fake Claude API)', () => {
     await page.getByRole('link', { name: 'Mes histoires' }).click()
     await expect(page.getByRole('link', { name: 'Clockwork' })).toBeVisible()
     await expect(page.getByText('Import privé')).toBeVisible()
+  })
+
+  test('keeper creates an original story from the questionnaire', async ({ page }) => {
+    await signUp(page)
+    await page.getByRole('link', { name: /^Histoires/ }).click()
+    await page.getByRole('navigation', { name: 'Histoires' }).getByRole('link', { name: 'Créer' }).click()
+    await expect(page.getByRole('heading', { name: 'Créer une histoire', level: 1 })).toBeVisible()
+
+    // 1. Setting: English story, a place of our own, the rest from "Inspire me"
+    await page.getByRole('tab', { name: 'English' }).click()
+    await page.getByLabel('Lieu', { exact: true }).fill('A mill town')
+    await page.getByRole('button', { name: 'Inspire-moi' }).click()
+    await expect(page.getByLabel('Époque', { exact: true })).toHaveValue('1890s')
+    await expect(page.getByLabel('Lieu', { exact: true })).toHaveValue('A mill town')
+    await page.getByRole('button', { name: 'Ambiance' }).last().click()
+
+    // 2. Mood, 3. Mystery, 4. Table
+    await page.getByRole('radio', { name: /Folklorique/ }).check({ force: true })
+    await page.getByRole('button', { name: 'Intrigue' }).last().click()
+    await expect(page.getByLabel('Le mystère', { exact: true })).toHaveValue('A bell rings at night.')
+    await page.getByRole('button', { name: 'Table' }).last().click()
+    await page.getByLabel('Nombre d’investigateurs').selectOption('3')
+    await page.getByLabel('À éviter').fill('No spiders')
+    await page.getByRole('button', { name: 'Plan' }).last().click()
+
+    // 5. Outline: review, rename, drop a scene, then write
+    await page.getByRole('button', { name: 'Écrire le plan' }).click()
+    await expect(page.getByLabel('Titre', { exact: true })).toHaveValue('The Quiet Mill')
+    await page.getByLabel('Titre', { exact: true }).fill('Mill of Silence')
+    await page.getByRole('button', { name: 'Retirer la scène 3' }).click()
+    await page.getByRole('button', { name: "Écrire l'histoire (2 scènes)" }).click()
+
+    // 6. Written: the story page opens
+    await expect(page.getByRole('heading', { name: 'Mill of Silence', level: 1 })).toBeVisible({ timeout: 60_000 })
+    await expect(page.getByText('Mon histoire')).toBeVisible()
+    await page.getByRole('link', { name: 'Histoires', exact: true }).click()
+    await page.getByRole('link', { name: 'Mes histoires' }).click()
+    await expect(page.getByRole('link', { name: 'Mill of Silence' })).toBeVisible()
+    await expect(page.getByText('Création privée')).toBeVisible()
   })
 })

@@ -18,6 +18,7 @@ import { HomePage } from '@/home/HomePage'
 import { ImportPage } from '@/import/ImportPage'
 import { MarketplacePage, MyStoriesPage } from '@/stories/StoryLists'
 import { StoryPage } from '@/stories/StoryPage'
+import { CreateStoryPage } from '@/stories/create/CreateStoryPage'
 import { SettingsPage } from '@/settings/SettingsPage'
 import { Section } from '@/theme/Section'
 
@@ -35,6 +36,7 @@ function GameRoute() {
 const STORY_TABS = [
   { to: '/stories', label: 'Bibliothèque', end: true },
   { to: '/stories/mine', label: 'Mes histoires' },
+  { to: '/stories/create', label: 'Créer' },
   { to: '/stories/import', label: 'Importer' },
 ]
 const INVESTIGATOR_TABS = [
@@ -78,6 +80,7 @@ const router = createBrowserRouter([
         children: [
           { index: true, element: <MarketplacePage /> },
           { path: 'mine', element: <MyStoriesPage /> },
+          { path: 'create', element: <CreateStoryPage /> },
           { path: 'import', element: <ImportPage /> },
         ],
       },

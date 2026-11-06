@@ -423,6 +423,72 @@ export type Database = {
           },
         ]
       }
+      story_creations: {
+        Row: {
+          brief: Json
+          created_at: string
+          draft: Json | null
+          error: string | null
+          finished_at: string | null
+          id: string
+          input_tokens: number
+          outline: Json | null
+          outline_count: number
+          output_tokens: number
+          owner_id: string
+          status: string
+          story_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          brief: Json
+          created_at?: string
+          draft?: Json | null
+          error?: string | null
+          finished_at?: string | null
+          id?: string
+          input_tokens?: number
+          outline?: Json | null
+          outline_count?: number
+          output_tokens?: number
+          owner_id: string
+          status?: string
+          story_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          brief?: Json
+          created_at?: string
+          draft?: Json | null
+          error?: string | null
+          finished_at?: string | null
+          id?: string
+          input_tokens?: number
+          outline?: Json | null
+          outline_count?: number
+          output_tokens?: number
+          owner_id?: string
+          status?: string
+          story_id?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "story_creations_owner_id_fkey"
+            columns: ["owner_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "story_creations_story_id_fkey"
+            columns: ["story_id"]
+            isOneToOne: false
+            referencedRelation: "stories"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       story_imports: {
         Row: {
           created_at: string

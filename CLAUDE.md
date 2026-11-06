@@ -15,6 +15,7 @@ supabase/
   migrations/         schema + RLS (profiles, stories, characters, games, story_imports, import-pages bucket)
   seed.sql            generated from stories/ (`pnpm db:seed-gen`): original stories → marketplace
   functions/import-story/   AI import Edge Function (Deno). Own deno.json.
+  functions/create-story/   AI story creator (questionnaire → outline → scenes). Own deno.json.
   functions/_shared/  import-draft.ts (draft schema, merge, → story.json), import-prompt.ts,
                       spec-bundle.ts (generated from spec/: `pnpm spec:bundle`), database.types.ts (generated)
   tests/              rls.test.ts (security rules), import-story.test.ts (function, fake Claude API)
@@ -115,9 +116,20 @@ Every story also exists as a story pack (spec/STORY_FORMAT.md) in the private `s
 - Keeper UI: toolbar button `#qaScreen` (extraction patch) → `ScreenDialog` (link + QR, follow, preset, sound, push/clear handouts: story handouts, scene images, pictures uploaded to the private `screen-images` bucket, `<owner>/<game>/…`).
 - Tests: `src/screen/*.test.ts`, `supabase/tests/screen.test.ts` (`pnpm test:db`), "ambiance screen" in `e2e/app.spec.ts` (two pages).
 
+## Story creator (AI)
+
+Histoires → **Créer** (`/stories/create`, `src/stories/create/`): a questionnaire, then Claude writes an original private story.
+
+- Steps: Cadre (story language, era, place) · Ambiance (tone, threat) · Intrigue (mystery, ideas) · Table (investigators, length, content to avoid) · Plan · Écriture. react-hook-form + zod (`brief.ts`); everything empty is left to Claude. Progress (answers, creation id, edited outline) is kept in `localStorage` (`grimoire-story-creator`).
+- `create-story` Edge Function, one function with three actions (shared auth, quotas, cached system prompt): `ideas` ("Inspire-moi" / ↻: fills only empty fields, effort low, `STORY_IDEAS_MONTHLY_LIMIT` 50 in `ai_usage` kind `story-ideas`); `outline` (phase 1: secret, acts, scenes, NPCs; a new creation counts against `STORY_CREATE_MONTHLY_LIMIT` 10/month, rewrites with the keeper's notes are capped by `STORY_OUTLINES_PER_STORY` 5); `write` (phase 2: the next `STORY_SCENES_PER_CALL` (2) scenes as an `ImportDraft`, merged, `draftToStory`, validated, saved as a private story + pack story.json; the browser loops until `remaining` is 0, and can resume after an error or a reload). Admins are unlimited.
+- The keeper reviews the outline before any scene is written: rename, rewrite summaries/secret, remove scenes, or ask for a new outline with notes. The edited outline goes with the first `write` call and is frozen after.
+- State: `story_creations` (brief, outline, accumulated draft, story id, tokens; read own, function writes). Created stories carry `meta.tags: ['grimoire-creator']` (badge "Création privée") and `license: private`.
+- Pure logic in `_shared/story-create.ts` (brief/outline parsing, batching, ordering), prompts in `_shared/create-prompt.ts` (originality rules + `FORBIDDEN_NAMES`, lines and veils). Presets (tones, threats, lengths) exist in both `src/stories/create/brief.ts` (French labels) and `_shared/story-create.ts` (English prompt text); a unit test keeps the ids in sync.
+- Tests: `story-create.test.ts` (unit), `supabase/tests/create-story.test.ts` (function, fake Claude answers from `supabase/tests/fake-creator.ts`, also used by the e2e test; set `FUNCTIONS_URL` to test a function served elsewhere, e.g. `deno run` of `index.ts` with `DENO_SERVE_ADDRESS`), e2e "keeper creates an original story".
+
 ## Main menu
 
-Reprendre la partie · Nouvelle partie (→ library) · **Histoires** (`/stories`: tabs Bibliothèque, Mes histoires `/stories/mine`, Importer `/stories/import`) · **Investigateurs** (`/characters`: tabs Investigateurs, Joueurs `/characters/joueurs`) · **Réglages** (`/settings`: theme, language). Sections share `src/theme/Section.tsx` (title + tab nav + Outlet). `/marketplace` and `/import` redirect to their new place.
+Reprendre la partie · Nouvelle partie (→ library) · **Histoires** (`/stories`: tabs Bibliothèque, Mes histoires `/stories/mine`, Créer `/stories/create`, Importer `/stories/import`) · **Investigateurs** (`/characters`: tabs Investigateurs, Joueurs `/characters/joueurs`) · **Réglages** (`/settings`: theme, language). Sections share `src/theme/Section.tsx` (title + tab nav + Outlet). `/marketplace` and `/import` redirect to their new place.
 
 - **Players** (`players` table): a first name, owned by the keeper. `characters.player_id` (FK on `(player_id, owner_id)`, so only your own players; deleting a player sets it to null). Investigators' progression stays in `characters.data.progress`; the Joueurs page reads it with `progressSummary`. The engine gets the player's name via `NewGame.party[].player`.
 - **Language** (`src/settings/lang.ts`) is the `gardien-lang` key the game engine also reads: one setting for the app, the game screen, the default AI-import language and the AI profile suggestions.
