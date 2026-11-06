@@ -49,6 +49,8 @@ export const EN: Record<string, string> = {
   'Compte créé. Ouvre le lien envoyé à {email} pour le confirmer, puis connecte-toi.': 'Account created. Open the link sent to {email} to confirm it, then sign in.',
   'Créer mon compte': 'Create my account',
   'Connecte-toi pour retrouver tes investigateurs et tes parties en cours.': 'Sign in to find your investigators and your games in progress.',
+  'Continuer avec Google': 'Continue with Google',
+  'ou': 'or',
 
   // ---------------------------------------------------------------- settings
   'Gardés sur cet appareil.': 'Kept on this device.',

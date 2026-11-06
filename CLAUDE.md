@@ -152,6 +152,13 @@ Reprendre la partie · Nouvelle partie (→ library) · **Histoires** (`/stories
 - Test e-mail addresses use `@example.com`: Supabase Auth rejects `.local` domains.
 - **Deploying the player companion**: merging to `main` does it in the right order (deploy workflow above): the companion migrations (`20261106090000` to `20261106090500`), then `suggest-profile`, which now takes `storyLink` for the investigator's link with the story and `link` for the companion token, then the site. One manual prerequisite: hosted Realtime must allow public broadcast channels (the companion topics are public, `private: false`).
 
+## Google sign-in
+
+- Login page (`src/auth/LoginPage.tsx`, `src/auth/oauth.ts`): "Continuer avec Google" above the e-mail form, shown only when Google is enabled in Supabase Auth (read from Auth's public `/auth/v1/settings`), so switching it on or off in the dashboard needs no deploy. Locally it is off (`[auth.external.google]` in `config.toml`, ids from `supabase/.env`). Hosted: on. No Apple sign-in (it needs the paid Apple Developer Program).
+- Return: Google sends the keeper back to `window.location.origin`, which must be in Auth's redirect allow-list (Vercel previews too, if wanted: `https://*-<team>.vercel.app/**`). Errors come back in the URL (`error_description`) and show on the login page (`returnedOAuthError`, read at start-up because the redirect to `/login` drops it).
+- Accounts: Supabase links Google to an existing account with the same verified e-mail. A new account gets its profile name from Google (`full_name`/`name`, migration `20261106130000`) and its language (`user_metadata.lang`, for the e-mails) on first sign-in (`AuthProvider`).
+- Setup (hosted): Google Cloud Console → OAuth consent screen (Grimoire, scopes openid/email/profile, published) → Credentials → OAuth client ID, type Web: JavaScript origin `https://www.legrimoire.quest`, redirect URI `https://fovyhcbasmmstkocavlp.supabase.co/auth/v1/callback`. Client ID + secret → Supabase Dashboard → Authentication → Providers → Google.
+
 ## Accounts, marketplace, import (Supabase)
 
 - **Only the keeper has an account.** Investigators belong to the keeper's account; players don't log in.

@@ -13,6 +13,7 @@ import { supabase } from '@/lib/supabase'
 import { Epigraph, Masthead, SkinToggle } from '@/theme/Masthead'
 import { useT, type T } from '@/i18n/t'
 import { useAuth } from './auth'
+import { returnedOAuthError, signInWithGoogle, useGoogleEnabled } from './oauth'
 
 const makeSchema = (t: T) =>
   z.object({
@@ -29,7 +30,7 @@ export function LoginPage() {
   const t = useT()
   const schema = useMemo(() => makeSchema(t), [t])
   const [mode, setMode] = useState<Mode>('signin')
-  const [error, setError] = useState<string | null>(null)
+  const [error, setError] = useState<string | null>(returnedOAuthError)
   // Where accounts need an e-mail confirmation (hosted Supabase), sign-up returns no session.
   const [confirmTo, setConfirmTo] = useState<string | null>(null)
   const form = useForm<Values>({ resolver: zodResolver(schema), defaultValues: { email: '', password: '', displayName: '' } })
@@ -69,6 +70,7 @@ export function LoginPage() {
               <TabsTrigger value="signup">{t('Créer un compte')}</TabsTrigger>
             </TabsList>
           </Tabs>
+          <GoogleButton onError={setError} />
           <form onSubmit={form.handleSubmit(onSubmit)} noValidate>
             <FieldGroup>
               {mode === 'signup' && (
@@ -122,5 +124,49 @@ export function LoginPage() {
         />
       </div>
     </main>
+  )
+}
+
+/** Shown only when Google sign-in is enabled in Supabase Auth (nothing, not even the "or" rule, otherwise). */
+function GoogleButton({ onError }: { onError: (message: string | null) => void }) {
+  const t = useT()
+  const enabled = useGoogleEnabled().data ?? false
+  const [pending, setPending] = useState(false)
+  if (!enabled) return null
+
+  async function go() {
+    onError(null)
+    setPending(true)
+    const { error } = await signInWithGoogle()
+    // On success the browser is already leaving for Google's page.
+    if (error) {
+      onError(error.message)
+      setPending(false)
+    }
+  }
+
+  return (
+    <div className="flex flex-col gap-3">
+      <Button type="button" variant="outline" disabled={pending} onClick={go}>
+        {pending ? <Spinner data-icon="inline-start" /> : <GoogleIcon />}
+        {t('Continuer avec Google')}
+      </Button>
+      <div className="flex items-center gap-3 text-xs uppercase tracking-widest text-muted-foreground">
+        <span className="h-px flex-1 bg-border" />
+        {t('ou')}
+        <span className="h-px flex-1 bg-border" />
+      </div>
+    </div>
+  )
+}
+
+function GoogleIcon() {
+  return (
+    <svg data-icon="inline-start" viewBox="0 0 24 24" aria-hidden="true" className="size-4">
+      <path fill="#4285F4" d="M23.5 12.3c0-.8-.1-1.6-.2-2.3H12v4.5h6.5a5.5 5.5 0 0 1-2.4 3.6v3h3.9c2.3-2.1 3.5-5.2 3.5-8.8Z" />
+      <path fill="#34A853" d="M12 24c3.2 0 6-1.1 7.9-2.9l-3.9-3c-1 .7-2.4 1.1-4 1.1-3.1 0-5.7-2.1-6.6-4.9h-4v3.1A12 12 0 0 0 12 24Z" />
+      <path fill="#FBBC05" d="M5.4 14.3a7.2 7.2 0 0 1 0-4.6V6.6h-4a12 12 0 0 0 0 10.8l4-3.1Z" />
+      <path fill="#EA4335" d="M12 4.8c1.7 0 3.3.6 4.5 1.8l3.4-3.4A12 12 0 0 0 1.4 6.6l4 3.1C6.3 6.9 8.9 4.8 12 4.8Z" />
+    </svg>
   )
 }

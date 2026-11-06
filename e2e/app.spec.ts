@@ -33,6 +33,29 @@ test('login form validates input', async ({ page }) => {
   await expect(page.getByText('Au moins 8 caractères')).toBeVisible()
 })
 
+test('the Google button follows the provider being enabled in Supabase Auth', async ({ page }) => {
+  // Local config has it off: no button.
+  await page.goto('/login')
+  await expect(page.getByRole('button', { name: 'Se connecter' })).toBeVisible()
+  await expect(page.getByRole('button', { name: 'Continuer avec Google' })).toHaveCount(0)
+
+  // On (as the hosted project reports it): the button leads to Auth's authorize URL.
+  await page.route('**/auth/v1/settings', async (route) => {
+    const res = await route.fetch()
+    const settings = await res.json()
+    await route.fulfill({ response: res, json: { ...settings, external: { ...settings.external, google: true } } })
+  })
+  await page.route('**/auth/v1/authorize**', (route) => route.fulfill({ body: 'provider page' }))
+  await page.reload()
+  await page.getByRole('button', { name: 'Continuer avec Google' }).click()
+  await expect(page).toHaveURL(/\/auth\/v1\/authorize\?provider=google&redirect_to=/)
+
+  // Back from Google with an error (e.g. cancelled): shown on the login page.
+  await page.goto('/?error=access_denied&error_description=Cancelled%20by%20user')
+  await expect(page).toHaveURL(/\/login$/)
+  await expect(page.getByText('Cancelled by user')).toBeVisible()
+})
+
 test('keeper creates an investigator, then plays a marketplace story', async ({ page }) => {
   test.setTimeout(90_000) // long flow: wizard, then game(s)
   await signUp(page)
