@@ -222,6 +222,75 @@ test('game screen: the original engine runs a story, rolls, saves to the account
   expect(history).toContain('Survived the lighthouse')
 })
 
+test('ambiance screen: follows the scene, shows the handouts the keeper pushes, link revocable', async ({ page, context }) => {
+  test.setTimeout(120_000)
+  await signUp(page)
+  await page.goto('/characters/new')
+  await createJournalist(page, 'Vera Holt')
+  await page.goto('/stories')
+  await page.getByRole('link', { name: 'The Silent Light' }).click()
+  await page.getByLabel(/Vera Holt/).check()
+  await page.getByRole('button', { name: 'Lancer la partie' }).click()
+  const game = page.frameLocator('iframe[title="Partie"]')
+  await expect(game.locator('#scene h2')).toBeVisible()
+
+  // The toolbar opens the screen dialog: create the link the TV opens
+  await game.locator('#qaScreen').click()
+  const dialog = page.getByRole('dialog')
+  await expect(dialog.getByRole('heading', { name: "L'écran de la table" })).toBeVisible()
+  await dialog.getByRole('button', { name: "Créer le lien de l'écran" }).click()
+  const url = (await dialog.getByTestId('screen-url').textContent())!
+  expect(url).toMatch(/\/screen\/[A-Za-z0-9_-]{32,}$/)
+
+  // A second window, no account: the first scene's ambiance (its sounds say wind: fog)
+  const tv = await context.newPage()
+  tv.on('pageerror', (e) => errors.push(e.message))
+  await tv.goto(url)
+  const stage = tv.locator('[data-scene-key]')
+  await expect(stage).toHaveAttribute('data-scene-key', /^fog\|/)
+  await expect(tv.getByRole('button', { name: 'Toucher pour lancer l’écran' })).toBeVisible()
+
+  // The keeper moves on: the screen follows (a fireplace and a clock: the hearth)
+  await page.keyboard.press('Escape')
+  await game.locator('#scene .scene-foot .btn.prim[data-go]').click()
+  await expect(stage).toHaveAttribute('data-scene-key', /^hearth\|/)
+
+  // Push this scene's handout: it appears on the screen, on paper
+  await game.locator('#qaScreen').click()
+  await dialog.getByRole('button', { name: /^Montrer à l’écran/ }).first().click()
+  const handout = tv.locator('figure.scr-handout')
+  await expect(handout).toBeVisible()
+  await expect(handout.locator('.scr-letter')).not.toBeEmpty()
+  await expect(handout.locator('figcaption')).not.toBeEmpty()
+
+  // An ad-hoc picture from the keeper's disk replaces it
+  const png = Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==', 'base64')
+  await dialog.getByLabel('Image à montrer').setInputFiles({ name: 'map.png', mimeType: 'image/png', buffer: png })
+  await expect(handout.locator('img')).toHaveAttribute('src', /\/storage\/v1\/object\/sign\/screen-images\//)
+  await expect(dialog.getByText('Images envoyées')).toBeVisible()
+
+  // Clear the screen; pick another preset by hand
+  await dialog.getByRole('button', { name: "Effacer l'écran" }).click()
+  await expect(handout).toHaveCount(0)
+  await dialog.getByLabel('Ambiance', { exact: true }).selectOption('storm')
+  await expect(stage).toHaveAttribute('data-scene-key', /^storm\|/)
+
+  // Pinned: the screen stays put when the scene changes
+  await dialog.getByRole('checkbox', { name: 'Suivre la scène' }).click()
+  await page.keyboard.press('Escape')
+  await game.locator('#scene .scene-foot .btn.prim[data-go]').click()
+  await expect(game.locator('#jList li').first()).toBeVisible()
+  await tv.waitForTimeout(1500)
+  await expect(stage).toHaveAttribute('data-scene-key', /^storm\|/)
+
+  // Revoke and replace: the old link stops working
+  await game.locator('#qaScreen').click()
+  await dialog.getByRole('button', { name: 'Révoquer et remplacer' }).click()
+  await expect(dialog.getByTestId('screen-url')).not.toHaveText(url)
+  await tv.reload()
+  await expect(tv.getByText("Ce lien d'écran n'est plus valide.")).toBeVisible()
+})
+
 test('story packs: import a .zip with its files, download it back, re-import updates, folders of packs', async ({ page }, testInfo) => {
   const story = JSON.parse(readFileSync('stories/the-silent-light/story.json', 'utf8'))
   story.meta.id = 'lighthouse-pack'

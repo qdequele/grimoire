@@ -13,6 +13,7 @@ import { Notebook } from '@/companion/Notebook'
 import { PickPage } from '@/companion/PickPage'
 import { ProfileTab, SheetPage, SheetTab } from '@/companion/SheetPage'
 import { GamePage } from '@/games/GamePage'
+import { ScreenPage } from '@/screen/ScreenPage'
 import { HomePage } from '@/home/HomePage'
 import { ImportPage } from '@/import/ImportPage'
 import { MarketplacePage, MyStoriesPage } from '@/stories/StoryLists'
@@ -47,6 +48,8 @@ const router = createBrowserRouter([
   { path: '/login', element: <LoginPage /> },
   // Full-screen game screen, outside the app chrome.
   { path: '/games/:id', element: <RequireAuth><GameRoute /></RequireAuth> },
+  // Ambiance screen: a TV or tablet in the middle of the table, opened from the keeper's link (no account).
+  { path: '/screen/:token', element: <ScreenPage /> },
   // Player companion: public pages opened from a table link (no account).
   {
     path: '/t/:token',

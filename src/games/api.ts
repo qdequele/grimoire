@@ -18,7 +18,7 @@ export interface GameState {
 
 export type GameRow = Omit<Tables<'games'>, 'state'> & {
   state: GameState
-  story: { id: string; content: StoryContent } | null
+  story: { id: string; owner_id: string | null; pack_files: string[]; content: StoryContent } | null
 }
 
 export const gameKeys = {
@@ -27,7 +27,7 @@ export const gameKeys = {
   one: (id: string) => [...gameKeys.all, 'one', id] as const,
 }
 
-const SELECT = '*, story:stories(id, content)'
+const SELECT = '*, story:stories(id, owner_id, pack_files, content)'
 const asGame = (row: unknown) => row as GameRow
 
 export function useMyGames() {

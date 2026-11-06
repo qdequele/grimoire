@@ -67,6 +67,8 @@ export interface PlayHost {
   quit: () => void
   /** Open the "players at the table" dialog. */
   openTable?: () => void
+  /** Open the ambiance screen dialog (link for the TV, handouts to push). */
+  openScreen?: () => void
   /** The narrator's text generation (what claude.use("sample") gave in claude.ai). */
   sample?: (messages: SampleMessage[], opts?: SampleOptions) => Promise<{ text: string }>
 }
