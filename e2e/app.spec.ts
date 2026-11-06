@@ -33,6 +33,30 @@ test('login form validates input', async ({ page }) => {
   await expect(page.getByText('Au moins 8 caractères')).toBeVisible()
 })
 
+test('Google and Apple buttons follow the providers enabled in Supabase Auth', async ({ page }) => {
+  // Local config has both off: no buttons.
+  await page.goto('/login')
+  await expect(page.getByRole('button', { name: 'Se connecter' })).toBeVisible()
+  await expect(page.getByRole('button', { name: 'Continuer avec Google' })).toHaveCount(0)
+
+  // Both on (as the hosted project reports them): a button each, leading to Auth's authorize URL.
+  await page.route('**/auth/v1/settings', async (route) => {
+    const res = await route.fetch()
+    const settings = await res.json()
+    await route.fulfill({ response: res, json: { ...settings, external: { ...settings.external, google: true, apple: true } } })
+  })
+  await page.route('**/auth/v1/authorize**', (route) => route.fulfill({ body: 'provider page' }))
+  await page.reload()
+  await expect(page.getByRole('button', { name: 'Continuer avec Apple' })).toBeVisible()
+  await page.getByRole('button', { name: 'Continuer avec Google' }).click()
+  await expect(page).toHaveURL(/\/auth\/v1\/authorize\?provider=google&redirect_to=/)
+
+  // Back from the provider with an error (e.g. cancelled): shown on the login page.
+  await page.goto('/?error=access_denied&error_description=Cancelled%20by%20user')
+  await expect(page).toHaveURL(/\/login$/)
+  await expect(page.getByText('Cancelled by user')).toBeVisible()
+})
+
 test('keeper creates an investigator, then plays a marketplace story', async ({ page }) => {
   test.setTimeout(90_000) // long flow: wizard, then game(s)
   await signUp(page)

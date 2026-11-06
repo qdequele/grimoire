@@ -27,6 +27,7 @@
     "stories:convert": "eval \"$(supabase status -o env | grep -E '^(API_URL|SERVICE_ROLE_KEY)=' | sed -E 's/^API_URL=/export SUPABASE_URL=/; s/^SERVICE_ROLE_KEY=/export SUPABASE_SERVICE_ROLE_KEY=/')\" && node scripts/convert-legacy.ts",
     "emails": "node scripts/gen-email-templates.mjs",
     "emails:push": "node scripts/push-email-templates.mjs",
+    "auth:apple-secret": "node scripts/apple-client-secret.mjs",
     "packs:sync": "eval \"$(supabase status -o env | grep -E '^(API_URL|SERVICE_ROLE_KEY)=' | sed -E 's/^API_URL=/export SUPABASE_URL=/; s/^SERVICE_ROLE_KEY=/export SUPABASE_SERVICE_ROLE_KEY=/')\" && node scripts/sync-packs.ts",
     "icons": "node scripts/gen-icons.mjs"
   },
