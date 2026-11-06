@@ -1,6 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { strToU8, zipSync } from 'fflate'
-import { Copy, Download } from 'lucide-react'
+import { Copy, Download, ExternalLink } from 'lucide-react'
+import { Link } from 'react-router'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -8,18 +9,10 @@ import { Skeleton } from '@/components/ui/skeleton'
 import { supabase } from '@/lib/supabase'
 import { Rich } from '@/i18n/Rich'
 import { useT } from '@/i18n/t'
+import { DIRECTORY_LISTING } from '@/legal/info'
+import { LEGAL_PATHS } from '@/legal/paths'
+import { CHATGPT_PLUGINS_URL, claudeAddLink, connectorUrl } from './connectorUrl'
 import skill from '../../skills/grimoire-story/SKILL.md?raw'
-
-/**
- * The MCP connector's address (supabase/functions/mcp): www.legrimoire.quest/mcp in production and
- * previews (vercel.json rewrites it to the function), the function itself when running locally.
- */
-function connectorUrl(): string {
-  const configured = import.meta.env.VITE_MCP_URL as string | undefined
-  if (configured) return configured
-  const { hostname, origin } = window.location
-  return hostname === 'localhost' || hostname === '127.0.0.1' ? `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/mcp` : `${origin}/mcp`
-}
 
 const GRANTS_KEY = ['oauth-grants'] as const
 
@@ -80,6 +73,23 @@ export function ChatConnectors() {
         </p>
       </header>
 
+      {/* Claude: its install link opens the add-connector dialog already filled in, until Grimoire is in
+          its directory. ChatGPT has no such link: the button opens the page where the address is pasted. */}
+      <div className="flex flex-wrap gap-3" data-testid="connector-buttons">
+        <Button nativeButton={false} render={<a href={DIRECTORY_LISTING.claude || claudeAddLink(url)} target="_blank" rel="noreferrer" />}>
+          <ExternalLink data-icon="inline-start" />
+          {t('Ajouter à Claude')}
+        </Button>
+        <Button
+          variant={DIRECTORY_LISTING.chatgpt ? 'default' : 'outline'}
+          nativeButton={false}
+          render={<a href={DIRECTORY_LISTING.chatgpt || CHATGPT_PLUGINS_URL} target="_blank" rel="noreferrer" />}
+        >
+          <ExternalLink data-icon="inline-start" />
+          {DIRECTORY_LISTING.chatgpt ? t('Ajouter à ChatGPT') : t('Ouvrir ChatGPT')}
+        </Button>
+      </div>
+
       <div className="flex flex-col gap-2">
         <label htmlFor="connector-url" className="eyebrow">{t('Adresse du connecteur')}</label>
         <div className="flex gap-2">
@@ -92,10 +102,25 @@ export function ChatConnectors() {
       </div>
 
       <ol className="flex list-decimal flex-col gap-2 pl-5 font-serif">
-        <li><Rich text={t('**Claude** (site ou application) : Réglages → Connecteurs → Ajouter un connecteur personnalisé. Colle l’adresse, puis connecte-toi à Grimoire.')} /></li>
-        <li><Rich text={t('**ChatGPT** : Réglages → Applications et connecteurs → Paramètres avancés → active le mode développeur, puis Créer. Colle l’adresse, choisis OAuth, puis connecte-toi à Grimoire.')} /></li>
+        <li>
+          <Rich
+            text={DIRECTORY_LISTING.claude
+              ? t('**Claude** : « Ajouter à Claude » ouvre la fiche de Grimoire. Clique sur Connecter, puis connecte-toi à Grimoire.')
+              : t('**Claude** : « Ajouter à Claude » ouvre Claude avec Grimoire déjà rempli. Clique sur Ajouter, puis Connecter, et connecte-toi à Grimoire.')}
+          />
+        </li>
+        <li>
+          <Rich
+            text={DIRECTORY_LISTING.chatgpt
+              ? t('**ChatGPT** : « Ajouter à ChatGPT » ouvre la fiche de Grimoire. Clique sur Connecter, puis connecte-toi à Grimoire.')
+              : t('**ChatGPT** : « Ouvrir ChatGPT », puis + → ajouter un serveur MCP personnalisé. Nomme-le Grimoire, colle l’adresse, choisis OAuth, accepte l’avertissement et crée-le, puis connecte-toi à Grimoire.')}
+          />
+        </li>
         <li>{t('Demande par exemple : « Crée-moi une histoire Grimoire dans un village de pêcheurs en 1925, pour trois joueurs. »')}</li>
       </ol>
+      <p className="text-sm text-muted-foreground">
+        <Link to={LEGAL_PATHS.help[t.lang]} className="text-gold underline underline-offset-4">{t('Mode d’emploi complet du connecteur')}</Link>
+      </p>
 
       <div className="flex flex-wrap items-center gap-3">
         <Button variant="outline" onClick={downloadSkill}>

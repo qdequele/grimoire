@@ -12,6 +12,7 @@ import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { supabase } from '@/lib/supabase'
 import { Epigraph, Masthead, SkinToggle } from '@/theme/Masthead'
 import { useT, type T } from '@/i18n/t'
+import { LegalLinks } from '@/legal/LegalPage'
 import { useAuth } from './auth'
 import { returnedOAuthError, signInWithGoogle, useGoogleEnabled } from './oauth'
 
@@ -120,6 +121,7 @@ export function LoginPage() {
             </FieldGroup>
           </form>
           <SkinToggle />
+          <LegalLinks t={t} />
         </div>
       </div>
 

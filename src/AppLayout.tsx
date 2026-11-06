@@ -15,6 +15,7 @@ import {
 import { Spinner } from '@/components/ui/spinner'
 import { supabase } from '@/lib/supabase'
 import { useT } from '@/i18n/t'
+import { LegalLinks } from '@/legal/LegalPage'
 import { cn } from '@/lib/utils'
 
 const NAV = [
@@ -125,6 +126,9 @@ export function AppLayout() {
       <main className={cn('mx-auto w-full max-w-6xl flex-1 px-4 sm:px-10', isHome ? 'py-16 lg:py-[4.5rem]' : 'py-10')}>
         <Outlet />
       </main>
+      <footer className="mx-auto w-full max-w-6xl px-4 pb-6 sm:px-10">
+        <LegalLinks t={t} />
+      </footer>
     </div>
   )
 }

@@ -6,6 +6,7 @@ import { Spinner } from '@/components/ui/spinner'
 import { supabase } from '@/lib/supabase'
 import { Epigraph, Masthead } from '@/theme/Masthead'
 import { useT } from '@/i18n/t'
+import { LegalLinks } from '@/legal/LegalPage'
 
 const hostOf = (url: string) => {
   try {
@@ -98,6 +99,7 @@ export function OAuthConsentPage() {
               <p className="text-sm text-muted-foreground">{t('Tu pourras la déconnecter à tout moment dans Réglages.')}</p>
             </>
           )}
+          <LegalLinks t={t} />
         </div>
       </div>
 

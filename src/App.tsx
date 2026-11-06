@@ -18,6 +18,8 @@ import { GamePage } from '@/games/GamePage'
 import { ScreenPage } from '@/screen/ScreenPage'
 import { HomePage } from '@/home/HomePage'
 import { ImportPage } from '@/import/ImportPage'
+import { LegalPage } from '@/legal/LegalPage'
+import { LEGAL_PATHS, type LegalKind } from '@/legal/paths'
 import { MarketplacePage, MyStoriesPage } from '@/stories/StoryLists'
 import { StoryPage } from '@/stories/StoryPage'
 import { CreateStoryPage } from '@/stories/create/CreateStoryPage'
@@ -50,6 +52,11 @@ const queryClient = new QueryClient({ defaultOptions: { queries: { staleTime: 30
 
 const router = createBrowserRouter([
   { path: '/login', element: <LoginPage /> },
+  // Privacy policy, terms and connector help: public, one address per language (the ChatGPT and
+  // Claude directories link to them).
+  ...(Object.keys(LEGAL_PATHS) as LegalKind[]).flatMap((kind) =>
+    (['fr', 'en'] as const).map((lang) => ({ path: LEGAL_PATHS[kind][lang], element: <LegalPage key={`${kind}-${lang}`} kind={kind} lang={lang} /> })),
+  ),
   // ChatGPT or Claude asks to use the MCP connector (Supabase Auth's OAuth server sends the keeper here).
   { path: '/oauth/consent', element: <RequireAuth><OAuthConsentPage /></RequireAuth> },
   // Full-screen game screen, outside the app chrome.
