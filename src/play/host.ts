@@ -49,12 +49,14 @@ export interface NotebookEntry { id: string; body: string; createdAt: string }
 
 /** What the engine exposes to the app, as window.GRIMOIRE_ENGINE inside the iframe. */
 export interface EngineApi {
-  /** Set live values of the party slot of this investigator (current story); also S.prog[cid].san. Saves and re-renders. */
+  /** Set live values of the party slot of this investigator (current story); also S.prog[cid].san. Each value that changes gets a Journal line ("Name : PV 13 → 12"). Saves and re-renders. */
   setPoints(cid: string, v: { pv: number; san: number; chance: number; pm: number }): void
   /** Add an account investigator (legacy character from toLegacyCharacter) to the current party, if not there. `progress` is the account's characters.data.progress; the player is found or created in S.players. */
   addMember(c: unknown, player: string, progress?: Record<string, unknown>): void
   /** Notebooks shown on the investigator cards, by character id. */
   setNotebooks(n: Record<string, NotebookEntry[]>): void
+  /** A roll made on a phone, as a Journal line (plain text, escaped by the engine) under Dés, Tests or Santé mentale. Saves. */
+  logRoll(text: string, kind: 'de' | 'test' | 'san'): void
 }
 
 export interface PlayHost {
