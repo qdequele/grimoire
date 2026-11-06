@@ -1,6 +1,5 @@
--- Google and Apple sign-in: accounts made through a provider have no display_name in their
--- metadata (the sign-up form sets it); take the provider's name before falling back to the
--- e-mail's local part (for Apple's private relay addresses, a random string).
+-- Google sign-in: accounts made through Google have no display_name in their metadata (the
+-- sign-up form sets it); take Google's name before falling back to the e-mail's local part.
 create or replace function public.handle_new_user()
 returns trigger
 language plpgsql

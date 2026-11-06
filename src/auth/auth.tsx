@@ -19,7 +19,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     supabase.auth.getSession().then(({ data }) => setState({ session: data.session, ready: true }))
     const { data } = supabase.auth.onAuthStateChange((_event, session) => {
       setState({ session, ready: true })
-      // Accounts made with Google or Apple skip the sign-up form, which records the keeper's
+      // Accounts made with Google skip the sign-up form, which records the keeper's
       // language for the e-mails (supabase/templates read user_metadata.lang): record it now.
       // Deferred: Auth calls made inside this callback deadlock.
       if (session && !session.user.user_metadata?.lang)

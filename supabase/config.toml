@@ -335,11 +335,11 @@ max_frequency = "5s"
 # Use an external OAuth provider. The full list of providers are: `apple`, `azure`, `bitbucket`,
 # `discord`, `facebook`, `github`, `gitlab`, `google`, `keycloak`, `linkedin_oidc`, `notion`, `twitch`,
 # `twitter`, `x`, `slack`, `spotify`, `workos`, `zoom`.
-# Google and Apple sign-in. The login page shows a provider's button only when it is enabled here
-# (locally) or in the hosted project's dashboard (Authentication → Providers): it reads Auth's
-# public /settings. To try one locally: set enabled = true, put the ids in supabase/.env
-# (gitignored, read by the CLI), add http://127.0.0.1:54321/auth/v1/callback to the provider's
-# allowed redirect URIs, then `supabase stop && supabase start`. Setup: CLAUDE.md, "Google and Apple sign-in".
+# Google sign-in. The login page shows its button only when it is enabled here (locally) or in the
+# hosted project's dashboard (Authentication → Providers): it reads Auth's public /settings. To try it
+# locally: set enabled = true, put the ids in supabase/.env (gitignored, read by the CLI), add
+# http://127.0.0.1:54321/auth/v1/callback to the OAuth client's redirect URIs, then
+# `supabase stop && supabase start`. Setup: CLAUDE.md, "Google sign-in".
 [auth.external.google]
 enabled = false
 client_id = "env(SUPABASE_AUTH_EXTERNAL_GOOGLE_CLIENT_ID)"
@@ -351,13 +351,17 @@ email_optional = false
 
 [auth.external.apple]
 enabled = false
-# The Services ID (e.g. quest.legrimoire.web).
-client_id = "env(SUPABASE_AUTH_EXTERNAL_APPLE_CLIENT_ID)"
-# A JWT signed with the Sign in with Apple key, valid 6 months at most: `pnpm auth:apple-secret`.
+client_id = ""
+# DO NOT commit your OAuth provider secret to git. Use environment variable substitution instead:
 secret = "env(SUPABASE_AUTH_EXTERNAL_APPLE_SECRET)"
+# Overrides the default auth callback URL derived from auth.external_url.
 redirect_uri = ""
+# Overrides the default auth provider URL. Used to support self-hosted gitlab, single-tenant Azure,
+# or any other third-party OIDC providers.
 url = ""
+# If enabled, the nonce check will be skipped. Required for local sign in with Google auth.
 skip_nonce_check = false
+# If enabled, it will allow the user to successfully authenticate when the provider does not return an email address.
 email_optional = false
 
 # Allow Solana wallet holders to sign in to your project via the Sign in with Solana (SIWS, EIP-4361) standard.

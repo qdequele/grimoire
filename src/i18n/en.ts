@@ -50,7 +50,6 @@ export const EN: Record<string, string> = {
   'Créer mon compte': 'Create my account',
   'Connecte-toi pour retrouver tes investigateurs et tes parties en cours.': 'Sign in to find your investigators and your games in progress.',
   'Continuer avec Google': 'Continue with Google',
-  'Continuer avec Apple': 'Continue with Apple',
   'ou': 'or',
 
   // ---------------------------------------------------------------- settings
