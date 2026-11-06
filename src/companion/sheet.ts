@@ -1,5 +1,6 @@
 // What the player's phone shows of an investigator: pure helpers, no UI.
-import { skillKeyLabel, type CharacterData } from '@/characters/character'
+import { hasMarkup, SHEET_LIMITS, skillKeyLabel, type CharacterData } from '@/characters/character'
+import type { ProfileField } from '@/rules/d100'
 import type { Points } from '@/play/companion'
 
 export interface SkillRow {
@@ -52,4 +53,36 @@ export function companionSheet(data: CharacterData): CharacterData {
     ...(data.age === undefined ? {} : { age: Math.min(150, Math.max(0, Math.round(data.age))) }),
     skills: Object.fromEntries(Object.entries(data.skills ?? {}).map(([k, v]) => [k, clamp(v, 99)])),
   }
+}
+
+/** A sheet field the server would refuse: too long, or holding characters that build HTML. */
+export type SheetProblem =
+  | { field: 'name' | 'occupation' | 'link' | 'playerName'; reason: 'tooLong'; max: number }
+  | { field: 'name' | 'playerName'; reason: 'markup' }
+  | { field: 'profile'; id: ProfileField; reason: 'tooLong'; max: number }
+  | { field: 'skill'; key: string; reason: 'tooLong'; max: number }
+  | { field: 'skill'; key: string; reason: 'markup' }
+
+/**
+ * What companion_create_character would refuse in this sheet (the `companionSheet` version) and first
+ * name, so the phone can say which field instead of "a value was refused". Same limits as the server.
+ */
+export function companionSheetProblems(data: CharacterData, playerName: string): SheetProblem[] {
+  const out: SheetProblem[] = []
+  const name = data.name.trim()
+  if (name.length > SHEET_LIMITS.name) out.push({ field: 'name', reason: 'tooLong', max: SHEET_LIMITS.name })
+  if (hasMarkup(name)) out.push({ field: 'name', reason: 'markup' })
+  if ((data.occupation ?? '').length > SHEET_LIMITS.occupation) out.push({ field: 'occupation', reason: 'tooLong', max: SHEET_LIMITS.occupation })
+  if ((data.link ?? '').length > SHEET_LIMITS.link) out.push({ field: 'link', reason: 'tooLong', max: SHEET_LIMITS.link })
+  for (const [id, text] of Object.entries(data.profile ?? {}) as Array<[ProfileField, string | undefined]>) {
+    if ((text ?? '').length > SHEET_LIMITS.profile) out.push({ field: 'profile', id, reason: 'tooLong', max: SHEET_LIMITS.profile })
+  }
+  for (const key of Object.keys(data.skills ?? {})) {
+    if (key.length > SHEET_LIMITS.skillKey) out.push({ field: 'skill', key, reason: 'tooLong', max: SHEET_LIMITS.skillKey })
+    if (hasMarkup(key)) out.push({ field: 'skill', key, reason: 'markup' })
+  }
+  const player = playerName.trim()
+  if (player.length > SHEET_LIMITS.playerName) out.push({ field: 'playerName', reason: 'tooLong', max: SHEET_LIMITS.playerName })
+  if (hasMarkup(player)) out.push({ field: 'playerName', reason: 'markup' })
+  return out
 }

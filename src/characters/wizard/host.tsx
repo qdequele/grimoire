@@ -38,6 +38,11 @@ export interface WizardHost {
   suggestProfile: (body: ProfileRequest) => Promise<ProfileSuggestions>
   /** localStorage key of the unsaved draft. */
   draftKey: string
+  /**
+   * Refuse < > & " in the name and the specialties: on a phone, where the database refuses them
+   * (they would build HTML on the keeper's game screen). The keeper's own sheets may hold them.
+   */
+  noMarkup?: boolean
 }
 
 /** Calls suggest-profile with the given extra body fields (the keeper's session goes in the headers). */

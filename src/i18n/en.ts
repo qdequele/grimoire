@@ -513,6 +513,10 @@ export const EN: Record<string, string> = {
   '{name} rejoint la partie.': '{name} joins the game.',
   'La table est complète : le gardien ne peut pas accueillir un investigateur de plus.': 'The table is full: the keeper cannot take one more investigator.',
   'Vérifie la fiche : une valeur a été refusée.': 'Check the sheet: a value was refused.',
+  '« {field} » : {max} caractères au plus.': '“{field}”: {max} characters at most.',
+  '« {field} » : les caractères < > & et " ne sont pas acceptés.': '“{field}”: the characters < > & and " are not accepted.',
+  '{max} caractères au plus ({n} actuellement).': '{max} characters at most ({n} now).',
+  'Les caractères < > & et " ne sont pas acceptés ici.': 'The characters < > & and " are not accepted here.',
   'Ce lien ne permet pas de créer un investigateur.': 'This link cannot create an investigator.',
   "Ce lien n'est plus valide.": 'This link is no longer valid.',
   // Keeper's view of the players' notebooks (Investigateurs page)

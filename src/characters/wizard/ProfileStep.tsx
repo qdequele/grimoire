@@ -9,7 +9,8 @@ import { occupationOf, skillTotal, type CreationDraft } from '@/engine/creation'
 import { functionErrorMessage } from '@/lib/functions'
 import { PROFILE_FIELDS, skillLabel, type ProfileField } from '@/rules/d100'
 import { useWizardHost, type ProfileRequest } from './host'
-import { Tuto } from './parts'
+import { TextLimit, Tuto } from './parts'
+import { SHEET_LIMITS } from '@/characters/character'
 import type { StepProps } from './steps'
 import { Rich } from '@/i18n/Rich'
 import { tMsg, useT } from '@/i18n/t'
@@ -88,8 +89,10 @@ export function ProfileStep({ draft: d, update }: StepProps) {
               placeholder={t(f.placeholder)}
               value={d.profile[f.id] ?? ''}
               aria-busy={busy === f.id || (busy === 'all' && !d.profile[f.id])}
+              maxLength={SHEET_LIMITS.profile}
               onChange={(e) => update((x) => ({ ...x, profile: { ...x.profile, [f.id]: e.target.value } }))}
             />
+            <TextLimit value={d.profile[f.id] ?? ''} max={SHEET_LIMITS.profile} />
           </Field>
         ))}
       </div>

@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import type { CharacterData } from '@/characters/character'
-import { clampPoints, companionSheet, skillRows } from './sheet'
+import { clampPoints, companionSheet, companionSheetProblems, skillRows } from './sheet'
 
 const data = (over: Partial<CharacterData> = {}): CharacterData => ({
   name: 'X',
@@ -36,5 +36,44 @@ describe('companionSheet', () => {
   it('brings skills and age within what the server accepts', () => {
     const d = companionSheet({ name: 'Z', age: 200, characteristics: {}, skills: { own: 110, spot: 45 } })
     expect(d).toMatchObject({ age: 150, skills: { own: 99, spot: 45 } })
+  })
+})
+
+describe('companionSheetProblems', () => {
+  const sheet = (over: Partial<CharacterData> = {}): CharacterData => ({ name: 'Ada', characteristics: {}, skills: { dodge: 30 }, ...over })
+  const at = (n: number) => 'a'.repeat(n)
+
+  it('accepts every text at its limit', () => {
+    const d = sheet({
+      name: at(80), occupation: at(200), link: at(200), profile: { traits: at(2000) },
+      skills: { [`art-craft:${at(80 - 'art-craft:'.length)}`]: 5 },
+    })
+    expect(companionSheetProblems(d, at(80))).toEqual([])
+  })
+
+  it('names each text one character over its limit (the server refuses them)', () => {
+    const key = `art-craft:${at(81 - 'art-craft:'.length)}`
+    const d = sheet({ name: at(81), occupation: at(201), link: at(201), profile: { traits: at(2001) }, skills: { [key]: 5 } })
+    expect(companionSheetProblems(d, at(81))).toEqual([
+      { field: 'name', reason: 'tooLong', max: 80 },
+      { field: 'occupation', reason: 'tooLong', max: 200 },
+      { field: 'link', reason: 'tooLong', max: 200 },
+      { field: 'profile', id: 'traits', reason: 'tooLong', max: 2000 },
+      { field: 'skill', key, reason: 'tooLong', max: 80 },
+      { field: 'playerName', reason: 'tooLong', max: 80 },
+    ])
+  })
+
+  it('measures the name and first name trimmed, like the server', () => {
+    expect(companionSheetProblems(sheet({ name: ` ${at(80)} ` }), ` ${at(80)} `)).toEqual([])
+  })
+
+  it('refuses < > & " in the name, skill keys and first name', () => {
+    const key = 'art-craft:<img src=x>'
+    expect(companionSheetProblems(sheet({ name: 'A & B', skills: { [key]: 5 } }), 'Bo"b')).toEqual([
+      { field: 'name', reason: 'markup' },
+      { field: 'skill', key, reason: 'markup' },
+      { field: 'playerName', reason: 'markup' },
+    ])
   })
 })

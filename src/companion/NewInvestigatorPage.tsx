@@ -6,13 +6,16 @@ import { toast } from 'sonner'
 import { Field, FieldLabel } from '@/components/ui/field'
 import { Input } from '@/components/ui/input'
 import type { CreationDraft } from '@/engine/creation'
+import { SHEET_LIMITS, skillKeyLabel } from '@/characters/character'
 import { CharacterWizard, toCharacterData } from '@/characters/wizard/CharacterWizard'
 import { invokeSuggestProfile, loadLocalDraft, saveLocalDraft, WizardHostProvider, type WizardHost } from '@/characters/wizard/host'
+import { TextLimit } from '@/characters/wizard/parts'
+import { PROFILE_FIELDS } from '@/rules/d100'
 import { useT, type T } from '@/i18n/t'
 import { Masthead } from '@/theme/Masthead'
 import { companionKeys, forgetCharacter, rememberedCharacter, useCreateCharacter, type CompanionErrorCode } from './api'
 import { useCompanionContext } from './CompanionLayout'
-import { companionSheet } from './sheet'
+import { companionSheet, companionSheetProblems, type SheetProblem } from './sheet'
 
 /** The first name typed on the phone: page state, not one of the keeper's players. */
 const PlayerNameContext = createContext<{ name: string; setName: (name: string) => void }>({ name: '', setName: () => {} })
@@ -23,7 +26,8 @@ function PlayerNameInput() {
   return (
     <Field>
       <FieldLabel htmlFor="w-player">{t('Ton prénom')}</FieldLabel>
-      <Input id="w-player" value={name} maxLength={80} autoComplete="given-name" placeholder={t('Prénom')} onChange={(e) => setName(e.target.value)} />
+      <Input id="w-player" value={name} maxLength={SHEET_LIMITS.playerName} autoComplete="given-name" placeholder={t('Prénom')} onChange={(e) => setName(e.target.value)} />
+      <TextLimit value={name.trim()} max={SHEET_LIMITS.playerName} markup />
     </Field>
   )
 }
@@ -39,6 +43,21 @@ function errorText(t: T, code: CompanionErrorCode): string | null {
     case 'network': return t('Connexion impossible. Réessaie.')
     case 'link_invalid': return null
   }
+}
+
+/** Toast for a field the server would refuse: which one, and why (instead of "a value was refused"). */
+function problemText(t: T, p: SheetProblem): string {
+  const field =
+    p.field === 'name' ? t('Nom')
+    : p.field === 'occupation' ? t('Occupation')
+    : p.field === 'link' ? t("Lien avec l'histoire")
+    : p.field === 'playerName' ? t('Ton prénom')
+    : 'id' in p ? t(PROFILE_FIELDS.find((f) => f.id === p.id)?.label ?? 'Profil')
+    : 'key' in p ? skillKeyLabel(p.key)
+    : ''
+  return p.reason === 'tooLong'
+    ? t('« {field} » : {max} caractères au plus.', { field, max: p.max })
+    : t('« {field} » : les caractères < > & et " ne sont pas acceptés.', { field })
 }
 
 /** `/t/:token/nouveau`: a player creates their investigator with the keeper's wizard. */
@@ -68,6 +87,7 @@ export function NewInvestigatorPage() {
       }
     },
     draftKey,
+    noMarkup: true,
   }), [token, qc, draftKey])
   const player = useMemo(() => ({ name, setName }), [name])
 
@@ -86,8 +106,14 @@ export function NewInvestigatorPage() {
   }
 
   async function onSave(draft: CreationDraft) {
+    const data = companionSheet(toCharacterData(draft))
+    const problems = companionSheetProblems(data, name)
+    if (problems.length) {
+      toast.error(problemText(t, problems[0]))
+      return
+    }
     try {
-      const id = await create.mutateAsync({ data: companionSheet(toCharacterData(draft)), playerName: name.trim() })
+      const id = await create.mutateAsync({ data, playerName: name.trim() })
       saveLocalDraft(draftKey, null)
       toast.success(t('{name} rejoint la partie.', { name: draft.name.trim() }))
       navigate(`/t/${token}/c/${id}`)

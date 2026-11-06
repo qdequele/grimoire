@@ -45,7 +45,8 @@ import {
 } from '@/rules/d100'
 import { Rich } from '@/i18n/Rich'
 import { skillName, type T } from '@/i18n/t'
-import { Pool, Stat, Tuto, ValueSelect } from './parts'
+import { Pool, Stat, TextLimit, Tuto, ValueSelect } from './parts'
+import { SHEET_LIMITS } from '@/characters/character'
 import { ProfileStep } from './ProfileStep'
 import { useT } from '@/i18n/t'
 
@@ -87,7 +88,8 @@ export function ConceptStep({ draft: d, update }: StepProps) {
         <div className="grid gap-4 sm:grid-cols-[2fr_2fr_1fr]">
           <Field>
             <FieldLabel htmlFor="w-name">{t('Nom')}</FieldLabel>
-            <Input id="w-name" value={d.name} placeholder={t('Ex. Ada Whitcombe')} onChange={(e) => update({ name: e.target.value })} />
+            <Input id="w-name" value={d.name} maxLength={SHEET_LIMITS.name} placeholder={t('Ex. Ada Whitcombe')} onChange={(e) => update({ name: e.target.value })} />
+            <TextLimit value={d.name.trim()} max={SHEET_LIMITS.name} markup />
           </Field>
           <Field>
             <FieldLabel htmlFor="w-occ">{t('Occupation')}</FieldLabel>
@@ -127,7 +129,8 @@ export function ConceptStep({ draft: d, update }: StepProps) {
         </div>
         <Field>
           <FieldLabel htmlFor="w-link">{t("Lien avec l'histoire")}</FieldLabel>
-          <Textarea id="w-link" value={d.link} placeholder={t('Ancien étudiant, voisin, cousine…')} onChange={(e) => update({ link: e.target.value })} />
+          <Textarea id="w-link" value={d.link} maxLength={SHEET_LIMITS.link} placeholder={t('Ancien étudiant, voisin, cousine…')} onChange={(e) => update({ link: e.target.value })} />
+          <TextLimit value={d.link.trim()} max={SHEET_LIMITS.link} />
         </Field>
       </FieldGroup>
       <Tuto>
@@ -272,14 +275,19 @@ export function DerivedStep({ draft: d }: StepProps) {
 function SpecialtyInput({ draft: d, update, id }: StepProps & { id: string }) {
   const t = useT()
   if (!SKILL_BY_ID.get(id)?.specialty) return null
+  const value = d.specialties[id] ?? ''
   return (
-    <Input
-      aria-label={t('Spécialité de {skill}', { skill: skillName(t, id) })}
-      placeholder={t('spécialité')}
-      value={d.specialties[id] ?? ''}
-      className="h-7 w-36 text-xs"
-      onChange={(e) => update((x) => ({ ...x, specialties: { ...x.specialties, [id]: e.target.value } }))}
-    />
+    <>
+      <Input
+        aria-label={t('Spécialité de {skill}', { skill: skillName(t, id) })}
+        placeholder={t('spécialité')}
+        value={value}
+        maxLength={SHEET_LIMITS.specialty}
+        className="h-7 w-36 text-xs"
+        onChange={(e) => update((x) => ({ ...x, specialties: { ...x.specialties, [id]: e.target.value } }))}
+      />
+      <TextLimit value={value} max={SHEET_LIMITS.specialty} markup />
+    </>
   )
 }
 
