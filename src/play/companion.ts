@@ -77,23 +77,42 @@ export function keeperEchoAction(
   return samePoints ? 'ignore' : 'adopt'
 }
 
-/** Phone rows newer than `since` (ms) applied to the party slots (and S.prog[cid].san). Returns a new state. */
+/** An entry of the engine's Journal (`jlog`): newest first in `S.scen[story].journal`. */
+export interface JournalEntry { at: number; t: string; k: string; key: string | null; sc: string }
+const POINT_LABELS: Array<[keyof Points, string, string]> = [
+  ['pv', 'PV', 'pv'], ['san', 'SAN', 'san'], ['chance', 'Chance', 'partie'], ['pm', 'PM', 'partie'],
+]
+
+/**
+ * Phone rows newer than `since` (ms) applied to the party slots (and S.prog[cid].san). Returns a new
+ * state. Each value that changes gets a Journal line at the time of the phone's change, worded as the
+ * engine words the keeper's own −/+ ("Name : PV 13 → 12").
+ */
 export function applyPoints(S: LegacyState, storyId: string, rows: PointsRow[], since: number): LegacyState {
   const fresh = new Map<string, PointsRow>()
   for (const r of rows) {
     if (r.source === 'phone' && Date.parse(r.updatedAt) > since) fresh.set(r.characterId, r)
   }
   if (!fresh.size) return S
-  const scen = (S.scen ?? {}) as Record<string, { party?: Slot[] } & Record<string, unknown>>
+  const scen = (S.scen ?? {}) as Record<string, { party?: Slot[]; journal?: JournalEntry[] } & Record<string, unknown>>
   const party = partyOf(S, storyId)
   const prog = { ...progOf(S) }
+  const names = new Map(((S.chars ?? []) as Array<{ id?: unknown; n?: unknown }>).map((c) => [c.id, c.n]))
+  const journal = [...(scen[storyId]?.journal ?? [])]
   const newParty = party.map((s) => {
     const r = fresh.get(s.cid)
     if (!r) return s
     prog[s.cid] = { ...prog[s.cid], san: r.san }
+    const name = names.get(s.cid)
+    for (const [k, label, kind] of POINT_LABELS) {
+      if (typeof name !== 'string' || typeof s[k] !== 'number' || s[k] === r[k]) continue
+      const at = Date.parse(r.updatedAt)
+      const i = journal.findIndex((e) => e.at <= at)
+      journal.splice(i < 0 ? journal.length : i, 0, { at, t: `${name} : ${label} ${s[k]} → ${r[k]}`, k: kind, key: `${s.cid}-${k}`, sc: '' })
+    }
     return { ...s, pv: r.pv, san: r.san, chance: r.chance, pm: r.pm }
   })
-  return { ...S, prog, scen: { ...scen, [storyId]: { ...scen[storyId], party: newParty } } }
+  return { ...S, prog, scen: { ...scen, [storyId]: { ...scen[storyId], party: newParty, journal: journal.slice(0, 600) } } }
 }
 
 /** Account investigators listed in the game but missing from the engine party, added like freshState does. */

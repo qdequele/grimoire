@@ -143,6 +143,17 @@ test('SAN removed on the game screen shows on the phone, and HP changed on the p
   await expect(engineStat(game, 'Alpha', 'pv')).toHaveText('12/13', LIVE)
   // The keeper's change stays
   await expect(engineStat(game, 'Alpha', 'san')).toHaveText('59')
+
+  // Both changes are in the Journal; the phone's taps within a few seconds share one line, as the keeper's do.
+  const journal = game.locator('#jList li')
+  await expect(journal.filter({ hasText: 'Alpha : SAN 60 → 59' })).toHaveCount(1)
+  await expect(journal.filter({ hasText: 'Alpha : PV 13 → 12' })).toHaveCount(1)
+  await tap(phone, 'Retirer 1 PV')
+  await expect(engineStat(game, 'Alpha', 'pv')).toHaveText('11/13', LIVE)
+  await expect(journal.filter({ hasText: 'Alpha : PV 13 → 11' })).toHaveCount(1)
+  await expect(journal.filter({ hasText: 'Alpha : PV' })).toHaveCount(1)
+  await game.locator('#jFilters [data-jf="pv"]').click()
+  await expect(journal).toHaveText([/Alpha : PV 13 → 11/])
 })
 
 test('a note written on the phone appears on the investigator card of the game screen and on the Investigateurs page', async ({ browser, baseURL }) => {
@@ -259,6 +270,9 @@ test("phone changes made while the keeper's tab is closed are there when the gam
   await unfold(game, 'Alpha')
   await expect(engineStat(game, 'Alpha', 'pv')).toHaveText('12/13', LIVE)
   await expect(engineStat(game, 'Alpha', 'san')).toHaveText('59', LIVE)
+  // ... and in the Journal.
+  await expect(game.locator('#jList li').filter({ hasText: 'Alpha : PV 13 → 12' })).toHaveCount(1)
+  await expect(game.locator('#jList li').filter({ hasText: 'Alpha : SAN 60 → 59' })).toHaveCount(1)
 })
 
 test('broadcasts are hints: forged ones change nothing on the game screen, and phones clamp what they show', async ({ browser, baseURL }) => {
@@ -425,11 +439,25 @@ test('a skill explains itself on the phone; rolls made on the phone show on the 
   await expect(dialog.getByTestId('roll-result').locator('output')).toHaveText(String(roll.result))
   await expect(dialog.getByRole('button', { name: 'Relancer' })).toBeVisible()
 
-  // The keeper's game screen shows it.
+  // The keeper's game screen shows it: a toast at the top, over the game (not hidden behind it, not
+  // still fading in), and a line in the Journal that stays.
   const toast = keeper.locator('[data-sonner-toast]').filter({ hasText: `Alpha · Bibliothèque (${roll.target})` })
   await expect(toast).toBeVisible(LIVE)
-  await expect(toast).toContainText(`${roll.result} — `)
+  await expect(toast.locator('output')).toHaveText(String(roll.result))
   await expect(toast).toContainText('1 dé bonus')
+  await expect(toast).toHaveAttribute('data-y-position', 'top')
+  await expect.poll(() => toast.evaluate((el) => {
+    const r = el.getBoundingClientRect()
+    const top = document.elementFromPoint(r.x + r.width / 2, r.y + r.height / 2)
+    return Number(getComputedStyle(el).opacity) === 1 && r.top >= 0 && !!top && el.contains(top)
+  })).toBe(true)
+  const journal = engine(keeper).locator('#jList li')
+  await expect(journal.filter({ hasText: `Alpha · Bibliothèque (${roll.target}) : ${roll.result} — ` })).toContainText('1 dé bonus')
+  await engine(keeper).locator('#jFilters [data-jf="test"]').click()
+  await expect(journal.filter({ hasText: `Alpha · Bibliothèque (${roll.target})` })).toBeVisible()
+  await engine(keeper).locator('#jFilters [data-jf=""]').click()
+  await toast.getByRole('button', { name: 'Fermer' }).click()
+  await expect(toast).toBeHidden()
   await phone.keyboard.press('Escape')
 
   // Free dice from the Dés tab.
@@ -440,7 +468,8 @@ test('a skill explains itself on the phone; rolls made on the phone show on the 
   await phone.getByRole('button', { name: 'Lancer 2D8' }).click()
   const dice = (await (await thrown).json()) as { result: number }
   await expect(phone.getByTestId('roll-result').locator('output')).toHaveText(String(dice.result))
-  await expect(keeper.locator('[data-sonner-toast]').filter({ hasText: 'Alpha lance 2D8' })).toContainText(String(dice.result), LIVE)
+  await expect(keeper.locator('[data-sonner-toast]').filter({ hasText: 'Alpha lance 2D8' }).locator('output')).toHaveText(String(dice.result), LIVE)
+  await expect(engine(keeper).locator('#jList li').filter({ hasText: `Alpha lance 2D8 : ${dice.result} (` })).toBeVisible()
   // The phone keeps its own rolls.
   await expect(phone.getByRole('heading', { name: 'Derniers jets' })).toBeVisible()
   await expect(phone.getByText(/^Bibliothèque \(\d+\)$/)).toBeVisible()

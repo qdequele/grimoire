@@ -1703,10 +1703,16 @@ function fillCarnets(){
     d.addEventListener("toggle",()=>{d.open?openCarnets.add(cid):openCarnets.delete(cid);});
     d.innerHTML='<summary><span>Carnet</span> <span>('+notes.length+')</span></summary>'+notes.map(n=>'<div class="cnote"><small>'+esc(new Date(n.createdAt).toLocaleString(LANG==="en"?"en-GB":"fr-FR",{day:"numeric",month:"short",hour:"2-digit",minute:"2-digit"}))+'</small> '+esc(n.body)+'</div>').join("");
     body.appendChild(d);});}
+/* Points changed elsewhere (a phone), in the Journal as the keeper's own −/+ write them:
+   "Name : PV 13 → 10", changes of one value within 20 s on one line. */
+function jlogPoints(sl,old){const c=charById(sl.cid);if(!c)return;const now=Date.now();
+  [["pv","PV"],["san","SAN"],["chance","Chance"],["pm","PM"]].forEach(([k,lab])=>{if(sl[k]===old[k])return;
+    const base=sl["_j"+k]&&now-sl["_j"+k].at<20000?sl["_j"+k].from:old[k];sl["_j"+k]={from:base,at:now};
+    jlog(c.n+" : "+lab+" "+base+" → "+sl[k],k==="san"?"san":k==="pv"?"pv":"partie",sl.cid+"-"+k);});}
 window.GRIMOIRE_ENGINE={
-  setPoints(cid,v){const sl=ST().party.find(p=>p.cid===cid);if(!sl)return;
+  setPoints(cid,v){const sl=ST().party.find(p=>p.cid===cid);if(!sl)return;const old={pv:sl.pv,san:sl.san,chance:sl.chance,pm:sl.pm};
     const n=x=>{x=Number(x);return Number.isFinite(x)?Math.round(x):0};sl.pv=n(v.pv);sl.san=n(v.san);sl.chance=n(v.chance);sl.pm=n(v.pm);P_(cid).san=sl.san;
-    save();keepFocus(()=>{renderInv();if(ST().mode==="combat")renderCombat();});},
+    jlogPoints(sl,old);save();keepFocus(()=>{renderInv();if(ST().mode==="combat")renderCombat();});},
   addMember(c,player,progress){if(!c||ST().party.some(p=>p.cid===c.id))return;
     if(!S.chars.some(x=>x.id===c.id))S.chars.push(c);
     const name=(player||"").trim(),pl=name?addPlayer(name):null;
@@ -1714,5 +1720,6 @@ window.GRIMOIRE_ENGINE={
     const sl=mkSlot(c);sl.player=name;if(pl)sl.pid=pl.id;ensureGroups();sl.grp=ST().active;
     ST().party.push(sl);save();keepFocus(()=>renderPlay());},
   setNotebooks(n){NOTEBOOKS=n||{};fillCarnets();},
+  logRoll(txt,k){jlog(String(txt).slice(0,300),k==="san"||k==="test"?k:"de");},
 };
 try{route()}catch(e){}

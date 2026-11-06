@@ -155,3 +155,13 @@ export function rollMessage(t: T, r: Roll, name: string): { title: string; text:
     text: `${r.result} — ${t(LEVEL_LABEL[r.level])}${extra ? ` · ${extra}` : ''}`,
   }
 }
+
+/**
+ * The roll as a line of the game screen's Journal, and its filter there: free dice under Dés, SAN
+ * under Santé mentale, every other check under Tests (where the engine puts its own skill tests).
+ */
+export function rollJournal(t: T, r: Roll, name: string): { text: string; kind: 'de' | 'test' | 'san' } {
+  const { title, text } = rollMessage(t, r, name)
+  const kind = r.kind === 'dice' ? 'de' : r.subject === 'san' ? 'san' : 'test'
+  return { text: t('{label} : {detail}', { label: title, detail: text }), kind }
+}

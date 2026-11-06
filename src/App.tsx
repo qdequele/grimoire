@@ -111,7 +111,8 @@ export default function App() {
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
         <RouterProvider router={router} />
-        <Toaster />
+        {/* Top toasts (players' rolls on the game screen) sit under the game's toolbar; the others stay bottom-right. */}
+        <Toaster offset={{ top: 80 }} mobileOffset={{ top: 72 }} />
       </AuthProvider>
     </QueryClientProvider>
   )

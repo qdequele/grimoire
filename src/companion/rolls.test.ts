@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest'
 import { makeT } from '@/i18n/t'
 import { SKILLS } from '@/rules/d100'
 import {
-  asRoll, diceDetail, diceFormula, keptTens, parseSubject, rollableSkillKey, rollMessage, subjectKey, subjectName,
+  asRoll, diceDetail, diceFormula, keptTens, parseSubject, rollableSkillKey, rollJournal, rollMessage, subjectKey, subjectName,
   type CheckRoll, type RollSubject,
 } from './rolls'
 
@@ -106,5 +106,17 @@ describe('reading a roll', () => {
     })
     expect(rollMessage(en, { id: 'r', characterId: 'c', kind: 'dice', count: 1, sides: 6, modifier: 0, results: [5], result: 5, createdAt: 'x' }, 'Ada'))
       .toEqual({ title: 'Ada rolls 1D6', text: '5' })
+  })
+
+  it('makes the game screen’s Journal line, under the engine’s own filters', () => {
+    expect(rollJournal(fr, check({ net: 1, tens: [5, 2] }), 'Ada')).toEqual({
+      text: 'Ada · Trouver Objet Caché (60) : 23 — Réussite majeure · 1 dé bonus',
+      kind: 'test',
+    })
+    expect(rollJournal(en, check({ subject: 'san', target: 45, result: 80, level: 'failure', tens: [8], units: 0 }), 'Ada'))
+      .toEqual({ text: 'Ada · SAN (45): 80 — Failed', kind: 'san' })
+    expect(rollJournal(fr, check({ subject: 'luck' }), 'Ada').kind).toBe('test')
+    expect(rollJournal(fr, { id: 'r', characterId: 'c', kind: 'dice', count: 2, sides: 6, modifier: 1, results: [5, 2], result: 8, createdAt: 'x' }, 'Ada'))
+      .toEqual({ text: 'Ada lance 2D6+1 : 8 (5 + 2 + 1)', kind: 'de' })
   })
 })

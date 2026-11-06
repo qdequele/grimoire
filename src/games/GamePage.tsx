@@ -1,6 +1,5 @@
 import { useQueryClient } from '@tanstack/react-query'
 import { useEffect, useRef, useState } from 'react'
-import { toast } from 'sonner'
 import { useNavigate, useParams } from 'react-router'
 import { characterKeys, useCharacters, type CharacterRow } from '@/characters/api'
 import { Alert, AlertDescription } from '@/components/ui/alert'
@@ -17,7 +16,8 @@ import { TableLinksDialog, type TableMember } from './TableLinksDialog'
 import { ScreenControl, screenStory } from './screen'
 import { ScreenDialog } from './ScreenDialog'
 import { rollFeed } from './rolls'
-import { rollMessage } from '@/companion/rolls'
+import { showRollToast } from './RollToast'
+import { rollJournal } from '@/companion/rolls'
 import { parseScreen } from '@/screen/state'
 import { useT } from '@/i18n/t'
 
@@ -431,12 +431,14 @@ export function GamePage() {
       const cid = (payload as Record<string, unknown> | null)?.characterId
       return typeof cid === 'string' ? cid : null
     }
-    // Players' dice rolls: a toast on the game screen for each one.
+    // Players' dice rolls: a toast at the top of the game screen, and a line in the engine's Journal.
     const rolls = rollFeed(id, (roll) => {
-      const name = names.current.get(roll.characterId)
-      if (!name) void qc.invalidateQueries({ queryKey: characterKeys.all })
-      const { title, text } = rollMessage(t, roll, name ?? t('Un investigateur'))
-      toast(title, { description: text, duration: 15_000 })
+      const known = names.current.get(roll.characterId)
+      if (!known) void qc.invalidateQueries({ queryKey: characterKeys.all })
+      const name = known ?? t('Un investigateur')
+      showRollToast(t, roll, name)
+      const line = rollJournal(t, roll, name)
+      live.current?.withEngine((e) => e.logRoll(line.text, line.kind))
     })
     const ch = supabase
       .channel(`companion:${channel}`)

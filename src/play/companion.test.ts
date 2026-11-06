@@ -56,6 +56,26 @@ describe('companion helpers', () => {
     expect(JSON.stringify(S)).toBe(before)
   })
 
+  it('writes each changed value to the Journal, at the phone change’s time, among the older lines', () => {
+    const S = stateOf()
+    S.chars = [{ id: 'c1', n: 'Ada' }, { id: 'x9', n: 'Bo' }]
+    const at = (iso: string) => Date.parse(iso)
+    const scen = S.scen as { s: Record<string, unknown> }
+    scen.s.journal = [
+      { at: at('2026-01-03T00:00:00Z'), t: 'later', k: 'scene', key: null, sc: '' },
+      { at: at('2026-01-01T00:00:00Z'), t: 'earlier', k: 'scene', key: null, sc: '' },
+    ]
+    const before = JSON.stringify(S)
+    const out = applyPoints(S, 's', [row({ pv: 10, san: 9, chance: 12, pm: 13 })], 0)
+    const journal = (out.scen as { s: { journal: Array<{ t: string; k: string; key: string; at: number }> } }).s.journal
+    expect(journal.map((e) => e.t)).toEqual(['later', 'Ada : SAN 11 → 9', 'earlier'])
+    expect(journal[1]).toMatchObject({ k: 'san', key: 'c1-san', at: at('2026-01-02T00:00:00Z') })
+    expect(JSON.stringify(S)).toBe(before)
+    // Nothing changed: no line.
+    const same = applyPoints(out, 's', [row({ pv: 10, san: 9, chance: 12, pm: 13, updatedAt: '2026-01-04T00:00:00Z' })], 0)
+    expect((same.scen as { s: { journal: unknown[] } }).s.journal).toHaveLength(3)
+  })
+
   it('addMissingMembers adds a listed investigator once', () => {
     const S = stateOf()
     const before = JSON.stringify(S)
