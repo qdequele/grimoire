@@ -16,11 +16,14 @@
 import Anthropic from 'npm:@anthropic-ai/sdk@1.4.0'
 import { createClient, type SupabaseClient } from 'npm:@supabase/supabase-js@2.118.0'
 import { Ajv2020 } from 'npm:ajv@8.20.0/dist/2020.js'
-import { draftToStory, importDraftSchema, mergeDraft, type ImportDraft } from '../_shared/import-draft.ts'
+import { importDraftSchema, mergeDraft, type ImportDraft } from '../_shared/import-draft.ts'
 import type { Database, Json } from '../_shared/database.types.ts'
 import { createSystemPrompt, ideasUserPrompt, outlineUserPrompt, scenesUserPrompt } from '../_shared/create-prompt.ts'
 import { SOUNDS, STORY_SCHEMA } from '../_shared/spec-bundle.ts'
+import { forbiddenNamesIn } from '../_shared/story-mcp.ts'
+import { existingStory, saveStory } from '../_shared/story-save.ts'
 import {
+  createdStory,
   IDEA_FIELDS,
   ideasSchema,
   nextBatch,
@@ -32,7 +35,6 @@ import {
   parseBrief,
   parseOutline,
   pickIdeas,
-  playersFor,
   storyMetaId,
   writtenSceneIds,
   type IdeaField,
@@ -165,6 +167,7 @@ async function outline(apiKey: string, admin: Admin, userId: string, body: Recor
         .from('story_creations')
         .select('id', { count: 'exact', head: true })
         .eq('owner_id', userId)
+        .eq('source', 'web') // creations from the MCP connector have their own limit
         .gte('created_at', monthStart())
       if (error) throw error
       if ((count ?? 0) >= MONTHLY_LIMIT) throw new Failure(429, 'quota_exceeded', `Limite mensuelle atteinte (${MONTHLY_LIMIT} histoires créées).`)
@@ -248,44 +251,16 @@ async function write(apiKey: string, admin: Admin, userId: string, body: Record<
   }
 
   // ---- convert, validate, save (story + pack story.json)
-  let storyId = row.story_id
-  let metaId = storyMetaId(outline.title, row.id)
-  if (storyId) {
-    const { data } = await admin.from('stories').select('content').eq('id', storyId).maybeSingle()
-    if (!data) storyId = null // the keeper deleted it meanwhile: start a new one
-    else metaId = (data.content as { meta?: { id?: string } } | null)?.meta?.id ?? metaId
-  }
-  const story = draftToStory(draft, {
-    id: metaId,
-    lang: brief.lang,
-    players: playersFor(brief.investigators),
-    contentWarnings: outline.contentWarnings,
-    tags: ['grimoire-creator'],
-  })
+  const target = await existingStory(admin, row.story_id, storyMetaId(outline.title, row.id))
+  const story = createdStory(draft, outline, brief, target.metaId)
   const valid = validateStory(story)
   const validationErrors = valid
     ? []
     : (validateStory.errors ?? []).slice(0, 50).map((e) => `${e.instancePath || '/'} ${e.message ?? ''}`.trim())
-
-  if (storyId) {
-    const { error } = await admin.from('stories').update({ content: story as Json }).eq('id', storyId).eq('owner_id', userId)
-    if (error) throw error
-  } else {
-    const { data, error } = await admin
-      .from('stories')
-      .insert({ owner_id: userId, visibility: 'private', content: story as Json })
-      .select('id')
-      .single()
-    if (error) throw error
-    storyId = data.id
-  }
-  const { error: packError } = await admin.storage
-    .from('story-packs')
-    .upload(`${userId}/${storyId}/story.json`, new Blob([JSON.stringify(story, null, 2) + '\n'], { type: 'application/json' }), {
-      upsert: true,
-      contentType: 'application/json',
-    })
-  if (packError) console.error('story pack write failed', packError)
+  // The prompt forbids these names; here they're only reported, the keeper can fix them in the editor.
+  const forbidden = forbiddenNamesIn(story)
+  if (forbidden.length) validationErrors.push(`forbidden names: ${forbidden.join(', ')}`)
+  const storyId = await saveStory(admin, userId, target.storyId, story)
 
   const remaining = total - written
   await admin

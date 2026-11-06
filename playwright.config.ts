@@ -16,6 +16,8 @@ export default defineConfig({
     { name: 'app', testMatch: 'app.spec.ts', use: { baseURL: 'http://localhost:5173' } },
     // Keeper (desktop) and a player's phone (390×844, no account) side by side.
     { name: 'companion', testMatch: 'companion.spec.ts', use: { baseURL: 'http://localhost:5173' } },
+    // MCP connector sign-in (OAuth with Supabase Auth's OAuth server).
+    { name: 'mcp', testMatch: 'mcp.spec.ts', use: { baseURL: 'http://localhost:5173' } },
     // Original vs new game screen, scene by scene (private data only): pnpm e2e:parity
     ...(hasLegacy ? [{ name: 'parity', testMatch: 'parity.spec.ts' }] : []),
   ],

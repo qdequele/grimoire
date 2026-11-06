@@ -25,7 +25,8 @@ export const FAKE_OUTLINE = {
 
 export const FAKE_IDEAS = { era: '1890s', place: 'A river port', hook: 'A bell rings at night.', ideas: 'A drowned choir.' }
 
-const scene = (id: string) => ({
+/** A full draft scene with placeholder words (also used by the MCP connector test). */
+export const fakeScene = (id: string) => ({
   id, title: id, ref: '', lead: 'Lead.', readAloud: ['You see it.'],
   flow: [{
     title: 'Look around', text: '', success: 'Found.', failure: 'Nothing.', pushed: '', extra: '', goto: [],
@@ -49,7 +50,7 @@ export function fakeAnswer(body: { output_config?: { format?: { schema?: { prope
   const wanted = requestedScenes(typeof content === 'string' ? content : '')
   if (!wanted.length) return null
   const acts = [...new Set(wanted.map((w) => w.act))].map((act) => ({
-    id: act, title: '', scenes: wanted.filter((w) => w.act === act).map((w) => scene(w.id)),
+    id: act, title: '', scenes: wanted.filter((w) => w.act === act).map((w) => fakeScene(w.id)),
   }))
   return JSON.stringify({
     title: '', summary: '', era: '', setting: '', duration: '',

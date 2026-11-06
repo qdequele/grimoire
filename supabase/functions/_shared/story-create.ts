@@ -4,7 +4,7 @@
 //
 // Pure TypeScript, no Deno or browser APIs: used by the create-story Edge Function and unit-tested
 // with Vitest. Prompts live in create-prompt.ts (they need the spec bundle).
-import { emptyDraft, type DraftOverview, type ImportDraft } from './import-draft.ts'
+import { draftToStory, emptyDraft, type DraftOverview, type ImportDraft } from './import-draft.ts'
 
 // ------------------------------------------------------------------ the questionnaire
 
@@ -362,3 +362,13 @@ export const storyMetaId = (title: string, creationId: string) => {
   const slug = kebab(title).slice(0, 48) || 'story'
   return `${slug}-${creationId.slice(0, 6)}`
 }
+
+/** The story.json of a creation so far (the web creator and the MCP connector save the same shape). */
+export const createdStory = (draft: ImportDraft, outline: StoryOutline, brief: StoryBrief, metaId: string) =>
+  draftToStory(draft, {
+    id: metaId,
+    lang: brief.lang,
+    players: playersFor(brief.investigators),
+    contentWarnings: outline.contentWarnings,
+    tags: ['grimoire-creator'],
+  })

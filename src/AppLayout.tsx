@@ -55,7 +55,14 @@ function AccountMenu() {
   )
 }
 
-/** Signed-in pages without the app chrome (the game screen). Signed-out visitors go to /login. */
+/** The login page, coming back here once signed in (?next=, read by LoginPage). */
+function ToLogin() {
+  const { pathname, search } = useLocation()
+  const next = pathname === '/' ? '' : `?next=${encodeURIComponent(pathname + search)}`
+  return <Navigate to={`/login${next}`} replace />
+}
+
+/** Signed-in pages without the app chrome (the game screen, the OAuth consent page). Signed-out visitors go to /login. */
 export function RequireAuth({ children }: { children: ReactNode }) {
   const { session, ready } = useAuth()
   if (!ready) {
@@ -65,7 +72,7 @@ export function RequireAuth({ children }: { children: ReactNode }) {
       </div>
     )
   }
-  if (!session) return <Navigate to="/login" replace />
+  if (!session) return <ToLogin />
   return children
 }
 
@@ -83,7 +90,7 @@ export function AppLayout() {
       </div>
     )
   }
-  if (!session) return <Navigate to="/login" replace />
+  if (!session) return <ToLogin />
 
   return (
     <div className="relative flex min-h-svh flex-col">

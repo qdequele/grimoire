@@ -436,6 +436,7 @@ export type Database = {
           outline_count: number
           output_tokens: number
           owner_id: string
+          source: string
           status: string
           story_id: string | null
           updated_at: string
@@ -452,6 +453,7 @@ export type Database = {
           outline_count?: number
           output_tokens?: number
           owner_id: string
+          source?: string
           status?: string
           story_id?: string | null
           updated_at?: string
@@ -468,6 +470,7 @@ export type Database = {
           outline_count?: number
           output_tokens?: number
           owner_id?: string
+          source?: string
           status?: string
           story_id?: string | null
           updated_at?: string

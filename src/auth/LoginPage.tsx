@@ -1,7 +1,7 @@
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useMemo, useState } from 'react'
 import { useForm } from 'react-hook-form'
-import { Navigate } from 'react-router'
+import { Navigate, useSearchParams } from 'react-router'
 import { z } from 'zod'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Button } from '@/components/ui/button'
@@ -21,12 +21,18 @@ const makeSchema = (t: T) =>
     displayName: z.string().max(60).optional(),
   })
 type Values = z.infer<ReturnType<typeof makeSchema>>
+
+/** Where to go once signed in: a path on this site only (never another origin, "//host" included). */
+function safeNext(next: string | null): string {
+  return next && next.startsWith('/') && !next.startsWith('//') && !next.startsWith('/\\') ? next : '/'
+}
 type Mode = 'signin' | 'signup'
 
 // Laid out like the legacy home screen: title block and menu on the left, quote on the right.
 export function LoginPage() {
   const { session } = useAuth()
   const t = useT()
+  const next = safeNext(useSearchParams()[0].get('next'))
   const schema = useMemo(() => makeSchema(t), [t])
   const [mode, setMode] = useState<Mode>('signin')
   const [error, setError] = useState<string | null>(null)
@@ -34,7 +40,7 @@ export function LoginPage() {
   const [confirmTo, setConfirmTo] = useState<string | null>(null)
   const form = useForm<Values>({ resolver: zodResolver(schema), defaultValues: { email: '', password: '', displayName: '' } })
 
-  if (session) return <Navigate to="/" replace />
+  if (session) return <Navigate to={next} replace />
 
   async function onSubmit(values: Values) {
     setError(null)

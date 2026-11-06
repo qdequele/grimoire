@@ -209,6 +209,10 @@ export function CreateStoryPage() {
             {t.n(used.data, '{n} histoire créée ce mois-ci.', '{n} histoires créées ce mois-ci.')}
           </p>
         )}
+        <p className="mt-4 hidden px-3 text-xs text-muted-foreground lg:block">
+          {t('Tu peux aussi écrire une histoire avec ChatGPT ou Claude :')}{' '}
+          <Link to="/settings#chat-connectors" className="underline underline-offset-4 hover:text-gold">{t('les connecter')}</Link>
+        </p>
       </nav>
 
       <section className="flex max-w-4xl min-w-0 flex-col gap-5">
