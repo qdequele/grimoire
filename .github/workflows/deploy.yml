@@ -56,9 +56,9 @@ jobs:
       - name: Pending migrations
         run: supabase db push --remote --dry-run
       - name: Apply migrations
-        run: supabase db push --remote
+        run: supabase db push --remote --yes
       - name: Deploy Edge Functions
-        run: supabase functions deploy --remote="$PROJECT_ID"
+        run: supabase functions deploy --remote="$PROJECT_ID" --yes
 
   site:
     needs: supabase
