@@ -1,7 +1,8 @@
 import { useQueryClient } from '@tanstack/react-query'
 import { useEffect, useRef, useState } from 'react'
+import { toast } from 'sonner'
 import { useNavigate, useParams } from 'react-router'
-import { useCharacters, type CharacterRow } from '@/characters/api'
+import { characterKeys, useCharacters, type CharacterRow } from '@/characters/api'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Spinner } from '@/components/ui/spinner'
 import type { Json } from '@/lib/database.types'
@@ -15,6 +16,8 @@ import { gameKeys, useGame, type GameRow, type GameState } from './api'
 import { TableLinksDialog, type TableMember } from './TableLinksDialog'
 import { ScreenControl, screenStory } from './screen'
 import { ScreenDialog } from './ScreenDialog'
+import { rollFeed } from './rolls'
+import { rollMessage } from '@/companion/rolls'
 import { parseScreen } from '@/screen/state'
 import { useT } from '@/i18n/t'
 
@@ -96,6 +99,11 @@ export function GamePage() {
   const [screen, setScreen] = useState<ScreenControl | null>(null)
   const iframe = useRef<HTMLIFrameElement>(null)
   const live = useRef<Live | null>(null)
+  // Investigators' names for the roll toasts (phones can add investigators during the game).
+  const names = useRef(new Map<string, string>())
+  useEffect(() => {
+    names.current = new Map((characters.data ?? []).map((c) => [c.id, c.data.name]))
+  }, [characters.data])
 
   // Start once, from fresh data: a cached game could miss investigators who joined from a phone.
   // Later refetches (after every save) don't restart the game: the data it started from is kept.
@@ -423,6 +431,13 @@ export function GamePage() {
       const cid = (payload as Record<string, unknown> | null)?.characterId
       return typeof cid === 'string' ? cid : null
     }
+    // Players' dice rolls: a toast on the game screen for each one.
+    const rolls = rollFeed(id, (roll) => {
+      const name = names.current.get(roll.characterId)
+      if (!name) void qc.invalidateQueries({ queryKey: characterKeys.all })
+      const { title, text } = rollMessage(t, roll, name ?? t('Un investigateur'))
+      toast(title, { description: text, duration: 15_000 })
+    })
     const ch = supabase
       .channel(`companion:${channel}`)
       .on('broadcast', { event: 'points' }, ({ payload }) => {
@@ -436,13 +451,16 @@ export function GamePage() {
       // Only investigators listed in the game's party in the database join (catchUp reads it).
       .on('broadcast', { event: 'member' }, () => live.current?.catchUp())
       .on('broadcast', { event: 'rotate' }, () => void qc.invalidateQueries({ queryKey: gameKeys.one(id) }))
+      .on('broadcast', { event: 'roll' }, () => rolls())
       .subscribe((status) => {
-        if (status === 'SUBSCRIBED') live.current?.catchUp()
+        if (status !== 'SUBSCRIBED') return
+        live.current?.catchUp()
+        rolls()
       })
     return () => {
       void supabase.removeChannel(ch)
     }
-  }, [ready, channel, id, qc])
+  }, [ready, channel, id, qc, t])
 
   if (game.error) {
     return (

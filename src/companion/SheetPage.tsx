@@ -1,15 +1,17 @@
-import { Check, Minus, Plus } from 'lucide-react'
-import { useEffect } from 'react'
+import { Check, Dices, Minus, Plus } from 'lucide-react'
+import { useEffect, useState } from 'react'
 import { Link, Navigate, NavLink, Outlet, useOutletContext, useParams } from 'react-router'
 import { Button } from '@/components/ui/button'
-import { skillName, useT } from '@/i18n/t'
+import { skillName, useT, type T } from '@/i18n/t'
 import { cn } from '@/lib/utils'
 import type { Points } from '@/play/companion'
-import { CHARACTERISTIC_INFO, CHARACTERISTICS, PROFILE_FIELDS } from '@/rules/d100'
+import { CHARACTERISTIC_INFO, CHARACTERISTICS, PROFILE_FIELDS, SKILL_BY_ID } from '@/rules/d100'
 import { Masthead } from '@/theme/Masthead'
 import { pointsOf, rememberCharacter, useSetPoints, type CompanionMember } from './api'
 import { useCompanionContext, type CompanionContext } from './CompanionLayout'
 import type { PickState } from './PickPage'
+import { RollDialog, type RollTarget } from './Dice'
+import { rollableSkillKey } from './rolls'
 import { skillRows } from './sheet'
 
 export interface SheetContext extends CompanionContext {
@@ -19,6 +21,7 @@ export const useSheetContext = () => useOutletContext<SheetContext>()
 
 const TABS = [
   { to: '', label: 'Fiche', end: true },
+  { to: 'des', label: 'Dés' },
   { to: 'carnet', label: 'Carnet' },
   { to: 'profil', label: 'Profil' },
 ]
@@ -113,8 +116,18 @@ const STATS: Array<{ key: keyof Points; label: string }> = [
   { key: 'pm', label: 'PM' },
 ]
 
-/** HP / SAN / Luck / MP with − / +. Each tap is a ±1 on the latest value, so quick taps all count. */
-function StatTiles({ member }: { member: CompanionMember }) {
+/** What a SAN or Luck roll is for; null for the points that are never rolled. */
+function statWhat(t: T, key: keyof Points): string | null {
+  if (key === 'san') return t('Santé mentale. Le gardien demande un jet de SAN face à l’horreur : le réussir limite la perte.')
+  if (key === 'chance') return t('Le gardien demande un jet de Chance quand seul le hasard peut trancher.')
+  return null
+}
+
+/**
+ * HP / SAN / Luck / MP with − / +. Each tap is a ±1 on the latest value, so quick taps all count.
+ * SAN and Luck are also rolled: their label opens the roll dialog with the current value.
+ */
+function StatTiles({ member, onRoll }: { member: CompanionMember; onRoll: (r: RollTarget) => void }) {
   const t = useT()
   const { token, view } = useSheetContext()
   const setPoints = useSetPoints(token)
@@ -128,9 +141,23 @@ function StatTiles({ member }: { member: CompanionMember }) {
       {STATS.map(({ key, label }) => {
         const max = key === 'pv' ? maxHp : 99
         const low = key === 'pv' && now.pv <= Math.floor(maxHp / 2)
+        const what = statWhat(t, key)
+        const labelClass = 'text-[0.625rem] font-semibold tracking-[0.14em] text-muted-foreground uppercase'
         return (
           <div key={key} className="flex flex-col items-center gap-1 border border-border bg-card px-2 pt-2 pb-1">
-            <span className="text-[0.625rem] font-semibold tracking-[0.14em] text-muted-foreground uppercase">{t(label)}</span>
+            {what ? (
+              <button
+                type="button"
+                className={cn(labelClass, 'inline-flex items-center gap-1 hover:text-gold')}
+                aria-label={t('Jet de {stat}', { stat: t(label) })}
+                onClick={() => onRoll({ subject: { kind: key === 'san' ? 'san' : 'luck' }, title: t(label), what, value: now[key] })}
+              >
+                {t(label)}
+                <Dices aria-hidden="true" className="size-3" />
+              </button>
+            ) : (
+              <span className={labelClass}>{t(label)}</span>
+            )}
             <output aria-label={t(label)} className={cn('font-heading text-3xl leading-none', low && 'text-destructive')}>
               {key === 'pv' ? `${now.pv} / ${maxHp}` : now[key]}
             </output>
@@ -167,6 +194,7 @@ function StatTiles({ member }: { member: CompanionMember }) {
 export function SheetTab() {
   const t = useT()
   const { view, member } = useSheetContext()
+  const [rolling, setRolling] = useState<RollTarget | null>(null)
   const d = member.data
   const rows = skillRows(d, pointsOf(view, member).checks)
   const chars = CHARACTERISTICS.filter((c) => typeof d.characteristics?.[c] === 'number')
@@ -178,20 +206,31 @@ export function SheetTab() {
 
   return (
     <div className="flex flex-col gap-6">
-      <StatTiles member={member} />
+      <RollDialog target={rolling} onClose={() => setRolling(null)} />
+      <StatTiles member={member} onRoll={setRolling} />
 
       {(chars.length > 0 || derived.length > 0) && (
         <section className="flex flex-col gap-2">
           <h2 className="eyebrow">{t('Caractéristiques')}</h2>
           {chars.length > 0 && (
-            <dl className="grid grid-cols-4 gap-px border border-border bg-border">
-              {chars.map((c) => (
-                <div key={c} className="flex flex-col items-center bg-card py-2">
-                  <dt className="text-[0.625rem] font-semibold tracking-[0.14em] text-muted-foreground uppercase">{t(CHARACTERISTIC_INFO[c].short)}</dt>
-                  <dd className="font-mono text-lg">{d.characteristics?.[c]}</dd>
-                </div>
-              ))}
-            </dl>
+            <div className="grid grid-cols-4 gap-px border border-border bg-border">
+              {chars.map((c) => {
+                const value = d.characteristics?.[c] ?? 0
+                const info = CHARACTERISTIC_INFO[c]
+                return (
+                  <button
+                    key={c}
+                    type="button"
+                    className="flex w-full flex-col items-center bg-card py-2 hover:text-gold"
+                    aria-label={`${t(info.name)} ${value}`}
+                    onClick={() => setRolling({ subject: { kind: 'char', id: c }, title: t(info.name), what: t(info.what), value })}
+                  >
+                    <span className="text-[0.625rem] font-semibold tracking-[0.14em] text-muted-foreground uppercase">{t(info.short)}</span>
+                    <span className="font-mono text-lg">{value}</span>
+                  </button>
+                )
+              })}
+            </div>
           )}
           {derived.length > 0 && (
             <p className="text-sm text-muted-foreground">
@@ -207,20 +246,38 @@ export function SheetTab() {
             <h2 className="eyebrow">{t('Compétences')}</h2>
             <span className="text-[0.625rem] tracking-[0.1em] text-muted-foreground uppercase">{t('ordinaire · majeure · extrême')}</span>
           </div>
+          <p className="text-xs text-muted-foreground">{t('Touche une compétence pour savoir à quoi elle sert et la lancer.')}</p>
           <ul>
             {rows.map((r) => {
               const [id, specialty] = r.key.split(/:(.*)/)
+              const name = skillName(t, id, specialty)
+              const what = SKILL_BY_ID.get(id)?.what
+              const rollable = rollableSkillKey(r.key)
+              const open = () =>
+                setRolling({
+                  subject: { kind: 'skill', key: r.key },
+                  title: name,
+                  what: what ? t(what) : '',
+                  value: r.value,
+                })
               return (
-                <li key={r.key} className="flex items-baseline justify-between gap-3 border-b border-border py-2">
-                  <span className={cn('font-serif text-lg', r.checked && 'text-gold')}>
-                    {skillName(t, id, specialty)}
-                    {r.checked && (
-                      <Check aria-label={t('Cochée en jeu')} className="ml-1.5 inline size-4 align-[-2px]" />
-                    )}
-                  </span>
-                  <span className="font-mono text-sm whitespace-nowrap">
-                    {r.value} <span className="text-muted-foreground">· {r.hard} · {r.extreme}</span>
-                  </span>
+                <li key={r.key} className="border-b border-border">
+                  <button
+                    type="button"
+                    disabled={!rollable}
+                    onClick={open}
+                    className="flex w-full items-baseline justify-between gap-3 py-2 text-left hover:text-gold disabled:hover:text-inherit"
+                  >
+                    <span className={cn('font-serif text-lg', r.checked && 'text-gold')}>
+                      {name}
+                      {r.checked && (
+                        <Check aria-label={t('Cochée en jeu')} className="ml-1.5 inline size-4 align-[-2px]" />
+                      )}
+                    </span>
+                    <span className="font-mono text-sm whitespace-nowrap">
+                      {r.value} <span className="text-muted-foreground">· {r.hard} · {r.extreme}</span>
+                    </span>
+                  </button>
                 </li>
               )
             })}

@@ -7,6 +7,7 @@ import { currentT } from '@/i18n/t'
 import type { Json } from '@/lib/database.types'
 import { supabase } from '@/lib/supabase'
 import type { Points, PointsRow } from '@/play/companion'
+import { asRoll, subjectKey, type Roll, type RollSubject } from './rolls'
 import { clampPoints } from './sheet'
 
 export interface CompanionNote { id: string; characterId: string; body: string; createdAt: string }
@@ -300,6 +301,42 @@ export function useCreateCharacter(token: string) {
         void qc.invalidateQueries({ queryKey: companionKeys.one(token) })
       }
     },
+  })
+}
+
+// ------------------------------------------------------------------ rolls
+
+/** The server's roll, checked (a malformed answer reads as a network error). */
+function rolled(raw: unknown): Roll {
+  const roll = asRoll(raw)
+  if (!roll) throw new CompanionError('network', 'bad roll')
+  return roll
+}
+
+export interface CheckRequest { characterId: string; subject: RollSubject; target: number; net: number }
+export interface DiceRequest { characterId: string; count: number; sides: number; modifier: number }
+
+/** A d100 check rolled by the server, which tells the keeper's game screen. */
+export function useRollCheck(token: string) {
+  const qc = useQueryClient()
+  return useMutation<Roll, CompanionError, CheckRequest>({
+    mutationFn: async ({ characterId, subject, target, net }) =>
+      rolled(await call(() => supabase.rpc('companion_roll_check', {
+        p_token: token, p_character: characterId, p_subject: subjectKey(subject), p_target: target, p_net: net,
+      }))),
+    onError: (e) => onWriteError(qc, token, e),
+  })
+}
+
+/** Free dice (damage…) rolled by the server, which tells the keeper's game screen. */
+export function useRollDice(token: string) {
+  const qc = useQueryClient()
+  return useMutation<Roll, CompanionError, DiceRequest>({
+    mutationFn: async ({ characterId, count, sides, modifier }) =>
+      rolled(await call(() => supabase.rpc('companion_roll_dice', {
+        p_token: token, p_character: characterId, p_count: count, p_sides: sides, p_modifier: modifier,
+      }))),
+    onError: (e) => onWriteError(qc, token, e),
   })
 }
 
