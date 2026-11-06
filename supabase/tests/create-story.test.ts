@@ -12,6 +12,12 @@ const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!
 const MOCK_PORT = Number(process.env.MOCK_ANTHROPIC_PORT ?? 4010)
 
 const requests: Array<{ body: Record<string, unknown>; headers: Record<string, unknown> }> = []
+/** When true, the fake API refuses any structured-output schema, like production did. */
+let refuseSchemas = false
+const GRAMMAR_ERROR = {
+  type: 'error',
+  error: { type: 'invalid_request_error', message: 'The compiled grammar is too large, which would cause performance issues. Simplify your tool schemas or reduce the number of strict tools.' },
+}
 
 /** Streams one Messages API response the way the real API does (SSE). */
 function sse(text: string) {
@@ -38,6 +44,10 @@ beforeAll(async () => {
     req.on('end', () => {
       const body = JSON.parse(raw || '{}')
       requests.push({ body, headers: req.headers })
+      if (refuseSchemas && body.output_config?.format) {
+        res.writeHead(400, { 'content-type': 'application/json' })
+        return res.end(JSON.stringify(GRAMMAR_ERROR))
+      }
       res.writeHead(200, { 'content-type': 'text/event-stream' })
       res.end(sse(fakeAnswer(body) ?? '{}'))
     })
@@ -135,6 +145,24 @@ describe('create-story', () => {
     const { data } = await user.from('stories').select('content').eq('id', b.body.storyId).single()
     const acts = (data!.content as { acts: Array<{ id: string; scenes: Array<{ id: string }> }> }).acts
     expect(acts.map((x) => [x.id, x.scenes.map((s) => s.id)])).toEqual([['act-1', ['arrival', 'mill']], ['act-2', ['cellar']]])
+  })
+
+  it('still writes the scenes when the API refuses the schema, with the schema in the prompt instead', async () => {
+    const outline = await invoke({ action: 'outline', brief })
+    const creationId = outline.body.creationId as string
+    refuseSchemas = true
+    try {
+      const before = requests.length
+      const res = await invoke({ action: 'write', creationId })
+      expect(res.status).toBe(200)
+      expect(res.body).toMatchObject({ written: 2, total: 3, remaining: 1, validationErrors: [] })
+      // refused with the schema, then accepted without it
+      const sent = requests.slice(before)
+      expect(sent.map((r) => !!(r.body.output_config as { format?: unknown }).format)).toEqual([true, false])
+      expect(JSON.stringify(sent[1].body.messages)).toContain('Answer with ONE JSON object')
+    } finally {
+      refuseSchemas = false
+    }
   })
 
   it("can't touch someone else's creation, or work without a session", async () => {

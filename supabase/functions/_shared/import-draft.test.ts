@@ -7,6 +7,7 @@ import {
   emptyDraft,
   importDraftSchema,
   mergeDraft,
+  normalizeDraft,
   type DraftRoll,
   type DraftScene,
   type ImportDraft,
@@ -104,10 +105,52 @@ describe('importDraftSchema', () => {
     walk(schema, (n) => forbidden.forEach((k) => expect(n).not.toHaveProperty(k)))
   })
 
-  it('only lets the model pick sound ids that exist', () => {
+  it('stays small: shared objects are defined once, long id lists are only described', () => {
     const text = JSON.stringify(schema)
-    expect(text).toContain('"enum":["rain","wind"]')
-    expect(text).toContain('"enum":["door-creak","footsteps"]')
+    // "The compiled grammar is too large": roll is used by steps and scenes, scene and npc are big
+    expect(Object.keys(schema.$defs as object)).toEqual(['roll', 'step', 'scene', 'npc'])
+    expect(text.match(/"againstSkill":{/g)).toHaveLength(1)
+    expect(text.match(/"readAloud":{/g)).toHaveLength(1)
+    expect(text).not.toContain('"enum":["rain"')
+    expect(text).toContain('only from: rain, wind')
+    expect(text).toContain('only from: door-creak, footsteps')
+  })
+})
+
+describe('normalizeDraft', () => {
+  it('keeps a well-formed draft as it is', () => {
+    expect(normalizeDraft(batchOne(), sounds)).toEqual({ ...batchOne() })
+  })
+
+  it('drops sound ids and stat keys outside their lists', () => {
+    const d = batchOne()
+    d.acts[0].scenes[0].ambience = ['rain', 'thunder']
+    d.acts[0].scenes[0].sfx = ['footsteps', 'scream']
+    d.npcs[0].stats = [{ key: 'DEX', value: 70 }, { key: 'LUCK' as 'DEX', value: 50 }]
+    const n = normalizeDraft(d, sounds)
+    expect(n.acts[0].scenes[0].ambience).toEqual(['rain'])
+    expect(n.acts[0].scenes[0].sfx).toEqual(['footsteps'])
+    expect(n.npcs[0].stats).toEqual([{ key: 'DEX', value: 70 }])
+  })
+
+  it('fills what is missing and fixes wrong types (the fallback without structured outputs)', () => {
+    const n = normalizeDraft(
+      {
+        title: 'T',
+        acts: [{ id: 'a', scenes: [{ id: 's', flow: [{ title: 'x', roll: [{ type: 'magic', bonus: '2' }, {}] }] }, { title: 'no id' }] }],
+        npcs: [{ name: 'no id' }],
+        handouts: 'nope',
+      },
+      sounds,
+    )
+    expect(n.overview).toEqual(emptyDraft().overview)
+    expect(n.acts[0].scenes).toHaveLength(1)
+    expect(n.acts[0].scenes[0]).toEqual(scene('s', '', {
+      flow: [{ title: 'x', text: '', roll: [{ ...noRoll, bonus: 2 }], success: '', failure: '', pushed: '', extra: '', goto: [] }],
+    }))
+    expect(n.npcs).toEqual([])
+    expect(n.handouts).toEqual([])
+    expect(normalizeDraft(null, sounds)).toEqual(emptyDraft())
   })
 })
 
