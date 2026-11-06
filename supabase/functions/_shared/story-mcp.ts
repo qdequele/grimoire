@@ -500,7 +500,7 @@ export interface ToolDef {
   title: string
   description: string
   inputSchema: JsonSchema
-  annotations: { readOnlyHint: boolean; destructiveHint?: boolean; idempotentHint?: boolean; openWorldHint: false }
+  annotations: { readOnlyHint: boolean; destructiveHint: boolean; openWorldHint: false }
 }
 
 export function toolDefinitions(): ToolDef[] {
@@ -512,7 +512,7 @@ export function toolDefinitions(): ToolDef[] {
       description:
         'How to write a Grimoire story: "workflow" (the steps and tools, read it first), "rules" (originality and what makes a good story, plus the brief presets), "format" (story.json), "sounds" (allowed sound ids, and the ambiance screen\'s décors and atmospheres), "example" (a complete story).',
       inputSchema: { type: 'object', properties: { topic: { enum: [...GUIDE_TOPICS] } }, required: ['topic'], additionalProperties: false },
-      annotations: { readOnlyHint: true, openWorldHint: false },
+      annotations: { readOnlyHint: true, destructiveHint: false, openWorldHint: false },
     },
     {
       name: 'save_outline',
@@ -548,7 +548,7 @@ export function toolDefinitions(): ToolDef[] {
       title: 'List my stories',
       description: 'The keeper\'s private stories: id, title, language, number of scenes, last change, and whether a creation is still writing it.',
       inputSchema: { type: 'object', properties: {}, additionalProperties: false },
-      annotations: { readOnlyHint: true, openWorldHint: false },
+      annotations: { readOnlyHint: true, destructiveHint: false, openWorldHint: false },
     },
     {
       name: 'get_story',
@@ -565,7 +565,7 @@ export function toolDefinitions(): ToolDef[] {
         required: ['storyId'],
         additionalProperties: false,
       },
-      annotations: { readOnlyHint: true, openWorldHint: false },
+      annotations: { readOnlyHint: true, destructiveHint: false, openWorldHint: false },
     },
     {
       name: 'edit_story',

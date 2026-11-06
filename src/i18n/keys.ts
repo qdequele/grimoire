@@ -52,6 +52,7 @@ export function dataKeys(): string[] {
     ...Object.values(PRESET_LABEL), // ambiance screen presets
     ...Object.values(PLACE_LABEL), // ambiance screen drawn décors
     ...Object.values(TIME_LABEL), // ambiance screen time of day
+    'Confidentialité', 'Conditions', 'Aide', // LegalLinks (legal/LegalPage.tsx)
   ].filter(Boolean)
 }
 

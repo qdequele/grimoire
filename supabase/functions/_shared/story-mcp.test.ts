@@ -248,6 +248,14 @@ describe('guide and tools', () => {
       expect(t.inputSchema.type).toBe('object')
       expect(JSON.stringify(t.inputSchema)).not.toContain('$ref')
       expect(t.annotations.readOnlyHint).toBe(['grimoire_guide', 'list_my_stories', 'get_story'].includes(t.name))
+      // The ChatGPT and Claude directories: a title on every tool, and every hint an explicit boolean.
+      expect(t.title, t.name).toBeTruthy()
+      expect(t.name.length).toBeLessThanOrEqual(64)
+      expect(t.annotations, t.name).toEqual({
+        readOnlyHint: expect.any(Boolean),
+        destructiveHint: t.name === 'edit_story',
+        openWorldHint: false,
+      })
     }
     const edit = tools.find((t) => t.name === 'edit_story')!
     for (const op of EDIT_OPS) expect(edit.description).toContain(op)

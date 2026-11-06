@@ -41,6 +41,24 @@ test('login form validates input', async ({ page }) => {
   await expect(page.getByText('Au moins 8 caractères')).toBeVisible()
 })
 
+test('privacy policy, terms and connector help are public, in the language of their address', async ({ page }) => {
+  await page.goto('/login')
+  await page.getByRole('navigation', { name: 'Informations légales' }).getByRole('link', { name: 'Confidentialité' }).click()
+  await expect(page).toHaveURL(/\/confidentialite$/)
+  await expect(page.getByRole('heading', { level: 1 })).toHaveText('Politique de confidentialité')
+  await expect(page.locator('html')).toHaveAttribute('lang', 'fr')
+  await expect(page.getByRole('link', { name: /@/ }).first()).toHaveAttribute('href', /^mailto:/)
+  // The language switch goes to the English address: what the ChatGPT and Claude directories link to.
+  await page.getByRole('link', { name: 'English' }).click()
+  await expect(page).toHaveURL(/\/privacy$/)
+  await expect(page.locator('html')).toHaveAttribute('lang', 'en')
+  for (const [path, title] of [['/terms', 'Terms of use'], ['/help', 'Grimoire in ChatGPT and Claude'], ['/conditions', 'Conditions d’utilisation'], ['/aide', 'Grimoire dans ChatGPT et Claude']]) {
+    await page.goto(path)
+    await expect(page.getByRole('heading', { level: 1 })).toHaveText(title)
+  }
+  await expect(page.getByText('/functions/v1/mcp')).toBeVisible() // the connector's address, filled in
+})
+
 test('the Google button follows the provider being enabled in Supabase Auth', async ({ page }) => {
   // Local config has it off: no button.
   await page.goto('/login')

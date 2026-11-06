@@ -759,10 +759,15 @@ export const EN: Record<string, string> = {
   'Adresse du connecteur': 'Connector address',
   'Adresse copiée.': 'Address copied.',
   'Impossible de copier l’adresse.': 'Could not copy the address.',
-  '**Claude** (site ou application) : Réglages → Connecteurs → Ajouter un connecteur personnalisé. Colle l’adresse, puis connecte-toi à Grimoire.':
-    '**Claude** (website or app): Settings → Connectors → Add custom connector. Paste the address, then sign in to Grimoire.',
-  '**ChatGPT** : Réglages → Applications et connecteurs → Paramètres avancés → active le mode développeur, puis Créer. Colle l’adresse, choisis OAuth, puis connecte-toi à Grimoire.':
-    '**ChatGPT**: Settings → Apps & Connectors → Advanced settings → turn on developer mode, then Create. Paste the address, choose OAuth, then sign in to Grimoire.',
+  '**Claude** : « Ajouter à Claude » ouvre Claude avec Grimoire déjà rempli. Clique sur Ajouter, puis Connecter, et connecte-toi à Grimoire.':
+    '**Claude**: “Add to Claude” opens Claude with Grimoire already filled in. Click Add, then Connect, and sign in to Grimoire.',
+  '**Claude** : « Ajouter à Claude » ouvre la fiche de Grimoire. Clique sur Connecter, puis connecte-toi à Grimoire.':
+    '**Claude**: “Add to Claude” opens Grimoire’s page. Click Connect, then sign in to Grimoire.',
+  '**ChatGPT** : « Ouvrir ChatGPT », puis + → ajouter un serveur MCP personnalisé. Nomme-le Grimoire, colle l’adresse, choisis OAuth, accepte l’avertissement et crée-le, puis connecte-toi à Grimoire.':
+    '**ChatGPT**: “Open ChatGPT”, then + → Add custom MCP server. Name it Grimoire, paste the address, choose OAuth, accept the warning and create it, then sign in to Grimoire.',
+  '**ChatGPT** : « Ajouter à ChatGPT » ouvre la fiche de Grimoire. Clique sur Connecter, puis connecte-toi à Grimoire.':
+    '**ChatGPT**: “Add to ChatGPT” opens Grimoire’s page. Click Connect, then sign in to Grimoire.',
+  'Ouvrir ChatGPT': 'Open ChatGPT',
   'Demande par exemple : « Crée-moi une histoire Grimoire dans un village de pêcheurs en 1925, pour trois joueurs. »':
     'Then ask, for example: “Write me a Grimoire story in a fishing village in 1925, for three players.”',
   'Compétence pour Claude (.zip)': 'Skill for Claude (.zip)',
@@ -787,6 +792,15 @@ export const EN: Record<string, string> = {
   'Un nouveau scribe demande à entrer dans la bibliothèque.': 'A new scribe asks to enter the library.',
   'N’autorise que les applications que tu viens de connecter toi-même.': 'Only allow apps you have just connected yourself.',
 
+  'Ajouter à Claude': 'Add to Claude',
+  'Ajouter à ChatGPT': 'Add to ChatGPT',
+  'Mode d’emploi complet du connecteur': 'Full guide to the connector',
+  // ---------------------------------------------------------------- privacy policy, terms, help (legal/)
+  'Confidentialité': 'Privacy',
+  'Conditions': 'Terms',
+  'Aide': 'Help',
+  'Informations légales': 'Legal information',
+  'Mise à jour le {date}': 'Updated {date}',
   // ---------------------------------------------------------------- player companion: dice rolls
   'Moins : {label}': 'Less: {label}',
   'Plus : {label}': 'More: {label}',
