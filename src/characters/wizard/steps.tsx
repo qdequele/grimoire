@@ -29,8 +29,7 @@ import {
   type NameGender,
 } from '@/engine/creation'
 import { cn } from '@/lib/utils'
-import { usePlayers } from '@/characters/api'
-import { PlayerField } from './PlayerField'
+import { useWizardHost } from './host'
 import {
   CHARACTERISTIC_ARRAY,
   CHARACTERISTIC_INFO,
@@ -46,7 +45,8 @@ import {
 } from '@/rules/d100'
 import { Rich } from '@/i18n/Rich'
 import { skillName, type T } from '@/i18n/t'
-import { Pool, Stat, Tuto, ValueSelect } from './parts'
+import { Pool, Stat, TextLimit, Tuto, ValueSelect } from './parts'
+import { SHEET_LIMITS } from '@/characters/character'
 import { ProfileStep } from './ProfileStep'
 import { useT } from '@/i18n/t'
 
@@ -65,6 +65,7 @@ const short = (t: T, k: (typeof CHARACTERISTICS)[number]) => t(CHARACTERISTIC_IN
 
 export function ConceptStep({ draft: d, update }: StepProps) {
   const t = useT()
+  const { PlayerInput } = useWizardHost()
   const [gender, setGender] = useState<NameGender>('any')
   const [origin, setOrigin] = useState('ne')
   const [ideas, setIdeas] = useState<string[]>([])
@@ -87,7 +88,8 @@ export function ConceptStep({ draft: d, update }: StepProps) {
         <div className="grid gap-4 sm:grid-cols-[2fr_2fr_1fr]">
           <Field>
             <FieldLabel htmlFor="w-name">{t('Nom')}</FieldLabel>
-            <Input id="w-name" value={d.name} placeholder={t('Ex. Ada Whitcombe')} onChange={(e) => update({ name: e.target.value })} />
+            <Input id="w-name" value={d.name} maxLength={SHEET_LIMITS.name} placeholder={t('Ex. Ada Whitcombe')} onChange={(e) => update({ name: e.target.value })} />
+            <TextLimit value={d.name.trim()} max={SHEET_LIMITS.name} markup />
           </Field>
           <Field>
             <FieldLabel htmlFor="w-occ">{t('Occupation')}</FieldLabel>
@@ -123,11 +125,12 @@ export function ConceptStep({ draft: d, update }: StepProps) {
         )}
 
         <div className="grid gap-4 sm:grid-cols-2">
-          <PlayerField value={d.playerId ?? ''} onChange={(playerId) => update({ playerId })} />
+          <PlayerInput value={d.playerId ?? ''} onChange={(playerId) => update({ playerId })} />
         </div>
         <Field>
           <FieldLabel htmlFor="w-link">{t("Lien avec l'histoire")}</FieldLabel>
-          <Textarea id="w-link" value={d.link} placeholder={t('Ancien étudiant, voisin, cousine…')} onChange={(e) => update({ link: e.target.value })} />
+          <Textarea id="w-link" value={d.link} maxLength={SHEET_LIMITS.link} placeholder={t('Ancien étudiant, voisin, cousine…')} onChange={(e) => update({ link: e.target.value })} />
+          <TextLimit value={d.link.trim()} max={SHEET_LIMITS.link} />
         </Field>
       </FieldGroup>
       <Tuto>
@@ -272,14 +275,19 @@ export function DerivedStep({ draft: d }: StepProps) {
 function SpecialtyInput({ draft: d, update, id }: StepProps & { id: string }) {
   const t = useT()
   if (!SKILL_BY_ID.get(id)?.specialty) return null
+  const value = d.specialties[id] ?? ''
   return (
-    <Input
-      aria-label={t('Spécialité de {skill}', { skill: skillName(t, id) })}
-      placeholder={t('spécialité')}
-      value={d.specialties[id] ?? ''}
-      className="h-7 w-36 text-xs"
-      onChange={(e) => update((x) => ({ ...x, specialties: { ...x.specialties, [id]: e.target.value } }))}
-    />
+    <>
+      <Input
+        aria-label={t('Spécialité de {skill}', { skill: skillName(t, id) })}
+        placeholder={t('spécialité')}
+        value={value}
+        maxLength={SHEET_LIMITS.specialty}
+        className="h-7 w-36 text-xs"
+        onChange={(e) => update((x) => ({ ...x, specialties: { ...x.specialties, [id]: e.target.value } }))}
+      />
+      <TextLimit value={value} max={SHEET_LIMITS.specialty} markup />
+    </>
   )
 }
 
@@ -330,7 +338,7 @@ export function OccupationStep({ draft: d, update }: StepProps) {
         <TableBody>
           {d.occupationSkills.map((id) => (
             <TableRow key={id}>
-              <TableCell>
+              <TableCell className="whitespace-normal">
                 <div className="flex flex-wrap items-center gap-2">
                   <span className="text-gold">{label(t, d, id)}</span>
                   <SpecialtyInput draft={d} update={update} id={id} />
@@ -338,11 +346,11 @@ export function OccupationStep({ draft: d, update }: StepProps) {
               </TableCell>
               <TableCell className="text-right font-mono">{baseValue(id, d.characteristics)}</TableCell>
               <TableCell>
-                <ValueSelect id={`ov-${id}`} label={t('Valeur de {skill}', { skill: label(t, d, id) })} value={d.occupationValues[id]} pool={OCCUPATION_ARRAY} left={left} onChange={(v) => setValue(id, v)} />
+                <ValueSelect id={`ov-${id}`} label={t('Valeur de {skill}', { skill: label(t, d, id) })} value={d.occupationValues[id]} pool={OCCUPATION_ARRAY} left={left} onChange={(v) => setValue(id, v)} className="w-20" />
               </TableCell>
               <TableCell className="text-right">
                 {o.skills.includes(id) ? (
-                  <span className="text-xs text-muted-foreground">{t('imposée')}</span>
+                  <span className="text-xs whitespace-nowrap text-muted-foreground">{t('imposée')}</span>
                 ) : (
                   <Button type="button" variant="ghost" size="icon-xs" aria-label={t('Retirer {name}', { name: label(t, d, id) })} onClick={() => remove(id)}>
                     <X />
@@ -352,7 +360,7 @@ export function OccupationStep({ draft: d, update }: StepProps) {
             </TableRow>
           ))}
           <TableRow>
-            <TableCell>
+            <TableCell className="whitespace-normal">
               <span className="text-gold">{t('Crédit')}</span>
               {d.occupationValues['credit-rating'] !== undefined && (
                 <span className="text-muted-foreground"> · {t(creditTier(d.occupationValues['credit-rating']))}</span>
@@ -360,7 +368,7 @@ export function OccupationStep({ draft: d, update }: StepProps) {
             </TableCell>
             <TableCell className="text-right font-mono">0</TableCell>
             <TableCell>
-              <ValueSelect id="ov-credit-rating" label={t('Valeur du Crédit')} value={d.occupationValues['credit-rating']} pool={OCCUPATION_ARRAY} left={left} onChange={(v) => setValue('credit-rating', v)} />
+              <ValueSelect id="ov-credit-rating" label={t('Valeur du Crédit')} value={d.occupationValues['credit-rating']} pool={OCCUPATION_ARRAY} left={left} onChange={(v) => setValue('credit-rating', v)} className="w-20" />
             </TableCell>
             <TableCell />
           </TableRow>
@@ -468,7 +476,7 @@ export function issueText(t: T, i: Issue): string {
 
 export function SummaryStep({ draft: d, goTo }: StepProps) {
   const t = useT()
-  const playerName = usePlayers().data?.find((p) => p.id === d.playerId)?.name
+  const playerName = useWizardHost().usePlayerName(d.playerId)
   const v = derivedValues(d.characteristics)
   const { issues, warnings } = checkDraft(d)
   const skills = [...d.occupationSkills, ...d.personalInterests]

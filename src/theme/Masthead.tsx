@@ -2,9 +2,9 @@ import { useT } from '@/i18n/t'
 import { SKIN_LABEL, useSkin } from './skin'
 
 /** Fan ornament above the title in the Art Deco skin (an original drawing in the legacy style). */
-function Fan() {
+function Fan({ width = 110 }: { width?: number }) {
   return (
-    <svg viewBox="0 0 120 60" width="110" height="55" aria-hidden="true" className="text-gold">
+    <svg viewBox="0 0 120 60" width={width} height={width / 2} aria-hidden="true" className="text-gold">
       <g fill="none" stroke="currentColor" strokeWidth="1">
         <path d="M2 58a58 58 0 0 1 116 0" />
         <path d="M18 58a42 42 0 0 1 84 0" />
@@ -15,9 +15,22 @@ function Fan() {
   )
 }
 
-/** The big title block of the legacy home screen: eyebrow, ornament, title, italic subtitle. */
-export function Masthead({ eyebrow, title, subtitle }: { eyebrow: string; title: string; subtitle?: string }) {
+/**
+ * The big title block of the legacy home screen: eyebrow, ornament, title, italic subtitle.
+ * `compact`: a small centred version for phone screens (player companion).
+ */
+export function Masthead({ eyebrow, title, subtitle, compact }: { eyebrow: string; title: string; subtitle?: string; compact?: boolean }) {
   const skin = useSkin((s) => s.skin)
+  if (compact) {
+    return (
+      <div className="flex flex-col items-center gap-1.5 text-center">
+        {skin === 'deco' && <Fan width={64} />}
+        <p className="eyebrow">{eyebrow}</p>
+        <h1 className="font-heading text-4xl leading-tight text-balance">{title}</h1>
+        {subtitle && <p className="font-serif text-lg text-muted-foreground italic">{subtitle}</p>}
+      </div>
+    )
+  }
   return (
     <div className="flex flex-col gap-3">
       <p className="eyebrow">{eyebrow}</p>

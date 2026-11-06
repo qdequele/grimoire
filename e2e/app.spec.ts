@@ -1,8 +1,9 @@
 import { createServer, type Server } from 'node:http'
 import { mkdirSync, readFileSync, writeFileSync } from 'node:fs'
 import { strFromU8, strToU8, unzipSync, zipSync } from 'fflate'
-import { expect, test, type Page } from '@playwright/test'
+import { expect, test } from '@playwright/test'
 import { fakeAnswer } from '../supabase/tests/fake-creator.ts'
+import { createJournalist, signUp } from './helpers.ts'
 
 // The new app against the local Supabase stack (`supabase start`, plus
 // `supabase functions serve --env-file supabase/tests/functions.env` for the import test).
@@ -17,79 +18,6 @@ test.beforeEach(({ page }) => {
 test.afterEach(() => {
   expect(errors, 'uncaught page errors').toEqual([])
 })
-
-async function signUp(page: Page, name = 'Keeper') {
-  await page.goto('/')
-  await expect(page).toHaveURL(/\/login$/)
-  await page.getByRole('tab', { name: 'Créer un compte' }).click()
-  await page.getByLabel('Nom affiché').fill(name)
-  await page.getByLabel('E-mail').fill(`e2e-${crypto.randomUUID()}@example.com`)
-  await page.getByLabel('Mot de passe').fill('correct-horse-battery')
-  await page.getByRole('button', { name: 'Créer mon compte' }).click()
-  await expect(page.getByText(`Bonsoir, ${name}`)).toBeVisible()
-}
-
-/** Picks the investigator's player in the wizard, creating the player if needed. */
-async function choosePlayer(page: Page, player: string) {
-  const select = page.getByRole('combobox', { name: 'Joueur' })
-  if (await select.locator('option', { hasText: player }).count()) return select.selectOption({ label: player })
-  await select.selectOption({ label: '+ Nouveau joueur…' })
-  await page.getByPlaceholder('Prénom').fill(player)
-  await page.getByRole('button', { name: 'Ajouter', exact: true }).click()
-  await expect(page.getByRole('combobox', { name: 'Joueur' }).locator('option:checked')).toHaveText(player)
-}
-
-/** Walks the 7-step creation wizard (the legacy app's rules) for a journalist. player null: keep the one already chosen. */
-async function createJournalist(page: Page, name: string, player: string | null = 'Camille') {
-  const next = (label: string) => page.getByRole('button', { name: new RegExp(label, 'i') }).last().click()
-
-  // 1. Concept (Journaliste is the default occupation)
-  await expect(page.getByRole('heading', { name: 'Créer un investigateur' })).toBeVisible()
-  await page.getByLabel('Nom', { exact: true }).fill(name)
-  if (player) await choosePlayer(page, player)
-  await next('Caractéristiques')
-
-  // 2. Characteristics: place the fixed values, roll luck
-  const values: Record<string, string> = {
-    Force: '50', Constitution: '60', Taille: '70', Dextérité: '50', Apparence: '40', Intelligence: '80', Pouvoir: '60', Éducation: '50',
-  }
-  for (const [label, v] of Object.entries(values)) await page.getByLabel(label, { exact: true }).selectOption(v)
-  await expect(page.getByText('toutes placées ✓')).toBeVisible()
-  await page.getByRole('button', { name: /Lancer/i }).click()
-  await next('Valeurs dérivées')
-
-  // 3. Derived values
-  await expect(page.getByText('Points de vie')).toBeVisible()
-  await next("Compétences d'occupation")
-
-  // 4. Occupation: 5 imposed skills + a social skill + 2 free, then place 70/60/60/50/50/50/40/40/40
-  const add = page.getByLabel('Compétence à ajouter')
-  for (const skill of ['Charme', 'Écouter', 'Trouver Objet Caché']) await add.selectOption({ label: skill })
-  await expect(page.getByText('8 / 8 compétences')).toBeVisible()
-  for (const v of ['70', '60', '60', '50', '50', '50', '40', '40', '40']) {
-    const empty = page.locator('select[aria-label^="Valeur"]').filter({ has: page.locator('option[value=""]:checked') }).first()
-    await empty.selectOption(v)
-  }
-  await next('Intérêts personnels')
-
-  // 5. Personal interests: 4 skills at +20
-  for (const skill of ['Grimper', 'Nager', 'Sauter', 'Occultisme']) {
-    await page.getByRole('checkbox', { name: `Intérêt personnel : ${skill}` }).check()
-  }
-  await expect(page.getByText('4 / 4')).toBeVisible()
-  await next('Profil')
-
-  // 6. Profile
-  await page.getByLabel('Trait', { exact: true }).fill('Curieuse, têtue')
-  await next('Récapitulatif')
-
-  // 7. Summary and save
-  await expect(page.getByText('Tout est prêt')).toBeVisible()
-  await page.getByRole('button', { name: 'Enregistrer le personnage' }).click()
-  // Saved: the wizard goes back to the list. Navigating away earlier would cancel the save.
-  await expect(page).toHaveURL(/\/characters(\/joueurs)?$/)
-  await expect(page.getByText(name, { exact: true }).first()).toBeVisible()
-}
 
 test('signed-out visitors are sent to the login page', async ({ page }) => {
   await page.goto('/characters')
@@ -209,8 +137,52 @@ test('game screen: the original engine runs a story, rolls, saves to the account
   await game.locator('[data-ptog="investigateurs"]').click()
   await expect(game.locator('#invView .nm')).toHaveText('Vera Holt')
 
+  // Phones update points and notebooks while the keeper types: focus, caret and text stay; notes are text
+  await game.locator('#invView .tog').first().click()
+  const note = game.locator('#invView textarea').first()
+  await note.click()
+  await note.pressSequentially('hello')
+  const live = page.frames().find((f) => f.url().includes('play.html'))!
+  await live.evaluate(() => {
+    const g = eval as (s: string) => unknown
+    const S = g('S') as { chars: Array<{ id: string }> }
+    const api = (window as unknown as { GRIMOIRE_ENGINE: { setPoints: (c: string, v: object) => void; setNotebooks: (n: object) => void } }).GRIMOIRE_ENGINE
+    const cid = S.chars[0].id
+    api.setPoints(cid, { pv: 3, san: 20, chance: 30, pm: 4 })
+    api.setNotebooks({ [cid]: [{ id: 'n1', body: '<img src=x onerror=window.__xss=1>', createdAt: new Date().toISOString() }] })
+  })
+  await expect(note).toBeFocused()
+  await expect(note).toHaveValue('hello')
+  await expect(game.locator('#invView .stat .v').first()).toContainText('3')
+  await expect(game.locator('#invView .carnet')).toContainText('<img src=x onerror=window.__xss=1>')
+  await expect(game.locator('#invView .carnet img')).toHaveCount(0)
+  expect(await live.evaluate(() => (window as unknown as { __xss?: number }).__xss)).toBeUndefined()
+
+  // An investigator whose values hold markup (as a hostile phone sheet would, past the database's
+  // checks and toLegacyCharacter): the engine's own renders escape them.
+  const bad = '<img src=x onerror=window.__xss=2>'
+  const leaked = await live.evaluate((bad) => {
+    const g = eval as (s: string) => unknown
+    const api = (window as unknown as { GRIMOIRE_ENGINE: { addMember: (c: object, player: string) => void } }).GRIMOIRE_ENGINE
+    const c = { id: 'hostile', custom: true, n: 'Hostile', job: 'x', pv: 10, san: 50, chance: 50, pm: 10, dex: bad, imp: bad,
+      car: { FOR: bad, CON: bad, TAI: bad, DEX: bad, APP: bad, INT: bad, POU: bad, ÉDU: bad }, sk: '', bg: {} }
+    api.addMember(c, '')
+    // The investigator's sheet (home list and card), rendered off-screen: an <img> would load and fire.
+    const box = document.createElement('div')
+    box.innerHTML = (g('charCard') as (c: object) => string)(c)
+    ;(g('renderHome') as () => void)()
+    return box.querySelectorAll('img').length + document.querySelectorAll('img[src="x"]').length
+  }, bad)
+  expect(leaked).toBe(0)
+  const hostileCard = game.locator('#invView .inv').filter({ hasText: 'Hostile' })
+  await hostileCard.locator('.tog').click()
+  await expect(hostileCard.locator('.job')).toContainText(bad)
+  await expect(game.locator('img[src="x"]')).toHaveCount(0)
+  await page.waitForTimeout(200) // an onerror handler would have run by now
+  expect(await live.evaluate(() => (window as unknown as { __xss?: number }).__xss)).toBeUndefined()
+
   // Next scene, then reload without the browser copy: the account copy brings it back
-  const gameSaved = page.waitForResponse((r) => r.request().method() === 'PATCH' && r.url().includes('/rest/v1/games'))
+  const gameSaved = page.waitForResponse((r) => r.url().includes('/rest/v1/rpc/save_game_state') && r.ok())
   await game.locator('#scene .scene-foot .btn.prim[data-go]').click()
   await expect(game.locator('#scene h2')).not.toHaveText('The harbour')
   const second = (await game.locator('#scene h2').textContent()) ?? ''
@@ -249,6 +221,75 @@ test('game screen: the original engine runs a story, rolls, saves to the account
     return (g('P_') as (id: string) => { hist: Array<{ txt: string }> })(S.chars[0].id).hist.map((h) => h.txt)
   })
   expect(history).toContain('Survived the lighthouse')
+})
+
+test('ambiance screen: follows the scene, shows the handouts the keeper pushes, link revocable', async ({ page, context }) => {
+  test.setTimeout(120_000)
+  await signUp(page)
+  await page.goto('/characters/new')
+  await createJournalist(page, 'Vera Holt')
+  await page.goto('/stories')
+  await page.getByRole('link', { name: 'The Silent Light' }).click()
+  await page.getByLabel(/Vera Holt/).check()
+  await page.getByRole('button', { name: 'Lancer la partie' }).click()
+  const game = page.frameLocator('iframe[title="Partie"]')
+  await expect(game.locator('#scene h2')).toBeVisible()
+
+  // The toolbar opens the screen dialog: create the link the TV opens
+  await game.locator('#qaScreen').click()
+  const dialog = page.getByRole('dialog')
+  await expect(dialog.getByRole('heading', { name: "L'écran de la table" })).toBeVisible()
+  await dialog.getByRole('button', { name: "Créer le lien de l'écran" }).click()
+  const url = (await dialog.getByTestId('screen-url').textContent())!
+  expect(url).toMatch(/\/screen\/[A-Za-z0-9_-]{32,}$/)
+
+  // A second window, no account: the first scene's ambiance (its sounds say wind: fog)
+  const tv = await context.newPage()
+  tv.on('pageerror', (e) => errors.push(e.message))
+  await tv.goto(url)
+  const stage = tv.locator('[data-scene-key]')
+  await expect(stage).toHaveAttribute('data-scene-key', /^fog\|/)
+  await expect(tv.getByRole('button', { name: 'Toucher pour lancer l’écran' })).toBeVisible()
+
+  // The keeper moves on: the screen follows (a fireplace and a clock: the hearth)
+  await page.keyboard.press('Escape')
+  await game.locator('#scene .scene-foot .btn.prim[data-go]').click()
+  await expect(stage).toHaveAttribute('data-scene-key', /^hearth\|/)
+
+  // Push this scene's handout: it appears on the screen, on paper
+  await game.locator('#qaScreen').click()
+  await dialog.getByRole('button', { name: /^Montrer à l’écran/ }).first().click()
+  const handout = tv.locator('figure.scr-handout')
+  await expect(handout).toBeVisible()
+  await expect(handout.locator('.scr-letter')).not.toBeEmpty()
+  await expect(handout.locator('figcaption')).not.toBeEmpty()
+
+  // An ad-hoc picture from the keeper's disk replaces it
+  const png = Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==', 'base64')
+  await dialog.getByLabel('Image à montrer').setInputFiles({ name: 'map.png', mimeType: 'image/png', buffer: png })
+  await expect(handout.locator('img')).toHaveAttribute('src', /\/storage\/v1\/object\/sign\/screen-images\//)
+  await expect(dialog.getByText('Images envoyées')).toBeVisible()
+
+  // Clear the screen; pick another preset by hand
+  await dialog.getByRole('button', { name: "Effacer l'écran" }).click()
+  await expect(handout).toHaveCount(0)
+  await dialog.getByLabel('Ambiance', { exact: true }).selectOption('storm')
+  await expect(stage).toHaveAttribute('data-scene-key', /^storm\|/)
+
+  // Pinned: the screen stays put when the scene changes
+  await dialog.getByRole('checkbox', { name: 'Suivre la scène' }).click()
+  await page.keyboard.press('Escape')
+  await game.locator('#scene .scene-foot .btn.prim[data-go]').click()
+  await expect(game.locator('#jList li').first()).toBeVisible()
+  await tv.waitForTimeout(1500)
+  await expect(stage).toHaveAttribute('data-scene-key', /^storm\|/)
+
+  // Revoke and replace: the old link stops working
+  await game.locator('#qaScreen').click()
+  await dialog.getByRole('button', { name: 'Révoquer et remplacer' }).click()
+  await expect(dialog.getByTestId('screen-url')).not.toHaveText(url)
+  await tv.reload()
+  await expect(tv.getByText("Ce lien d'écran n'est plus valide.")).toBeVisible()
 })
 
 test('story packs: import a .zip with its files, download it back, re-import updates, folders of packs', async ({ page }, testInfo) => {

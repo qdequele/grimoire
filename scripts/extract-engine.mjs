@@ -90,6 +90,12 @@ function patch(from, to, why) {
   if (n !== 1) throw new Error(`Patch "${why}" matched ${n} times`)
   js = js.replace(from, to)
 }
+/** Like patch, for a fragment that appears exactly `count` times (every one is changed). */
+function patchAll(from, to, count, why) {
+  const n = js.split(from).length - 1
+  if (n !== count) throw new Error(`Patch "${why}" matched ${n} times, expected ${count}`)
+  js = js.split(from).join(to)
+}
 
 patch(
   'try{S=JSON.parse(localStorage.getItem(KEY));}catch(e){S=null;}',
@@ -279,6 +285,100 @@ patch(
   'collapsible scene NPCs and investigators',
 )
 
+// ------------------------------------------------------------------ escaping investigator values
+// Investigators now come from the account, and a table link lets a player create one: the values the
+// original engine trusted (its own wizard made them) are escaped where they go into innerHTML.
+// esc() escapes & < > and the double quote, so it is also safe inside value="…" attributes.
+// The app also coerces them (toLegacyCharacter), and the database validates phone sheets.
+patchAll('<div class="v">${c.dex}</div>', '<div class="v">${esc(c.dex)}</div>', 2, 'escape DEX on the investigator sheets')
+patchAll('<div class="v" style="font-size:13px">${c.imp}</div>', '<div class="v" style="font-size:13px">${esc(c.imp)}</div>', 2, 'escape damage bonus on the investigator sheets')
+patchAll('<div class="v">${c.car[k[0]]}</div>', '<div class="v">${esc(c.car[k[0]])}</div>', 2, 'escape characteristics on the investigator sheets')
+for (const k of ['pv', 'chance', 'pm']) {
+  patchAll(`<div class="v">\${c.${k}}</div>`, `<div class="v">\${esc(c.${k})}</div>`, 2, `escape ${k} on the investigator sheets`)
+}
+patch('<div class="k">SAN</div><div class="v">${c.san}</div>', '<div class="k">SAN</div><div class="v">${esc(c.san)}</div>', 'escape SAN on the investigator sheet')
+patchAll('${esc(n)} ${v}</button>', '${esc(n)} ${esc(v)}</button>', 2, 'escape skill values on the party cards (base values come from characteristics)')
+patch('${esc(b.job)} · DEX ${b.dex}', '${esc(b.job)} · DEX ${esc(b.dex)}', 'escape DEX on the party cards')
+patch('value="${carOf(b)[k]||""}"', 'value="${esc(carOf(b)[k]||"")}"', 'escape characteristics in the party cards\' inputs')
+patch('${esc(c.n)} · DEX ${c.dex}', '${esc(c.n)} · DEX ${esc(c.dex)}', 'escape DEX in the combat picker')
+patch('<div class="ini">${r.dex}<small>DEX</small></div>', '<div class="ini">${esc(r.dex)}<small>DEX</small></div>', 'escape DEX in the combat order')
+// The dice result's detail line is plain text built with investigator and opponent names.
+patch('<div class="det">${det}</div>', '<div class="det">${esc(det)}</div>', 'escape the dice result detail (names)')
+// Its level line is plain text too, and carries the skill name ("… · <skill> cochée"): a phone-made
+// investigator's skill names are free text. Every caller passes plain text; the one that escaped its
+// group name itself stops doing so, or it would show "&amp;".
+patch('<div class="lvl ${lvlCls}">${lvlTxt}</div>', '<div class="lvl ${lvlCls}">${esc(lvlTxt)}</div>', 'escape the dice result level line (skill names)')
+patch('" · "+esc(grpOf(st.active).name)', '" · "+grpOf(st.active).name', 'the group SAN result\'s level line is escaped by showRes now')
+// The multi-investigator roll results: same "· <skill> cochée" text.
+patch('<b>${esc(r.n)}</b> ${r.txt}</li>', '<b>${esc(r.n)}</b> ${esc(r.txt)}</li>', 'escape the picker\'s roll results (skill names)')
+// "Modifier la partie": the warnings name the players, and a phone chooses its player's first name.
+patch('<span class="mut">${iss.join(" · ")}</span>', '<span class="mut">${esc(iss.join(" · "))}</span>', 'escape the game setup warnings (player names)')
+
+// ------------------------------------------------------------------ player companion
+// Players' phones change points and write notebooks; the app pushes them through GRIMOIRE_ENGINE.
+// Nothing changes until setNotebooks/setPoints/addMember are called.
+patch(
+  'try{route()}catch(e){}',
+  `/* Grimoire: API for the app (player companion). Types: EngineApi in src/play/host.ts. */
+let NOTEBOOKS={};
+const notesOf=cid=>NOTEBOOKS[cid]||[];
+const openCarnets=new Set();
+/* Re-render without the keeper losing the field they type in (phones update at any time). */
+function keepFocus(fn){const a=document.activeElement,ok=a&&a.id&&/^(INPUT|TEXTAREA)$/.test(a.tagName),
+  m=ok?{id:a.id,v:a.value,s:a.selectionStart,e:a.selectionEnd}:null;
+  fn();
+  if(m){const el=document.getElementById(m.id);if(el&&el!==document.activeElement){el.focus();}
+    if(el){if(el.value!==m.v)el.value=m.v;try{el.setSelectionRange(m.s,m.e);}catch(e){}}}}
+function fillCarnets(){
+  document.querySelectorAll("#invView .inv").forEach(card=>{const t=card.querySelector("[data-tog]"),body=card.querySelector(".ibody");if(!t||!body)return;
+    const old=body.querySelector("details.carnet");if(old)old.remove();
+    const cid=t.dataset.tog,notes=notesOf(cid).slice().sort((a,b)=>String(b.createdAt).localeCompare(String(a.createdAt)));if(!notes.length)return;
+    const d=document.createElement("details");d.className="carnet";d.open=openCarnets.has(cid);
+    d.addEventListener("toggle",()=>{d.open?openCarnets.add(cid):openCarnets.delete(cid);});
+    d.innerHTML='<summary><span>Carnet</span> <span>('+notes.length+')</span></summary>'+notes.map(n=>'<div class="cnote"><small>'+esc(new Date(n.createdAt).toLocaleString(LANG==="en"?"en-GB":"fr-FR",{day:"numeric",month:"short",hour:"2-digit",minute:"2-digit"}))+'</small> '+esc(n.body)+'</div>').join("");
+    body.appendChild(d);});}
+window.GRIMOIRE_ENGINE={
+  setPoints(cid,v){const sl=ST().party.find(p=>p.cid===cid);if(!sl)return;
+    const n=x=>{x=Number(x);return Number.isFinite(x)?Math.round(x):0};sl.pv=n(v.pv);sl.san=n(v.san);sl.chance=n(v.chance);sl.pm=n(v.pm);P_(cid).san=sl.san;
+    save();keepFocus(()=>{renderInv();if(ST().mode==="combat")renderCombat();});},
+  addMember(c,player,progress){if(!c||ST().party.some(p=>p.cid===c.id))return;
+    if(!S.chars.some(x=>x.id===c.id))S.chars.push(c);
+    const name=(player||"").trim(),pl=name?addPlayer(name):null;
+    S.prog[c.id]={skills:{},checks:[],hist:[],...(progress||{}),player:name,owner:pl?pl.id:null};
+    const sl=mkSlot(c);sl.player=name;if(pl)sl.pid=pl.id;ensureGroups();sl.grp=ST().active;
+    ST().party.push(sl);save();keepFocus(()=>renderPlay());},
+  setNotebooks(n){NOTEBOOKS=n||{};fillCarnets();},
+};
+try{route()}catch(e){}`,
+  'API exposed to the app: live points, new party members, notebooks',
+)
+// Notebook section on the investigator cards (folded, newest first).
+patch(
+  '$("#invView").addEventListener("click",e=>{\n  const b=e.target.closest("button");if(!b)return;const P=ST().party;',
+  `{const _riN=renderInv;renderInv=function(){_riN();fillCarnets();};}
+$("#invView").addEventListener("click",e=>{
+  const b=e.target.closest("button");if(!b)return;const P=ST().party;`,
+  'notebooks on the investigator cards',
+)
+// Narrator sees the notebooks.
+patch(
+  'NOTES DU GARDIEN : ${(st.notes||"").slice(-1500)||"aucune"}`;',
+  'NOTES DU GARDIEN : ${(st.notes||"").slice(-1500)||"aucune"}\nCARNETS DES INVESTIGATEURS : ${(()=>{const t=st.party.map(p=>{const c=charById(p.cid),ns=notesOf(p.cid).slice().sort((a,b)=>String(a.createdAt).localeCompare(String(b.createdAt))).slice(-5);return c&&ns.length?c.n+": "+ns.map(n=>n.body).join(" | "):""}).filter(Boolean).join("\\n");return t.slice(0,1500)||"aucun"})()}`;',
+  'narrator reads the investigators\' notebooks',
+)
+// Toolbar: players at the table.
+patch(
+  '$("#qaNarr").onclick=()=>toggleNarr();',
+  '$("#qaNarr").onclick=()=>toggleNarr();$("#qaTable").onclick=()=>{GRIMOIRE_HOST.openTable&&GRIMOIRE_HOST.openTable();};',
+  'toolbar button opens the players-at-the-table dialog',
+)
+// Toolbar: the ambiance screen (TV link, handouts). The screen follows the scene through save().
+patch(
+  '$("#qaTable").onclick=()=>{GRIMOIRE_HOST.openTable&&GRIMOIRE_HOST.openTable();};',
+  '$("#qaTable").onclick=()=>{GRIMOIRE_HOST.openTable&&GRIMOIRE_HOST.openTable();};$("#qaScreen").onclick=()=>{GRIMOIRE_HOST.openScreen&&GRIMOIRE_HOST.openScreen();};',
+  'toolbar button opens the ambiance screen dialog',
+)
+
 const engine =
   '// Generated by scripts/extract-engine.mjs from the legacy app. Game engine only: content is\n' +
   '// injected as GRIMOIRE_DATA by src/play/boot.ts. Edit with care, the legacy parity tests apply.\n' +
@@ -299,6 +399,16 @@ markup = patchText(markup,
   '<button class="btn ico" id="qaSnd"',
   `<button class="btn ico" id="qaNarr" aria-label="Narrateur" title="Narrateur (A)" aria-pressed="false">${NARR_ICON}</button>\n    <button class="btn ico" id="qaSnd"`,
   'narrator toolbar button')
+const TABLE_ICON = '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="9" cy="8" r="3.2"/><path d="M3 19.5c0-3.3 2.7-5.5 6-5.5s6 2.2 6 5.5"/><path d="M16 5.2a3.2 3.2 0 0 1 0 6.2M18 14.3c1.9.7 3 2.4 3 5.2"/></svg>'
+markup = patchText(markup,
+  '<button class="btn ico" id="qaSnd"',
+  `<button class="btn ico" id="qaTable" aria-label="Joueurs à la table" title="Joueurs à la table" aria-pressed="false">${TABLE_ICON}</button>\n    <button class="btn ico" id="qaSnd"`,
+  'players-at-the-table toolbar button')
+const SCREEN_ICON = '<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="2.5" y="4" width="19" height="12.5" rx="1"/><path d="M8.5 20.5h7M12 16.5v4"/><path d="M5.5 13.5l4-4 3 3 2-2 4 3"/></svg>'
+markup = patchText(markup,
+  '<button class="btn ico" id="qaSnd"',
+  `<button class="btn ico" id="qaScreen" aria-label="Écran d'ambiance" title="Écran d'ambiance" aria-pressed="false">${SCREEN_ICON}</button>\n    <button class="btn ico" id="qaSnd"`,
+  'ambiance screen toolbar button')
 const narrPanel = markup.match(/\n\s*<section class="panel narr" id="narrPanel"[^\n]*<\/section>/)
 if (!narrPanel) throw new Error('narrator panel markup not found')
 markup = markup.replace(narrPanel[0], '')
@@ -322,6 +432,11 @@ css = patchText(css,
   '',
   'narrator column style removed')
 css += `
+/* Grimoire: notebooks on investigator cards */
+.inv details.carnet{margin-top:8px;font-size:13px}
+.inv details.carnet summary{cursor:pointer;color:var(--mute)}
+.inv .cnote{padding:4px 0;border-top:1px solid var(--line,rgba(128,128,128,.25))}
+.inv .cnote small{color:var(--mute);margin-right:6px}
 /* Grimoire: floating narrator, collapsible side panels */
 #narrPanel.narr{top:auto;right:calc(18px + env(safe-area-inset-right,0px));bottom:calc(18px + env(safe-area-inset-bottom,0px));width:min(440px,calc(100vw - 32px));height:min(640px,calc(100vh - 110px))}
 @media (min-width:960px){body:has(#dicePanel:not([hidden])) #narrPanel.narr{right:calc(18px + min(440px,100vw - 32px) + 12px)}}

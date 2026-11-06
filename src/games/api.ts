@@ -12,11 +12,13 @@ export interface GameState {
   party: Array<{ characterId: string }>
   /** The game engine's own state (legacy engine), saved as is. */
   legacy?: LegacyState
+  /** Server time (ms) of the last save_game_state: phone points written after it are newer than `legacy`. */
+  serverSavedAt?: number
 }
 
 export type GameRow = Omit<Tables<'games'>, 'state'> & {
   state: GameState
-  story: { id: string; content: StoryContent } | null
+  story: { id: string; owner_id: string | null; pack_files: string[]; content: StoryContent } | null
 }
 
 export const gameKeys = {
@@ -25,7 +27,7 @@ export const gameKeys = {
   one: (id: string) => [...gameKeys.all, 'one', id] as const,
 }
 
-const SELECT = '*, story:stories(id, content)'
+const SELECT = '*, story:stories(id, owner_id, pack_files, content)'
 const asGame = (row: unknown) => row as GameRow
 
 export function useMyGames() {

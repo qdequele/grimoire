@@ -103,8 +103,8 @@ function renderHome(){
   const cs=allChars();
   $("#charList").innerHTML=cs.map(c=>`<details class="ch"><summary><span class="nm">${esc(c.n)}</span><span class="job">${esc(c.job)}</span>${S.prog&&S.prog[c.id]&&S.prog[c.id].player?`<span class="pl">joué par ${esc(S.prog[c.id].player)}</span>`:""}<span class="tag badge ${c.custom?"ready":"todo"}">${c.custom?"Créé":"Prétiré"}</span></summary>
     <div class="body">
-      ${c.car?`<div class="carac">${CARS.map(k=>`<div><div class="k">${k[0]}</div><div class="v">${c.car[k[0]]}</div></div>`).join("")}</div>`:""}
-      <div class="carac"><div><div class="k">PV</div><div class="v">${c.pv}</div></div><div><div class="k">SAN</div><div class="v">${c.san}</div></div><div><div class="k">CHANCE</div><div class="v">${c.chance}</div></div><div><div class="k">PM</div><div class="v">${c.pm}</div></div><div><div class="k">DEX</div><div class="v">${c.dex}</div></div>${c.imp?`<div><div class="k">IMPACT</div><div class="v" style="font-size:13px">${c.imp}</div></div>`:""}</div>
+      ${c.car?`<div class="carac">${CARS.map(k=>`<div><div class="k">${k[0]}</div><div class="v">${esc(c.car[k[0]])}</div></div>`).join("")}</div>`:""}
+      <div class="carac"><div><div class="k">PV</div><div class="v">${esc(c.pv)}</div></div><div><div class="k">SAN</div><div class="v">${esc(c.san)}</div></div><div><div class="k">CHANCE</div><div class="v">${esc(c.chance)}</div></div><div><div class="k">PM</div><div class="v">${esc(c.pm)}</div></div><div><div class="k">DEX</div><div class="v">${esc(c.dex)}</div></div>${c.imp?`<div><div class="k">IMPACT</div><div class="v" style="font-size:13px">${esc(c.imp)}</div></div>`:""}</div>
       <div class="sklist">${esc(skStr(c))}</div>${progHTML(c)}
       ${c.bg?`<div class="bgtxt">${Object.entries(c.bg).filter(x=>x[1]).map(x=>`<b>${x[0]}</b> : ${esc(x[1])}`).join("<br>")}</div>`:""}
       <div class="addrow"><button class="btn" data-export="${c.id}">Exporter la fiche</button>${c.custom?`<button class="btn" data-edit="${c.id}">Modifier</button>`:""}</div>
@@ -232,7 +232,7 @@ function showRes(big,lvlCls,lvlTxt,det,logTxt,fx){
   openDice();const R=$("#result");clearTimeout(rollT);
   const reduce=matchMedia("(prefers-reduced-motion: reduce)").matches;
   const final=()=>{R.className="result"+(fx?" fx-"+fx:"");const tiles=diceTiles();
-    R.innerHTML=`<div class="r-top"><div class="big">${big}</div>${tiles}</div>${lvlTxt?`<div class="lvl ${lvlCls}">${lvlTxt}</div>`:""}<div class="det">${det}</div>`;
+    R.innerHTML=`<div class="r-top"><div class="big">${big}</div>${tiles}</div>${lvlTxt?`<div class="lvl ${lvlCls}">${esc(lvlTxt)}</div>`:""}<div class="det">${esc(det)}</div>`;
     if(fx&&!reduce){const F=$("#flash");F.hidden=false;F.className="flash on-"+(fx==="great"?"good":fx);void F.offsetWidth;
       setTimeout(()=>{F.hidden=true;F.className="flash";},1300);
       if(fx==="crit"||fx==="great"||fx==="good"){const col=fx==="crit"?"#cdb06a":fx==="great"?"#72b8a3":"#86b56f";const n=fx==="good"?10:22;
@@ -282,12 +282,12 @@ function renderInv(){setTimeout(renderCtx,0);
         <span class="mini"><b class="${low?"lo":""}">${s.pv}</b><small>PV</small> <b class="${lowS?"lo":""}">${s.san}</b><small>SAN</small></span>
         ${s.state!=="ok"?pill(s.state):""}
         <button class="tog" data-tog="${s.cid}" aria-expanded="${open}" aria-label="${open?"Replier":"Déplier"} la fiche de ${esc(b.n)}">${open?"−":"+"}</button></div>
-      ${open?`<div class="ibody"><div class="job">${esc(b.job)} · DEX ${b.dex}</div>
+      ${open?`<div class="ibody"><div class="job">${esc(b.job)} · DEX ${esc(b.dex)}</div>
       <div class="stats">${st("pv","PV",b.pv)}${st("san","SAN")}${st("chance","CHANCE")}${st("pm","PM")}</div>
       ${ST().groups&&ST().groups.length>1?`<div class="row3"><span style="font-size:12px;color:var(--mute)">Groupe</span>${ST().groups.map(gg=>`<button class="gchip ${s.grp===gg.id?"on":""}" style="--gc:${GCOL[gg.col%4]}" data-setg="${i}" data-g="${gg.id}">${esc(gg.name)}</button>`).join("")}</div>`:""}
       <div class="row3"><select id="st-${S.cur}-${s.cid}" data-i="${i}" aria-label="État de ${esc(b.n)}">${STATES.map(x=>`<option value="${x[0]}" ${x[0]===s.state?"selected":""}>${x[1]}</option>`).join("")}</select>
         <button class="btn" data-sant="${i}">Test SAN</button><button class="btn" data-luck="${i}">Chance</button></div>
-      <div class="skchips">${skillsOf(b).map(([n,v])=>`<button class="skc ${isChecked(b.id,n)?"on":""}" data-chk="${b.id}" data-sk="${esc(n)}" title="Cocher pour la phase d'amélioration">${esc(n)} ${v}</button>`).join("")}</div><details class="skmore" ${CHARS_K.some(k=>!carOf(b)[k])?"":""}><summary>Caractéristiques${CHARS_K.some(k=>!carOf(b)[k])?" (à compléter)":""}</summary><div class="carin">${CHARS_K.map(k=>`<label><span>${k}</span><input type="number" min="1" max="99" value="${carOf(b)[k]||""}" placeholder="?" data-carin="${b.id}|${k}" ${b.car&&b.car[k]?"disabled":""} aria-label="${k} de ${esc(b.n)}"></label>`).join("")}</div></details><details class="skmore"><summary>Autres compétences (valeurs de base)</summary><div class="skchips">${allSkillsOf(b).filter(x=>x[2]).map(([n,v])=>`<button class="skc ${isChecked(b.id,n)?"on":""}" data-chk="${b.id}" data-sk="${esc(n)}" title="Cocher pour la phase d'amélioration">${esc(n)} ${v}</button>`).join("")}</div></details><p class="skhint">Coche une compétence réussie pendant la partie : elle pourra progresser à la fin.</p><textarea id="nt-${S.cur}-${s.cid}" data-i="${i}" placeholder="Blessures, phobie, objets…">${esc(s.note)}</textarea>
+      <div class="skchips">${skillsOf(b).map(([n,v])=>`<button class="skc ${isChecked(b.id,n)?"on":""}" data-chk="${b.id}" data-sk="${esc(n)}" title="Cocher pour la phase d'amélioration">${esc(n)} ${esc(v)}</button>`).join("")}</div><details class="skmore" ${CHARS_K.some(k=>!carOf(b)[k])?"":""}><summary>Caractéristiques${CHARS_K.some(k=>!carOf(b)[k])?" (à compléter)":""}</summary><div class="carin">${CHARS_K.map(k=>`<label><span>${k}</span><input type="number" min="1" max="99" value="${esc(carOf(b)[k]||"")}" placeholder="?" data-carin="${b.id}|${k}" ${b.car&&b.car[k]?"disabled":""} aria-label="${k} de ${esc(b.n)}"></label>`).join("")}</div></details><details class="skmore"><summary>Autres compétences (valeurs de base)</summary><div class="skchips">${allSkillsOf(b).filter(x=>x[2]).map(([n,v])=>`<button class="skc ${isChecked(b.id,n)?"on":""}" data-chk="${b.id}" data-sk="${esc(n)}" title="Cocher pour la phase d'amélioration">${esc(n)} ${esc(v)}</button>`).join("")}</div></details><p class="skhint">Coche une compétence réussie pendant la partie : elle pourra progresser à la fin.</p><textarea id="nt-${S.cur}-${s.cid}" data-i="${i}" placeholder="Blessures, phobie, objets…">${esc(s.note)}</textarea>
 </div>`:""}
     </div>`}).join("")}</div>`;
 }
@@ -295,6 +295,7 @@ function renderAdd(){const inP=new Set(ST().party.map(p=>p.cid));const av=allCha
   $("#addSel").innerHTML=av.length?av.map(c=>`<option value="${c.id}">${esc(c.n)} · ${c.custom?"créé":"prétiré"}</option>`).join(""):`<option value="">Tous les personnages sont dans la partie</option>`;
   $("#addBtn").disabled=!av.length;}
 if(false)$("#addBtn").onclick=()=>{const id=$("#addSel").value;const c=charById(id);if(!c)return;const sl=mkSlot(c);ensureGroups();sl.grp=ST().active;ST().party.push(sl);save();renderInv();renderAdd();renderNav();toast(`${c.n} rejoint la partie.`);};
+{const _riN=renderInv;renderInv=function(){_riN();fillCarnets();};}
 $("#invView").addEventListener("click",e=>{
   const b=e.target.closest("button");if(!b)return;const P=ST().party;
   if(b.dataset.k){const i=+b.dataset.i,k=b.dataset.k;P[i][k]=Math.max(0,P[i][k]+ +b.dataset.d);
@@ -528,7 +529,7 @@ function renderCombat(){setTimeout(renderCtx,0);
         <label class="fld" for="nb-dg">Dégâts<input id="nb-dg" value="1D6"></label>
       </div><button class="btn" id="nbAdd">Ajouter au bestiaire</button></details>
     <div class="sec"><h4>Investigateurs engagés</h4>
-      ${party.length?`<div class="chips">${party.map(p=>{const c=charById(p.cid);return `<label class="chip test" style="display:flex;gap:6px;align-items:center"><input type="checkbox" id="cw-${p.cid}" data-cw="${p.cid}" ${C.who.includes(p.cid)?"checked":""}> ${esc(c.n)} · DEX ${c.dex}</label>`}).join("")}</div>`:`<div class="empty">Ajoute d'abord des investigateurs à la partie.</div>`}</div>
+      ${party.length?`<div class="chips">${party.map(p=>{const c=charById(p.cid);return `<label class="chip test" style="display:flex;gap:6px;align-items:center"><input type="checkbox" id="cw-${p.cid}" data-cw="${p.cid}" ${C.who.includes(p.cid)?"checked":""}> ${esc(c.n)} · DEX ${esc(c.dex)}</label>`}).join("")}</div>`:`<div class="empty">Ajoute d'abord des investigateurs à la partie.</div>`}</div>
     <div class="cbt-launch"><button class="btn prim" id="cbtStart">Commencer le combat</button></div>`;
   } else {
     const R=C.roster,cur=R[C.turn];
@@ -536,7 +537,7 @@ function renderCombat(){setTimeout(renderCtx,0);
       <button class="btn prim" id="cbtNext">Tour suivant</button><button class="btn" id="cbtSetup">Ajouter des combattants</button><span id="cbtEndZone"><button class="btn warn" id="cbtEnd">Terminer</button></span></div>
     <div class="order">${R.map((r,i)=>{const pv=pvOf(r),out=pv<=0;const atk=r.type==="m"?r.atk:weaponsOf(charById(r.cid)).atk;const esqv=r.type==="m"?r.esq:weaponsOf(charById(r.cid)).esq;
       return `<div class="ctr ${r.type==="m"?"mon":""} ${i===C.turn?"cur":""} ${out?"out":""}">
-        <div class="ini">${r.dex}<small>DEX</small></div>
+        <div class="ini">${esc(r.dex)}<small>DEX</small></div>
         <div style="min-width:0"><div class="cn">${esc(r.name)}${r.type==="p"&&slotOf(r).player?`<small>${esc(slotOf(r).player)}</small>`:""}${out?`<small>${r.type==="m"?"hors de combat":"à terre"}</small>`:""}</div>
           <div class="hp"><span class="bar"><i style="width:${Math.max(0,pv/r.max*100)}%"></i></span><span class="n">${pv} / ${r.max}</span>
             <button data-hp="${i}" data-d="-1" aria-label="Retirer 1 PV">−1</button><button data-hp="${i}" data-d="1" aria-label="Rendre 1 PV">+1</button>
@@ -599,7 +600,7 @@ $("#qaSan").onclick=()=>{const st=ST();ensureGroups();const mem=st.party.filter(
   if(!mem.length){toast("Aucun investigateur dans le groupe suivi.");return;}
   const rs=mem.map(p=>{const c=charById(p.cid),x=d100(0,0),ok=x.r<=p.san&&x.r!==100;return {n:c.n,san:p.san,r:x.r,ok};});
   const nOk=rs.filter(r=>r.ok).length;
-  showRes(`${nOk} / ${rs.length}`,nOk===rs.length?"ord":"fail",`réussites au test de SAN${st.groups.length>1?" · "+esc(grpOf(st.active).name):""}`,
+  showRes(`${nOk} / ${rs.length}`,nOk===rs.length?"ord":"fail",`réussites au test de SAN${st.groups.length>1?" · "+grpOf(st.active).name:""}`,
     rs.map(r=>`${r.ok?"✓":"✗"} ${esc(r.n)} : ${r.r} sur ${r.san}`).join("<br>"),`SAN du groupe → ${nOk}/${rs.length} réussis`,nOk===rs.length?"good":nOk===0?"bad":null);};
 
 /* ---------- Sons (synthèse Web Audio, aucun fichier) ---------- */
@@ -878,7 +879,8 @@ INVESTIGATEURS :
 ${inv}
 ${st.combat&&st.combat.on?`\nCOMBAT EN COURS : round ${st.combat.round}, combattants ${st.combat.roster.map(r=>`${r.name} (${pvOf(r)}/${r.max} PV)`).join(", ")}`:""}
 JOURNAL RÉCENT : ${(ST().journal||[]).slice(0,15).map(x=>x.t).join(" | ")||"aucun"}
-NOTES DU GARDIEN : ${(st.notes||"").slice(-1500)||"aucune"}`;
+NOTES DU GARDIEN : ${(st.notes||"").slice(-1500)||"aucune"}
+CARNETS DES INVESTIGATEURS : ${(()=>{const t=st.party.map(p=>{const c=charById(p.cid),ns=notesOf(p.cid).slice().sort((a,b)=>String(a.createdAt).localeCompare(String(b.createdAt))).slice(-5);return c&&ns.length?c.n+": "+ns.map(n=>n.body).join(" | "):""}).filter(Boolean).join("\n");return t.slice(0,1500)||"aucun"})()}`;
 }
 const NARR_RULES_PRE=1;const NARR_RULES=GRIMOIRE_DATA.NARR_RULES;
 const NARR_QUICK=GRIMOIRE_DATA.NARR_QUICK;
@@ -912,7 +914,7 @@ async function narrSend(text){
 function toggleNarr(force){const p=$("#narrPanel");p.hidden=force===undefined?!p.hidden:!force;if(!S.ui)S.ui={};S.ui.narr=!p.hidden;save();if(!p.hidden){renderNarr();setTimeout(()=>$("#ninput")?.focus(),50);}}
 
 
-$("#qaNarr").onclick=()=>toggleNarr();$("#narrClose").onclick=()=>toggleNarr(false);
+$("#qaNarr").onclick=()=>toggleNarr();$("#qaTable").onclick=()=>{GRIMOIRE_HOST.openTable&&GRIMOIRE_HOST.openTable();};$("#qaScreen").onclick=()=>{GRIMOIRE_HOST.openScreen&&GRIMOIRE_HOST.openScreen();};$("#narrClose").onclick=()=>toggleNarr(false);
 $("#narrPanel").addEventListener("submit",e=>{e.preventDefault();const t=$("#ninput").value;narrSend(t);});
 $("#narrPanel").addEventListener("keydown",e=>{if(e.target.id==="ninput"&&e.key==="Enter"&&!e.shiftKey){e.preventDefault();narrSend(e.target.value);}});
 $("#narrPanel").addEventListener("click",async e=>{const b=e.target.closest("button");if(!b)return;const st=ST();
@@ -1191,8 +1193,8 @@ function charCard(c){const pr=S.prog[c.id]||{};const sanNow=pr.san??c.san;const 
   return `<details class="ch"><summary><span class="nm">${esc(c.n)}</span><span class="job">${esc(c.job)}</span><span class="mini2">SAN ${sanNow}${played?` · ${played} partie${played>1?"s":""}`:""}</span><span class="tag badge ${c.custom?"ready":"todo"}">${c.custom?"Créé":"Prétiré"}</span></summary>
     <div class="body">
       <div class="addrow"><label class="mut" for="own-${c.id}">Joueur</label><select id="own-${c.id}" data-owner="${c.id}"><option value="">Sans joueur</option>${S.players.map(p=>`<option value="${p.id}" ${ownerOf(c.id)===p.id?"selected":""}>${esc(p.name)}</option>`).join("")}</select></div>
-      ${c.car?`<div class="carac">${CARS.map(k=>`<div><div class="k">${k[0]}</div><div class="v">${c.car[k[0]]}</div></div>`).join("")}</div>`:""}
-      <div class="carac"><div><div class="k">PV</div><div class="v">${c.pv}</div></div><div><div class="k">SAN</div><div class="v">${sanNow}</div></div><div><div class="k">CHANCE</div><div class="v">${c.chance}</div></div><div><div class="k">PM</div><div class="v">${c.pm}</div></div><div><div class="k">DEX</div><div class="v">${c.dex}</div></div>${c.imp?`<div><div class="k">IMPACT</div><div class="v" style="font-size:13px">${c.imp}</div></div>`:""}</div>
+      ${c.car?`<div class="carac">${CARS.map(k=>`<div><div class="k">${k[0]}</div><div class="v">${esc(c.car[k[0]])}</div></div>`).join("")}</div>`:""}
+      <div class="carac"><div><div class="k">PV</div><div class="v">${esc(c.pv)}</div></div><div><div class="k">SAN</div><div class="v">${sanNow}</div></div><div><div class="k">CHANCE</div><div class="v">${esc(c.chance)}</div></div><div><div class="k">PM</div><div class="v">${esc(c.pm)}</div></div><div><div class="k">DEX</div><div class="v">${esc(c.dex)}</div></div>${c.imp?`<div><div class="k">IMPACT</div><div class="v" style="font-size:13px">${esc(c.imp)}</div></div>`:""}</div>
       <div class="sklist">${esc(skStr(c))}</div>${progHTML(c)}
       ${c.bg?`<div class="bgtxt">${Object.entries(c.bg).filter(x=>x[1]).map(x=>`<b>${x[0]}</b> : ${esc(x[1])}`).join("<br>")}</div>`:""}
       <div class="addrow"><button class="btn" data-export="${c.id}">Exporter la fiche</button>${c.custom?`<button class="btn" data-edit="${c.id}">Modifier</button><span data-delzone="${c.id}"><button class="btn warn" data-del="${c.id}">Supprimer</button></span>`:""}</div>
@@ -1255,7 +1257,7 @@ function renderSetup(){const U=S.setup,sc=SCENARIOS.find(s=>s.id===U.scen);const
       <label class="pick"><input type="checkbox" id="sj-${p.id}" data-sjon="${p.id}" ${r.on?"checked":""}> <span>${esc(p.name)}</span></label>
       <select id="sc-${p.id}" data-sjc="${p.id}" ${r.on?"":"disabled"} aria-label="Personnage de ${esc(p.name)}">${opts(p.id,r.cid)}</select></div>`;}).join("")}</div>`:`<p class="mut">Aucun joueur enregistré pour l'instant.</p>`}
     <div class="addrow" id="setAddZone"><button class="btn" id="setAdd">+ Ajouter un joueur</button></div></div>
-    <div class="pool"><span>${n} joueur${n>1?"s":""}</span>${iss.length?`<span class="mut">${iss.join(" · ")}</span>`:`<span class="t">prêt ✓</span>`}</div>
+    <div class="pool"><span>${n} joueur${n>1?"s":""}</span>${iss.length?`<span class="mut">${esc(iss.join(" · "))}</span>`:`<span class="t">prêt ✓</span>`}</div>
     <div class="addrow"><button class="btn prim" id="setGo" ${iss.length?"disabled":""}>${U.edit?"Appliquer les changements":"Lancer la partie"}</button><button class="btn" id="setCancel">Annuler</button></div>
     ${U.edit?`<p class="mut">Les investigateurs retirés quittent la partie ; ceux qui restent gardent leurs PV, leur SAN et leur état.</p>`:""}`;}
 $("#vSetup").addEventListener("change",e=>{const t=e.target,R=S.setup.rows;
@@ -1334,7 +1336,7 @@ function renderPick(){const P=PICK,st=ST();const title=P.kind==="san"?`SAN · ${
     let extra="";if(P.kind==="test"){const f=valFor(c,sl,P.label);const v=P.vals[sl.cid]??f.v;extra=`<input type="number" min="1" max="99" class="pv-in" id="pv-${sl.cid}" data-pv="${sl.cid}" value="${v??""}" placeholder="?" aria-label="Valeur de ${esc(c.n)}">`;}
     if(P.kind==="san")extra=`<span class="pv-s">SAN ${sl.san}</span>`;if(P.kind==="dmg")extra=`<span class="pv-s">PV ${sl.pv}/${c.pv}</span>`;
     return `<label class="pk ${on?"on":""} ${dead?"dead":""}">${head(sl,g)}<input type="checkbox" data-pk="${sl.cid}" ${on?"checked":""} ${dead?"disabled":""}><span class="pn">${esc(c.n)}${sl.player?` <span class="mut">${esc(sl.player)}</span>`:""}</span>${extra}</label>`;}).join("");
-  const res=P.res?`<ul class="pres">${P.res.map(r=>`<li class="${r.cls}"><b>${esc(r.n)}</b> ${r.txt}</li>`).join("")}</ul>`:"";
+  const res=P.res?`<ul class="pres">${P.res.map(r=>`<li class="${r.cls}"><b>${esc(r.n)}</b> ${esc(r.txt)}</li>`).join("")}</ul>`:"";
   $("#pickBox").innerHTML=`<div class="pk-head"><span class="gm-eyebrow">${P.kind==="san"?"Test de Santé mentale":P.kind==="dmg"?"Dégâts":"Test de compétence"}</span><h3>${esc(title)}</h3>
     ${P.kind==="san"?`<p class="mut">Réussite : −${esc(P.val.split("/")[0])} · échec : −${esc(P.val.split("/")[1])}. La perte est retirée automatiquement.</p>`:P.kind==="dmg"?`<p class="mut">${esc(P.val)} par cible, retirés des PV avec la règle de blessure grave.</p>`:`<p class="mut">Valeur trouvée sur la fiche, modifiable. Une réussite coche la compétence pour la progression.</p>`}</div>
     ${P.res?res:`<div class="pk-all"><button class="lnk" data-pkall="1">Tout le groupe suivi</button> · <button class="lnk" data-pkall="2">Tous</button> · <button class="lnk" data-pkall="0">Aucun</button></div><div class="pk-list">${rows}</div>
@@ -1683,4 +1685,34 @@ if(LANG==="en"){i18nData();setTimeout(i18nAll,0);}langLabels();
 const FR_EN_SCEN=null;
 /* content removed by extract-engine.mjs */
 
+/* Grimoire: API for the app (player companion). Types: EngineApi in src/play/host.ts. */
+let NOTEBOOKS={};
+const notesOf=cid=>NOTEBOOKS[cid]||[];
+const openCarnets=new Set();
+/* Re-render without the keeper losing the field they type in (phones update at any time). */
+function keepFocus(fn){const a=document.activeElement,ok=a&&a.id&&/^(INPUT|TEXTAREA)$/.test(a.tagName),
+  m=ok?{id:a.id,v:a.value,s:a.selectionStart,e:a.selectionEnd}:null;
+  fn();
+  if(m){const el=document.getElementById(m.id);if(el&&el!==document.activeElement){el.focus();}
+    if(el){if(el.value!==m.v)el.value=m.v;try{el.setSelectionRange(m.s,m.e);}catch(e){}}}}
+function fillCarnets(){
+  document.querySelectorAll("#invView .inv").forEach(card=>{const t=card.querySelector("[data-tog]"),body=card.querySelector(".ibody");if(!t||!body)return;
+    const old=body.querySelector("details.carnet");if(old)old.remove();
+    const cid=t.dataset.tog,notes=notesOf(cid).slice().sort((a,b)=>String(b.createdAt).localeCompare(String(a.createdAt)));if(!notes.length)return;
+    const d=document.createElement("details");d.className="carnet";d.open=openCarnets.has(cid);
+    d.addEventListener("toggle",()=>{d.open?openCarnets.add(cid):openCarnets.delete(cid);});
+    d.innerHTML='<summary><span>Carnet</span> <span>('+notes.length+')</span></summary>'+notes.map(n=>'<div class="cnote"><small>'+esc(new Date(n.createdAt).toLocaleString(LANG==="en"?"en-GB":"fr-FR",{day:"numeric",month:"short",hour:"2-digit",minute:"2-digit"}))+'</small> '+esc(n.body)+'</div>').join("");
+    body.appendChild(d);});}
+window.GRIMOIRE_ENGINE={
+  setPoints(cid,v){const sl=ST().party.find(p=>p.cid===cid);if(!sl)return;
+    const n=x=>{x=Number(x);return Number.isFinite(x)?Math.round(x):0};sl.pv=n(v.pv);sl.san=n(v.san);sl.chance=n(v.chance);sl.pm=n(v.pm);P_(cid).san=sl.san;
+    save();keepFocus(()=>{renderInv();if(ST().mode==="combat")renderCombat();});},
+  addMember(c,player,progress){if(!c||ST().party.some(p=>p.cid===c.id))return;
+    if(!S.chars.some(x=>x.id===c.id))S.chars.push(c);
+    const name=(player||"").trim(),pl=name?addPlayer(name):null;
+    S.prog[c.id]={skills:{},checks:[],hist:[],...(progress||{}),player:name,owner:pl?pl.id:null};
+    const sl=mkSlot(c);sl.player=name;if(pl)sl.pid=pl.id;ensureGroups();sl.grp=ST().active;
+    ST().party.push(sl);save();keepFocus(()=>renderPlay());},
+  setNotebooks(n){NOTEBOOKS=n||{};fillCarnets();},
+};
 try{route()}catch(e){}

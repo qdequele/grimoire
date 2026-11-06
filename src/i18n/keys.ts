@@ -5,6 +5,7 @@ import { ERA_CHOICES, LENGTHS, PLACE_CHOICES, THREATS, TONES } from '@/stories/c
 import {
   CHARACTERISTIC_INFO, CREDIT_TIERS, NAME_ORIGINS, OCCUPATIONS, PROFILE_FIELDS, SKILLS,
 } from '@/rules/d100'
+import { PRESET_LABEL } from '@/screen/ambiance'
 
 /** Texts that reach t() from data rather than from a t('…') literal in the code. */
 export function dataKeys(): string[] {
@@ -29,6 +30,7 @@ export function dataKeys(): string[] {
     // Labels passed as props, then translated by the component (Section, NameForm, Stat, nav).
     'Histoires', 'Bibliothèque', 'Mes histoires', 'Importer', 'Investigateurs', 'Joueurs', 'Réglages',
     'Renommer', 'Ajouter un joueur', 'PV', 'Chance', 'PM', '{label} : {detail}',
+    'SAN', 'Fiche', 'Carnet', // companion stat tiles and sheet tabs
     'Concept', 'Caractéristiques', 'Valeurs dérivées', "Compétences d'occupation", 'Intérêts personnels', 'Profil', 'Récapitulatif',
     // Messages built outside components, shown through t() / tMsg().
     'Tu as déjà un joueur avec ce prénom.',
@@ -44,6 +46,8 @@ export function dataKeys(): string[] {
     // suggest-profile function messages
     "L'aide IA n'est pas configurée sur ce serveur.", "Le service d'IA est occupé. Réessaie dans une minute.",
     'Connecte-toi pour utiliser l’aide IA.', 'Pas de suggestion possible pour ce profil.', 'Réponse de l’IA illisible. Réessaie.',
+    "Ce lien n'est plus valide.",
+    ...Object.values(PRESET_LABEL), // ambiance screen presets
   ].filter(Boolean)
 }
 

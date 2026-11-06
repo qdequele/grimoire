@@ -28,6 +28,19 @@ export interface CharacterData {
   progress?: Record<string, unknown>
 }
 
+/**
+ * Text limits of a sheet, in characters. They are the database's for a sheet made on a phone
+ * (companion_clean_character, companion_create_character); the wizard applies them everywhere.
+ * A specialty of 40 keeps any skill key ("id:specialty") within the server's 80.
+ */
+export const SHEET_LIMITS = { name: 80, occupation: 200, link: 200, profile: 2000, skillKey: 80, specialty: 40, playerName: 80 } as const
+
+/**
+ * Characters a phone may not put in a name, a skill or a first name: they build HTML on the keeper's
+ * game screen (the database refuses them too).
+ */
+export const hasMarkup = (s: string): boolean => /[<>&"]/.test(s)
+
 /** "art-craft:Photographie" → "Arts et métiers (Photographie)". */
 export function skillKeyLabel(key: string): string {
   const [id, specialty] = key.split(/:(.*)/)
