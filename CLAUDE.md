@@ -129,11 +129,7 @@ Reprendre la partie · Nouvelle partie (→ library) · **Histoires** (`/stories
 - Hosted Auth requires e-mail confirmation (local doesn't). E-mails go through Resend (SMTP, sender on legrimoire.quest; DKIM/SPF/DMARC records on Vercel DNS).
 - E-mail templates: `pnpm emails` (`scripts/gen-email-templates.mjs`) writes `supabase/templates/*.html`, used locally via `config.toml`. To update the hosted project: `pnpm emails:push --diff` (preview), then `pnpm emails:push` (asks before writing; `--yes` in agent runs). It pushes only the `[auth.email.template.*]` sections, never the local settings of `config.toml`. French or English from `user_metadata.lang`, set at sign-up.
 - Test e-mail addresses use `@example.com`: Supabase Auth rejects `.local` domains.
-- **Deploy order for the player companion** (the app calls RPCs and a function signature that only exist after steps 1–2):
-  1. `supabase db push` (every companion migration, `20261106090000` to `20261106090500`).
-  2. `supabase functions deploy suggest-profile`: it now takes `storyLink` for the investigator's link with the story and `link` for the companion token.
-  3. Merge to `main` (Vercel deploys the app).
-  Hosted Realtime must allow public broadcast channels (the companion topics are public, `private: false`).
+- **Deploying the player companion**: merging to `main` does it in the right order (deploy workflow above): the companion migrations (`20261106090000` to `20261106090500`), then `suggest-profile`, which now takes `storyLink` for the investigator's link with the story and `link` for the companion token, then the site. One manual prerequisite: hosted Realtime must allow public broadcast channels (the companion topics are public, `private: false`).
 
 ## Accounts, marketplace, import (Supabase)
 
