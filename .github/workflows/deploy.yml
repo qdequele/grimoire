@@ -54,11 +54,11 @@ jobs:
           version: 3.0.0
       - run: supabase link --project-ref "$PROJECT_ID"
       - name: Pending migrations
-        run: supabase db push --dry-run
+        run: supabase db push --remote --dry-run
       - name: Apply migrations
-        run: supabase db push
+        run: supabase db push --remote
       - name: Deploy Edge Functions
-        run: supabase functions deploy --project-ref "$PROJECT_ID"
+        run: supabase functions deploy --remote="$PROJECT_ID"
 
   site:
     needs: supabase
