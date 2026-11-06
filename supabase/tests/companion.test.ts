@@ -320,6 +320,35 @@ describe('companion RPCs (anonymous)', () => {
 })
 
 // ------------------------------------------------------------------ create from a link, live broadcast
+// ------------------------------------------------------------------ live helpers
+async function waitFor<T>(subscribe: (resolve: (v: T) => void) => Promise<() => Promise<void>>, act: () => Promise<void>): Promise<T> {
+  let off: () => Promise<void> = async () => {}
+  try {
+    return await new Promise<T>((resolve, reject) => {
+      const timer = setTimeout(() => reject(new Error('no broadcast within 5 s')), 5000)
+      subscribe((v) => { clearTimeout(timer); resolve(v) })
+        .then((o) => { off = o; return act() })
+        .catch(reject)
+    })
+  } finally {
+    await off()
+  }
+}
+
+async function listen(channel: string, event: string, onMessage: (payload: unknown) => void) {
+  const client = createClient<Database>(url, anonKey, { auth: { persistSession: false } })
+  const ch = client.channel(`companion:${channel}`)
+  ch.on('broadcast', { event }, (m) => onMessage(m.payload))
+  await new Promise<void>((resolve, reject) => {
+    const timer = setTimeout(() => reject(new Error('not SUBSCRIBED within 5 s')), 5000)
+    ch.subscribe((status) => {
+      if (status === 'SUBSCRIBED') { clearTimeout(timer); resolve() }
+      else if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT') { clearTimeout(timer); reject(new Error(status)) }
+    })
+  })
+  return async () => { await client.removeChannel(ch); await client.realtime.disconnect() }
+}
+
 describe('companion: create an investigator and broadcast', () => {
   it('a player creates an investigator that joins the game', async () => {
     const g = await newGame(alice, [{ name: 'One' }])
@@ -527,34 +556,6 @@ describe('companion: create an investigator and broadcast', () => {
     expect(r.error).not.toBeNull()
   })
 
-  async function waitFor<T>(subscribe: (resolve: (v: T) => void) => Promise<() => Promise<void>>, act: () => Promise<void>): Promise<T> {
-    let off: () => Promise<void> = async () => {}
-    try {
-      return await new Promise<T>((resolve, reject) => {
-        const timer = setTimeout(() => reject(new Error('no broadcast within 5 s')), 5000)
-        subscribe((v) => { clearTimeout(timer); resolve(v) })
-          .then((o) => { off = o; return act() })
-          .catch(reject)
-      })
-    } finally {
-      await off()
-    }
-  }
-
-  async function listen(channel: string, event: string, onMessage: (payload: unknown) => void) {
-    const client = createClient<Database>(url, anonKey, { auth: { persistSession: false } })
-    const ch = client.channel(`companion:${channel}`)
-    ch.on('broadcast', { event }, (m) => onMessage(m.payload))
-    await new Promise<void>((resolve, reject) => {
-      const timer = setTimeout(() => reject(new Error('not SUBSCRIBED within 5 s')), 5000)
-      ch.subscribe((status) => {
-        if (status === 'SUBSCRIBED') { clearTimeout(timer); resolve() }
-        else if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT') { clearTimeout(timer); reject(new Error(status)) }
-      })
-    })
-    return async () => { await client.removeChannel(ch); await client.realtime.disconnect() }
-  }
-
   it("points changes are broadcast on the game's topic", async () => {
     const g = await newGame(alice, [{ name: 'One', hp: 12 }])
     const l = await link(alice, g.gameId)
@@ -708,5 +709,123 @@ describe('companion: keeper saves', () => {
     }).select('updated_at').single()
     expect(r.error).toBeNull()
     expect(Date.parse(r.data!.updated_at)).toBeLessThan(Date.parse('2090-01-01T00:00:00Z'))
+  })
+})
+
+describe('companion: dice rolls', () => {
+  const channelOf = async (gameId: string) =>
+    (await alice.client.from('games').select('channel').eq('id', gameId).single()).data!.channel
+
+  it('a check is rolled by the server, kept for the keeper only, and announced on the topic', async () => {
+    const g = await newGame(alice, [{ name: 'One' }])
+    const l = await link(alice, g.gameId)
+    let roll: Record<string, unknown> = {}
+    const hint = await waitFor<Record<string, unknown>>(
+      async (resolve) => listen(await channelOf(g.gameId), 'roll', (p) => resolve(p as Record<string, unknown>)),
+      async () => {
+        const { data, error } = await anon.rpc('companion_roll_check', {
+          p_token: l.token, p_character: g.ids[0], p_subject: 'skill:spot-hidden', p_target: 60, p_net: 1,
+        })
+        expect(error).toBeNull()
+        roll = data as Record<string, unknown>
+      },
+    )
+    expect(hint).toMatchObject({ characterId: g.ids[0] })
+    expect(roll).toMatchObject({ kind: 'check', characterId: g.ids[0], subject: 'skill:spot-hidden', target: 60, net: 1 })
+    const dice = roll.dice as { tens: number[]; units: number }
+    expect(dice.tens).toHaveLength(2)
+    const values = dice.tens.map((t) => (t === 0 && dice.units === 0 ? 100 : t * 10 + dice.units))
+    expect(roll.result).toBe(Math.min(...values))
+    const r = roll.result as number
+    expect(roll.level).toBe(r <= 12 ? 'extreme' : r <= 30 ? 'hard' : r <= 60 ? 'regular' : 'failure')
+
+    const rows = (await alice.client.from('game_rolls').select('id, result').eq('game_id', g.gameId)).data
+    expect(rows).toEqual([{ id: roll.id, result: roll.result }])
+    expect((await bob.client.from('game_rolls').select('id').eq('game_id', g.gameId)).data).toEqual([])
+    expect((await anon.from('game_rolls').select('id')).data ?? []).toEqual([])
+  })
+
+  it('penalty dice keep the highest; results stay within 1..100', async () => {
+    const g = await newGame(alice, [{ name: 'One' }])
+    const l = await link(alice, g.gameId)
+    for (let i = 0; i < 15; i++) {
+      const { data, error } = await anon.rpc('companion_roll_check', {
+        p_token: l.token, p_character: g.ids[0], p_subject: 'char:POW', p_target: 50, p_net: -2,
+      })
+      expect(error).toBeNull()
+      const roll = data as { result: number; dice: { tens: number[]; units: number } }
+      expect(roll.dice.tens).toHaveLength(3)
+      const values = roll.dice.tens.map((t) => (t === 0 && roll.dice.units === 0 ? 100 : t * 10 + roll.dice.units))
+      expect(roll.result).toBe(Math.max(...values))
+      expect(roll.result).toBeGreaterThanOrEqual(1)
+      expect(roll.result).toBeLessThanOrEqual(100)
+    }
+  })
+
+  it('free dice: count × sides + modifier', async () => {
+    const g = await newGame(alice, [{ name: 'One' }])
+    const l = await link(alice, g.gameId)
+    for (const sides of [3, 6, 20]) {
+      const { data, error } = await anon.rpc('companion_roll_dice', {
+        p_token: l.token, p_character: g.ids[0], p_count: 3, p_sides: sides, p_modifier: -1,
+      })
+      expect(error).toBeNull()
+      const roll = data as { kind: string; result: number; dice: { count: number; sides: number; modifier: number; results: number[] } }
+      expect(roll.kind).toBe('dice')
+      expect(roll.dice).toMatchObject({ count: 3, sides, modifier: -1 })
+      expect(roll.dice.results).toHaveLength(3)
+      expect(roll.dice.results.every((d) => d >= 1 && d <= sides)).toBe(true)
+      expect(roll.result).toBe(roll.dice.results.reduce((a, b) => a + b, 0) - 1)
+    }
+  })
+
+  it('refuses bad values, other investigators and revoked links', async () => {
+    const g = await newGame(alice, [{ name: 'One' }, { name: 'Two' }])
+    const other = await newGame(bob, [{ name: 'Elsewhere' }])
+    const l = await link(alice, g.gameId)
+    const personal = await link(alice, g.gameId, g.ids[0])
+    const check = (over: Record<string, unknown>) =>
+      anon.rpc('companion_roll_check', {
+        p_token: l.token, p_character: g.ids[0], p_subject: 'san', p_target: 50, p_net: 0, ...over,
+      } as Database['public']['Functions']['companion_roll_check']['Args'])
+    for (const bad of [
+      { p_subject: 'skill:Spot Hidden' }, { p_subject: 'skill:x:<b>' }, { p_subject: 'char:XYZ' }, { p_subject: 'sanity' },
+      { p_target: -1 }, { p_target: 201 }, { p_net: 3 }, { p_net: -3 },
+    ]) expect((await check(bad)).error?.message).toContain('bad_value')
+    expect((await check({ p_character: other.ids[0] })).error?.message).toContain('not_in_game')
+    expect((await check({ p_token: personal.token, p_character: g.ids[1] })).error?.message).toContain('not_in_game')
+    expect((await check({ p_token: personal.token })).error).toBeNull()
+
+    const dice = (over: Record<string, unknown>) =>
+      anon.rpc('companion_roll_dice', {
+        p_token: l.token, p_character: g.ids[0], p_count: 1, p_sides: 6, p_modifier: 0, ...over,
+      } as Database['public']['Functions']['companion_roll_dice']['Args'])
+    for (const bad of [{ p_count: 0 }, { p_count: 11 }, { p_sides: 7 }, { p_modifier: 21 }, { p_modifier: -21 }]) {
+      expect((await dice(bad)).error?.message).toContain('bad_value')
+    }
+
+    await alice.client.from('table_links').update({ revoked_at: new Date().toISOString() }).eq('id', l.id)
+    expect((await check({})).error?.message).toContain('link_invalid')
+  })
+
+  it('keeps the 100 newest rolls of a game', async () => {
+    const g = await newGame(alice, [{ name: 'One' }])
+    const l = await link(alice, g.gameId)
+    for (let i = 0; i < 103; i++) {
+      const { error } = await anon.rpc('companion_roll_dice', { p_token: l.token, p_character: g.ids[0], p_count: 1, p_sides: 6, p_modifier: 0 })
+      expect(error).toBeNull()
+    }
+    const { count } = await alice.client.from('game_rolls').select('id', { count: 'exact', head: true }).eq('game_id', g.gameId)
+    expect(count).toBe(100)
+  })
+
+  it("anonymous visitors can't call the internals or write rolls", async () => {
+    const g = await newGame(alice, [{ name: 'One' }])
+    expect((await anon.rpc('companion_d10' as never)).error).not.toBeNull()
+    expect((await anon.rpc('companion_roll_prune', { p_game: g.gameId })).error).not.toBeNull()
+    const forged = await alice.client.from('game_rolls').insert({
+      game_id: g.gameId, owner_id: alice.id, character_id: g.ids[0], kind: 'dice', dice: {}, result: 100,
+    })
+    expect(forged.error).not.toBeNull()
   })
 })

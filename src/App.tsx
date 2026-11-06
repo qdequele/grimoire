@@ -12,6 +12,7 @@ import { CompanionLayout } from '@/companion/CompanionLayout'
 import { NewInvestigatorPage } from '@/companion/NewInvestigatorPage'
 import { Notebook } from '@/companion/Notebook'
 import { PickPage } from '@/companion/PickPage'
+import { DiceTab } from '@/companion/Dice'
 import { ProfileTab, SheetPage, SheetTab } from '@/companion/SheetPage'
 import { GamePage } from '@/games/GamePage'
 import { ScreenPage } from '@/screen/ScreenPage'
@@ -67,6 +68,7 @@ const router = createBrowserRouter([
         element: <SheetPage />,
         children: [
           { index: true, element: <SheetTab /> },
+          { path: 'des', element: <DiceTab /> },
           { path: 'carnet', element: <Notebook /> },
           { path: 'profil', element: <ProfileTab /> },
         ],

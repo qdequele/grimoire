@@ -6,11 +6,12 @@ import {
   CHARACTERISTIC_INFO, CREDIT_TIERS, NAME_ORIGINS, OCCUPATIONS, PROFILE_FIELDS, SKILLS,
 } from '@/rules/d100'
 import { PRESET_LABEL } from '@/screen/ambiance'
+import { LEVEL_LABEL } from '@/companion/rolls'
 
 /** Texts that reach t() from data rather than from a t('…') literal in the code. */
 export function dataKeys(): string[] {
   return [
-    ...SKILLS.map((s) => `compétence:${s.label}`),
+    ...SKILLS.flatMap((s) => [`compétence:${s.label}`, s.what]),
     'compétence:Sciences', // "Sciences (autre)" with a specialty
     ...OCCUPATIONS.flatMap((o) => [o.label, o.hint ?? '', ...Object.values(o.specialties ?? {})]),
     ...Object.values(CHARACTERISTIC_INFO).flatMap((c) => [c.short, c.name, c.what]),
@@ -30,7 +31,8 @@ export function dataKeys(): string[] {
     // Labels passed as props, then translated by the component (Section, NameForm, Stat, nav).
     'Histoires', 'Bibliothèque', 'Mes histoires', 'Importer', 'Investigateurs', 'Joueurs', 'Réglages',
     'Renommer', 'Ajouter un joueur', 'PV', 'Chance', 'PM', '{label} : {detail}',
-    'SAN', 'Fiche', 'Carnet', // companion stat tiles and sheet tabs
+    'SAN', 'Fiche', 'Dés', 'Carnet', // companion stat tiles and sheet tabs
+    ...Object.values(LEVEL_LABEL), 'Réussite', 'Majeure', 'Extrême', // companion rolls
     'Concept', 'Caractéristiques', 'Valeurs dérivées', "Compétences d'occupation", 'Intérêts personnels', 'Profil', 'Récapitulatif',
     // Messages built outside components, shown through t() / tMsg().
     'Tu as déjà un joueur avec ce prénom.',

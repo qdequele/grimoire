@@ -217,6 +217,73 @@ export type Database = {
           },
         ]
       }
+      game_rolls: {
+        Row: {
+          character_id: string
+          created_at: string
+          dice: Json
+          game_id: string
+          id: string
+          kind: string
+          level: string | null
+          net: number
+          owner_id: string
+          result: number
+          subject: string | null
+          target: number | null
+        }
+        Insert: {
+          character_id: string
+          created_at?: string
+          dice: Json
+          game_id: string
+          id?: string
+          kind: string
+          level?: string | null
+          net?: number
+          owner_id: string
+          result: number
+          subject?: string | null
+          target?: number | null
+        }
+        Update: {
+          character_id?: string
+          created_at?: string
+          dice?: Json
+          game_id?: string
+          id?: string
+          kind?: string
+          level?: string | null
+          net?: number
+          owner_id?: string
+          result?: number
+          subject?: string | null
+          target?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "game_rolls_character_fkey"
+            columns: ["character_id", "owner_id"]
+            isOneToOne: false
+            referencedRelation: "characters"
+            referencedColumns: ["id", "owner_id"]
+          },
+          {
+            foreignKeyName: "game_rolls_game_fkey"
+            columns: ["game_id", "owner_id"]
+            isOneToOne: false
+            referencedRelation: "games"
+            referencedColumns: ["id", "owner_id"]
+          },
+          {
+            foreignKeyName: "game_rolls_owner_id_fkey"
+            columns: ["owner_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       games: {
         Row: {
           channel: string
@@ -619,6 +686,7 @@ export type Database = {
         Args: { p_data: Json; p_player_name: string; p_token: string }
         Returns: string
       }
+      companion_d10: { Args: Record<PropertyKey, never>; Returns: number }
       companion_has_markup: { Args: { p: string }; Returns: boolean }
       companion_int: {
         Args: { p: Json; p_hi: number; p_lo: number }
@@ -645,6 +713,31 @@ export type Database = {
       companion_open: { Args: { p_token: string }; Returns: Json }
       companion_owner: { Args: { p_token: string }; Returns: string }
       companion_party: { Args: { p_game: string }; Returns: string[] }
+      companion_roll_character: {
+        Args: { p_character: string; p_game: string; p_link_character: string }
+        Returns: undefined
+      }
+      companion_roll_check: {
+        Args: {
+          p_character: string
+          p_net: number
+          p_subject: string
+          p_target: number
+          p_token: string
+        }
+        Returns: Json
+      }
+      companion_roll_dice: {
+        Args: {
+          p_character: string
+          p_count: number
+          p_modifier: number
+          p_sides: number
+          p_token: string
+        }
+        Returns: Json
+      }
+      companion_roll_prune: { Args: { p_game: string }; Returns: undefined }
       companion_set_point: {
         Args: {
           p_character: string

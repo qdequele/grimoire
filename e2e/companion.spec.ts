@@ -121,7 +121,7 @@ test('keeper shows the table link; a player picks an investigator and sees their
   await expect(phoneStat(phone, 'PV')).toHaveText('13 / 13')
   await expect(phoneStat(phone, 'SAN')).toHaveText('60')
   await expect(phone.getByRole('heading', { name: 'Compétences' })).toBeVisible()
-  await expect(phone.getByRole('navigation', { name: 'Fiche' }).getByRole('link')).toHaveText(['Fiche', 'Carnet', 'Profil'])
+  await expect(phone.getByRole('navigation', { name: 'Fiche' }).getByRole('link')).toHaveText(['Fiche', 'Dés', 'Carnet', 'Profil'])
 
   // This phone remembers its investigator: the table link goes straight to the sheet
   await phone.goto(tableUrl)
@@ -407,3 +407,42 @@ test('a skill name and a first name holding markup show as text on the game scre
   await keeper.waitForTimeout(200) // an onerror handler would have run by now
   expect(await xss()).toBeUndefined()
 })
+
+test('a skill explains itself on the phone; rolls made on the phone show on the game screen', async ({ browser, baseURL }) => {
+  const { keeper, tableUrl, phone } = await setUpTable(browser, baseURL)
+  await pick(phone, tableUrl, 'Alpha')
+
+  // Tapping a skill: what it is for, its thresholds, then a d100 rolled by the server.
+  await phone.getByRole('button', { name: /^Bibliothèque \d+/ }).click()
+  const dialog = phone.getByRole('dialog', { name: 'Bibliothèque' })
+  await expect(dialog).toBeVisible()
+  await expect(dialog.getByText(/Trouver un livre/)).toBeVisible()
+  await dialog.getByRole('button', { name: 'Plus : Dés bonus ou de pénalité' }).click()
+  await expect(dialog.locator('output[aria-label="Dés bonus ou de pénalité"]')).toHaveText('1 dé bonus')
+  const rolled = phone.waitForResponse((r) => r.url().includes('/rest/v1/rpc/companion_roll_check') && r.ok())
+  await dialog.getByRole('button', { name: 'Lancer 1D100' }).click()
+  const roll = (await (await rolled).json()) as { result: number; target: number }
+  await expect(dialog.getByTestId('roll-result').locator('output')).toHaveText(String(roll.result))
+  await expect(dialog.getByRole('button', { name: 'Relancer' })).toBeVisible()
+
+  // The keeper's game screen shows it.
+  const toast = keeper.locator('[data-sonner-toast]').filter({ hasText: `Alpha · Bibliothèque (${roll.target})` })
+  await expect(toast).toBeVisible(LIVE)
+  await expect(toast).toContainText(`${roll.result} — `)
+  await expect(toast).toContainText('1 dé bonus')
+  await phone.keyboard.press('Escape')
+
+  // Free dice from the Dés tab.
+  await phone.getByRole('navigation', { name: 'Fiche' }).getByRole('link', { name: 'Dés' }).click()
+  await phone.getByRole('radio', { name: 'D8' }).click()
+  await phone.getByRole('button', { name: 'Plus : Nombre de dés' }).click()
+  const thrown = phone.waitForResponse((r) => r.url().includes('/rest/v1/rpc/companion_roll_dice') && r.ok())
+  await phone.getByRole('button', { name: 'Lancer 2D8' }).click()
+  const dice = (await (await thrown).json()) as { result: number }
+  await expect(phone.getByTestId('roll-result').locator('output')).toHaveText(String(dice.result))
+  await expect(keeper.locator('[data-sonner-toast]').filter({ hasText: 'Alpha lance 2D8' })).toContainText(String(dice.result), LIVE)
+  // The phone keeps its own rolls.
+  await expect(phone.getByRole('heading', { name: 'Derniers jets' })).toBeVisible()
+  await expect(phone.getByText(/^Bibliothèque \(\d+\)$/)).toBeVisible()
+})
+
