@@ -304,6 +304,15 @@ patch('${esc(c.n)} · DEX ${c.dex}', '${esc(c.n)} · DEX ${esc(c.dex)}', 'escape
 patch('<div class="ini">${r.dex}<small>DEX</small></div>', '<div class="ini">${esc(r.dex)}<small>DEX</small></div>', 'escape DEX in the combat order')
 // The dice result's detail line is plain text built with investigator and opponent names.
 patch('<div class="det">${det}</div>', '<div class="det">${esc(det)}</div>', 'escape the dice result detail (names)')
+// Its level line is plain text too, and carries the skill name ("… · <skill> cochée"): a phone-made
+// investigator's skill names are free text. Every caller passes plain text; the one that escaped its
+// group name itself stops doing so, or it would show "&amp;".
+patch('<div class="lvl ${lvlCls}">${lvlTxt}</div>', '<div class="lvl ${lvlCls}">${esc(lvlTxt)}</div>', 'escape the dice result level line (skill names)')
+patch('" · "+esc(grpOf(st.active).name)', '" · "+grpOf(st.active).name', 'the group SAN result\'s level line is escaped by showRes now')
+// The multi-investigator roll results: same "· <skill> cochée" text.
+patch('<b>${esc(r.n)}</b> ${r.txt}</li>', '<b>${esc(r.n)}</b> ${esc(r.txt)}</li>', 'escape the picker\'s roll results (skill names)')
+// "Modifier la partie": the warnings name the players, and a phone chooses its player's first name.
+patch('<span class="mut">${iss.join(" · ")}</span>', '<span class="mut">${esc(iss.join(" · "))}</span>', 'escape the game setup warnings (player names)')
 
 // ------------------------------------------------------------------ player companion
 // Players' phones change points and write notebooks; the app pushes them through GRIMOIRE_ENGINE.

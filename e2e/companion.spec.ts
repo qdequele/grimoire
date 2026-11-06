@@ -1,4 +1,5 @@
 import { expect, test, type Browser, type BrowserContext, type FrameLocator, type Page } from '@playwright/test'
+import type { SupabaseClient } from '@supabase/supabase-js'
 import { createJournalist, signUp } from './helpers.ts'
 
 // Player companion: the keeper (desktop, signed in) and a player's phone (390×844, no account),
@@ -356,4 +357,53 @@ test("a keeper change that never reached the live points is written on the next 
   await frame().evaluate(() => (eval('save') as () => void)())
   await stateSaved
   expect(writes).toBe(0)
+})
+
+test('a skill name and a first name holding markup show as text on the game screen, never as HTML', async ({ browser, baseURL }) => {
+  const keeper = await (await browser.newContext({ baseURL })).newPage()
+  watch(keeper)
+  await signUp(keeper)
+  const bad = '<img src=x onerror="window.__xss=1">'
+  // Straight into the account with the keeper's session, past companion_create_character's checks
+  // (an older row, a hand edit): the game screen must not trust what the database holds.
+  await keeper.evaluate(async (bad) => {
+    const path = '/src/lib/supabase.ts' // the app's own client, served by Vite
+    const { supabase } = (await import(/* @vite-ignore */ path)) as { supabase: SupabaseClient }
+    const { data: auth } = await supabase.auth.getUser()
+    const owner_id = auth.user!.id
+    const player = await supabase.from('players').insert({ owner_id, name: bad }).select('id').single()
+    if (player.error) throw player.error
+    const data = { name: 'Zed', characteristics: { DEX: 50 }, hp: 10, san: 50, luck: 50, mp: 10, skills: { [bad]: 99 } }
+    const ch = await supabase.from('characters').insert({ owner_id, player_id: player.data.id, data })
+    if (ch.error) throw ch.error
+  }, bad)
+
+  await keeper.goto('/stories')
+  await keeper.locator('[data-slot="card"] a[href^="/stories/"]').first().click()
+  await keeper.getByLabel(/Zed/).check()
+  await keeper.getByRole('button', { name: 'Lancer la partie' }).click()
+  await expect(keeper).toHaveURL(/\/games\//)
+  const game = engine(keeper)
+  await expect(card(game, 'Zed')).toBeVisible()
+  const frame = keeper.frames().find((f) => f.url().includes('play.html'))!
+  const xss = () => frame.evaluate(() => (window as unknown as { __xss?: number }).__xss)
+
+  // Roll the skill: a success ticks it, and the result's level line names it.
+  await frame.evaluate(() => { Math.random = () => 0.01 }) // 2 on the D100: an extreme success
+  await game.locator('#qaDice').click()
+  await game.locator('#dWho').selectOption({ label: `Zed · ${bad}` })
+  await game.locator('#dSk').selectOption(bad)
+  await game.locator('#rollTest').click()
+  await expect(game.locator('#result .lvl')).toContainText(`${bad} cochée`)
+  await expect(game.locator('#result .det')).toContainText(bad)
+
+  // "Modifier la partie": with no investigator chosen, the warning names the player.
+  await game.locator('#diceClose').click()
+  await game.locator('#gmEdit2').click()
+  await game.locator('select[data-sjc]').selectOption('')
+  await expect(game.locator('.pool .mut')).toContainText(`personnage à choisir pour ${bad}`)
+
+  await expect(game.locator('img[src="x"]')).toHaveCount(0)
+  await keeper.waitForTimeout(200) // an onerror handler would have run by now
+  expect(await xss()).toBeUndefined()
 })

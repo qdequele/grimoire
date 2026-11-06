@@ -232,7 +232,7 @@ function showRes(big,lvlCls,lvlTxt,det,logTxt,fx){
   openDice();const R=$("#result");clearTimeout(rollT);
   const reduce=matchMedia("(prefers-reduced-motion: reduce)").matches;
   const final=()=>{R.className="result"+(fx?" fx-"+fx:"");const tiles=diceTiles();
-    R.innerHTML=`<div class="r-top"><div class="big">${big}</div>${tiles}</div>${lvlTxt?`<div class="lvl ${lvlCls}">${lvlTxt}</div>`:""}<div class="det">${esc(det)}</div>`;
+    R.innerHTML=`<div class="r-top"><div class="big">${big}</div>${tiles}</div>${lvlTxt?`<div class="lvl ${lvlCls}">${esc(lvlTxt)}</div>`:""}<div class="det">${esc(det)}</div>`;
     if(fx&&!reduce){const F=$("#flash");F.hidden=false;F.className="flash on-"+(fx==="great"?"good":fx);void F.offsetWidth;
       setTimeout(()=>{F.hidden=true;F.className="flash";},1300);
       if(fx==="crit"||fx==="great"||fx==="good"){const col=fx==="crit"?"#cdb06a":fx==="great"?"#72b8a3":"#86b56f";const n=fx==="good"?10:22;
@@ -600,7 +600,7 @@ $("#qaSan").onclick=()=>{const st=ST();ensureGroups();const mem=st.party.filter(
   if(!mem.length){toast("Aucun investigateur dans le groupe suivi.");return;}
   const rs=mem.map(p=>{const c=charById(p.cid),x=d100(0,0),ok=x.r<=p.san&&x.r!==100;return {n:c.n,san:p.san,r:x.r,ok};});
   const nOk=rs.filter(r=>r.ok).length;
-  showRes(`${nOk} / ${rs.length}`,nOk===rs.length?"ord":"fail",`réussites au test de SAN${st.groups.length>1?" · "+esc(grpOf(st.active).name):""}`,
+  showRes(`${nOk} / ${rs.length}`,nOk===rs.length?"ord":"fail",`réussites au test de SAN${st.groups.length>1?" · "+grpOf(st.active).name:""}`,
     rs.map(r=>`${r.ok?"✓":"✗"} ${esc(r.n)} : ${r.r} sur ${r.san}`).join("<br>"),`SAN du groupe → ${nOk}/${rs.length} réussis`,nOk===rs.length?"good":nOk===0?"bad":null);};
 
 /* ---------- Sons (synthèse Web Audio, aucun fichier) ---------- */
@@ -1257,7 +1257,7 @@ function renderSetup(){const U=S.setup,sc=SCENARIOS.find(s=>s.id===U.scen);const
       <label class="pick"><input type="checkbox" id="sj-${p.id}" data-sjon="${p.id}" ${r.on?"checked":""}> <span>${esc(p.name)}</span></label>
       <select id="sc-${p.id}" data-sjc="${p.id}" ${r.on?"":"disabled"} aria-label="Personnage de ${esc(p.name)}">${opts(p.id,r.cid)}</select></div>`;}).join("")}</div>`:`<p class="mut">Aucun joueur enregistré pour l'instant.</p>`}
     <div class="addrow" id="setAddZone"><button class="btn" id="setAdd">+ Ajouter un joueur</button></div></div>
-    <div class="pool"><span>${n} joueur${n>1?"s":""}</span>${iss.length?`<span class="mut">${iss.join(" · ")}</span>`:`<span class="t">prêt ✓</span>`}</div>
+    <div class="pool"><span>${n} joueur${n>1?"s":""}</span>${iss.length?`<span class="mut">${esc(iss.join(" · "))}</span>`:`<span class="t">prêt ✓</span>`}</div>
     <div class="addrow"><button class="btn prim" id="setGo" ${iss.length?"disabled":""}>${U.edit?"Appliquer les changements":"Lancer la partie"}</button><button class="btn" id="setCancel">Annuler</button></div>
     ${U.edit?`<p class="mut">Les investigateurs retirés quittent la partie ; ceux qui restent gardent leurs PV, leur SAN et leur état.</p>`:""}`;}
 $("#vSetup").addEventListener("change",e=>{const t=e.target,R=S.setup.rows;
@@ -1336,7 +1336,7 @@ function renderPick(){const P=PICK,st=ST();const title=P.kind==="san"?`SAN · ${
     let extra="";if(P.kind==="test"){const f=valFor(c,sl,P.label);const v=P.vals[sl.cid]??f.v;extra=`<input type="number" min="1" max="99" class="pv-in" id="pv-${sl.cid}" data-pv="${sl.cid}" value="${v??""}" placeholder="?" aria-label="Valeur de ${esc(c.n)}">`;}
     if(P.kind==="san")extra=`<span class="pv-s">SAN ${sl.san}</span>`;if(P.kind==="dmg")extra=`<span class="pv-s">PV ${sl.pv}/${c.pv}</span>`;
     return `<label class="pk ${on?"on":""} ${dead?"dead":""}">${head(sl,g)}<input type="checkbox" data-pk="${sl.cid}" ${on?"checked":""} ${dead?"disabled":""}><span class="pn">${esc(c.n)}${sl.player?` <span class="mut">${esc(sl.player)}</span>`:""}</span>${extra}</label>`;}).join("");
-  const res=P.res?`<ul class="pres">${P.res.map(r=>`<li class="${r.cls}"><b>${esc(r.n)}</b> ${r.txt}</li>`).join("")}</ul>`:"";
+  const res=P.res?`<ul class="pres">${P.res.map(r=>`<li class="${r.cls}"><b>${esc(r.n)}</b> ${esc(r.txt)}</li>`).join("")}</ul>`:"";
   $("#pickBox").innerHTML=`<div class="pk-head"><span class="gm-eyebrow">${P.kind==="san"?"Test de Santé mentale":P.kind==="dmg"?"Dégâts":"Test de compétence"}</span><h3>${esc(title)}</h3>
     ${P.kind==="san"?`<p class="mut">Réussite : −${esc(P.val.split("/")[0])} · échec : −${esc(P.val.split("/")[1])}. La perte est retirée automatiquement.</p>`:P.kind==="dmg"?`<p class="mut">${esc(P.val)} par cible, retirés des PV avec la règle de blessure grave.</p>`:`<p class="mut">Valeur trouvée sur la fiche, modifiable. Une réussite coche la compétence pour la progression.</p>`}</div>
     ${P.res?res:`<div class="pk-all"><button class="lnk" data-pkall="1">Tout le groupe suivi</button> · <button class="lnk" data-pkall="2">Tous</button> · <button class="lnk" data-pkall="0">Aucun</button></div><div class="pk-list">${rows}</div>
