@@ -50,6 +50,7 @@ export function dataKeys(): string[] {
     'Connecte-toi pour utiliser l’aide IA.', 'Pas de suggestion possible pour ce profil.', 'Réponse de l’IA illisible. Réessaie.',
     "Ce lien n'est plus valide.",
     ...Object.values(PRESET_LABEL), // ambiance screen presets
+    'Confidentialité', 'Conditions', 'Aide', // LegalLinks (legal/LegalPage.tsx)
   ].filter(Boolean)
 }
 

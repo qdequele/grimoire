@@ -1,0 +1,90 @@
+{
+  "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
+  "name": "grimoire",
+  "version": "1.0.0",
+  "description": "Create and revise investigation and horror tabletop stories for Grimoire, the keeper's companion app.",
+  "author": {
+    "name": "Quentin de Quelen",
+    "email": "contact@legrimoire.quest",
+    "url": "https://www.legrimoire.quest"
+  },
+  "homepage": "https://www.legrimoire.quest/help",
+  "keywords": ["tabletop", "role-playing", "horror", "investigation", "stories"],
+  "extensions": {
+    "com.openai": {
+      "interface": {
+        "displayName": "Grimoire",
+        "shortDescription": "Write tabletop horror stories",
+        "longDescription": "Grimoire is the keeper's companion for investigation and horror tabletop role-playing games. With this app, ChatGPT writes original stories for your table and Grimoire saves them in your library, ready to play.\n\nDescribe the setting, the tone, the mystery and your players; ChatGPT proposes an outline (acts, scenes, non-player characters and the secret behind it all), and once you approve it, writes every scene: what the investigators can find, the clues, the read-aloud text and the handouts. Grimoire checks the story against its format, refuses names taken from protected works, and saves it after every step. You can then ask ChatGPT to revise any of your private stories: add or rewrite a scene, change a non-player character, add a handout.\n\nThe app only reaches the private stories of the Grimoire account you connect. It cannot see your games, investigators or players, and it never deletes a whole story. It requires a Grimoire account.",
+        "developerName": "Quentin de Quelen",
+        "category": "Entertainment",
+        "capabilities": ["Create original tabletop stories", "Read your Grimoire stories", "Revise your Grimoire stories"],
+        "websiteURL": "https://www.legrimoire.quest",
+        "supportURL": "https://www.legrimoire.quest/help",
+        "privacyPolicyURL": "https://www.legrimoire.quest/privacy",
+        "termsOfServiceURL": "https://www.legrimoire.quest/terms",
+        "defaultPrompt": [
+          "Create a short Grimoire story in a fishing village in 1925, for three players.",
+          "List my Grimoire stories.",
+          "Add a scene to my Grimoire story where the investigators search an abandoned chapel."
+        ],
+        "brandColor": "#C9A24A",
+        "brandColorDark": "#C9A24A",
+        "logo": "./assets/logo.png"
+      },
+      "review": {
+        "test_cases": {
+          "positive": [
+            {
+              "description": "Create an original story from a brief",
+              "prompt": "Create a short Grimoire story in a fishing village in 1925, for three players. Show me the outline before writing the scenes.",
+              "tools_triggered": "grimoire_guide, save_outline, write_scenes",
+              "expected_behavior": "Reads the guide, proposes an outline (acts, scenes, NPCs, secret) and asks for approval. After approval, saves the outline, writes every scene in a few calls and ends with the link to the new private story in Grimoire."
+            },
+            {
+              "description": "List the keeper's stories",
+              "prompt": "List my Grimoire stories.",
+              "tools_triggered": "list_my_stories",
+              "expected_behavior": "Lists the private stories of the connected account, including The Silent Light, with their language and number of scenes."
+            },
+            {
+              "description": "Read and summarise a story",
+              "prompt": "Summarise my Grimoire story The Silent Light: its acts, scenes and main characters.",
+              "tools_triggered": "list_my_stories, get_story",
+              "expected_behavior": "Finds The Silent Light, reads its summary and NPCs, and summarises the acts, scenes and main characters without inventing content."
+            },
+            {
+              "description": "Add a scene to an existing story",
+              "prompt": "In my Grimoire story The Silent Light, add a short scene at the end of the last act where the investigators return to the village at dawn.",
+              "tools_triggered": "list_my_stories, get_story, edit_story",
+              "expected_behavior": "Reads the story, writes a new scene in the story format and adds it to the last act with edit_story, then confirms what changed. The story in Grimoire shows the new scene."
+            },
+            {
+              "description": "Revise a non-player character",
+              "prompt": "In The Silent Light, give one of the non-player characters a hidden motive and update their description.",
+              "tools_triggered": "get_story, edit_story",
+              "expected_behavior": "Reads the story's NPCs, rewrites the chosen NPC with a hidden motive and saves it with edit_story, leaving the other NPCs unchanged."
+            }
+          ],
+          "negative": [
+            { "description": "Deleting every story is not supported", "prompt": "Delete all my Grimoire stories." },
+            { "description": "Another user's stories are out of reach", "prompt": "Show me the Grimoire stories of another user." },
+            { "description": "Games and investigators are out of reach", "prompt": "Roll the dice for my investigators in my current Grimoire game." }
+          ]
+        },
+        "demo_recording_url": "",
+        "commerce": false,
+        "commerce_description": "Grimoire does not sell products or process payments."
+      },
+      "publication": {
+        "release_notes": "First release: create original stories from a brief, list, read and revise your private Grimoire stories.",
+        "translations": {
+          "fr-FR": {
+            "subtitle": "Écris des scénarios d’horreur",
+            "description": "Grimoire est le compagnon du gardien pour les jeux de rôle d’enquête et d’horreur sur table. Avec cette application, ChatGPT écrit des histoires originales pour ta table et Grimoire les range dans ta bibliothèque, prêtes à jouer.\n\nDécris le cadre, l’ambiance, le mystère et tes joueurs ; ChatGPT propose un plan (actes, scènes, personnages non joueurs et le secret derrière tout cela), puis, une fois le plan validé, écrit chaque scène : ce que les investigateurs peuvent trouver, les indices, le texte à lire et les aides de jeu. Grimoire vérifie le format de l’histoire, refuse les noms tirés d’œuvres protégées et l’enregistre à chaque étape. Tu peux ensuite demander à ChatGPT de réviser tes histoires privées : ajouter ou réécrire une scène, changer un personnage, ajouter une aide de jeu.\n\nL’application n’accède qu’aux histoires privées du compte Grimoire connecté. Elle ne voit ni tes parties, ni tes investigateurs, ni tes joueurs, et ne supprime jamais une histoire entière. Un compte Grimoire est nécessaire."
+          }
+        }
+      }
+    }
+  }
+}
