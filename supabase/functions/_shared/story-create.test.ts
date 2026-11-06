@@ -51,7 +51,7 @@ const outlineInput = {
 
 const scene = (id: string, over: Partial<DraftScene> = {}): DraftScene => ({
   id, title: id, ref: '', lead: 'Lead.', readAloud: ['You see it.'], flow: [], notes: [], npcs: [], handouts: [],
-  rolls: [], ambience: [], sfx: [], next: [], ...over,
+  rolls: [], ambience: [], sfx: [], place: '', preset: '', time: '', next: [], ...over,
 })
 
 describe('questionnaire presets', () => {

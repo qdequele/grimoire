@@ -5,7 +5,7 @@ import { ERA_CHOICES, LENGTHS, PLACE_CHOICES, THREATS, TONES } from '@/stories/c
 import {
   CHARACTERISTIC_INFO, CREDIT_TIERS, NAME_ORIGINS, OCCUPATIONS, PROFILE_FIELDS, SKILLS,
 } from '@/rules/d100'
-import { PRESET_LABEL } from '@/screen/ambiance'
+import { PLACE_LABEL, PRESET_LABEL, TIME_LABEL } from '@/screen/ambiance'
 import { LEVEL_LABEL } from '@/companion/rolls'
 
 /** Texts that reach t() from data rather than from a t('…') literal in the code. */
@@ -50,6 +50,8 @@ export function dataKeys(): string[] {
     'Connecte-toi pour utiliser l’aide IA.', 'Pas de suggestion possible pour ce profil.', 'Réponse de l’IA illisible. Réessaie.',
     "Ce lien n'est plus valide.",
     ...Object.values(PRESET_LABEL), // ambiance screen presets
+    ...Object.values(PLACE_LABEL), // ambiance screen drawn décors
+    ...Object.values(TIME_LABEL), // ambiance screen time of day
   ].filter(Boolean)
 }
 

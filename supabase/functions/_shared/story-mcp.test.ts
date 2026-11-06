@@ -1,7 +1,7 @@
 import { Ajv2020 } from 'ajv/dist/2020.js'
 import { describe, expect, it } from 'vitest'
-import { CRAFT_RULES, createSystemPrompt, FORBIDDEN_NAMES, ORIGINALITY_RULES } from './create-prompt'
-import { draftToStory } from './import-draft'
+import { CRAFT_RULES, createSystemPrompt, FORBIDDEN_NAMES, ORIGINALITY_RULES, PLACE_HINTS, PRESET_HINTS, TIME_HINTS } from './create-prompt'
+import { draftToStory, SCREEN_PLACES, SCREEN_PRESETS, SCREEN_TIMES } from './import-draft'
 import { SAMPLE_STORY, STORY_SCHEMA } from './spec-bundle'
 import {
   applyEdits,
@@ -63,6 +63,15 @@ describe('normalizeDraft', () => {
     expect(sc[0].flow[0].roll).toEqual([expect.objectContaining({ options: ['spot-hidden'], bonus: 2, difficulty: 'regular' })])
     expect(sc[0].ambience).toEqual([SOUND_IDS.ambience[0]])
     expect(d.npcs).toEqual([expect.objectContaining({ id: 'miller', skills: [{ id: 'persuade', value: 55 }], stats: [{ key: 'STR', value: 60 }] })])
+  })
+
+  it("keeps a scene's ambiance screen, as draft fields or as story.json's screen, and drops unknown values", () => {
+    const d = normalizeDraft({ acts: [{ id: 'a', scenes: [
+      { id: 'one', place: 'library', preset: 'candle', time: 'dusk' },
+      { id: 'two', screen: { place: 'graveyard', preset: 'fog', time: 'day' } },
+      { id: 'three', place: 'spaceship', preset: 42 },
+    ] }] })
+    expect(d.acts[0].scenes.map((s) => [s.place, s.preset, s.time])).toEqual([['library', 'candle', 'dusk'], ['graveyard', 'fog', 'day'], ['', '', '']])
   })
 
   it('makes a draft the story schema accepts', () => {
@@ -183,6 +192,20 @@ describe('applyEdits', () => {
     }
   })
 
+  it("set_screen changes only a scene's ambiance screen; {} removes it", () => {
+    const s = sample()
+    const id = firstScene(s).id
+    const out = applyEdits(s, [{ op: 'set_screen', id, screen: { place: 'harbour', preset: 'storm', image: '' } }]) as Record<string, any> // eslint-disable-line @typescript-eslint/no-explicit-any
+    expect(firstScene(out)).toEqual({ ...firstScene(s), screen: { place: 'harbour', preset: 'storm' } })
+    expect(validate(out), JSON.stringify(validate.errors)).toBe(true)
+    const back = applyEdits(out, [{ op: 'set_screen', id, screen: {} }]) as Record<string, any> // eslint-disable-line @typescript-eslint/no-explicit-any
+    expect(firstScene(back)).toEqual(firstScene(s))
+    expect(() => applyEdits(s, [{ op: 'set_screen', id: 'nowhere', screen: {} }])).toThrow(ToolError)
+    expect(() => applyEdits(s, [{ op: 'set_screen', id, screen: 'fog' }])).toThrow(ToolError)
+    // An unknown value gets through applyEdits but not the schema check that follows it.
+    expect(validate(applyEdits(s, [{ op: 'set_screen', id, screen: { place: 'moon' } }]))).toBe(false)
+  })
+
   it('refuses bad operations, naming the one at fault, and applies none', () => {
     const s = sample()
     const bad: unknown[] = [
@@ -228,6 +251,15 @@ describe('guide and tools', () => {
     }
     const edit = tools.find((t) => t.name === 'edit_story')!
     for (const op of EDIT_OPS) expect(edit.description).toContain(op)
+  })
+
+  it("describes every décor and atmosphere of the ambiance screen", () => {
+    expect(Object.keys(PLACE_HINTS)).toEqual([...SCREEN_PLACES])
+    expect(Object.keys(PRESET_HINTS)).toEqual([...SCREEN_PRESETS])
+    expect(Object.keys(TIME_HINTS)).toEqual([...SCREEN_TIMES])
+    const sounds = guideText('sounds')
+    for (const p of [...SCREEN_PLACES, ...SCREEN_PRESETS, ...SCREEN_TIMES]) expect(sounds).toContain(`${p} (`)
+    expect(createSystemPrompt()).toContain(sounds)
   })
 
   it('relaxes required fields except the ones kept', () => {

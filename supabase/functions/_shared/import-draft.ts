@@ -7,6 +7,7 @@
 //
 // Pure TypeScript, no Deno or browser APIs: used by the import-story Edge Function and unit-tested
 // with Vitest.
+import { STORY_SCHEMA } from './spec-bundle.ts'
 
 export const ROLL_TYPES = ['skill', 'characteristic', 'luck', 'san', 'damage', 'opposed', 'group'] as const
 export const DIFFICULTIES = ['regular', 'hard', 'extreme'] as const
@@ -15,6 +16,28 @@ export const STAT_KEYS = [
   'hp', 'mp', 'san', 'move', 'build', 'armor', 'dodge', 'attacksPerRound',
 ] as const
 const CHARACTERISTICS = ['STR', 'CON', 'SIZ', 'DEX', 'APP', 'INT', 'POW', 'EDU'] as const
+
+/** The allowed values of a scene's `screen.<field>`, read from spec/story.schema.json (one source of truth). */
+function screenEnum(field: 'place' | 'preset' | 'time'): string[] {
+  let found: string[] = []
+  const walk = (v: unknown): void => {
+    if (found.length || !v || typeof v !== 'object') return
+    const o = v as Record<string, unknown>
+    const screen = o.screen as { properties?: Record<string, { enum?: unknown }> } | undefined
+    const values = screen?.properties?.[field]?.enum
+    if (Array.isArray(values)) found = values.filter((x): x is string => typeof x === 'string')
+    else Object.values(o).forEach(walk)
+  }
+  walk(STORY_SCHEMA)
+  return found
+}
+
+/** Drawn décors of the ambiance screen (church, graveyard…), shown when a scene has no picture. */
+export const SCREEN_PLACES: readonly string[] = screenEnum('place')
+/** Atmospheres of the ambiance screen (fog, rain, ritual…). */
+export const SCREEN_PRESETS: readonly string[] = screenEnum('preset')
+/** Time of day on the ambiance screen (day, dusk, night). */
+export const SCREEN_TIMES: readonly string[] = screenEnum('time')
 
 export interface DraftRoll {
   type: (typeof ROLL_TYPES)[number]
@@ -53,6 +76,11 @@ export interface DraftScene {
   rolls: DraftRoll[]
   ambience: string[]
   sfx: string[]
+  /** Ambiance screen: drawn décor (one of SCREEN_PLACES) and atmosphere (one of SCREEN_PRESETS), "" = let the app choose. */
+  place: string
+  preset: string
+  /** Time of day (one of SCREEN_TIMES), "" = let the app choose. */
+  time: string
   next: string[]
 }
 
@@ -160,6 +188,9 @@ export function importDraftSchema(sounds: { ambience: string[]; sfx: string[] })
     rolls: arr(roll, 'Quick rolls not tied to a step (damage, SAN).'),
     ambience: arr({ enum: sounds.ambience }, 'Up to 3 ambience sounds.'),
     sfx: arr({ enum: sounds.sfx }),
+    place: { enum: ['', ...SCREEN_PLACES], description: 'Ambiance screen: the drawn décor that matches where the scene happens, or "" if none fits.' },
+    preset: { enum: ['', ...SCREEN_PRESETS], description: 'Ambiance screen: the atmosphere (weather, light, mood) of the scene, or "" to let the app pick one from the sounds.' },
+    time: { enum: ['', ...SCREEN_TIMES], description: 'Ambiance screen: time of day of the scene, or "" if it doesn\'t matter.' },
     next: arr(id, 'Likely next scenes, or [] for the following one.'),
   })
   const npc = obj({
@@ -314,6 +345,14 @@ function toNpc(n: DraftNpc): Json {
   })
 }
 
+/** A scene's `screen` field from its draft place, preset and time; values the format doesn't know are dropped. */
+function screenOf(s: DraftScene): Json | undefined {
+  const place = SCREEN_PLACES.includes(s.place) ? s.place : ''
+  const preset = SCREEN_PRESETS.includes(s.preset) ? s.preset : ''
+  const time = SCREEN_TIMES.includes(s.time) ? s.time : ''
+  return compact({ place, preset, time })
+}
+
 export interface StoryMetaInput {
   id: string
   lang: string
@@ -376,6 +415,7 @@ export function draftToStory(d: ImportDraft, meta: StoryMetaInput): Json {
             rolls: s.rolls.map(toRoll),
             ambience: s.ambience.slice(0, 3),
             sfx: s.sfx,
+            screen: screenOf(s),
             next: s.next,
           }),
         ),

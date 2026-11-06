@@ -25,6 +25,12 @@ export const FAKE_OUTLINE = {
 
 export const FAKE_IDEAS = { era: '1890s', place: 'A river port', hook: 'A bell rings at night.', ideas: 'A drowned choir.' }
 
+/** The ambiance screen the fake model picks for some scenes. */
+export const FAKE_SCREEN: Record<string, { place: string; preset: string; time?: string }> = {
+  arrival: { place: 'street', preset: 'rain', time: 'day' },
+  cellar: { place: 'crypt', preset: 'ritual' },
+}
+
 /** A full draft scene with placeholder words (also used by the MCP connector test). */
 export const fakeScene = (id: string) => ({
   id, title: id, ref: '', lead: 'Lead.', readAloud: ['You see it.'],
@@ -32,7 +38,8 @@ export const fakeScene = (id: string) => ({
     title: 'Look around', text: '', success: 'Found.', failure: 'Nothing.', pushed: '', extra: '', goto: [],
     roll: [{ type: 'skill', options: ['spot-hidden'], difficulty: 'regular', bonus: 0, san: '', dice: '', label: '', againstNpc: '', againstSkill: '' }],
   }],
-  notes: [], npcs: [], handouts: [], rolls: [], ambience: [], sfx: [], next: [],
+  notes: [], npcs: [], handouts: [], rolls: [], ambience: [], sfx: [],
+  place: FAKE_SCREEN[id]?.place ?? '', preset: FAKE_SCREEN[id]?.preset ?? '', time: FAKE_SCREEN[id]?.time ?? '', next: [],
 })
 
 /** The scenes a "write" prompt asks for: '"id" (act "act-id")'. */

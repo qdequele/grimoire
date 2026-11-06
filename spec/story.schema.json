@@ -411,9 +411,23 @@
                 "hearth",
                 "night",
                 "storm",
-                "dust"
+                "dust",
+                "snow",
+                "abyss",
+                "ritual",
+                "nightmare",
+                "bulb",
+                "blaze"
               ],
               "description": "Living layers over the picture. Default: picked from the scene's ambience sounds."
+            },
+            "place": {
+              "enum": ["church", "graveyard", "crypt", "castle", "manor", "library", "police", "forest", "harbour", "street"],
+              "description": "Drawn scenery shown when there is no picture. Default: guessed from the scene's title."
+            },
+            "time": {
+              "enum": ["day", "dusk", "night"],
+              "description": "Time of day: the light, apart from the preset's weather and mood. Default: guessed from the scene's title or sounds, else the preset's own (night, except dust)."
             },
             "fire": {
               "type": "object",

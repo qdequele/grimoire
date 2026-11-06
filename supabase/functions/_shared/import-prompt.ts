@@ -1,6 +1,7 @@
 // Instructions for the AI import. Kept byte-for-byte stable across calls so the whole block is
 // served from the prompt cache: the per-call parts (pages, what was imported so far) go after it.
 import { SAMPLE_STORY, SOUNDS, STORY_FORMAT_MD } from './spec-bundle.ts'
+import { SCREEN_PLACES, SCREEN_PRESETS, SCREEN_TIMES } from './import-draft.ts'
 
 const LANG_NAME: Record<string, string> = { fr: 'French', en: 'English' }
 
@@ -27,6 +28,7 @@ The app shows one scene per screen: a one-line lead, gold "read to the players" 
 - Use [[scene-id]] to link scenes and {{npc:id}} to mention NPCs in text.
 - Rolls: use the skill ids and characteristic codes listed in the format below (e.g. "spot-hidden", "library-use", "STR"). For a skill not in the list, write a short kebab-case id. SAN rolls use "success/failure" like "1/1D6"; damage uses dice like "1D6+1".
 - Sounds: pick up to 3 ambience ids that fit each scene and any matching sound effects, from the allowed ids only. Leave them empty when nothing fits.
+- Ambiance screen: "place" is the drawn décor matching where the scene happens (${SCREEN_PLACES.join(', ')}), "" when none fits; "preset" is the atmosphere matching the scene (${SCREEN_PRESETS.join(', ')}), "" to let the app pick it from the sounds; "time" is the time of day (${SCREEN_TIMES.join(', ')}), "" when the pages don't say.
 - Pages may arrive in several batches. Only output what appears in THESE pages, reusing the ids you're told already exist. If a scene continues from an earlier batch, output that scene again with the same id and its complete content (earlier part + new part).
 - Fields you have nothing for: "" for text, [] for lists, 0 for bonus. NPC stats: list only the ones the source gives.
 - page refs: if the pages show page numbers, put them in the scene's "ref" (e.g. "p. 12-13").

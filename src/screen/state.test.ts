@@ -36,6 +36,39 @@ describe('screenReducer', () => {
     expect(shownScene(INITIAL_SCREEN)).toBeNull()
   })
 
+  it("the keeper's décor holds until the screen moves on; 'none' hides the scene's own", () => {
+    const church: ScreenScene = { ...fog, place: 'church' }
+    const s = run({ type: 'scene', scene: church }, { type: 'place', place: 'forest' })
+    expect(shownScene(s)?.place).toBe('forest')
+    expect(shownScene(screenReducer(s, { type: 'place', place: 'none' }))).not.toHaveProperty('place')
+    expect(shownScene(screenReducer(s, { type: 'place', place: null }))?.place).toBe('church')
+    const moved = screenReducer(s, { type: 'scene', scene: storm })
+    expect(moved.placeOverride).toBeNull()
+    expect(shownScene(run({ type: 'place', place: 'crypt' }))).toEqual({ preset: 'fog', image: null, sounds: [], place: 'crypt' })
+  })
+
+  it("the keeper's time of day holds until the screen moves on, and is part of the scene", () => {
+    const night: ScreenScene = { ...fog, time: 'night' }
+    const s = run({ type: 'scene', scene: night }, { type: 'time', time: 'day' })
+    expect(shownScene(s)?.time).toBe('day')
+    expect(shownScene(screenReducer(s, { type: 'time', time: null }))?.time).toBe('night')
+    expect(screenReducer(s, { type: 'scene', scene: storm }).timeOverride).toBeNull()
+    const saved = JSON.parse(JSON.stringify(s))
+    expect(parseScreen(saved)).toMatchObject({ scene: night, timeOverride: 'day' })
+    expect(parseScreen({ ...saved, timeOverride: 'noon', scene: { ...night, time: 'noon' } })).toMatchObject({ scene: fog, timeOverride: null })
+    expect(sceneKey(night)).not.toBe(sceneKey({ ...night, time: 'day' }))
+    expect(toScreenScene({ preset: 'fog', image: null, sounds: [], fire: null, place: null, time: 'dusk' }, 'u/s').time).toBe('dusk')
+  })
+
+  it('the décor is part of the scene: saved, read back, a new background when it changes', () => {
+    const church: ScreenScene = { ...fog, place: 'church' }
+    const saved = JSON.parse(JSON.stringify(run({ type: 'scene', scene: church }, { type: 'place', place: 'none' })))
+    expect(parseScreen(saved)).toMatchObject({ scene: church, placeOverride: 'none' })
+    expect(parseScreen({ ...saved, placeOverride: 'disco', scene: { ...church, place: 'disco' } })).toMatchObject({ scene: fog, placeOverride: null })
+    expect(sceneKey(church)).not.toBe(sceneKey(fog))
+    expect(toScreenScene({ preset: 'fog', image: null, sounds: [], fire: null, place: 'harbour', time: null }, 'u/s').place).toBe('harbour')
+  })
+
   it('pushes and clears a handout, over any scene change', () => {
     const s = run({ type: 'scene', scene: fog }, { type: 'show', handout: letter }, { type: 'scene', scene: storm })
     expect(s.handout).toEqual(letter)
@@ -64,7 +97,7 @@ describe('helpers', () => {
   })
 
   it('pack paths become Storage refs', () => {
-    expect(toScreenScene({ preset: 'rain', image: 'images/x.jpg', sounds: [], fire: null }, 'owner/story')).toEqual({
+    expect(toScreenScene({ preset: 'rain', image: 'images/x.jpg', sounds: [], fire: null, place: null, time: null }, 'owner/story')).toEqual({
       preset: 'rain', image: { bucket: 'story-packs', path: 'owner/story/images/x.jpg' }, sounds: [],
     })
   })
@@ -80,7 +113,7 @@ describe('helpers', () => {
 
 describe('parseScreen', () => {
   it('reads back what was saved', () => {
-    const s: ScreenState = { v: 1, follow: false, sound: true, scene: storm, override: 'dust', handout: letter }
+    const s: ScreenState = { v: 1, follow: false, sound: true, scene: storm, override: 'dust', placeOverride: null, timeOverride: null, handout: letter }
     expect(parseScreen(JSON.parse(JSON.stringify(s)))).toEqual(s)
   })
 
@@ -101,9 +134,9 @@ describe('fire place (hearth)', () => {
   const hearth: ScreenScene = { preset: 'hearth', image: storm.image, sounds: ['fireplace'], fire: { x: 0.4, y: 0.8, width: 0.3 } }
 
   it('travels from the scene to the saved state and back', () => {
-    const scene = toScreenScene({ preset: 'hearth', image: 'images/hall.jpg', sounds: [], fire: { x: 0.4, y: 0.8, width: 0.3 } }, 'u/s')
+    const scene = toScreenScene({ preset: 'hearth', image: 'images/hall.jpg', sounds: [], fire: { x: 0.4, y: 0.8, width: 0.3 }, place: null, time: null }, 'u/s')
     expect(scene.fire).toEqual({ x: 0.4, y: 0.8, width: 0.3 })
-    expect(toScreenScene({ preset: 'fog', image: null, sounds: [], fire: null }, 'u/s')).not.toHaveProperty('fire')
+    expect(toScreenScene({ preset: 'fog', image: null, sounds: [], fire: null, place: null, time: null }, 'u/s')).not.toHaveProperty('fire')
     const saved = JSON.parse(JSON.stringify(run({ type: 'scene', scene: hearth })))
     expect(parseScreen(saved).scene).toEqual(hearth)
   })
