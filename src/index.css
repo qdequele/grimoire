@@ -190,4 +190,24 @@
     border-top: 1px solid var(--gold);
     border-bottom: 1px solid color-mix(in srgb, var(--gold) 40%, transparent);
   }
+  /* Full-width rule under a title: a thin line, or in Art Deco a double gold rule. */
+  .double-rule {
+    display: block;
+    width: 100%;
+    border-top: 1px solid var(--line);
+  }
+  :root[data-skin="deco"] .double-rule {
+    height: 5px;
+    border-top: 1px solid var(--gold);
+    border-bottom: 1px solid color-mix(in srgb, var(--gold) 45%, transparent);
+  }
+  /* A legacy diamond bullet before a menu entry. */
+  .diamond {
+    display: inline-block;
+    width: 0.5rem;
+    height: 0.5rem;
+    flex-shrink: 0;
+    rotate: 45deg;
+    border: 1px solid color-mix(in srgb, var(--gold) 60%, transparent);
+  }
 }

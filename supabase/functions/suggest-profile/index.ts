@@ -1,7 +1,8 @@
 // AI help for the investigator profile (creation wizard, step 6).
 //
 // The browser sends what the wizard knows (occupation, characteristics, best skills, link, fields
-// already written). Claude proposes the six profile statements; the function returns only the
+// already written), with the keeper's session or, from a player's phone, the table link as `link`
+// (the game owner's quota then applies). Claude proposes the six profile statements; the function returns only the
 // fields that were empty, or the single field asked for. Monthly limit per account.
 //
 // Secrets: ANTHROPIC_API_KEY (required). Optional: PROFILE_MONTHLY_LIMIT (default 50).
@@ -43,17 +44,30 @@ Deno.serve(async (req) => {
   const asUser = createClient<Database>(supabaseUrl, Deno.env.get('SUPABASE_ANON_KEY')!, {
     global: { headers: { Authorization: req.headers.get('Authorization') ?? '' } },
   })
-  const { data: userData, error: userError } = await asUser.auth.getUser()
-  if (userError || !userData.user) return fail(401, 'unauthorized', 'Connecte-toi pour utiliser l’aide IA.')
-  const userId = userData.user.id
   const admin = createClient<Database>(supabaseUrl, Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!)
 
-  let input: ReturnType<typeof parseProfileRequest>
-  try {
-    input = parseProfileRequest(await req.json())
-  } catch {
-    return fail(400, 'bad_request', 'Body must be JSON.')
+  const body: unknown = await req.json().catch(() => undefined)
+
+  // The keeper's session, or a player's table link (no account): then the game owner's quota.
+  const { data: userData } = await asUser.auth.getUser()
+  let userId = userData.user?.id
+  const link = body && typeof body === 'object' ? (body as { link?: unknown }).link : undefined
+  if (!userId && typeof link === 'string') {
+    const { data: owner, error } = await admin.rpc('companion_owner', { p_token: link })
+    // An unknown or revoked link: the RPC raises `link_invalid` (or returns null).
+    if ((error && error.message === 'link_invalid') || (!error && !owner)) {
+      return fail(401, 'link_invalid', "Ce lien n'est plus valide.")
+    }
+    if (error) {
+      console.error('companion_owner failed', error)
+      return fail(500, 'internal', 'Suggestion impossible.')
+    }
+    userId = owner!
   }
+  if (!userId) return fail(401, 'unauthorized', 'Connecte-toi pour utiliser l’aide IA.')
+
+  if (body === undefined) return fail(400, 'bad_request', 'Body must be JSON.')
+  const input = parseProfileRequest(body)
   if (typeof input === 'string') return fail(400, 'bad_request', input)
 
   try {

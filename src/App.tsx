@@ -1,5 +1,5 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import { createBrowserRouter, Navigate, RouterProvider, useLocation } from 'react-router'
+import { createBrowserRouter, Navigate, RouterProvider, useLocation, useParams } from 'react-router'
 import { AppLayout, RequireAuth } from '@/AppLayout'
 import { AuthProvider } from '@/auth/auth'
 import { LoginPage } from '@/auth/LoginPage'
@@ -7,6 +7,11 @@ import { CharactersPage } from '@/characters/CharactersPage'
 import { PlayersPage } from '@/characters/PlayersPage'
 import { CharacterWizardPage } from '@/characters/wizard/CharacterWizardPage'
 import { Toaster } from '@/components/ui/sonner'
+import { CompanionLayout } from '@/companion/CompanionLayout'
+import { NewInvestigatorPage } from '@/companion/NewInvestigatorPage'
+import { Notebook } from '@/companion/Notebook'
+import { PickPage } from '@/companion/PickPage'
+import { ProfileTab, SheetPage, SheetTab } from '@/companion/SheetPage'
 import { GamePage } from '@/games/GamePage'
 import { HomePage } from '@/home/HomePage'
 import { ImportPage } from '@/import/ImportPage'
@@ -18,6 +23,12 @@ import { Section } from '@/theme/Section'
 /** Old addresses (bookmarks, links in tests) → their place in the new menu, query string kept. */
 function Moved({ to }: { to: string }) {
   return <Navigate to={{ pathname: to, search: useLocation().search }} replace />
+}
+
+/** One GamePage per game: going from /games/a to /games/b starts the new game from scratch. */
+function GameRoute() {
+  const { id } = useParams()
+  return <GamePage key={id} />
 }
 
 const STORY_TABS = [
@@ -35,7 +46,25 @@ const queryClient = new QueryClient({ defaultOptions: { queries: { staleTime: 30
 const router = createBrowserRouter([
   { path: '/login', element: <LoginPage /> },
   // Full-screen game screen, outside the app chrome.
-  { path: '/games/:id', element: <RequireAuth><GamePage /></RequireAuth> },
+  { path: '/games/:id', element: <RequireAuth><GameRoute /></RequireAuth> },
+  // Player companion: public pages opened from a table link (no account).
+  {
+    path: '/t/:token',
+    element: <CompanionLayout />,
+    children: [
+      { index: true, element: <PickPage /> },
+      { path: 'nouveau', element: <NewInvestigatorPage /> },
+      {
+        path: 'c/:characterId',
+        element: <SheetPage />,
+        children: [
+          { index: true, element: <SheetTab /> },
+          { path: 'carnet', element: <Notebook /> },
+          { path: 'profil', element: <ProfileTab /> },
+        ],
+      },
+    ],
+  },
   {
     element: <AppLayout />,
     children: [

@@ -45,6 +45,18 @@ export interface EngineFactories {
   newScenState: (sc: unknown) => unknown
 }
 
+export interface NotebookEntry { id: string; body: string; createdAt: string }
+
+/** What the engine exposes to the app, as window.GRIMOIRE_ENGINE inside the iframe. */
+export interface EngineApi {
+  /** Set live values of the party slot of this investigator (current story); also S.prog[cid].san. Saves and re-renders. */
+  setPoints(cid: string, v: { pv: number; san: number; chance: number; pm: number }): void
+  /** Add an account investigator (legacy character from toLegacyCharacter) to the current party, if not there. `progress` is the account's characters.data.progress; the player is found or created in S.players. */
+  addMember(c: unknown, player: string, progress?: Record<string, unknown>): void
+  /** Notebooks shown on the investigator cards, by character id. */
+  setNotebooks(n: Record<string, NotebookEntry[]>): void
+}
+
 export interface PlayHost {
   data: EngineGlobals
   /** Called once by the engine at startup to get its state. */
@@ -53,6 +65,8 @@ export interface PlayHost {
   save: (state: LegacyState) => void
   /** Back to the app's menu. */
   quit: () => void
+  /** Open the "players at the table" dialog. */
+  openTable?: () => void
   /** The narrator's text generation (what claude.use("sample") gave in claude.ai). */
   sample?: (messages: SampleMessage[], opts?: SampleOptions) => Promise<{ text: string }>
 }
@@ -62,5 +76,6 @@ declare global {
     __grimoirePlay?: PlayHost
     GRIMOIRE_DATA?: EngineGlobals & { NPCS?: Record<string, unknown> }
     GRIMOIRE_HOST?: PlayHost
+    GRIMOIRE_ENGINE?: EngineApi
   }
 }

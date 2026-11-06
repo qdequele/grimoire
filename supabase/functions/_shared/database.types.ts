@@ -69,6 +69,48 @@ export type Database = {
           },
         ]
       }
+      character_notes: {
+        Row: {
+          body: string
+          character_id: string
+          created_at: string
+          id: string
+          owner_id: string
+          updated_at: string
+        }
+        Insert: {
+          body: string
+          character_id: string
+          created_at?: string
+          id?: string
+          owner_id?: string
+          updated_at?: string
+        }
+        Update: {
+          body?: string
+          character_id?: string
+          created_at?: string
+          id?: string
+          owner_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "character_notes_character_fkey"
+            columns: ["character_id", "owner_id"]
+            isOneToOne: false
+            referencedRelation: "characters"
+            referencedColumns: ["id", "owner_id"]
+          },
+          {
+            foreignKeyName: "character_notes_owner_id_fkey"
+            columns: ["owner_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       characters: {
         Row: {
           created_at: string
@@ -83,7 +125,7 @@ export type Database = {
           created_at?: string
           data: Json
           id?: string
-          name?: string | null
+          name?: never
           owner_id?: string
           player_id?: string | null
           updated_at?: string
@@ -92,7 +134,7 @@ export type Database = {
           created_at?: string
           data?: Json
           id?: string
-          name?: string | null
+          name?: never
           owner_id?: string
           player_id?: string | null
           updated_at?: string
@@ -114,8 +156,70 @@ export type Database = {
           },
         ]
       }
+      game_points: {
+        Row: {
+          chance: number | null
+          character_id: string
+          checks: string[]
+          game_id: string
+          owner_id: string
+          pm: number | null
+          pv: number | null
+          san: number | null
+          source: string
+          updated_at: string
+        }
+        Insert: {
+          chance?: number | null
+          character_id: string
+          checks?: string[]
+          game_id: string
+          owner_id?: string
+          pm?: number | null
+          pv?: number | null
+          san?: number | null
+          source: string
+          updated_at?: string
+        }
+        Update: {
+          chance?: number | null
+          character_id?: string
+          checks?: string[]
+          game_id?: string
+          owner_id?: string
+          pm?: number | null
+          pv?: number | null
+          san?: number | null
+          source?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "game_points_character_fkey"
+            columns: ["character_id", "owner_id"]
+            isOneToOne: false
+            referencedRelation: "characters"
+            referencedColumns: ["id", "owner_id"]
+          },
+          {
+            foreignKeyName: "game_points_game_fkey"
+            columns: ["game_id", "owner_id"]
+            isOneToOne: false
+            referencedRelation: "games"
+            referencedColumns: ["id", "owner_id"]
+          },
+          {
+            foreignKeyName: "game_points_owner_id_fkey"
+            columns: ["owner_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       games: {
         Row: {
+          channel: string
           created_at: string
           finished_at: string | null
           id: string
@@ -125,6 +229,7 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          channel?: string
           created_at?: string
           finished_at?: string | null
           id?: string
@@ -134,6 +239,7 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          channel?: string
           created_at?: string
           finished_at?: string | null
           id?: string
@@ -229,12 +335,12 @@ export type Database = {
           copied_from?: string | null
           created_at?: string
           id?: string
-          lang?: string | null
+          lang?: never
           owner_id?: string | null
           pack_files?: string[]
           published_at?: string | null
-          summary?: string | null
-          title?: string | null
+          summary?: never
+          title?: never
           updated_at?: string
           visibility?: Database["public"]["Enums"]["story_visibility"]
         }
@@ -243,12 +349,12 @@ export type Database = {
           copied_from?: string | null
           created_at?: string
           id?: string
-          lang?: string | null
+          lang?: never
           owner_id?: string | null
           pack_files?: string[]
           published_at?: string | null
-          summary?: string | null
-          title?: string | null
+          summary?: never
+          title?: never
           updated_at?: string
           visibility?: Database["public"]["Enums"]["story_visibility"]
         }
@@ -326,12 +432,122 @@ export type Database = {
           },
         ]
       }
+      table_links: {
+        Row: {
+          character_id: string | null
+          created_at: string
+          game_id: string
+          id: string
+          owner_id: string
+          revoked_at: string | null
+          token: string
+        }
+        Insert: {
+          character_id?: string | null
+          created_at?: string
+          game_id: string
+          id?: string
+          owner_id?: string
+          revoked_at?: string | null
+          token?: string
+        }
+        Update: {
+          character_id?: string | null
+          created_at?: string
+          game_id?: string
+          id?: string
+          owner_id?: string
+          revoked_at?: string | null
+          token?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "table_links_character_fkey"
+            columns: ["character_id", "owner_id"]
+            isOneToOne: false
+            referencedRelation: "characters"
+            referencedColumns: ["id", "owner_id"]
+          },
+          {
+            foreignKeyName: "table_links_game_fkey"
+            columns: ["game_id", "owner_id"]
+            isOneToOne: false
+            referencedRelation: "games"
+            referencedColumns: ["id", "owner_id"]
+          },
+          {
+            foreignKeyName: "table_links_owner_id_fkey"
+            columns: ["owner_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      is_admin: { Args: never; Returns: boolean }
+      companion_add_note: {
+        Args: { p_body: string; p_character: string; p_token: string }
+        Returns: string
+      }
+      companion_broadcast: {
+        Args: { p_channel: string; p_event: string; p_payload: Json }
+        Returns: undefined
+      }
+      companion_clean_character: { Args: { p_data: Json }; Returns: Json }
+      companion_create_character: {
+        Args: { p_data: Json; p_player_name: string; p_token: string }
+        Returns: string
+      }
+      companion_has_markup: { Args: { p: string }; Returns: boolean }
+      companion_int: {
+        Args: { p: Json; p_hi: number; p_lo: number }
+        Returns: number
+      }
+      companion_link: {
+        Args: { p_token: string }
+        Returns: {
+          character_id: string | null
+          created_at: string
+          game_id: string
+          id: string
+          owner_id: string
+          revoked_at: string | null
+          token: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "table_links"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      companion_open: { Args: { p_token: string }; Returns: Json }
+      companion_owner: { Args: { p_token: string }; Returns: string }
+      companion_party: { Args: { p_game: string }; Returns: string[] }
+      companion_set_point: {
+        Args: {
+          p_character: string
+          p_field: string
+          p_token: string
+          p_value: number
+        }
+        Returns: undefined
+      }
+      companion_sheet_int: {
+        Args: { p: Json; p_default: number }
+        Returns: number
+      }
+      companion_text: { Args: { p: Json; p_max: number }; Returns: string }
+      is_admin: { Args: Record<PropertyKey, never>; Returns: boolean }
+      revoke_table_link: { Args: { p_link: string }; Returns: undefined }
+      save_game_state: {
+        Args: { p_game: string; p_removed: string[]; p_state: Json }
+        Returns: undefined
+      }
     }
     Enums: {
       import_status: "running" | "succeeded" | "failed"
@@ -471,4 +687,3 @@ export const Constants = {
     },
   },
 } as const
-

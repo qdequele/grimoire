@@ -833,6 +833,11 @@ html[data-skin="deco"] .sc-say .read{margin-bottom:6px}
 html[data-skin="deco"] .scene-cols{gap:14px}
 html[data-skin="deco"] .npcc-h b{font-family:"Josefin Sans",sans-serif;letter-spacing:.06em;color:var(--gold)}
 
+/* Grimoire: notebooks on investigator cards */
+.inv details.carnet{margin-top:8px;font-size:13px}
+.inv details.carnet summary{cursor:pointer;color:var(--mute)}
+.inv .cnote{padding:4px 0;border-top:1px solid var(--line,rgba(128,128,128,.25))}
+.inv .cnote small{color:var(--mute);margin-right:6px}
 /* Grimoire: floating narrator, collapsible side panels */
 #narrPanel.narr{top:auto;right:calc(18px + env(safe-area-inset-right,0px));bottom:calc(18px + env(safe-area-inset-bottom,0px));width:min(440px,calc(100vw - 32px));height:min(640px,calc(100vh - 110px))}
 @media (min-width:960px){body:has(#dicePanel:not([hidden])) #narrPanel.narr{right:calc(18px + min(440px,100vw - 32px) + 12px)}}

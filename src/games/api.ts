@@ -12,6 +12,8 @@ export interface GameState {
   party: Array<{ characterId: string }>
   /** The game engine's own state (legacy engine), saved as is. */
   legacy?: LegacyState
+  /** Server time (ms) of the last save_game_state: phone points written after it are newer than `legacy`. */
+  serverSavedAt?: number
 }
 
 export type GameRow = Omit<Tables<'games'>, 'state'> & {

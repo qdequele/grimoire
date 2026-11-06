@@ -1,6 +1,10 @@
 import type { ReactNode } from 'react'
+import { hasMarkup } from '@/characters/character'
+import { FieldError } from '@/components/ui/field'
 import { NativeSelect, NativeSelectOption } from '@/components/ui/native-select'
+import { useT } from '@/i18n/t'
 import { cn } from '@/lib/utils'
+import { useWizardHost } from './host'
 
 /** The legacy "tuto" box: explanation of the step, gold rule on the left, serif text. */
 export function Tuto({ children }: { children: ReactNode }) {
@@ -9,6 +13,21 @@ export function Tuto({ children }: { children: ReactNode }) {
       {children}
     </div>
   )
+}
+
+/**
+ * Under a text field, what would be refused when saving: more than `max` characters (a draft kept
+ * from before, an AI suggestion: the input's maxLength only stops typing), or, with `markup` on a
+ * host that refuses them, the characters < > & ".
+ */
+export function TextLimit({ value, max, markup = false }: { value: string; max: number; markup?: boolean }) {
+  const t = useT()
+  const { noMarkup } = useWizardHost()
+  if (value.length > max) {
+    return <FieldError>{t('{max} caractères au plus ({n} actuellement).', { max, n: value.length })}</FieldError>
+  }
+  if (markup && noMarkup && hasMarkup(value)) return <FieldError>{t('Les caractères < > & et " ne sont pas acceptés ici.')}</FieldError>
+  return null
 }
 
 /** The legacy "pool" bar: what's left to place, in big monospace numbers. */

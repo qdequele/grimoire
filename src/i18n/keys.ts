@@ -19,6 +19,7 @@ export function dataKeys(): string[] {
     // Labels passed as props, then translated by the component (Section, NameForm, Stat, nav).
     'Histoires', 'Bibliothèque', 'Mes histoires', 'Importer', 'Investigateurs', 'Joueurs', 'Réglages',
     'Renommer', 'Ajouter un joueur', 'PV', 'Chance', 'PM', '{label} : {detail}',
+    'SAN', 'Fiche', 'Carnet', // companion stat tiles and sheet tabs
     'Concept', 'Caractéristiques', 'Valeurs dérivées', "Compétences d'occupation", 'Intérêts personnels', 'Profil', 'Récapitulatif',
     // Messages built outside components, shown through t() / tMsg().
     'Tu as déjà un joueur avec ce prénom.',
@@ -34,6 +35,7 @@ export function dataKeys(): string[] {
     // suggest-profile function messages
     "L'aide IA n'est pas configurée sur ce serveur.", "Le service d'IA est occupé. Réessaie dans une minute.",
     'Connecte-toi pour utiliser l’aide IA.', 'Pas de suggestion possible pour ce profil.', 'Réponse de l’IA illisible. Réessaie.',
+    "Ce lien n'est plus valide.",
   ].filter(Boolean)
 }
 
