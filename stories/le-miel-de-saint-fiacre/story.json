@@ -1,0 +1,1324 @@
+{
+  "format": "grimoire-story/1",
+  "meta": {
+    "id": "le-miel-de-saint-fiacre",
+    "title": "Le Miel de Saint-Fiacre",
+    "lang": "fr",
+    "summary": "Fin août 1929, dans les Baronnies. Ventebrune, village perché au-dessus des champs de lavande, s'apprête à fêter la Saint-Fiacre, et son miel gagne tous les concours depuis cinq ans. Deux étrangers venus pour la fête de l'an dernier n'en sont jamais repartis : ils vendent ce miel sur la place, avec le même sourire que tout le village.",
+    "players": {
+      "min": 4,
+      "max": 5
+    },
+    "duration": "1 à 2 heures",
+    "era": "Jeudi 29 et vendredi 30 août 1929",
+    "setting": "Ventebrune, village perché des Baronnies (Drôme provençale), entre Nyons et Buis-les-Baronnies, et la chapelle de l'ermitage Saint-Fiacre sur son rocher",
+    "system": "d100",
+    "author": "Grimoire",
+    "license": "CC-BY-4.0",
+    "version": "1.0",
+    "tags": [
+      "groupe",
+      "court",
+      "horreur rurale",
+      "Provence",
+      "fête de village",
+      "enquête"
+    ],
+    "contentWarnings": [
+      "insectes",
+      "perte du libre arbitre",
+      "deuil",
+      "morts de vieillards (épilogue)"
+    ]
+  },
+  "overview": {
+    "secret": "**Mai 1923.** {{npc:baptistin-arnaud}}, 72 ans, maître apiculteur de Ventebrune, a perdu son fils Paul à Verdun en 1916 et sa femme Rose en 1922. En cherchant des essaims sauvages, il en trouve un dans le mur de la chapelle en ruine de l'ermitage Saint-Fiacre, sur le rocher au-dessus du village : l'ermitage que la paroisse avait incendié en 1721, après qu'on y eut trouvé l'ermite mort, souriant, couvert d'abeilles muettes. Ces abeilles-là sont pâles et ne font aucun bruit. Leur reine n'est pas une abeille : une chose molle et cireuse de la taille d'un poing, qui pense lentement. Baptistin goûte leur miel, et son chagrin s'en va. Au lieu de recueillir l'essaim, il le mure dans la niche derrière l'autel en ne laissant qu'un trou de vol, refait le toit et ferme la porte d'une chaîne.\n\n**Le miel** fait de ceux qui en mangent une part de l'essaim : plus de chagrin, plus de peur, plus de volonté propre, une seule pensée lente partagée par tous. En mars 1924, Baptistin fonde avec le maire {{npc:marius-blanc}} la Coopérative apicole ; à la Saint-Fiacre 1924, le gâteau de miel est partagé à tout le village. Depuis 1925, le miel gagne tous les concours. Depuis l'hiver 1926-1927, Baptistin ne redescend plus : il est assis dans le chœur de la chapelle sous un manteau vivant d'abeilles, il est le cœur et la voix de l'essaim. Chaque dimanche soir, des hommes conduits par sa belle-fille {{npc:fernande-arnaud}} montent chercher environ 180 kg de miel, été comme hiver. Les 146 ruches de la colline sont à moitié vides : un décor.\n\n**La portée.** Le miel n'asservit qu'à portée de l'essaim, environ trois kilomètres autour de l'ermitage. Plus loin, il apaise seulement, et l'on y revient : vendu à Lyon et à Paris, il attire des acheteurs qui finissent par venir s'installer. Ventebrune est passé de 164 habitants en 1921 à 212 aujourd'hui, quand tous les villages des Baronnies se vident. À la Saint-Fiacre de 1928, {{npc:helene-vasseur}}, peintre parisienne, et {{npc:lucien-merle}}, représentant d'une épicerie lyonnaise, ont mangé le gâteau ; ils ne sont jamais repartis. Seule {{npc:odile-fabre}}, l'institutrice, diabétique, n'a jamais goûté au miel ; elle a tout noté, et elle a peur.\n\n**Ce jeudi 29 août 1929**, veille de la Saint-Fiacre, une soixantaine d'invités des villages voisins, le conseiller général et les investigateurs sont attendus à la veillée. À minuit, la coopérative offre à chaque invité une part du gâteau de Saint-Fiacre. **Si personne n'intervient**, tous ceux qui en mangent deviennent l'essaim ; ceux qui vivent loin reviennent s'installer dans l'année ; l'essaim grossit, et sa portée avec lui : l'an prochain, les hameaux voisins.\n\n**Ce qui l'arrête.** La fumée engourdit l'essaim et desserre son emprise sur le village pour une heure. Le feu le détruit. Brûler la colonie ou tuer la Reine libère tout le monde d'un coup : six ans de deuils et de peurs reviennent en une nuit, et les plus vieux, dont le cœur ne tient pas, en meurent, Baptistin le premier.",
+    "steps": [
+      "[[la-place]] (jeudi 29 août, 10 h) : l'arrivée, le miel offert, les deux étrangers au sourire identique, les abeilles muettes ; à midi, toutes les têtes se tournent vers la chapelle.",
+      "[[les-pistes]] (l'après-midi) : quatre pistes à se partager : la coopérative et ses registres, les ruchers vides et les abeilles mortes, Odile Fabre et son carnet, la chambre d'Hélène.",
+      "[[la-veillee]] (20 h - minuit) : la farandole d'un seul pas, le silence de 23 h, et le gâteau de minuit à empêcher.",
+      "[[l-ermitage]] : la chapelle verrouillée, le Père sous son manteau d'abeilles, la Reine dans le mur : enfumer, brûler, négocier ou partir.",
+      "[[epilogue]] (vendredi 30 août, jour de la Saint-Fiacre) : ce que chaque choix a coûté."
+    ],
+    "mustNotMiss": [
+      "**Le miel change les gens** : la faucille sur la place, les phrases finies par un autre ([[la-place]]), les lettres d'Hélène (sans jet), le carnet d'Odile, et le miel lui-même pour qui en a mangé.",
+      "**Le miel vient de l'ermitage, pas des ruches** : les registres (l'« apport de l'Ermitage » chaque dimanche, même en janvier, visible sans jet), les ruches vides, la piste des abeilles mortes, le carnet d'Odile ([[les-pistes]]).",
+      "**Le Père est là-haut** : Fernande, Marius, la toile retournée d'Hélène, le carnet d'Odile ([[les-pistes]]) ; les têtes tournées vers la chapelle à midi et à 23 h.",
+      "**Le gâteau de minuit** : l'affiche de la fête (sans jet), la dernière lettre d'Hélène, le carnet d'Odile, le discours du maire ([[la-veillee]]).",
+      "**Fumée et feu** : la grange Achard et la note de 1721 dans le carnet d'Odile, les enfumoirs jamais servis de la miellerie, l'inscription du linteau ([[l-ermitage]]). Tout apiculteur sait que la fumée calme les abeilles.",
+      "**La clé de la chapelle** : sur le trousseau de Fernande à la miellerie, ou chez le garde champêtre ; sinon la chaîne se force."
+    ],
+    "branches": [
+      "**Brûler la colonie ou tuer la Reine** : l'essaim meurt, tout le village se réveille en pleurs ; Hélène et Lucien sont libres ; trois des plus vieux, dont Baptistin, meurent dans la nuit ([[epilogue]]).",
+      "**Enfumer seulement** : gagne 1D6+2 rounds et réveille Baptistin une minute, mais ne règle rien si l'on s'arrête là.",
+      "**Saboter le gâteau** (ipéca du médecin ou de la pharmacie de l'école) : les invités vomissent le miel et sont sauvés cette année ; l'essaim vit.",
+      "**Négocier** : l'essaim ne ment pas. Il relâche Hélène, Lucien et les investigateurs s'ils partent cette nuit et se taisent ; les invités mangent le gâteau ; le village grandit.",
+      "**Emmener Hélène ou Lucien loin du village** (à plus de trois kilomètres) : libère cette personne, au prix de son chagrin revenu d'un coup.",
+      "**Partir, ou emporter un pot** : rien n'est réglé, et le pot attend son heure.",
+      "Un investigateur qui a trop mangé (Emprise 3) se range du côté du village jusqu'à ce que l'essaim meure ou qu'on l'emmène loin."
+    ],
+    "ifStuck": [
+      "Odile vient d'elle-même à l'auberge à 17 h, si personne n'est allé la voir : elle a vu des étrangers refuser le miel.",
+      "Un chien du village gronde à chaque villageois et suit les investigateurs ; le soir, il les mène au pied du sentier de l'ermitage et refuse d'aller plus loin.",
+      "À 23 h, à la veillée, tout le village se tourne vers la chapelle : une lueur dorée passe derrière les fentes de sa porte.",
+      "Lucien, interrogé sur ses affaires, dit tranquillement : « Le gros du miel, nous le descendons de l'ermitage le dimanche. Le Père le fait. »",
+      "Pour le feu : la distillerie de lavande, au bas du village, garde des bonbonnes d'essence de lavande, qui brûle comme de l'alcool."
+    ],
+    "keeperTips": [
+      "Horreur en plein jour : soleil, cigales, sourires, tables dressées. Ne montrez rien de monstrueux avant la chapelle. Le malaise vient des détails : le silence des abeilles, les phrases finies par un autre, la faucille.",
+      "Les villageois ne sont jamais méchants. Ils sont doux, généreux, patients. Ils veulent seulement que vous goûtiez. C'est ce qui fait peur.",
+      "À 4 ou 5 joueurs, encouragez la séparation l'après-midi ([[les-pistes]]) : chacun sa piste, puis on met en commun à l'auberge avant la veillée. Chaque accroche pousse vers une piste différente.",
+      "Notez discrètement qui a mangé du miel et son Emprise (règle dans [[la-place]]). Ne dites pas aux joueurs que l'Emprise existe : dites-leur ce que leur investigateur ne ressent plus.",
+      "Aucun enfant n'est en danger : l'école est en vacances, les enfants du village passent l'été chez des parents dans la vallée, la coopérative ne donne jamais de miel aux enfants, et les invités montent à la veillée sans les leurs.",
+      "Baptistin n'est pas un méchant : c'est un vieil homme qui ne voulait plus avoir mal. Laissez-le revenir une seconde, sous la fumée ou dans le feu, pour dire un nom."
+    ]
+  },
+  "acts": [
+    {
+      "id": "le-village",
+      "title": "Le village au miel",
+      "scenes": [
+        {
+          "id": "la-place",
+          "title": "La place de Ventebrune",
+          "lead": "Jeudi 29 août, 10 h : l'arrivée, le miel offert, les sourires, les abeilles muettes.",
+          "screen": {
+            "place": "street",
+            "preset": "dust",
+            "time": "day"
+          },
+          "notesFirst": true,
+          "readAloud": [
+            "L'autocar de Nyons vous laisse au pied du village à dix heures, dans une odeur de poussière chaude et de lavande coupée. Ventebrune s'accroche à la colline : des maisons de pierre dorée, des volets bleus, un clocher à campanile et, tout en haut, au-dessus des derniers oliviers, une petite chapelle seule sur son rocher.",
+            "Sur la place, sous les platanes, on dresse déjà les tables de la fête. Les cigales crient à vous rendre sourds. Une femme blonde en blouse de peintre vient vers vous avec un plateau : du pain, un pot de miel presque blanc, et un sourire. « Bienvenue à Ventebrune. Goûtez. Tout le monde goûte. »"
+          ],
+          "flow": [
+            {
+              "title": "Le miel de bienvenue",
+              "text": "{{npc:helene-vasseur}} tend les tartines. Le miel sent la lavande et la cire tiède. **Notez qui mange.** Chaque investigateur qui goûte fait aussitôt un jet de POU (voir « La règle du miel »).",
+              "roll": {
+                "type": "characteristic",
+                "options": [
+                  "POW"
+                ]
+              },
+              "success": "Un goût de lavande, de cire et d'autre chose, très doux. Rien de plus, pour l'instant.",
+              "failure": "**Emprise 1.** Une paix lourde, comme au sortir d'un bain chaud. Le prochain jet de SAN de cet investigateur est ignoré. Ne lui dites que ce qu'il ne ressent plus.",
+              "extra": "Refuser poliment ne fâche personne. Mais toute la journée, à chaque porte, on reproposera du miel, gentiment."
+            },
+            {
+              "title": "Les retrouvailles",
+              "text": "Le parent d'Hélène la reconnaît ; l'acheteur de Lyon reconnaît, d'après sa photographie, {{npc:lucien-merle}} derrière l'étal de miel, sous un platane. Ni l'un ni l'autre n'est surpris. Hélène : « Tu es là pour la fête. Je suis contente. » Elle ne demande aucune nouvelle de la famille.",
+              "roll": {
+                "type": "skill",
+                "options": [
+                  "psychology"
+                ]
+              },
+              "success": "Ni comédie ni folie : elle est sincèrement heureuse, et derrière ses yeux il manque quelque chose, comme une pièce vidée de ses meubles. Quand on parle de sa mère, morte l'an dernier, rien ne bouge sur son visage. Lucien, lui, parle de sa fiancée morte en 1918 sur le ton d'un bulletin météo.",
+              "failure": "Ils ont l'air en pleine santé, reposés, heureux. Ils ont bonne mine, tout simplement."
+            },
+            {
+              "title": "Le maire et la secrétaire",
+              "text": "{{npc:marius-blanc}}, maire et président de la coopérative, et {{npc:fernande-arnaud}}, sa secrétaire, viennent saluer. L'un commence une phrase, l'autre la finit, sans se regarder. « Vous êtes nos invités pour la veillée de ce soir... » « ...et pour le gâteau, à minuit. » Marius donne le programme → {{handout:affiche-fete}} et propose de visiter la coopérative à 14 h. Il ajoute, fier : « Deux cent douze habitants ! Le seul village du canton qui grandit. »",
+              "roll": {
+                "type": "san",
+                "label": "Les phrases qui se finissent ailleurs",
+                "san": "0/1"
+              },
+              "extra": "Si on les interroge séparément, ils racontent la même chose avec les mêmes mots."
+            },
+            {
+              "title": "Les abeilles muettes",
+              "text": "Des abeilles se posent sur les pots de l'étal, boivent à la fontaine. Il suffit d'y prêter attention : on ne les entend pas.",
+              "roll": {
+                "type": "skill",
+                "options": [
+                  "natural-world",
+                  "science:biology"
+                ]
+              },
+              "success": "Une abeille bourdonne toujours : c'est le battement de ses ailes. Celles-ci volent sans un bruit. Et elles sont trop pâles, presque blondes, sans le duvet roux des abeilles du pays.",
+              "failure": "Des abeilles attirées par le miel. Avec les cigales, on n'entend rien d'autre, de toute façon.",
+              "extra": "Les chiens du village s'écartent des pots et grondent au passage des villageois, jamais à celui des investigateurs."
+            },
+            {
+              "title": "La faucille",
+              "text": "Au bord de la place, un jeune coupeur de lavande affûte sa faucille et s'entaille la paume jusqu'à l'os. Il regarde sa main, sourit, l'essuie sur son pantalon et reprend son travail. Ceux qui ont vu : SAN 0/1.",
+              "roll": {
+                "type": "skill",
+                "options": [
+                  "medicine",
+                  "first-aid"
+                ]
+              },
+              "success": "Coupure profonde, tendon touché. Pouls lent et régulier, pupilles calmes : aucun signe de douleur, ni de choc. Le sang a une odeur sucrée.",
+              "failure": "Une vilaine coupure, vite bandée. Le garçon remercie poliment et retourne à ses bottes de lavande."
+            },
+            {
+              "title": "Midi",
+              "text": "L'angélus sonne au clocher. Pendant le temps d'un souffle, toute la place s'immobilise.",
+              "roll": {
+                "type": "skill",
+                "options": [
+                  "spot-hidden"
+                ]
+              },
+              "success": "Tous, sans exception, même Hélène et Lucien, ont tourné la tête vers la chapelle du rocher au même instant, puis repris leur geste. Deux seulement ne l'ont pas fait : un chien jaune, et une femme brune derrière la fenêtre de l'école, qui baisse aussitôt le rideau.",
+              "failure": "Midi sonne, la place se vide pour le déjeuner. On sert aux investigateurs, à l'auberge, du pain et du miel.",
+              "extra": "La femme de l'école est {{npc:odile-fabre}}. Si personne ne la remarque, elle viendra à eux à 17 h ([[les-pistes]]).",
+              "goto": [
+                "les-pistes"
+              ]
+            }
+          ],
+          "notes": [
+            {
+              "title": "Accroches (une par investigateur)",
+              "items": [
+                "**L'ingénieur agronome** de la Préfecture de la Drôme : enquête sur des rendements impossibles avant que le préfet ne décore la coopérative → {{handout:ordre-de-mission}}. Piste naturelle : la coopérative et ses registres.",
+                "**Un parent d'Hélène Vasseur** (sœur, frère, cousin) : plus de lettres depuis novembre dernier, neuf lettres restées sans réponse → {{handout:lettres-helene}}. Piste naturelle : Hélène et sa chambre.",
+                "**L'acheteur de la Maison Gerbier**, épicerie fine de Lyon : remplacer Lucien Merle, négocier l'exclusivité pour 1930, et le ramener s'il le peut → {{handout:lettre-gerbier}}. Pistes naturelles : Lucien, les ventes, la miellerie.",
+                "**Le médecin en vacances** à Nyons pour le climat : un confrère lui a conseillé la fête de Ventebrune. Il a sa trousse, et du sirop d'ipéca. Piste naturelle : les corps des villageois, les abeilles mortes, la purge.",
+                "**Le photographe d'un journal de Valence**, envoyé pour un article sur « le village qui ne se vide pas » : il connaît les recensements (164 habitants en 1921, 212 aujourd'hui). Pistes naturelles : la mairie, l'école, ses photos développées à l'auberge.",
+                "Ils ont pris le même tramway de Pierrelatte à Nyons, puis le même autocar : de quoi faire connaissance. Ils logent tous à l'auberge de la place."
+              ]
+            },
+            {
+              "title": "La règle du miel (Emprise)",
+              "items": [
+                "Chaque fois qu'un investigateur mange du miel (tartine, gâteau, rayon) : jet de POU, **Difficile** pour le gâteau de minuit ou un rayon de la chapelle. Échec : **Emprise +1**.",
+                "Qui a au moins Emprise 1 refait un jet de POU à la fin de l'après-midi ([[les-pistes]]) et à l'ouverture de la veillée ([[la-veillee]]) : échec, +1. Le miel continue d'agir.",
+                "**Emprise 1** : calme, peurs émoussées. Le prochain jet de SAN est ignoré.",
+                "**Emprise 2** : il entend « nous ». Il sait où est l'essaim, finit les phrases des villageois. Un dé de malus à tout jet pour tromper, retenir ou blesser un villageois ou l'essaim.",
+                "**Emprise 3** : pris. Le joueur garde son investigateur mais le joue serein : il ne s'oppose plus au village. Une fois par scène, si un compagnon lui parle de ce qu'il a perdu, POU Difficile pour agir librement un round.",
+                "**Retour** : une purge (ipéca, eau salée) dans les six heures annule le dernier point gagné ; une heure à plus de trois kilomètres de l'ermitage retire 1 point (SAN 0/1 par point, le chagrin revient) ; la mort de l'essaim remet tout à 0 (SAN 1/1D4)."
+              ]
+            },
+            {
+              "title": "Ventebrune en 1929",
+              "items": [
+                "212 habitants (164 en 1921). La place et ses platanes, la fontaine, l'auberge, l'église paroissiale, la mairie-école.",
+                "La coopérative et sa miellerie, à l'entrée du village ; la distillerie de lavande, en contrebas, froide depuis la fin de la coupe.",
+                "Les ruchers sur la colline, au milieu du thym, au pied du sentier de l'ermitage (25 minutes de montée).",
+                "Le cimetière, sur la route de Buis : aucune fleur sur aucune tombe depuis des années, pas même sur le monument aux morts."
+              ]
+            },
+            {
+              "title": "Chronologie",
+              "items": [
+                "1721 : l'ermite de Saint-Fiacre trouvé mort, souriant, couvert d'abeilles muettes ; la paroisse brûle l'ermitage.",
+                "1916 : Paul Arnaud, fils de Baptistin, tué à Verdun. 1922 : mort de Rose, sa femme.",
+                "Mai 1923 : Baptistin trouve l'essaim dans le mur de la chapelle et l'y mure.",
+                "Mars 1924 : fondation de la coopérative. 30 août 1924 : premier gâteau de Saint-Fiacre.",
+                "1925 : premier prix à Nyons. 1927 : médaille d'or à la Foire de Lyon. Hiver 1926-1927 : Baptistin ne redescend plus.",
+                "Octobre 1927 : Odile Fabre nommée institutrice. Août 1928 : Hélène et Lucien mangent le gâteau.",
+                "Février 1929 : médaille d'or au Concours général agricole de Paris ; la grange Achard brûle. Jeudi 29 août 1929 : la veillée."
+              ]
+            }
+          ],
+          "npcs": [
+            "helene-vasseur",
+            "lucien-merle",
+            "marius-blanc",
+            "fernande-arnaud"
+          ],
+          "handouts": [
+            "ordre-de-mission",
+            "lettres-helene",
+            "lettre-gerbier",
+            "affiche-fete"
+          ],
+          "ambience": [
+            "village-day",
+            "nature-day"
+          ],
+          "sfx": [
+            "dog-bark",
+            "footsteps"
+          ],
+          "next": [
+            "les-pistes"
+          ]
+        },
+        {
+          "id": "les-pistes",
+          "title": "L'après-midi : les quatre pistes",
+          "lead": "14 h - 19 h : la coopérative, les ruchers, l'école, la chambre d'Hélène. Les joueurs se partagent les pistes.",
+          "screen": {
+            "place": "forest",
+            "preset": "dust",
+            "time": "day"
+          },
+          "readAloud": [
+            "À deux heures, le village dort derrière ses volets. La chaleur écrase la place, l'air tremble au-dessus des tuiles. Sur la colline, les ruches de la coopérative s'alignent entre les touffes de thym, blanches et propres.",
+            "Plus haut, la chapelle de l'ermitage porte un toit de tuiles neuves. Sa porte est fermée par une chaîne. Tout autour d'elle, les cigales se taisent."
+          ],
+          "flow": [
+            {
+              "title": "A · La miellerie",
+              "text": "Marius et Fernande font visiter : l'extracteur, les bidons, les pots, les médailles (Nyons 1925, Lyon 1927, Paris 1929). Fernande tient les registres. L'agronome qui montre son ordre de mission les obtient sans jet.",
+              "roll": {
+                "type": "skill",
+                "options": [
+                  "persuade",
+                  "credit-rating"
+                ]
+              },
+              "success": "Fernande sort les registres sans méfiance : elle n'a rien à cacher, elle ne sait plus ce que c'est → {{handout:registre-cooperative}}.",
+              "failure": "« Le président doit signer. » Il faudra revenir pendant la veillée : la miellerie est fermée, mais personne ne la garde (Serrurerie, ou la fenêtre de derrière).",
+              "extra": "Sur une étagère, six enfumoirs neufs, jamais allumés, couverts de poussière. « Ici, on n'enfume pas. Nos abeilles sont douces. » Au clou derrière la porte, le trousseau de clés de Fernande."
+            },
+            {
+              "title": "A · Lire les registres",
+              "text": "Même sans jet, on voit que l'« apport de l'Ermitage » tombe chaque mois, y compris en janvier, quand aucune abeille ne butine.",
+              "roll": {
+                "type": "skill",
+                "options": [
+                  "accounting",
+                  "natural-world"
+                ]
+              },
+              "success": "146 ruches donnent au mieux 1 500 à 2 200 kg par an dans les Baronnies. Les ruchers en déclarent 940, ce qui va avec une ruche sur deux habitée. Tout le reste, plus de neuf tonnes et demie, vient d'un seul endroit sans ruche déclarée : l'Ermitage, environ 180 kg chaque dimanche. Signé « B. A. » jusqu'en 1926, puis « pour B. A. : F. A. ».",
+              "failure": "Des colonnes bien tenues. Mais l'Ermitage livre chaque dimanche, été comme hiver, et personne ne déclare de ruche là-haut."
+            },
+            {
+              "title": "A · Fernande et le beau-père",
+              "text": "B. A., c'est Baptistin Arnaud, le fondateur, son beau-père. « Il garde l'ermitage. » Elle parle de son mari Paul, tué à Verdun, comme d'un voisin parti en voyage.",
+              "roll": {
+                "type": "skill",
+                "options": [
+                  "psychology",
+                  "charm"
+                ]
+              },
+              "success": "Une seconde, sa voix se casse : « Père est là-haut. Il nous tient tous. » Puis elle sourit de nouveau, comme si rien n'avait été dit.",
+              "failure": "« Il est vieux. Il se repose là-haut, près de ses abeilles. On lui monte ce qu'il faut le dimanche. »",
+              "pushed": "Elle se fige au milieu d'un mot, et Marius, à l'autre bout de la miellerie, finit sa phrase. Tous deux vous regardent. Ce soir, le village entier sait ce que vous cherchez : le garde champêtre gardera le pied du sentier pendant la veillée."
+            },
+            {
+              "title": "B · Les ruches vides",
+              "text": "Sur la colline, au milieu du thym. Soulever un couvercle.",
+              "roll": {
+                "type": "skill",
+                "options": [
+                  "natural-world"
+                ]
+              },
+              "success": "Une ruche sur deux est vide : cadres propres, cire neuve, jamais habitée. Les autres abritent de vraies abeilles du pays, rousses, qui bourdonnent fort, et qui n'ont guère de miel. Les ruchers sont un décor.",
+              "failure": "Des abeilles rousses furieuses : une piqûre, 1 point de vie. Mais en refermant, on voit que la ruche voisine n'a personne à son entrée : elle est vide, et la suivante aussi."
+            },
+            {
+              "title": "B · Les abeilles mortes",
+              "text": "Au bout des ruchers, sur le sentier qui monte, de petits tas d'abeilles pâles, mortes.",
+              "roll": {
+                "type": "skill",
+                "options": [
+                  "science:biology",
+                  "natural-world",
+                  "medicine"
+                ]
+              },
+              "success": "Ce ne sont pas des abeilles. Pas d'aiguillon, pas d'yeux à facettes : une seule tache lisse et luisante. Le ventre est plein d'une pâte blanche, encore tiède, qui sent la cire et la peau. Les pattes finissent par de petits crochets pâles. SAN 0/1D3.",
+              "failure": "Des abeilles mortes de chaleur, plus claires que celles du pays. Elles laissent sur les doigts une graisse blanche qui ne part pas à l'eau."
+            },
+            {
+              "title": "B · La piste des mortes",
+              "text": "Les petits tas jalonnent le sentier vers la chapelle.",
+              "roll": {
+                "type": "skill",
+                "options": [
+                  "track",
+                  "spot-hidden"
+                ]
+              },
+              "success": "Dans la poussière du sentier, des dizaines de traces de pas, montées et descendues, et les ronds laissés par des bidons posés pour souffler. On monte là-haut souvent, et chargé.",
+              "failure": "Le sentier grimpe au soleil vers la chapelle. Personne n'y passe de jour.",
+              "extra": "S'ils montent à la chapelle maintenant, jouez [[l-ermitage]] en plein jour (voir ses notes).",
+              "goto": [
+                "l-ermitage"
+              ]
+            },
+            {
+              "title": "C · L'école : Odile Fabre",
+              "text": "{{npc:odile-fabre}} ouvre la porte de la mairie-école, pâle, et offre un café. Elle regarde qui a mangé du miel. Pas de jet si un investigateur dit qu'il a refusé le miel et qu'on la croit.",
+              "roll": {
+                "type": "skill",
+                "options": [
+                  "charm",
+                  "psychology",
+                  "persuade"
+                ]
+              },
+              "success": "Elle ferme les volets, parle tout bas, et donne son carnet → {{handout:carnet-odile}}.",
+              "failure": "« Je ne sais rien, je suis de Valence. » Elle donnera le carnet à la veillée, si elle les voit refuser le miel.",
+              "extra": "Si personne n'est venu à l'école, Odile vient à l'auberge à 17 h, son carnet dans un cabas."
+            },
+            {
+              "title": "C · Ce qu'Odile a compris",
+              "text": "Elle est diabétique : elle n'a jamais touché au miel, et le village le sait. Elle dit tout ce qu'elle sait (voir ses « knows »). Elle ajoute : « La fumée. Le jour de la grange Achard, pendant une heure, ils étaient redevenus des gens. » Et : « Dans la pharmacie de l'école, j'ai du sirop d'ipéca. »",
+              "extra": "Si le groupe le lui demande, elle les accompagne à la veillée et même à l'ermitage. Elle lit le latin."
+            },
+            {
+              "title": "D · La chambre d'Hélène",
+              "text": "Hélène loue une chambre au-dessus du four du boulanger. Elle n'en ferme jamais la porte. Des dizaines de toiles : les villageois, un par un, tous avec le même sourire, et tous les regards tournés vers le haut à gauche, vers l'ermitage.",
+              "roll": {
+                "type": "skill",
+                "options": [
+                  "spot-hidden"
+                ]
+              },
+              "success": "Sous la pile, une dernière toile retournée contre le mur : un vieil homme assis dans une chapelle, vêtu jusqu'au menton d'un manteau d'or qui semble remuer. Au dos : *Le Père. Février 1929.* SAN 0/1.",
+              "failure": "Des portraits, des paysages de lavande. Et, dans le tiroir de la commode, les lettres de sa famille, toutes non décachetées."
+            },
+            {
+              "title": "D · Lucien Merle à l'étal",
+              "text": "{{npc:lucien-merle}} parle affaires volontiers avec l'acheteur de Gerbier : prix, volumes, exclusivité. Il ne cache rien.",
+              "roll": {
+                "type": "skill",
+                "options": [
+                  "fast-talk",
+                  "persuade",
+                  "psychology"
+                ]
+              },
+              "success": "« Le gros du miel, nous le descendons de l'ermitage le dimanche. Le Père le fait. » Et, sans changer de ton : « En mars, je suis allé à Nyons. À mi-chemin, j'ai pensé à Jeanne. Je suis rentré à pied. On ne part pas, vous savez. On revient toujours. »",
+              "failure": "« L'exclusivité ? Nous en parlerons demain, après la fête. Goûtez donc. »"
+            },
+            {
+              "title": "Les photos du photographe",
+              "text": "S'il y a un photographe, il peut développer ses plaques du matin dans la cave de l'auberge (une heure).",
+              "roll": {
+                "type": "skill",
+                "options": [
+                  "art-craft:photography"
+                ]
+              },
+              "success": "Sur la photo de midi, tous les visages de la place sont tournés vers la chapelle, nets, immobiles, comme posés. Sur chaque photo, les abeilles en vol sont nettes elles aussi : elles ne battent pas des ailes.",
+              "failure": "Des plaques un peu voilées par la chaleur. Sur celle de midi, on devine pourtant que toutes les têtes regardent du même côté."
+            },
+            {
+              "title": "18 h : le miel agit",
+              "text": "Fin d'après-midi. Chaque investigateur qui a au moins Emprise 1 refait un jet de POU. Puis on met en commun à l'auberge avant la veillée.",
+              "roll": {
+                "type": "characteristic",
+                "options": [
+                  "POW"
+                ]
+              },
+              "success": "Rien ne change.",
+              "failure": "Emprise +1.",
+              "goto": [
+                "la-veillee",
+                "l-ermitage"
+              ]
+            }
+          ],
+          "notes": [
+            {
+              "title": "Qui va où (4 ou 5 joueurs)",
+              "items": [
+                "A · Coopérative : l'agronome, l'acheteur. B · Ruchers et sentier : le médecin, quiconque connaît les abeilles. C · École : le parent d'Hélène, le photographe. D · Chambre d'Hélène et étal de Lucien : le parent, l'acheteur.",
+                "Alternez les pistes toutes les deux ou trois minutes de jeu ; aucune ne doit durer plus d'un quart d'heure. Rendez-vous à l'auberge vers 19 h.",
+                "Chaque piste suffit à elle seule à pointer l'ermitage : A par les registres, B par le sentier, C par le carnet, D par la toile et Lucien."
+              ]
+            },
+            {
+              "title": "La miellerie",
+              "items": [
+                "Un extracteur à manivelle, des bidons de 20 kg, des centaines de pots étiquetés « Miel de Saint-Fiacre ».",
+                "Les médailles encadrées au mur, et une photographie de mars 1924 : les fondateurs, avec au centre un vieil homme maigre au chapeau de paille, Baptistin Arnaud.",
+                "Six enfumoirs neufs, jamais servis. Le trousseau de Fernande au clou : la clé du cadenas de la chapelle est la plus neuve.",
+                "Derrière, la camionnette de la coopérative, avec un bidon d'essence."
+              ]
+            },
+            {
+              "title": "Le cimetière (sans jet, sur la route de Buis)",
+              "items": [
+                "Les tombes sont propres, désherbées, sans une fleur. La dernière, celle de la mère Faure, décembre 1927, n'a même pas de photographie.",
+                "Sur le monument aux morts, le nom de Paul Arnaud, 1916. Pas un pot de fleurs, pas un ruban, alors que partout en France on fleurit les monuments."
+              ]
+            }
+          ],
+          "npcs": [
+            "marius-blanc",
+            "fernande-arnaud",
+            "odile-fabre",
+            "lucien-merle",
+            "helene-vasseur"
+          ],
+          "handouts": [
+            "registre-cooperative",
+            "carnet-odile"
+          ],
+          "ambience": [
+            "nature-day",
+            "village-day"
+          ],
+          "sfx": [
+            "door-open",
+            "latch",
+            "dog-bark"
+          ],
+          "next": [
+            "la-veillee",
+            "l-ermitage"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "la-saint-fiacre",
+      "title": "La veillée de la Saint-Fiacre",
+      "scenes": [
+        {
+          "id": "la-veillee",
+          "title": "La veillée",
+          "lead": "20 h - minuit : le village danse d'un seul pas ; à minuit, le gâteau sera partagé entre tous les invités.",
+          "screen": {
+            "place": "street",
+            "preset": "night",
+            "time": "night"
+          },
+          "readAloud": [
+            "Des lampions pendent entre les platanes. Sur les longues tables, des fougasses, des melons, des carafes de vin du pays et, au centre, sous un linge blanc, quelque chose de rond et de doré. Une soixantaine d'invités sont montés des villages voisins : on entend des rires, les accents de Buis et de Nyons.",
+            "Puis l'accordéon attaque une farandole, et tout Ventebrune se lève. Deux cents personnes, un seul pas. Les semelles frappent la terre ensemble, si exactement qu'on n'entend qu'un seul coup."
+          ],
+          "flow": [
+            {
+              "title": "La farandole",
+              "text": "Les invités rient et se font entraîner, en retard d'un temps. Les villageois, eux, ne se trompent jamais. Le tracker « Heures avant le gâteau » commence.",
+              "roll": {
+                "type": "san",
+                "label": "Deux cents personnes, un seul pas",
+                "san": "0/1D3"
+              },
+              "extra": "Un investigateur en Emprise 2 se retrouve dans la farandole sans l'avoir décidé : POU pour en sortir."
+            },
+            {
+              "title": "Le miel, encore",
+              "text": "À l'ouverture de la veillée, chaque investigateur qui a au moins Emprise 1 refait un jet de POU.",
+              "roll": {
+                "type": "characteristic",
+                "options": [
+                  "POW"
+                ]
+              },
+              "success": "Rien ne change.",
+              "failure": "Emprise +1."
+            },
+            {
+              "title": "Le discours du maire",
+              "text": "{{npc:marius-blanc}} lève son verre : « À nos invités... » Deux cents voix achèvent : « ...à ceux qui nous rejoignent. » Le conseiller général applaudit, un peu gêné. Marius rappelle le gâteau de minuit, « offert à chacun de nos invités, et à nos amis d'aujourd'hui », en désignant les investigateurs.",
+              "extra": "Hélène fait au fusain le portrait des invités qui le veulent. Lucien sert le vin et le miel. Le garde champêtre {{npc:auguste-pelissier}} ne danse pas : il fume au bas de la place, près du sentier de l'ermitage."
+            },
+            {
+              "title": "Odile",
+              "text": "Si le groupe ne l'a pas encore vue, {{npc:odile-fabre}} vient s'asseoir près d'eux, très pâle, et glisse son carnet sous la table → {{handout:carnet-odile}}. « Ils l'ont fait l'an dernier, à minuit. Ne mangez pas. Je vous en supplie, faites quelque chose. »"
+            },
+            {
+              "title": "Onze heures : le silence",
+              "text": "Au milieu d'une valse, d'un coup, tous les villageois s'arrêtent et se tournent vers la chapelle du rocher. L'accordéon se tait. Les invités rient, mal à l'aise. Puis tout reprend. Les investigateurs en Emprise 1 ou plus savent, sans savoir comment, que le Père les appelle.",
+              "roll": {
+                "type": "skill",
+                "options": [
+                  "listen",
+                  "spot-hidden"
+                ]
+              },
+              "success": "Les cigales et les grillons se sont tus d'un coup, partout autour du village. Là-haut, une lueur dorée passe derrière les fentes de la porte de la chapelle, et s'éteint.",
+              "failure": "Un silence gêné, puis la musique repart, plus fort."
+            },
+            {
+              "title": "Que faire avant minuit ?",
+              "text": "Le gâteau est sous son linge, au centre de la table d'honneur. Fernande ne le quitte guère des yeux. Les invités ne savent rien. Les choix les plus probables suivent ; on peut en combiner plusieurs si le groupe se sépare."
+            },
+            {
+              "title": "Monter à l'ermitage",
+              "branch": "S'ils montent à l'ermitage",
+              "text": "Quitter la fête et prendre le sentier (25 minutes). Le garde champêtre garde le pied du sentier ; on peut le distraire, le contourner par les ruchers, ou lui parler.",
+              "roll": {
+                "type": "group",
+                "options": [
+                  "stealth"
+                ]
+              },
+              "success": "Personne ne les voit partir. Le tracker « Les villageois montent » démarrera à 0.",
+              "failure": "Cent têtes se tournent en même temps, puis reviennent à la danse. Le tracker « Les villageois montent » démarrera à 2.",
+              "goto": [
+                "l-ermitage"
+              ]
+            },
+            {
+              "title": "Saboter le gâteau",
+              "branch": "S'ils sabotent le gâteau",
+              "text": "Verser l'ipéca du médecin (ou de la pharmacie de l'école) dans le gâteau, ou dans le vin de minuit. Il faut détourner l'attention de Fernande : un autre joueur peut l'occuper.",
+              "roll": {
+                "type": "skill",
+                "options": [
+                  "sleight-of-hand"
+                ]
+              },
+              "success": "À minuit, tout le monde mange. Vingt minutes plus tard, invités et villageois vomissent sous les platanes. Le miel est rendu avant d'agir : les invités sont sauvés cette année. Les villageois, eux, sourient en s'essuyant la bouche. L'essaim est intact.",
+              "failure": "Fernande les voit, sans colère. Le gâteau est emporté et remplacé par un autre, gardé à la miellerie. Des villageois entourent doucement les investigateurs et leur tendent une part, chacun, avec patience.",
+              "pushed": "Fernande et une dizaine de villageois les tiennent par les bras, sans violence, et portent le gâteau à leurs lèvres : POU Difficile, échec Emprise +2."
+            },
+            {
+              "title": "Emmener Hélène ou Lucien",
+              "branch": "S'ils emmènent Hélène ou Lucien loin du village",
+              "text": "En voiture (celle du médecin ou de l'agronome, ou la camionnette de la coopérative) sur la route de Nyons. Il faut d'abord les faire monter : ils viennent volontiers « faire un tour ».",
+              "roll": {
+                "type": "skill",
+                "options": [
+                  "drive-auto"
+                ]
+              },
+              "success": "À trois kilomètres, la personne se met à trembler. Au bout d'une heure, elle pleure comme si son deuil datait d'hier, et demande quel jour on est. Elle est libre, au prix de ce chagrin et d'une année dont elle ne se souvient qu'à moitié.",
+              "failure": "Dans un lacet, avec un sourire, la personne tire le frein à main. La voiture finit dans le fossé (1D3 à chacun) ; elle remonte au village à pied, sans se presser."
+            },
+            {
+              "title": "Rester et refuser",
+              "branch": "S'ils restent et refusent le gâteau",
+              "text": "Refuser ne coûte rien : on les laisse tranquilles. Les invités mangent. Rien n'est réglé, et la nuit ne fait que commencer : ils peuvent encore monter à l'ermitage après minuit."
+            },
+            {
+              "title": "Minuit : le gâteau",
+              "text": "Si rien ne l'a empêché, Marius découvre le gâteau et chaque invité reçoit sa part. Un investigateur qui mange : POU Difficile, échec Emprise +1. Les invités rient, puis, peu à peu, se taisent et sourient.",
+              "extra": "Le vendredi matin, les invités redescendront chez eux, calmes. Dans l'année, la plupart reviendront s'installer à Ventebrune."
+            }
+          ],
+          "notes": [
+            {
+              "title": "Sur la place",
+              "items": [
+                "Les invités : le conseiller général du canton et sa femme, des gens de Buis, de Mollans et de Nyons, des marchands de lavande. Une soixantaine en tout, venus sans enfants : la veillée finit tard.",
+                "Le gâteau de Saint-Fiacre : une grande couronne de pâte briochée fourrée de miel, sous un linge brodé, sur la table d'honneur.",
+                "Le garde champêtre fume au pied du sentier de l'ermitage de 21 h à minuit ; il a l'autre clé du cadenas.",
+                "La miellerie est fermée mais personne ne la garde : enfumoirs, trousseau de Fernande, bidon d'essence de la camionnette."
+              ]
+            },
+            {
+              "title": "Si un investigateur est pris (Emprise 3)",
+              "items": [
+                "Il se lève pour la farandole, sourit, propose du miel à ses compagnons. Il ne les trahit pas activement, mais il ne les aide plus contre le village.",
+                "S'il apprend qu'on veut brûler l'ermitage, il le dit aux villageois, simplement, comme on donne l'heure (le tracker « Les villageois montent » démarre à 3).",
+                "Le traîner loin du village en voiture le libère à raison d'1 point par heure."
+              ]
+            }
+          ],
+          "npcs": [
+            "marius-blanc",
+            "fernande-arnaud",
+            "odile-fabre",
+            "helene-vasseur",
+            "lucien-merle",
+            "auguste-pelissier",
+            "villageois"
+          ],
+          "handouts": [
+            "carnet-odile"
+          ],
+          "ambience": [
+            "village-night",
+            "night-crickets"
+          ],
+          "sfx": [
+            "footsteps",
+            "dog-bark"
+          ],
+          "next": [
+            "l-ermitage",
+            "epilogue"
+          ]
+        },
+        {
+          "id": "l-ermitage",
+          "title": "L'ermitage Saint-Fiacre",
+          "lead": "La chapelle verrouillée, le vieil apiculteur sous son manteau d'abeilles, la Reine dans le mur : le choix.",
+          "screen": {
+            "place": "church",
+            "preset": "ritual",
+            "time": "night"
+          },
+          "readAloud": [
+            "Le sentier monte entre les chênes verts et le thym. Plus vous approchez, plus le silence s'épaissit : plus une cigale, plus un grillon, rien que vos pas sur les cailloux.",
+            "La chapelle est petite, trapue, coiffée de tuiles neuves. Une chaîne et un cadenas ferment sa porte. Par les fentes du bois filtre une lumière jaune et chaude, et une odeur de cire si forte qu'elle colle au fond de la gorge."
+          ],
+          "flow": [
+            {
+              "title": "La porte",
+              "text": "La clé du trousseau de Fernande ou celle du garde champêtre ouvre sans bruit. Sinon : crocheter le cadenas (Serrurerie), ou arracher la chaîne de ses pitons (FOR, dans les jets rapides de la scène). Une petite fenêtre haute, côté vallée, laisse passer une personne (Grimper).",
+              "roll": {
+                "type": "skill",
+                "options": [
+                  "locksmith"
+                ]
+              },
+              "success": "La porte s'ouvre sans bruit.",
+              "failure": "Le métal grince, un piton saute avec un claquement sec. Tout le village l'a senti : le tracker « Les villageois montent » démarre, ou avance de 1."
+            },
+            {
+              "title": "Le Père",
+              "text": "Les murs disparaissent sous les rayons de cire pâle. Derrière l'autel, une niche murée, fissurée, d'où la cire déborde ; au centre, un trou de vol. Dans le chœur, sur un banc, {{npc:baptistin-arnaud}} : un vieil homme assis, les mains sur les genoux, vêtu jusqu'au menton d'un manteau d'abeilles pâles qui remue lentement. Elles ne font aucun bruit. Ses yeux sont ouverts. Il sourit.",
+              "roll": {
+                "type": "san",
+                "label": "Le Père sous son manteau d'abeilles",
+                "san": "1/1D6"
+              },
+              "extra": "La lumière jaune ne vient d'aucune lampe : la cire elle-même luit faiblement, et respire."
+            },
+            {
+              "title": "L'inscription",
+              "text": "Sur le linteau de la niche, des lettres latines taillées dans la pierre, à demi noyées dans la cire → {{handout:inscription-ermitage}}. Odile, si elle est là, la lit sans jet.",
+              "roll": {
+                "type": "skill",
+                "options": [
+                  "language-other:latin",
+                  "history",
+                  "occult"
+                ]
+              },
+              "success": "« Ne touche pas au miel. C'est un doux oubli. Le feu seul délie. 1721. »",
+              "failure": "Des mots usés : *MEL*, *IGNIS*. Le miel, le feu. Et une date, 1721."
+            },
+            {
+              "title": "Baptistin parle",
+              "text": "Il parle lentement, pour l'essaim, au pluriel. Il tend à chacun un morceau de rayon qui coule. « Vous avez mal. Tous. Nous le sentons d'ici. Ça peut s'arrêter. » Voir « Ce que dit l'essaim ». Le choix des joueurs suit ; manger le rayon : POU Difficile, échec Emprise +1."
+            },
+            {
+              "title": "Enfumer",
+              "branch": "S'ils enfument l'essaim",
+              "text": "Un enfumoir de la miellerie, ou un fagot de thym vert et de paille de lavande qui fume. À défaut de Sciences naturelles, un jet de Chance.",
+              "roll": {
+                "type": "skill",
+                "options": [
+                  "natural-world"
+                ]
+              },
+              "success": "Le manteau glisse de Baptistin comme un drap. Les abeilles se massent dans la niche, engourdies, pour 1D6+2 rounds. Baptistin ferme les yeux et dit, pour la première fois depuis six ans : « Rose. » En bas, la musique s'arrête : le village est hébété pour une heure.",
+              "failure": "La fumée est trop maigre : l'essaim se soulève d'un seul bloc, sans un bruit, et attaque (voir {{npc:l-essaim}}).",
+              "extra": "La fumée ne règle rien seule : elle donne le temps de briser la niche, de parler à Baptistin redevenu lui-même une minute, ou de repartir."
+            },
+            {
+              "title": "Briser la niche et brûler",
+              "branch": "S'ils brûlent la colonie",
+              "text": "Il faut ouvrir la niche (STR, ou deux rounds avec une barre ou une pioche) puis mettre le feu à la cire : essence de lavande de la distillerie, essence de la camionnette, huile d'une lanterne.",
+              "roll": {
+                "type": "characteristic",
+                "options": [
+                  "STR"
+                ]
+              },
+              "success": "Le plâtre cède. Derrière, un mur de rayons pâles et, au centre, {{npc:la-reine}} (SAN 1/1D8). Le feu prend dans la cire comme dans de l'huile ; la Reine se recroqueville. Tout l'essaim tombe en une minute, comme une pluie sèche.",
+              "failure": "Le mur résiste : il faut verser le combustible par le trou de vol. Cela marche, mais l'essaim sort d'abord tout entier (une attaque de {{npc:l-essaim}} sur chacun) et le feu ne prend qu'un round plus tard.",
+              "extra": "Baptistin, dans les flammes ou dehors sur l'herbe, redevient un vieil homme. Il dit « Paul... », pleure, et meurt. En bas, montant du village, un cri de deux cents gorges : SAN 1/1D4. Puis → [[epilogue]].",
+              "goto": [
+                "epilogue"
+              ]
+            },
+            {
+              "title": "Arracher la Reine",
+              "branch": "S'ils tuent la Reine de leurs mains",
+              "text": "Ouvrir la niche (comme ci-dessus), plonger la main dans la cire tiède, saisir la Reine. La toucher : POU, échec Emprise +1, et l'investigateur la tient contre lui au lieu de l'écraser.",
+              "roll": {
+                "type": "characteristic",
+                "options": [
+                  "POW"
+                ]
+              },
+              "success": "Elle éclate entre les doigts comme un fruit trop mûr (SAN 1/1D8). L'essaim tombe en une minute. Même fin que le feu, mais la cire et le miel restent, inertes : ce n'est plus que du miel.",
+              "failure": "Elle est tiède, elle bat doucement, elle est si légère. L'investigateur la serre contre sa poitrine. Un compagnon doit la lui arracher (STR opposée) ou il faut tout brûler.",
+              "goto": [
+                "epilogue"
+              ]
+            },
+            {
+              "title": "Négocier",
+              "branch": "S'ils négocient",
+              "text": "L'essaim ne ment pas : une seule pensée n'a pas besoin de mentir. Il veut être mangé, et grandir. Il peut relâcher Hélène, Lucien et les investigateurs, s'ils partent cette nuit et se taisent (et si l'agronome écrit un bon rapport).",
+              "roll": {
+                "type": "skill",
+                "options": [
+                  "persuade",
+                  "psychology"
+                ]
+              },
+              "success": "Accordé. Hélène et Lucien seront « laissés froids » s'ils partent avant l'aube ; l'Emprise des investigateurs tombe à 0 dès qu'ils passent la crête. Le gâteau sera partagé à minuit, ou l'a déjà été.",
+              "failure": "Il ne comprend pas ce qu'on lui refuse. Il ne sait proposer qu'une chose : le miel, encore.",
+              "goto": [
+                "epilogue"
+              ]
+            },
+            {
+              "title": "Partir, avec ou sans pot",
+              "branch": "S'ils repartent sans rien faire",
+              "text": "Baptistin tend un pot fermé à celui qui a le plus perdu dans sa vie. « Pour plus tard. Pour le jour où ça fera trop mal. » Le prendre ou non : notez qui le prend. Rien n'est réglé.",
+              "goto": [
+                "epilogue"
+              ]
+            },
+            {
+              "title": "Les villageois arrivent",
+              "text": "Quand le tracker atteint 6, ils emplissent la porte, lanternes à la main, sans un mot, Marius et Fernande devant. Ils ne frappent pas : ils tiennent, et portent du miel aux lèvres (voir {{npc:villageois}}). Pour se dégager : Corps à corps opposé, ou FOR (jets rapides de la scène) contre leur FOR.",
+              "roll": {
+                "type": "opposed",
+                "options": [
+                  "fighting-brawl"
+                ],
+                "against": {
+                  "npc": "villageois",
+                  "skill": "fighting-brawl"
+                }
+              },
+              "success": "L'investigateur se dégage et garde un round d'avance.",
+              "failure": "Tenu. Chaque round tenu : POU, échec Emprise +1.",
+              "extra": "Si la fumée est dans la chapelle, ils s'arrêtent sur le seuil, hébétés. Si la colonie brûle, ils tombent à genoux et pleurent."
+            }
+          ],
+          "notes": [
+            {
+              "title": "Ce que dit l'essaim (par la bouche de Baptistin)",
+              "items": [
+                "« Nous n'avons plus peur. Nous n'avons plus froid. Nous ne perdons plus personne. »",
+                "« Paul est mort à Verdun. Ça ne fait rien. Rien ne fait rien. C'est doux. »",
+                "« Les gens d'en bas ont choisi. Ils ont goûté. Ils restent. »",
+                "Si on parle du feu : « Ils ont déjà brûlé, il y a longtemps. Nous sommes revenus. Nous revenons toujours. »",
+                "Si on parle d'Odile : « Celle qui ne goûte pas. Elle goûtera. Tout le monde finit par avoir mal assez. »",
+                "Sous la fumée, une minute, Baptistin lui-même : « Rose... Je voulais juste dormir. Brûlez-la. Brûlez-moi avec. »"
+              ]
+            },
+            {
+              "title": "De jour (s'ils montent dans l'après-midi)",
+              "items": [
+                "Midi passé, plein soleil, 35 degrés à l'ombre des chênes verts. Passez l'écran d'ambiance en jour.",
+                "La moitié de l'essaim butine sur la garrigue : un dé de bonus pour enfumer, mais les butineuses reviennent en trois rounds si on attaque la niche.",
+                "Les villageois sont au village à préparer la fête : le tracker « Les villageois montent » commence quand l'essaim est attaqué, et ils mettent tout de même six rounds.",
+                "Si l'essaim est détruit l'après-midi, la veillée n'a pas lieu : passez directement à l'[[epilogue]], qui se joue le soir même."
+              ]
+            },
+            {
+              "title": "Combat dans la chapelle",
+              "items": [
+                "L'essaim attaque tous ceux qui touchent à la niche ou à Baptistin, un par round, puis tout le monde s'il est blessé par le feu.",
+                "Baptistin ne se lève pas et ne se bat pas.",
+                "Fumée sur la chapelle : l'essaim engourdi, les villageois hébétés sur le seuil, Baptistin lucide une minute."
+              ]
+            }
+          ],
+          "npcs": [
+            "baptistin-arnaud",
+            "l-essaim",
+            "la-reine",
+            "villageois",
+            "odile-fabre"
+          ],
+          "handouts": [
+            "inscription-ermitage"
+          ],
+          "ambience": [
+            "night-crickets",
+            "wind"
+          ],
+          "sfx": [
+            "latch",
+            "door-creak",
+            "footsteps"
+          ],
+          "next": [
+            "epilogue"
+          ],
+          "rolls": [
+            {
+              "type": "characteristic",
+              "options": [
+                "STR"
+              ],
+              "label": "Arracher la chaîne, se dégager"
+            }
+          ]
+        },
+        {
+          "id": "epilogue",
+          "title": "Le jour de la Saint-Fiacre",
+          "lead": "Vendredi 30 août : ce que chaque choix a coûté.",
+          "screen": {
+            "place": "graveyard",
+            "preset": "dust",
+            "time": "day"
+          },
+          "readAloud": [
+            "Le vendredi 30 août se lève blanc de chaleur sur la colline. Les cloches de Ventebrune sonnent pour la Saint-Fiacre, patron des jardiniers. Les cigales reprennent, une à une."
+          ],
+          "flow": [
+            {
+              "title": "Ce matin-là",
+              "text": "Jouez l'issue qui correspond à ce que le groupe a fait. Plusieurs peuvent se combiner (gâteau saboté et colonie brûlée, par exemple)."
+            },
+            {
+              "title": "La colonie a brûlé",
+              "branch": "Si l'essaim est mort (feu ou Reine tuée)",
+              "text": "Toute la nuit, le village a pleuré. Au matin, trois des plus vieux sont morts dans leur lit : la mère Ginoux, 94 ans, le père Achard, 88 ans, et Baptistin là-haut. Fernande pleure Paul comme au jour du télégramme de 1916. Marius erre sur la place, désemparé. Le cimetière, pour la première fois depuis six ans, est plein de monde et de fleurs. Personne ne remercie les investigateurs ; certains les maudissent. Des années plus tard, quelques-uns leur écriront.",
+              "roll": {
+                "type": "damage",
+                "label": "Gain de SAN : l'essaim détruit",
+                "dice": "1D6"
+              },
+              "extra": "Hélène pleure sa mère et demande à rentrer à Paris. Lucien retourne à Lyon et démissionne de Gerbier. Les invités qui ont mangé le gâteau cette nuit sont libres aussi."
+            },
+            {
+              "title": "Le gâteau saboté",
+              "branch": "Si le gâteau a été saboté mais l'essaim vit",
+              "text": "Les invités repartent malades, vexés, mais libres. Ventebrune sourit toujours. L'an prochain, il y aura une autre Saint-Fiacre, et un autre gâteau.",
+              "roll": {
+                "type": "damage",
+                "label": "Gain de SAN : les invités sauvés",
+                "dice": "1D3"
+              }
+            },
+            {
+              "title": "Le marché",
+              "branch": "S'ils ont négocié",
+              "text": "Hélène et Lucien partent à l'aube avec eux, en larmes dès la crête. L'essaim tient parole. Dans l'année, une quarantaine d'invités de la veillée viennent s'installer à Ventebrune ; le village dépasse 250 habitants au printemps. La coopérative reçoit une nouvelle médaille, et l'agronome est invité à la remettre.",
+              "roll": {
+                "type": "san",
+                "label": "Ce qu'on a laissé derrière soi",
+                "san": "0/1D3"
+              }
+            },
+            {
+              "title": "Rien n'est fait",
+              "branch": "S'ils sont partis sans rien faire",
+              "text": "Les invités redescendent calmes et souriants. Hélène et Lucien restent. Odile Fabre écrit aux investigateurs à l'automne ; à Noël, sa lettre se termine par : « J'ai goûté. Nous allons bien. Venez pour la Saint-Fiacre. »",
+              "roll": {
+                "type": "san",
+                "label": "La lettre d'Odile",
+                "san": "1/1D4"
+              }
+            },
+            {
+              "title": "Le pot de miel",
+              "text": "Celui qui a gardé un pot l'emporte chez lui. Loin de l'essaim, ce miel n'asservit pas : il efface le chagrin, un temps, et l'on y revient. Le jour où l'investigateur perd quelqu'un, le gardien lui demande s'il ouvre le pot. S'il l'ouvre : plus de perte de SAN pour ce deuil, et une envie, chaque année vers la fin août, de prendre l'autocar de Nyons.",
+              "extra": "Si l'essaim est mort, le pot n'est plus que du miel. L'investigateur ne le sait pas forcément."
+            },
+            {
+              "title": "Un investigateur pris",
+              "text": "Un investigateur resté en Emprise 3 alors que l'essaim vit reste à Ventebrune. Il écrit à sa famille une lettre calme, puis plus rien. Il devient un personnage du gardien, que les autres peuvent revenir chercher l'an prochain."
+            }
+          ],
+          "notes": [
+            {
+              "title": "Récompenses et pertes",
+              "items": [
+                "Essaim détruit : **1D6 SAN** pour chacun ; ceux qui avaient de l'Emprise perdent **1/1D4 SAN** quand leur propre chagrin revient.",
+                "Gâteau saboté (essaim vivant) : **1D3 SAN**.",
+                "Hélène ou Lucien ramené loin du village : **1D3 SAN** pour celui qui l'a emmené.",
+                "Marché conclu : **0/1D3 SAN**. Rien fait : **1/1D4 SAN** à la lettre d'Odile.",
+                "Investigateur pris et laissé à Ventebrune : **1/1D6 SAN** pour ses compagnons."
+              ]
+            },
+            {
+              "title": "Ventebrune après",
+              "items": [
+                "Si l'essaim est mort : la coopérative est dissoute au printemps 1930 ; les ruchers sont vendus ; la chapelle de l'ermitage s'effondre aux pluies d'automne. Ventebrune redevient un village des Baronnies qui se vide.",
+                "L'agronome doit écrire un rapport. Ce qu'il y met est son affaire.",
+                "Odile Fabre demande sa mutation, ou reste, selon ce que les investigateurs ont fait pour elle."
+              ]
+            }
+          ],
+          "npcs": [
+            "fernande-arnaud",
+            "helene-vasseur",
+            "lucien-merle",
+            "odile-fabre"
+          ],
+          "ambience": [
+            "village-day",
+            "nature-day"
+          ],
+          "sfx": [
+            "footsteps"
+          ]
+        }
+      ]
+    }
+  ],
+  "npcs": [
+    {
+      "id": "baptistin-arnaud",
+      "name": "Baptistin Arnaud",
+      "role": "Maître apiculteur, fondateur de la coopérative : le cœur de l'essaim",
+      "description": "78 ans. Assis dans le chœur de la chapelle depuis l'hiver 1926-1927, vêtu jusqu'au menton d'un manteau d'abeilles pâles et muettes. Maigre, propre, les yeux ouverts, un sourire immobile.",
+      "personality": "Il n'est plus vraiment lui-même : il parle pour l'essaim, lentement, au pluriel. Sous cette voix reste un vieil homme qui a perdu son fils et sa femme et ne voulait plus avoir mal. La fumée le fait revenir une minute.",
+      "characteristics": {
+        "STR": 25,
+        "CON": 35,
+        "SIZ": 50,
+        "DEX": 15,
+        "INT": 65,
+        "POW": 85
+      },
+      "hp": 8,
+      "sanLoss": "1/1D6",
+      "knows": [
+        "Il a trouvé l'essaim dans le mur de la chapelle en mai 1923 et l'y a muré au lieu de le recueillir.",
+        "Il savait pour l'incendie de 1721 : tout le monde au village connaissait le dicton « À l'ermitage, on ne monte pas ». Il est monté quand même.",
+        "Le feu tuera l'essaim, et lui avec. Sous la fumée, il le dit."
+      ],
+      "special": [
+        "Ne se lève pas, ne se bat pas.",
+        "Tant qu'il vit, l'essaim a une voix et peut négocier.",
+        "Meurt quand la colonie brûle ou que la Reine meurt, après avoir dit un nom : Paul, ou Rose."
+      ]
+    },
+    {
+      "id": "l-essaim",
+      "kind": "creature",
+      "name": "L'essaim de l'ermitage",
+      "role": "Les abeilles pâles et muettes",
+      "description": "Des milliers d'insectes presque blonds, sans aiguillon visible ni yeux à facettes, qui volent sans le moindre bruit. Le ventre plein d'une pâte de cire tiède.",
+      "personality": "Une seule pensée, lente et patiente, partagée avec tout le village. Ne hait rien. Veut être mangé, et grandir.",
+      "hp": 20,
+      "armor": 0,
+      "attacksPerRound": 1,
+      "attacks": [
+        {
+          "name": "Piqûres",
+          "skill": 60,
+          "damage": "1D3",
+          "note": "Indolores. CON, sinon un dé de malus pendant une heure (engourdissement). Trois piqûres ou plus dans le même round : POU, sinon Emprise +1 (le dard porte le miel)."
+        }
+      ],
+      "sanLoss": "0/1D4",
+      "special": [
+        "Silencieux : aucun bourdonnement, jamais.",
+        "Les armes ne servent à rien contre la masse. Le feu lui fait 1D6 points par round ; l'eau ne fait rien.",
+        "La fumée l'engourdit 1D6+2 rounds : il se masse dans la niche, et son emprise sur le village se relâche pour une heure.",
+        "Meurt tout entier en une minute si la Reine meurt."
+      ]
+    },
+    {
+      "id": "la-reine",
+      "kind": "creature",
+      "name": "La Reine",
+      "role": "Ce qui vit au fond du mur",
+      "description": "Une masse molle, cireuse, translucide, de la taille d'un poing, au centre des rayons. Trop de pattes, courtes et pâles. Sur le dos, un motif qui ressemble à un visage endormi et n'en est pas un. Elle est tiède, et elle bat lentement.",
+      "personality": "Elle pense lentement, avec tout le village. Elle n'a pas de nom ; Odile l'appelle « la Reine », le registre de 1721 « la mère du miel ».",
+      "hp": 6,
+      "armor": 0,
+      "sanLoss": "1/1D8",
+      "special": [
+        "Ne se défend pas : ses abeilles le font pour elle.",
+        "La toucher à mains nues : POU, sinon Emprise +1. Elle veut qu'on la prenne.",
+        "Morte, écrasée ou brûlée, tout l'essaim tombe en une minute, comme une pluie sèche, et le village se réveille."
+      ]
+    },
+    {
+      "id": "marius-blanc",
+      "name": "Marius Blanc",
+      "role": "Maire de Ventebrune, président de la coopérative",
+      "description": "58 ans, gros, rouge, moustache blanche, gilet ouvert sur une chemise impeccable. Il serre les mains à deux mains.",
+      "personality": "Jovial, généreux, intarissable sur sa coopérative et ses médailles. Finit les phrases de Fernande, et elle les siennes. Sa femme Augustine a perdu leur fille en 1919 ; il n'en parle jamais.",
+      "characteristics": {
+        "STR": 60,
+        "CON": 65,
+        "SIZ": 70,
+        "DEX": 45,
+        "INT": 55,
+        "POW": 35
+      },
+      "hp": 13,
+      "dodge": 22,
+      "attacks": [
+        {
+          "name": "Empoigner",
+          "skill": 50,
+          "damage": "0",
+          "note": "Il retient, il ne frappe pas."
+        }
+      ],
+      "knows": [
+        "La coopérative a été fondée en mars 1924 avec Baptistin Arnaud. Médailles : Nyons 1925, Lyon 1927, Paris 1929.",
+        "212 habitants, contre 164 en 1921 : « Le seul village du canton qui grandit. »",
+        "La chapelle est fermée « parce que le toit est dangereux » (faux : le toit est neuf).",
+        "« Baptistin se repose là-haut. Il garde l'ermitage. »"
+      ]
+    },
+    {
+      "id": "fernande-arnaud",
+      "name": "Fernande Arnaud",
+      "role": "Secrétaire-comptable de la coopérative, belle-fille de Baptistin",
+      "description": "49 ans, mince, robe grise, un trousseau de clés à la ceinture. Une écriture d'institutrice.",
+      "personality": "Précise, aimable, sans défense : elle répond à tout. Veuve de Paul Arnaud, tué à Verdun en 1916, dont elle parle comme d'un voisin parti en voyage. Une fissure, parfois : « Père est là-haut. Il nous tient tous. »",
+      "characteristics": {
+        "STR": 45,
+        "CON": 55,
+        "SIZ": 50,
+        "DEX": 55,
+        "INT": 65,
+        "POW": 35
+      },
+      "hp": 10,
+      "dodge": 27,
+      "knows": [
+        "Elle tient les registres : l'apport de l'Ermitage, environ 180 kg chaque dimanche, qu'elle signe « pour B. A. » depuis 1927.",
+        "Chaque dimanche soir, elle mène les porteurs à la chapelle avec la clé du cadenas, sur son trousseau.",
+        "Baptistin ne redescend plus depuis l'hiver 1926-1927."
+      ]
+    },
+    {
+      "id": "odile-fabre",
+      "name": "Odile Fabre",
+      "role": "Institutrice de Ventebrune",
+      "description": "34 ans, brune, chignon serré, lunettes cerclées d'acier. Nommée de Valence en octobre 1927. Diabétique : elle n'a jamais touché au miel.",
+      "personality": "Méthodique, effrayée, têtue. Elle a tout noté pour se prouver qu'elle n'est pas folle. Soulagée jusqu'aux larmes de trouver quelqu'un qui voit la même chose qu'elle.",
+      "characteristics": {
+        "STR": 40,
+        "CON": 45,
+        "SIZ": 45,
+        "DEX": 55,
+        "INT": 75,
+        "POW": 70,
+        "EDU": 80
+      },
+      "hp": 9,
+      "dodge": 27,
+      "skills": {
+        "language-other:latin": 50,
+        "library-use": 60,
+        "first-aid": 40
+      },
+      "knows": [
+        "Personne au village ne porte le deuil, ne pleure, ne fleurit une tombe.",
+        "Hélène et Lucien ont changé le lendemain du gâteau de la Saint-Fiacre 1928.",
+        "Chaque dimanche à la nuit, des hommes montent à l'ermitage avec des bidons vides et redescendent chargés, Fernande devant.",
+        "En février 1929, la fumée de la grange Achard a couvert la place une heure : les villageois se sont arrêtés, hébétés, et Augustine Blanc a crié le nom de sa fille morte. Puis le vent a tourné.",
+        "Lucien est parti pour Nyons en mars et revenu à pied dans la nuit, en pleurs ; le matin, il souriait. « On revient toujours. »",
+        "Elle a recopié aux archives de la mairie la note du curé de 1721 sur l'incendie de l'ermitage.",
+        "Il y a du sirop d'ipéca dans la pharmacie de l'école."
+      ]
+    },
+    {
+      "id": "helene-vasseur",
+      "name": "Hélène Vasseur",
+      "role": "Peintre parisienne, venue pour la Saint-Fiacre 1928",
+      "description": "27 ans, blonde, hâlée, blouse de peintre tachée de couleurs. Elle sent la térébenthine et le miel.",
+      "personality": "Douce, heureuse, attentive, et vide derrière les yeux. Sa mère est morte en avril 1928 : elle était descendue dans le Midi pour peindre et oublier. Elle a oublié.",
+      "characteristics": {
+        "STR": 40,
+        "CON": 55,
+        "SIZ": 45,
+        "DEX": 65,
+        "APP": 70,
+        "INT": 65,
+        "POW": 30
+      },
+      "hp": 10,
+      "knows": [
+        "« Le Père est là-haut. Je l'ai peint, une fois. Il est beau. »",
+        "Elle n'ouvre plus les lettres de sa famille : « Je sais ce qu'elles disent. »",
+        "Elle aimerait que son parent goûte le gâteau à minuit, « pour qu'on soit ensemble »."
+      ]
+    },
+    {
+      "id": "lucien-merle",
+      "name": "Lucien Merle",
+      "role": "Ancien représentant de la Maison Gerbier (Lyon), tient l'étal de miel",
+      "description": "31 ans, costume de ville trop chaud, manches retroussées, canotier. Bronzé comme un paysan.",
+      "personality": "Affable, commerçant jusqu'au bout des ongles, d'une franchise désarmante. Sa fiancée Jeanne est morte de la grippe en octobre 1918 ; il en parle sur le ton d'un bulletin météo.",
+      "characteristics": {
+        "STR": 55,
+        "CON": 60,
+        "SIZ": 60,
+        "DEX": 55,
+        "INT": 60,
+        "POW": 30
+      },
+      "hp": 12,
+      "dodge": 27,
+      "knows": [
+        "Les prix, les volumes, les clients de la coopérative à Lyon et à Paris.",
+        "Depuis le printemps, il porte les bidons de l'ermitage le dimanche : « Le Père le fait. »",
+        "En mars, il a voulu aller à Nyons ; il est rentré à pied. « On ne part pas. On revient toujours. »"
+      ]
+    },
+    {
+      "id": "auguste-pelissier",
+      "name": "Auguste Pélissier",
+      "role": "Garde champêtre",
+      "description": "52 ans, grand et lourd, képi, plaque de cuivre, gourdin de châtaignier.",
+      "personality": "Lent, placide, souriant. Pendant la veillée, il fume au pied du sentier de l'ermitage. Il ne s'énerve jamais ; il barre le chemin.",
+      "characteristics": {
+        "STR": 70,
+        "CON": 65,
+        "SIZ": 75,
+        "DEX": 45,
+        "INT": 45,
+        "POW": 35
+      },
+      "hp": 14,
+      "dodge": 22,
+      "attacks": [
+        {
+          "name": "Empoigner",
+          "skill": 55,
+          "damage": "0",
+          "note": "Il retient."
+        },
+        {
+          "name": "Gourdin",
+          "skill": 45,
+          "damage": "1D6",
+          "note": "Seulement si quelqu'un s'en prend à l'essaim sous ses yeux."
+        }
+      ],
+      "knows": [
+        "Il a la seconde clé du cadenas de la chapelle.",
+        "« Personne ne monte à l'ermitage la nuit de la fête. Le Père se repose. »"
+      ]
+    },
+    {
+      "id": "villageois",
+      "name": "Villageois de Ventebrune (type)",
+      "role": "Les habitants, d'un seul pas",
+      "description": "Coupeurs de lavande, paysannes, artisans : hâlés, propres, souriants. Ils arrivent ensemble et bougent ensemble.",
+      "personality": "Doux, patients, sans colère et sans peur. Ils ne blessent pas : ils tiennent, et offrent du miel.",
+      "characteristics": {
+        "STR": 55,
+        "CON": 60,
+        "SIZ": 60,
+        "DEX": 50,
+        "INT": 50,
+        "POW": 30
+      },
+      "hp": 12,
+      "dodge": 25,
+      "attacks": [
+        {
+          "name": "Empoigner",
+          "skill": 45,
+          "damage": "0",
+          "note": "À plusieurs : chaque round où un investigateur est tenu, on lui porte du miel aux lèvres : POU, sinon Emprise +1."
+        }
+      ],
+      "special": [
+        "Sous la fumée, ils s'arrêtent, hébétés, pour une heure.",
+        "Si l'essaim meurt, ils tombent à genoux et pleurent."
+      ],
+      "skills": {
+        "fighting-brawl": 45
+      }
+    }
+  ],
+  "handouts": [
+    {
+      "id": "ordre-de-mission",
+      "title": "Ordre de mission de la Préfecture",
+      "scene": "la-place",
+      "text": "*PRÉFECTURE DE LA DRÔME — Direction des Services agricoles*\n*Valence, le 24 août 1929*\n\nÀ l'ingénieur agronome chargé de mission,\n\nLa Coopérative apicole de Ventebrune (canton de Buis-les-Baronnies), médaille d'or au Concours général agricole de Paris en février dernier, sollicite pour son président la croix du Mérite agricole.\n\nAvant toute suite, M. le Préfet souhaite un avis sur les points suivants :\n\n1. La Coopérative déclare **10 530 kg** de miel vendus en 1928 pour **146 ruches**, soit plus de 70 kg par ruche, quand les meilleurs ruchers du département n'en donnent pas 20.\n2. L'analyse faite pour le jury par la Station agronomique de Valence ne relève **aucun grain de pollen identifiable**, ce qui est sans exemple pour un miel naturel, et une matière azotée que le laboratoire n'a pu déterminer. Les échantillons ne cristallisent pas après six mois.\n\nM. le Maire de Ventebrune invite M. le Préfet à la fête de la Saint-Fiacre, le 30 août. M. le Préfet, retenu, vous y délègue. Vous vous présenterez le jeudi 29 et visiterez ruchers et miellerie.\n\n*Pour le Préfet et par délégation,*\n**Le Directeur des Services agricoles**"
+    },
+    {
+      "id": "lettres-helene",
+      "title": "Lettres d'Hélène Vasseur à sa famille",
+      "scene": "la-place",
+      "text": "*Ventebrune, le 1er septembre 1928*\n\nMes chers tous,\n\nQuelle fête ! Des lampions, une farandole, et à minuit un gâteau au miel qu'on partage entre tous. J'en ai pris deux parts. Depuis Maman, je n'avais pas dormi une nuit entière. Ici, je dors. Je reste quelques jours, il y a tant à peindre.\n\n*Le 12 septembre*\n\nJe ne pense plus à Maman. Je veux dire : j'y pense, mais ça ne fait plus rien. C'est merveilleux, non ? Les gens d'ici sont si calmes. Je loue une chambre au-dessus du four.\n\n*Le 8 octobre*\n\nNous allons bien. Il fait doux. Ne m'écrivez pas tant.\n\n*Le 2 novembre*\n\nNe venez pas me chercher. Venez pour la Saint-Fiacre, le 30 août. Mangez le gâteau. Vous comprendrez. Nous vous attendons.\n\nHélène\n\n*(Depuis, neuf lettres de la famille sont restées sans réponse.)*"
+    },
+    {
+      "id": "lettre-gerbier",
+      "title": "Lettre de la Maison Gerbier",
+      "scene": "la-place",
+      "text": "*MAISON GERBIER — Épicerie fine, primeurs, confiserie — rue Mercière, Lyon*\n*Lyon, le 26 août 1929*\n\nComme convenu, vous vous rendrez à Ventebrune pour la Saint-Fiacre. Notre représentant, M. Lucien Merle, envoyé là-bas pour la fête de l'an dernier, ne nous est jamais revenu. Voici son télégramme du 4 septembre 1928 :\n\nRESTE A VENTEBRUNE STOP AFFAIRE EXCELLENTE STOP INUTILE ENVOYER QUELQU'UN\n\nPuis, le 20 septembre, sa démission, par lettre, sans un mot d'explication. Ce n'était pas son genre.\n\nLe miel de Ventebrune se vend comme aucun autre. Nos clientes en rachètent chaque semaine ; trois d'entre elles nous ont demandé l'adresse du village, et Mme Rivoire, du quai Saint-Antoine, a vendu son appartement pour aller s'y installer.\n\nObtenez l'exclusivité pour 1930. Et ramenez-nous M. Merle, si vous le pouvez.\n\n**É. Gerbier**"
+    },
+    {
+      "id": "affiche-fete",
+      "title": "Affiche de la fête",
+      "scene": "la-place",
+      "text": "**COMMUNE DE VENTEBRUNE**\n**FÊTE PATRONALE DE LA SAINT-FIACRE**\n*Jeudi 29 et vendredi 30 août 1929*\n\n**Jeudi 29**\n18 h — Concours de boules, place des Platanes\n20 h — Grande veillée et banquet offerts par la Coopérative apicole\n21 h — Bal et farandole\n**Minuit — Partage du gâteau de Saint-Fiacre, offert à tous nos invités**\n\n**Vendredi 30**\n10 h — Grand-messe en l'église paroissiale\n11 h — Bénédiction des jardins et des ruchers\n\n*Miel de Saint-Fiacre : médaille d'or, Paris 1929*\n*Le Maire, M. BLANC*"
+    },
+    {
+      "id": "registre-cooperative",
+      "title": "Registre des apports de la coopérative (1928)",
+      "scene": "les-pistes",
+      "text": "**COOPÉRATIVE APICOLE DE VENTEBRUNE — Registre des apports, exercice 1928 (récapitulatif)**\n\nRuches déclarées par les sociétaires : **146**\n\n*Mois — Ruchers des sociétaires — Apport de l'Ermitage (kg)*\nJanvier — 0 — 900\nFévrier — 0 — 720\nMars — 0 — 720\nAvril — 40 — 900\nMai — 210 — 740\nJuin — 260 — 720\nJuillet — 310 — 920\nAoût — 120 — 730\nSeptembre — 0 — 900\nOctobre — 0 — 720\nNovembre — 0 — 720\nDécembre — 0 — 900\n\n**Totaux : ruchers 940 — Ermitage 9 590 — vendu 10 530 kg**\n\n*Apport de l'Ermitage : chaque dimanche. Signé « pour B. A. : F. A. »*"
+    },
+    {
+      "id": "carnet-odile",
+      "title": "Le carnet d'Odile Fabre (extraits)",
+      "scene": "les-pistes",
+      "text": "*Octobre 1927.* Arrivée. On m'offre du miel à chaque porte. Je refuse : mon diabète. On me regarde avec une douceur qui me glace.\n\n*Décembre 1927.* Enterrement de la mère Faure. Pas une larme, pas une fleur. Son fils souriait au bord de la fosse.\n\n*Hiver.* On ne parle jamais de Baptistin Arnaud, le fondateur. Mme Blanc dit qu'il « garde l'ermitage » depuis l'hiver dernier. Personne ne l'a vu redescendre.\n\n*Tous les dimanches.* À la nuit, une file d'hommes monte à l'ermitage avec des bidons vides et redescend avant l'aube, chargée. Fernande Arnaud marche devant, avec ses clés.\n\n*30 août 1928, la nuit.* Le gâteau partagé à minuit. La peintre de Paris et le représentant de Lyon en ont repris. Le lendemain, ils avaient le même sourire que les autres.\n\n*Février 1929.* La grange Achard a brûlé. La fumée a couvert la place une heure. Ils se sont tous arrêtés, hébétés, comme des gens qu'on réveille. Augustine Blanc a crié le nom de sa fille, morte en 1919. Puis le vent a tourné, et ils ont souri de nouveau.\n\n*Mars 1929.* M. Merle est parti pour Nyons. Il est revenu à pied, en pleine nuit, en pleurant. Le matin, il souriait. Ceux qui s'éloignent reviennent toujours.\n\n*Avril 1929. Recopié aux archives de la mairie, registre de la paroisse :* « L'an 1721, le quatorze juillet, frère Hilarion, ermite de Saint-Fiacre, a été trouvé mort en sa cellule, assis et souriant, couvert de mouches à miel qui ne bruissaient point. Sept de nos paroissiens étaient auprès de lui et ne voulaient plus redescendre. Nous avons fait mettre le feu à l'ermitage avec la mère du miel. Ils ont pleuré trois jours, et deux des plus vieux en sont morts. »\n\n*Juin 1929.* Le maire annonce 212 habitants. Nous étions 164 en 1921. Partout ailleurs dans les Baronnies, les villages se vident.\n\n*Août 1929.* Les abeilles ne bourdonnent pas. Je ne l'ai compris qu'hier. Elles ne font aucun bruit.\n\nIls ne me font rien. Ils attendent. Je crois qu'ils pensent que je finirai par goûter."
+    },
+    {
+      "id": "inscription-ermitage",
+      "title": "L'inscription du linteau",
+      "scene": "l-ermitage",
+      "text": "*Taillé dans la pierre au-dessus de la niche murée, à demi noyé dans la cire :*\n\n**MEL NE TANGAS · DVLCE OBLIVIVM EST · IGNIS SOLVS SOLVIT · MDCCXXI**"
+    }
+  ],
+  "knowledge": [
+    {
+      "need": "Lire les registres de la coopérative",
+      "best": "Comptabilité",
+      "backup": "Sciences naturelles ; sans jet, les apports de l'Ermitage en hiver"
+    },
+    {
+      "need": "Comprendre les abeilles mortes",
+      "best": "Sciences (biologie), Sciences naturelles",
+      "backup": "Médecine ; le médecin du groupe"
+    },
+    {
+      "need": "Gagner la confiance d'Odile",
+      "best": "Avoir refusé le miel (sans jet)",
+      "backup": "Charme, Psychologie, Persuasion"
+    },
+    {
+      "need": "Lire l'inscription latine",
+      "best": "Langue (latin)",
+      "backup": "Histoire, Occultisme ; Odile la lit"
+    },
+    {
+      "need": "Ouvrir la chapelle",
+      "best": "Le trousseau de Fernande ou la clé du garde champêtre",
+      "backup": "Serrurerie, FOR ; la petite fenêtre (Grimper)"
+    },
+    {
+      "need": "Enfumer l'essaim",
+      "best": "Sciences naturelles (enfumoir de la miellerie)",
+      "backup": "Chance, avec un fagot de thym vert"
+    },
+    {
+      "need": "Purger le miel avalé",
+      "best": "Médecine (ipéca, dans les six heures)",
+      "backup": "Premiers soins (eau salée)"
+    },
+    {
+      "need": "Libérer Hélène ou Lucien",
+      "best": "Les emmener à plus de trois kilomètres (Conduite)",
+      "backup": "Détruire l'essaim"
+    }
+  ],
+  "trackers": [
+    {
+      "id": "minuit",
+      "label": "Heures avant le gâteau",
+      "max": 4,
+      "unit": "heures",
+      "help": "Commence à 20 h, à l'ouverture de la veillée. Avancez d'un cran par heure de jeu (environ toutes les 15 minutes réelles). À 4 : minuit, le gâteau est partagé.",
+      "addLabel": "+1 heure",
+      "fullMessage": "Minuit : Marius découvre le gâteau de Saint-Fiacre.",
+      "scenes": [
+        "la-veillee",
+        "l-ermitage"
+      ]
+    },
+    {
+      "id": "villageois-montent",
+      "label": "Les villageois montent",
+      "max": 6,
+      "unit": "rounds",
+      "help": "Démarre quand le village sent l'intrusion : chaîne forcée, essaim attaqué, ou départ repéré de la veillée (à 2). À 6, ils sont à la porte de la chapelle. Sous la fumée, il n'avance plus.",
+      "fullMessage": "Les villageois emplissent la porte, lanternes à la main, sans un mot.",
+      "scenes": [
+        "l-ermitage"
+      ]
+    }
+  ]
+}

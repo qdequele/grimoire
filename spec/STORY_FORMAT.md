@@ -227,7 +227,7 @@ Everything except `id` and `name` is optional: a talking-only NPC can be just `n
 - **Handout**: `{ id, title, text?, image?, scene? }` — shown to players full screen.
 - **Pregen**: name, occupation, characteristics, hp/mp/san/luck, `skills` (id → value), attacks, background, important people.
 - **Knowledge**: `{ need, best, backup }` rows for the "Who knows what" tab.
-- **Tracker**: `{ id, label, max, unit, step, timer, help, scenes }` — e.g. a ritual needing 8 MP, a creature climbing 5 turns of stairs. Shown only during the listed scenes.
+- **Tracker**: `{ id, label, max, unit, step, timer, help, scenes }` — e.g. a ritual needing 8 MP, a creature climbing 5 turns of stairs. The game screen has one tracker panel, shown for the whole game: it holds the tracker with id `ritual`, else the story's first tracker, so put the one the keeper needs at hand first. Other trackers are keeper reference for now, and `scenes` isn't used yet.
 
 ## 7. Sounds
 

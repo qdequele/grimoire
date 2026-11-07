@@ -12,35 +12,42 @@
     "system": "d100",
     "author": "Grimoire sample",
     "license": "CC-BY-4.0",
-    "version": "1.0",
+    "version": "1.1",
     "tags": ["introductory", "coastal", "investigation"],
-    "contentWarnings": ["drowning", "grief"]
+    "contentWarnings": ["drowning", "grief", "death of a child"]
   },
 
   "overview": {
-    "secret": "Keeper **Elias Varnum** lost his young son to the sea last winter. Grief-mad, he answered a voice from the deep that promised to give the boy back if the light went dark for three nights. Something now climbs the rocks each night wearing the boy's shape. On the fourth night, it will come ashore for good.",
+    "secret": "November 1923. Last February, keeper **Elias Varnum** was rowing his son **Thomas**, seven, back to the rock when a squall overturned the dinghy. Elias reached the landing; the boy was never found. Something lives in the deep water under Gull Rock. The old people of Port Ansel only call it *what's under*. It has no shape of its own: it wears the drowned, the way their mourners remember them, and it can only come ashore where no light falls on the water. The lighthouse was raised in 1851 to keep it down, after the forty drowned of the packet *Constance* were seen walking the rocks. Four nights ago it spoke to Elias in his son's voice: *put out the light three nights, open the door on the third, and on the fourth I come up to you and stay.* He drained the lamp, padlocked the oil store and threw his key into the sea. Night one, it swam at the landing. Night two, it stood on the rocks and waved. Night three, it stood dripping in the hall and went no further. Tonight, the fourth night, it climbs the stairs. If nobody relights the lamp, Elias lets it into the lamp room at midnight and it walks him into the sea; the next night, still wearing Thomas, it walks up the pier to Martha's door. A beam of light on it burns it back to seawater. Nothing else harms it.",
     "steps": [
-      "[[harbour]]: the investigators reach Port Ansel and hear the rumours.",
-      "[[widow]]: Martha Varnum, Elias's wife, gives them the key and a warning.",
-      "[[crossing]]: rowing to Gull Rock at dusk.",
-      "[[lighthouse]]: the logbook, the empty bed, the child's footprints.",
-      "[[the-lamp]]: relight the lamp before the tide turns, or face what climbs the stairs."
+      "[[harbour]] (afternoon): Port Ansel, the rumours, and an old saying: 'Keep the light, keep them under.'",
+      "[[widow]]: Martha Varnum gives the boat and the spare keys, and remembers the coat Thomas drowned in.",
+      "[[crossing]] (dusk): something follows the dinghy, and a lantern on the water drives it off.",
+      "[[lighthouse]] (evening): the logbook, the salt footprints, the locked oil store.",
+      "[[the-lamp]] (towards midnight): fill and relight the lamp while the thing climbs, and talk Elias down.",
+      "[[epilogue]]: dawn, and what it cost."
     ],
     "mustNotMiss": [
-      "The **logbook** in the watch room: it explains the bargain.",
-      "Relighting the **lamp** breaks the bargain. Fighting the thing is a bad idea."
+      "The **logbook**, open on the watch-room desk (no roll needed): the bargain, night by night.",
+      "**Oil**: the lamp is dry and the oil store padlocked. Martha's spare key opens it; otherwise the padlock must be forced ([[lighthouse]]).",
+      "**Light hurts it**: the saying ([[harbour]]), the lantern on the water ([[crossing]]), the logbook, the rule card and the brass plate ([[the-lamp]]). Fighting it does nothing."
     ],
     "branches": [
-      "If they arrive after midnight, the thing is already inside the lighthouse.",
-      "Elias can be saved if someone talks him down ([[the-lamp]], step 3)."
+      "If they land after dark (failed crossing, or a long evening in the village), the thing is already on the rocks: less time to search, and it comes in as soon as they go upstairs.",
+      "Without Martha's key, forcing the oil store costs time and noise, and brings Elias down the stairs with a boat hook.",
+      "Elias can be saved if someone talks him down ([[the-lamp]]); he then helps with the lamp.",
+      "If they reach the rock after midnight, Elias is gone and the door stands open. Relighting the lamp that night still keeps the thing from Martha's door."
     ],
     "ifStuck": [
-      "Martha remembers Elias muttering about 'keeping the light dark'.",
-      "A gull smashes into the dark lamp-room window: the lamp is the key."
+      "Martha remembers the last thing Elias asked her: 'If Thomas came back different, would you still let him in?'",
+      "Tobias, a drink in hand, tells the story of the *Constance* and why the light was built.",
+      "A gull smashes into the dark lamp-room glass: the lamp is the key."
     ],
     "keeperTips": [
       "Play Elias as a broken father, not a villain.",
-      "The creature never runs. It walks, dripping, and calls for its father."
+      "The creature never runs. It walks, dripping, and calls for its father.",
+      "It wears the summer sailor suit from the photograph, not the brown coat Thomas drowned in: it is Elias's memory of his son, not his son. Let the players notice.",
+      "Every key fact has more than one source. Rolls add detail or save time; they never hide the truth."
     ]
   },
 
@@ -58,7 +65,9 @@
             "Out past the breakwater, on its black rock, the lighthouse stands like a dead candle. Men mending nets stop talking when you pass."
           ],
           "flow": [
-            { "title": "Ask around", "text": "The fishermen won't row out. 'Not with the light gone.'", "roll": { "type": "skill", "options": ["charm", "fast-talk"] }, "success": "Old Tobias admits he saw a small figure on the rocks at night. 'Like a boy. But no boy swims that cold water.'", "failure": "Shrugs and shut doors." },
+            { "title": "Ask around", "text": "The fishermen won't row out. 'Not with the light gone.'", "roll": { "type": "skill", "options": ["charm", "fast-talk"] }, "success": "Old {{npc:tobias}} saw a small figure on the rocks at night. 'Like a boy. But no boy swims that cold water.' And the light didn't fail: 'It went out at sundown, neat, like a man pinching a candle.'", "failure": "Shrugs and shut doors. An old man mutters 'Keep the light, keep 'em under' and spits in the water." },
+            { "title": "The supply boat", "text": "The grocer's boy rowed supplies out four days ago. Elias met him at the landing and sent him back: 'Don't come again till I send.' His hands were cracked and white with salt.", "extra": "Elias is alive, and wants nobody on the rock." },
+            { "title": "The old saying", "text": "Asked about 'keep them under', {{npc:tobias}} tells it for a drink: in 1851 the packet *Constance* broke on Gull Rock and forty drowned. That winter, folk saw them walking the rocks on dark nights, calling people by name. The town raised the light in the spring, and nobody saw them again.", "roll": { "type": "skill", "options": ["history"] }, "success": "Without Tobias: they remember the wreck of the *Constance* from an old newspaper, and that the lighthouse was built because of it." },
             { "title": "Find a boat", "text": "Martha Varnum has her husband's dinghy. → [[widow]]" }
           ],
           "npcs": ["tobias"],
@@ -74,8 +83,10 @@
             "Martha listens to you without blinking. 'He hasn't been right since Thomas drowned,' she says at last. 'Bring him home. Whatever he's become.'"
           ],
           "flow": [
-            { "title": "Gain her trust", "roll": { "type": "skill", "options": ["psychology", "persuade"] }, "success": "She tells them Elias began talking to the sea at night, 'as if it answered'.", "failure": "She gives them the key and the boat, nothing more." },
-            { "title": "The photograph", "text": "If they look at it, describe the boy carefully: they will see that face again.", "extra": "This makes the final scene hit harder." }
+            { "title": "Gain her trust", "roll": { "type": "skill", "options": ["psychology", "persuade"] }, "success": "Elias began talking to the sea at night, 'as if it answered'. The last time he came ashore he asked her: 'If Thomas came back different, would you still let him in?'", "failure": "She gives them the boat and the keys, nothing more." },
+            { "title": "The keys", "text": "Martha gives them the dinghy, its storm lantern, and Elias's spare key ring from the hook by her door: the lighthouse door and the padlock of the oil store.", "extra": "The oil store key saves time and noise in [[lighthouse]]." },
+            { "title": "The photograph", "text": "If they turn it over, describe the boy carefully: summer, the sailor suit, squinting at the sun → {{handout:photo}}.", "extra": "They will see that face, and that suit, again." },
+            { "title": "How he drowned", "text": "If they ask, or mention the figure on the rocks: 'In February. In his brown wool coat, the one I made him. They never found him.'", "extra": "The thing on the rocks wears the sailor suit, not the coat." }
           ],
           "npcs": ["martha"],
           "handouts": ["photo"],
@@ -97,7 +108,8 @@
           ],
           "flow": [
             { "title": "Rowing", "roll": { "type": "characteristic", "options": ["STR"] }, "success": "They land before full dark.", "failure": "The current fights them: they land after nightfall, and the thing is already on the rocks." },
-            { "title": "Something below", "roll": { "type": "san", "san": "0/1D3", "label": "The bump under the hull" } }
+            { "title": "Something below", "roll": { "type": "san", "san": "0/1D3", "label": "The bump under the hull" } },
+            { "title": "A light on the water", "text": "If anyone holds the storm lantern (or a torch) over the side, the bumping stops at once and something pale slides away from the beam. It comes back as soon as the light moves.", "roll": { "type": "skill", "options": ["spot-hidden"] }, "success": "In the beam, for a heartbeat: a small white hand letting go of the keel.", "extra": "The first proof that light drives it off." }
           ],
           "ambience": ["wind", "crows"],
           "sfx": ["thunder"]
@@ -105,36 +117,48 @@
         {
           "id": "lighthouse",
           "title": "Inside the lighthouse",
-          "lead": "Wet footprints, a cold stove, and the logbook.",
+          "lead": "Wet footprints, a cold stove, the logbook, a locked oil store.",
           "readAloud": [
             "The door is unlocked. Inside, the stove is cold and the air smells of seaweed.",
-            "Small wet footprints, a child's, lead from the door to the spiral stairs, and stop on the first step as if whoever made them simply vanished."
+            "Small wet footprints, a child's, lead from the door to the spiral stairs. They stop on the first step, in a crust of salt, as if whoever made them stood there a long time, waiting."
           ],
           "flow": [
-            { "title": "Search the keeper's room", "roll": { "type": "skill", "options": ["spot-hidden"] }, "success": "The **logbook** under the mattress → {{handout:logbook}}.", "failure": "An unmade bed, an empty bottle.", "pushed": "They find it, but the noise brings Elias down the stairs, wild-eyed and holding a boat hook." },
-            { "title": "Read the logbook", "roll": { "type": "san", "san": "1/1D4", "label": "The last entries" }, "text": "Three nights dark. 'He came home. Tomorrow he stays.'" },
+            { "title": "The logbook", "text": "Open on the watch-room desk, beside an empty bottle → {{handout:logbook}}. No roll needed to find it.", "roll": { "type": "san", "san": "1/1D4", "label": "The last entries" } },
+            { "title": "Search the keeper's room", "roll": { "type": "skill", "options": ["spot-hidden"] }, "success": "Under the pillow, another print of Thomas's photograph, soft from handling. On the wall, the keepers' rule card → {{handout:rules}}.", "failure": "An unmade bed, an empty bottle. The rule card is on the wall, too dark to read without a lamp.", "pushed": "They find it all, but the noise brings Elias down the stairs, wild-eyed and holding a boat hook." },
+            { "title": "The footprints", "roll": { "type": "skill", "options": ["track", "natural-world"] }, "success": "Bare feet, a child's. They come in from the sea and never go back out. Tiny shells in the salt are still moving.", "failure": "Wet prints, a child's. Nothing more." },
+            { "title": "The lamp is dry", "text": "Anyone who looks at the lamp, or reads the logbook, knows it has no oil. The kerosene is in the stone store at the foot of the tower, padlocked. With Martha's key: no roll.", "roll": { "type": "skill", "options": ["locksmith", "mechanical-repair"] }, "success": "The padlock gives. Two full cans of kerosene.", "failure": "They break it with an iron bar: it takes time, and the noise brings Elias down the stairs with a boat hook.", "extra": "Without oil, the lamp cannot be lit." },
             { "title": "Listen", "roll": { "type": "skill", "options": ["listen"] }, "success": "Someone is sobbing in the lamp room above. And, outside, something small is climbing the rocks.", "goto": ["the-lamp"] }
           ],
+          "notes": [
+            { "title": "When the thing comes in", "items": [
+              "It rises at full dark and climbs the rocks.",
+              "It comes through the door when the search is done, or as soon as they go upstairs if they landed after dark. Midnight at the latest.",
+              "Then it climbs the stairs: start the **Stairs climbed** tracker in [[the-lamp]]."
+            ] }
+          ],
           "npcs": ["elias"],
-          "handouts": ["logbook"],
+          "handouts": ["logbook", "rules"],
           "ambience": ["wind-howling"],
           "sfx": ["door-creak", "footsteps"]
         },
         {
           "id": "the-lamp",
           "title": "The lamp",
-          "lead": "Relight the lamp before midnight, while the drowned child climbs.",
+          "lead": "Relight the lamp while the drowned child climbs.",
           "readAloud": [
             "The lamp room is a cage of glass and brass. Elias Varnum kneels by the great dead lens, a cold match in his fingers.",
             "Far below, a small voice calls up the stairwell. 'Papa? Papa, it's cold. Let me in.'"
           ],
           "flow": [
-            { "title": "The thing on the stairs", "text": "Each round it climbs one turn of the stairs. After 5 rounds it reaches the top.", "roll": { "type": "san", "san": "1/1D6", "label": "Seeing the drowned child" } },
-            { "title": "Relight the lamp", "text": "Oil, wick, mechanism: the lamp needs work.", "roll": { "type": "skill", "options": ["mechanical-repair", "electrical-repair"] }, "success": "The beam sweeps the sea. The voice on the stairs becomes a gurgling shriek and the thing collapses into seawater.", "failure": "Try again next round.", "pushed": "The lens cracks: the lamp lights, but at half strength. The thing survives and flees to the sea." },
-            { "title": "Talk Elias down", "text": "He tries to stop them: 'He's my son!'", "roll": { "type": "skill", "options": ["persuade", "psychology", "charm"], "difficulty": "hard" }, "success": "He weeps and helps relight the lamp (bonus die).", "failure": "He fights to keep the light dark." },
+            { "title": "The thing on the stairs", "text": "Each round it climbs one turn of the stairs. After 5 rounds it reaches the top. It wears the sailor suit from the photograph, wet through, and does not shiver.", "roll": { "type": "san", "san": "1/1D6", "label": "Seeing the drowned child" } },
+            { "title": "The brass plate", "text": "On the lens pedestal → {{handout:plate}}. Elias has gouged at the last line with a knife.", "extra": "Last nudge: the lamp is the answer." },
+            { "title": "Relight the lamp", "text": "Pour the oil, prime the burner, light the mantle, wind the clockwork that turns the lens. Without oil from the store, it cannot be lit.", "roll": { "type": "skill", "options": ["mechanical-repair", "operate-heavy-machinery"] }, "success": "The beam sweeps the sea. The voice on the stairs becomes a gurgling shriek and the thing collapses into seawater.", "failure": "Try again next round.", "pushed": "The lens cracks: the lamp lights, but at half strength. The thing survives and flees to the sea." },
+            { "title": "A hand lamp", "text": "A lantern or torch shone down the stairwell makes it stop and shield its face: it loses its next turn of the stairs. Once per light: after that it climbs with its eyes shut." },
+            { "title": "Talk Elias down", "text": "He tries to stop them: 'He's my son!' Reminding him of the brown coat (it is wearing the wrong clothes) gives a bonus die.", "roll": { "type": "skill", "options": ["persuade", "psychology", "charm"], "difficulty": "hard" }, "success": "He weeps and helps relight the lamp (bonus die).", "failure": "He fights to keep the light dark." },
             { "title": "If it reaches the top", "text": "It takes Elias's hand and walks him into the sea. Then it turns to the others.", "roll": { "type": "damage", "dice": "1D6", "label": "Cold grip" }, "goto": ["epilogue"] }
           ],
           "npcs": ["elias", "drowned-child"],
+          "handouts": ["plate"],
           "ambience": ["storm"],
           "sfx": ["footsteps", "knocking", "thunder"]
         },
@@ -149,7 +173,8 @@
             { "title": "Outcome", "items": [
               "Lamp relit before the thing reached the top: each investigator gains **1D6 SAN**.",
               "Elias saved: Martha's gratitude, and a friend in Port Ansel.",
-              "Elias lost: **1/1D4 SAN**. Some nights, small wet footprints appear on the pier."
+              "Elias lost: **1/1D4 SAN**. Some nights, small wet footprints appear on the pier.",
+              "Lamp never relit: the next night, someone knocks at Martha's door. 'Mama? Let me in.'"
             ] }
           ],
           "rolls": [ { "type": "damage", "dice": "1D6", "label": "SAN reward" } ],
@@ -160,24 +185,28 @@
   ],
 
   "npcs": [
-    { "id": "tobias", "name": "Old Tobias", "role": "Retired fisherman", "personality": "Superstitious, kind, drinks too much.", "knows": ["Saw a small figure on the rocks at night."], "hp": 9, "dodge": 20 },
-    { "id": "martha", "name": "Martha Varnum", "role": "The keeper's wife", "personality": "Composed, exhausted, fiercely loyal.", "knows": ["Elias talks to the sea at night.", "Thomas drowned last winter."], "hp": 10, "dodge": 25 },
-    { "id": "elias", "name": "Elias Varnum", "role": "Lighthouse keeper", "personality": "A grieving father who has stopped sleeping.",
+    { "id": "tobias", "name": "Old Tobias", "role": "Retired fisherman", "personality": "Superstitious, kind, drinks too much.", "knows": ["Saw a small figure on the rocks at night.", "The light went out at sundown, on purpose.", "The wreck of the *Constance* and the saying: 'Keep the light, keep them under.'"], "hp": 9, "dodge": 20 },
+    { "id": "martha", "name": "Martha Varnum", "role": "The keeper's wife", "personality": "Composed, exhausted, fiercely loyal.", "knows": ["Elias talks to the sea at night.", "Thomas drowned last February in his brown wool coat; he was never found.", "Elias asked if she would let Thomas in 'if he came back different'.", "Where the spare keys hang."], "hp": 10, "dodge": 25 },
+    { "id": "elias", "name": "Elias Varnum", "role": "Lighthouse keeper", "personality": "A grieving father who has stopped sleeping. He was at the oars when Thomas went over.",
       "characteristics": { "STR": 65, "CON": 60, "SIZ": 70, "DEX": 50, "INT": 55, "POW": 40 },
       "hp": 13, "dodge": 25, "attacks": [ { "name": "Boat hook", "skill": 45, "damage": "1D8" }, { "name": "Fists", "skill": 50, "damage": "1D3+1D4" } ] },
     { "id": "drowned-child", "name": "The drowned child", "kind": "creature", "role": "Something wearing Thomas's shape",
+      "description": "What lives under Gull Rock, wearing the boy as his father remembers him: the summer sailor suit, the squint.",
       "hp": 12, "dodge": 0, "armor": 0, "sanLoss": "1/1D6",
       "attacks": [ { "name": "Cold grip", "skill": 50, "damage": "1D6", "note": "On a hit, the victim is held and dragged toward the sea." } ],
-      "special": ["Weapons pass through it like water: it takes no damage.", "Destroyed by the lighthouse beam."] }
+      "special": ["Weapons pass through it like water: it takes no damage.", "Destroyed by the lighthouse beam.", "A lantern or torch in its face stops it for one round (once per light)."] }
   ],
 
   "handouts": [
-    { "id": "photo", "title": "Photograph of Thomas", "text": "A boy of about seven in a sailor suit, squinting at the camera. On the back: *Thomas, summer 1922.*", "scene": "widow" },
-    { "id": "logbook", "title": "Keeper's logbook, last entries", "text": "*Night one.* Lamp out. The sea said it would bring him.\n*Night two.* Saw him on the rocks. He waved.\n*Night three.* He came to the door. He came home. Tomorrow he stays.", "scene": "lighthouse" }
+    { "id": "photo", "title": "Photograph of Thomas", "text": "A boy of about seven in a sailor suit, squinting at the camera. On the back, in Martha's hand: *Thomas, summer 1922.*", "scene": "widow" },
+    { "id": "logbook", "title": "Keeper's logbook, last entries", "text": "*Night one.* Lamp out at sundown. Drained the reservoir, locked the store, threw my key off the landing so I can't go back on it. The sea said it would bring him. It said it can't come up through the light.\n*Night two.* Saw him on the rocks. He waved. He didn't shiver. Thomas always shivered.\n*Night three.* Opened the door like it said. He stood in the hall, dripping, and wouldn't come up. 'Tomorrow, Papa.' He had on the sailor suit. I can't think where he found the sailor suit.\n*Night four.* Tonight he comes up. Tonight he stays.", "scene": "lighthouse" },
+    { "id": "rules", "title": "Keepers' rule card", "text": "PORT ANSEL LIGHT BOARD, 1851.\nRule the first. The light to be kept from sunset to sunrise without fail, *that the sea keep what it has taken.*\nRule the second. No keeper to let the lamp go dark for any cause whatever.", "scene": "lighthouse" },
+    { "id": "plate", "title": "Brass plate, lamp room", "text": "GULL ROCK LIGHT, 1851.\nRaised in memory of the forty souls of the packet *Constance*.\nKEEP THE LIGHT AND KEEP THEM UNDER.", "scene": "the-lamp" }
   ],
 
   "knowledge": [
-    { "need": "Relight the lamp", "best": "Mechanical Repair", "backup": "Electrical Repair, or Luck" },
+    { "need": "Open the oil store", "best": "Martha's key", "backup": "Locksmith, Mechanical Repair" },
+    { "need": "Relight the lamp", "best": "Mechanical Repair", "backup": "Operate Heavy Machinery, or Luck" },
     { "need": "Calm Elias", "best": "Psychology", "backup": "Persuade, Charm" }
   ],
 

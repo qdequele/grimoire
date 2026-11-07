@@ -58,3 +58,22 @@ describe('story → engine: choices and documents', () => {
     expect(toHtml('{{handout:x}}')).toBe('<b>x</b>')
   })
 })
+
+describe('story → engine: the tracker panel', () => {
+  const t = (id: string) => ({ id, label: id.toUpperCase(), max: 6 })
+
+  it('shows the "ritual" tracker, else the story\'s first one', () => {
+    const legacy = storyToEngine({ ...story, trackers: [t('other'), t('ritual')] }, (id) => id)
+    expect(legacy.SCENARIO.ritual).toBe(true)
+    expect(legacy.RITUAL?.title).toBe('RITUAL')
+    const first = storyToEngine({ ...story, trackers: [t('days'), t('steps')] }, (id) => id)
+    expect(first.SCENARIO.ritual).toBe(true)
+    expect(first.RITUAL?.title).toBe('DAYS')
+  })
+
+  it('has no panel without trackers', () => {
+    const e = storyToEngine(story, (id) => id)
+    expect(e.SCENARIO.ritual).toBe(false)
+    expect(e.RITUAL).toBeNull()
+  })
+})

@@ -183,7 +183,7 @@ export function storyToEngine(story: StoryForEngine, skillLabel: SkillLabel): En
       statusTxt: en ? 'Ready to play' : 'Prêt à jouer',
       desc: story.meta.summary ?? '',
       party: story.defaultParty ?? [],
-      ritual: (story.trackers ?? []).some((t) => t.id === 'ritual'),
+      ritual: !!panelTracker(story),
       who: !!story.knowledge?.length,
       lang: en ? 'en' : undefined,
       acts: story.acts.map((a) => ({ name: a.title, scenes: a.scenes.map(scene) })),
@@ -225,12 +225,15 @@ export function storyToEngine(story: StoryForEngine, skillLabel: SkillLabel): En
     ),
     AMB_FOR,
     SFX_FOR,
-    RITUAL: ritual(story.trackers?.find((t) => t.id === 'ritual'), html),
+    RITUAL: ritual(panelTracker(story), html),
     WHO_NOTE: html(story.knowledgeNote) ?? '',
     NPC_WORDS: fighters.map((n) => n.name.split(/[\s,(]/)[0]).filter((w) => w.length > 2),
     HANDOUTS: Object.fromEntries(handouts.map((h) => [h.id, clean({ t: h.title, txt: html(h.text), img: h.image ? true : undefined })])),
   }
 }
+
+/** The tracker shown in the engine's one tracker panel: the one with id "ritual" (legacy stories), else the story's first. */
+const panelTracker = (story: StoryForEngine) => story.trackers?.find((t) => t.id === 'ritual') ?? story.trackers?.[0]
 
 function ritual(t: StoryForEngine['trackers'] extends Array<infer T> | undefined ? T | undefined : never, html: (s?: string) => string | undefined): LegacyRitual | null {
   if (!t) return null
