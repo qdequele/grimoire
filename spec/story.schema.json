@@ -422,7 +422,7 @@
               "description": "Living layers over the picture. Default: picked from the scene's ambience sounds."
             },
             "place": {
-              "enum": ["church", "graveyard", "crypt", "castle", "manor", "library", "police", "forest", "harbour", "street"],
+              "enum": ["church", "graveyard", "crypt", "castle", "manor", "library", "police", "forest", "harbour", "street", "asylum", "station", "swamp", "dig", "mountain", "museum", "cavern", "farm", "ship", "fair", "mine", "moor"],
               "description": "Drawn scenery shown when there is no picture. Default: guessed from the scene's title."
             },
             "time": {

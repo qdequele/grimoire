@@ -12,10 +12,11 @@
 // decor-review/compare, gitignored). With `pnpm dev` running the page is at
 // http://localhost:5173/decor-review/compare/index.html.
 import { spawn, execFileSync } from 'node:child_process'
-import { existsSync, mkdirSync, rmSync, symlinkSync, writeFileSync } from 'node:fs'
+import { existsSync, mkdirSync, readFileSync, rmSync, symlinkSync, writeFileSync } from 'node:fs'
 import { resolve } from 'node:path'
 
-const PLACES = ['church', 'graveyard', 'crypt', 'castle', 'manor', 'library', 'police', 'forest', 'harbour', 'street']
+// The places, read from the app's list (src/screen/ambiance.ts, PLACES).
+const PLACES = [...readFileSync(new URL('../src/screen/ambiance.ts', import.meta.url), 'utf8').match(/export const PLACES = \[([^\]]*)\]/)[1].matchAll(/'([a-z-]+)'/g)].map((m) => m[1])
 const args = process.argv.slice(2)
 const opt = (name, fallback) => {
   const i = args.indexOf(`--${name}`)

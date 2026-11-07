@@ -11,10 +11,11 @@
 // Options: --time night,dusk,day · --preset <id> · --crop x,y,w,h · --clean · --out <dir>
 // (default decor-review, gitignored) · --url <dev server> (default http://localhost:5173).
 // Files: <out>/<place>-<time>-a.png (drift start), -b.png (drift end), -a-zoom.png / -b-zoom.png.
-import { mkdirSync } from 'node:fs'
+import { mkdirSync, readFileSync } from 'node:fs'
 import { chromium } from '@playwright/test'
 
-const PLACES = ['church', 'graveyard', 'crypt', 'castle', 'manor', 'library', 'police', 'forest', 'harbour', 'street']
+// The places, read from the app's list (src/screen/ambiance.ts, PLACES).
+const PLACES = [...readFileSync(new URL('../src/screen/ambiance.ts', import.meta.url), 'utf8').match(/export const PLACES = \[([^\]]*)\]/)[1].matchAll(/'([a-z-]+)'/g)].map((m) => m[1])
 
 const args = process.argv.slice(2)
 const opt = (name, fallback) => {

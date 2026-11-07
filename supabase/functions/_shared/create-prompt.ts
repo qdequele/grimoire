@@ -74,6 +74,18 @@ export const PLACE_HINTS: Record<string, string> = {
   forest: 'woods, a forest, a clearing',
   harbour: 'a harbour, docks, a pier, the sea, a lighthouse',
   street: 'a town street at night: houses, lit windows, street lamps',
+  asylum: 'an asylum, a sanatorium, a hospital: a long building behind walls and gates',
+  station: 'a railway station: a platform under a canopy, a waiting train, a clock',
+  swamp: 'a swamp, a marsh, a bayou: dead trees in still water, a shack on stilts',
+  dig: 'an archaeological dig in the desert: tents, trenches, ruined columns, dunes',
+  mountain: 'mountains: snowy peaks, a pass, a refuge or a cabin among firs',
+  museum: 'a museum hall: display cases, statues, a skeleton, tall windows',
+  cavern: 'a natural cave: rock, stalactites, an underground lake, a torch (not a built crypt)',
+  farm: 'a farm: farmhouse, barn, windmill, fields, a scarecrow',
+  ship: 'on the deck of a ship at sea: masts, rigging, the rail, the waves',
+  fair: 'a fairground or a circus: a big wheel, tents, strings of lights',
+  mine: 'a mine: the headframe over the shaft, rails, carts, a tunnel mouth in the hill',
+  moor: 'a moor: standing stones, heather, a lone tree, low hills',
 }
 export const TIME_HINTS: Record<string, string> = {
   day: 'daylight: a bright sky (grey under rain, storm or snow), the sun, windows unlit',

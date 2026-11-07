@@ -88,8 +88,8 @@ function SceneLayer({ layer, reduced, onShown }: { layer: Layer; reduced: boolea
   const fire = layer.scene?.fire ?? DEFAULT_FIRE
   // A drawn décor only when there is no picture: the picture is the place.
   const place = layer.scene?.place ?? null
-  // Underground, no daylight: a crypt keeps its night colours.
-  const time: TimeOfDay = place === 'crypt' && !layer.url ? 'night' : (layer.scene?.time ?? look.time)
+  // Underground, no daylight: a crypt or a cavern keeps its night colours.
+  const time: TimeOfDay = (place === 'crypt' || place === 'cavern') && !layer.url ? 'night' : (layer.scene?.time ?? look.time)
   const palette = paletteFor(preset, time)
   const style = {
     '--c0': palette[0],

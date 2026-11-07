@@ -32,9 +32,13 @@
 // "Touches" = within TOUCH user units (the 1600×900 frame). Pieces meant to hang in the sky (the moon
 // and sun, stars, birds) carry `data-free`. Round halos fade to nothing, they have no edge: skipped.
 // Glows with a hard edge (shafts, rays, beams) are checked by rule 3 only.
+import { readFileSync } from 'node:fs'
 import { expect, test } from '@playwright/test'
 
-const PLACES = ['church', 'graveyard', 'crypt', 'castle', 'manor', 'library', 'police', 'forest', 'harbour', 'street']
+// The places, read from the app's list (src/screen/ambiance.ts, PLACES).
+const PLACES = [...readFileSync(new URL('../src/screen/ambiance.ts', import.meta.url), 'utf8').match(/export const PLACES = \[([^\]]*)\]/)![1].matchAll(/'([a-z-]+)'/g)].map((m) => m[1])
+
+
 const TOUCH = 3
 // A shared edge shorter than this is a coincidence nobody sees (a faint shaft parallel to a far fir for a few units).
 const EDGE = 96
