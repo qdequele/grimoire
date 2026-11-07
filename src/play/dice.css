@@ -1,0 +1,64 @@
+/*
+ * Game screen dice (loaded into play.html by src/play/dice.tsx, after legacy.css).
+ * 1. Room for the 3D dice: the dice panel's result and the roll picker's lines.
+ * 2. The dice panel in the Art Deco skin: the legacy app only styled it for Classic (green and teal),
+ *    so in Art Deco it stayed teal next to a black-and-gold screen.
+ */
+
+/* ---------------------------------------------------------------- dice panel result */
+.dice2 .result.has-dice.rolling { align-items: center; }
+.dice2 .result.has-dice .r-top { justify-content: space-between; flex-wrap: nowrap; }
+.dice2 .result .r-dice { display: flex; flex: none; }
+
+/* ---------------------------------------------------------------- roll picker lines */
+.pres li { display: flex; align-items: center; gap: 12px; }
+.pres .pk-dice { flex: none; display: flex; }
+.pres .pk-dice:empty { display: none; }
+.pres .pk-txt { min-width: 0; transition: opacity 0.35s; }
+.pres li.pk-wait .pk-txt { opacity: 0; }
+
+/* ---------------------------------------------------------------- Art Deco */
+html[data-skin="deco"] .dice2 {
+  background: var(--slab) !important;
+  box-shadow: 0 18px 60px #000d, 0 0 0 1px rgba(226, 192, 110, 0.12) !important;
+}
+html[data-skin="deco"] .d2-h { border-bottom-color: rgba(226, 192, 110, 0.25); }
+html[data-skin="deco"] .d2-h h3 { color: var(--gold); }
+html[data-skin="deco"] .dice2 .result {
+  border-radius: 0;
+  border-color: rgba(226, 192, 110, 0.25);
+  background: var(--ink);
+}
+html[data-skin="deco"] .dice2 .result .lvl { letter-spacing: 0.02em; }
+html[data-skin="deco"] .d2-tabs button {
+  font-family: var(--f-ui);
+  font-size: 12px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+html[data-skin="deco"] .d2-tabs button.on { color: var(--gold); border-bottom-color: var(--gold); }
+html[data-skin="deco"] .d2-l { letter-spacing: 0.2em; }
+html[data-skin="deco"] .d2-row select,
+html[data-skin="deco"] .d2-row input[type="text"],
+html[data-skin="deco"] .d2-val input,
+html[data-skin="deco"] .d2-step,
+html[data-skin="deco"] .d2-seg,
+html[data-skin="deco"] .d2-dice button,
+html[data-skin="deco"] .dice2 .quick button { border-radius: 0; }
+html[data-skin="deco"] .d2-step:hover,
+html[data-skin="deco"] .d2-dice button:hover { border-color: var(--gold); color: var(--gold); }
+html[data-skin="deco"] .d2-seg button.on { background: rgba(226, 192, 110, 0.12); color: var(--gold); }
+html[data-skin="deco"] .d2-seg button.g.on { background: #1f2a17; color: var(--ok); }
+html[data-skin="deco"] .d2-seg button.r.on { background: #2e1a15; color: var(--blood); }
+html[data-skin="deco"] .d2-go {
+  border-radius: 0;
+  border-color: var(--gold);
+  background: var(--gold);
+  color: #120f08;
+  letter-spacing: 0.04em;
+}
+html[data-skin="deco"] .d2-go:hover { background: #f0d58f; }
+/* The success glows were Classic's teal and green. */
+html[data-skin="deco"] .result.fx-great { box-shadow: 0 0 0 1px var(--gold), 0 0 38px rgba(226, 192, 110, 0.3) inset; }
+html[data-skin="deco"] .result.fx-crit { box-shadow: 0 0 0 2px var(--gold), 0 0 50px rgba(226, 192, 110, 0.45) inset; }
+html[data-skin="deco"] .pres li { border-radius: 0; }

@@ -1,6 +1,7 @@
 // Starts the legacy game engine inside play.html (the iframe of the game page).
 // The engine (public/play/engine.js) is a classic script, run as is: it reads its content from
 // GRIMOIRE_DATA and talks to the app through GRIMOIRE_HOST (see host.ts).
+import { engineDiceApi } from './dice'
 import type { PlayHost } from './host'
 
 const MENU_VIEWS = new Set(['accueil', 'menu', 'histoire', 'parties'])
@@ -17,6 +18,7 @@ if (!host) {
   const data = host.data
   const storyId = (data.SCENARIOS[0] as { id: string }).id
   window.GRIMOIRE_HOST = host
+  window.GRIMOIRE_DICE = engineDiceApi
   window.GRIMOIRE_DATA = {
     ...data,
     // The legacy NPCS entry has rows as a function.

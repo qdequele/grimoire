@@ -6,6 +6,8 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } f
 import { useT } from '@/i18n/t'
 import { cn } from '@/lib/utils'
 import { useRollCheck, useRollDice } from './api'
+import { checkDice, freeDice } from './dice3d/dice'
+import { DiceTray } from './dice3d/DiceTray'
 import {
   DICE_SIDES, diceDetail, diceFormula, keptTens, LEVEL_LABEL, MAX_DICE, MAX_MODIFIER, MAX_NET, netLabel, subjectName,
   type CheckRoll, type DiceRoll, type Roll, type RollSubject,
@@ -87,6 +89,21 @@ function DiceResult({ roll, compact }: { roll: DiceRoll; compact?: boolean }) {
   )
 }
 
+/**
+ * A roll being thrown on this phone: the dice tumble before the result shows. `fresh` is the roll just
+ * received (thrown once); older rolls, like the last one when the Dés tab opens again, show at once.
+ */
+function useThrow() {
+  const [fresh, setFresh] = useState<string | null>(null)
+  const [settled, setSettled] = useState<string | null>(null)
+  return {
+    fresh,
+    received: (r: Roll) => setFresh(r.id),
+    onSettled: setSettled,
+    revealed: (r: Roll | null | undefined, pending: boolean): r is Roll => !!r && !pending && (r.id !== fresh || settled === r.id),
+  }
+}
+
 // ------------------------------------------------------------------ d100 check
 
 export interface RollTarget {
@@ -109,6 +126,7 @@ export function RollDialog({ target, onClose }: { target: RollTarget | null; onC
   const add = useRollHistory((s) => s.add)
   const [net, setNet] = useState(0)
   const [last, setLast] = useState<Roll | null>(null)
+  const throwing = useThrow()
   // Keep showing the last target while the dialog closes.
   const [shown, setShown] = useState(target)
   if (target && target !== shown) {
@@ -122,9 +140,13 @@ export function RollDialog({ target, onClose }: { target: RollTarget | null; onC
     if (!shown) return
     roll.mutate(
       { characterId: member.id, subject: shown.subject, target: shown.value, net },
-      { onSuccess: (r) => { setLast(r); add(r) } },
+      { onSuccess: (r) => { setLast(r); throwing.received(r); add(r) } },
     )
   }
+  const pending = roll.isPending
+  const dice = pending
+    ? checkDice(1 + Math.abs(net), null)
+    : last?.kind === 'check' ? checkDice(last.tens.length, { tens: last.tens, units: last.units, kept: keptTens(last) }) : null
 
   return (
     <Dialog open={!!target} onOpenChange={(open) => !open && onClose()}>
@@ -157,7 +179,8 @@ export function RollDialog({ target, onClose }: { target: RollTarget | null; onC
           <Dices data-icon="inline-start" />
           {last ? t('Relancer') : t('Lancer 1D100')}
         </Button>
-        {last && <RollResult roll={last} />}
+        {dice && <DiceTray dice={dice} throwKey={pending ? null : throwing.fresh} onSettled={throwing.onSettled} />}
+        {throwing.revealed(last, pending) && <RollResult roll={last} />}
         <p className="text-center text-xs text-muted-foreground">{t('Le gardien voit le résultat sur son écran.')}</p>
       </DialogContent>
     </Dialog>
@@ -177,9 +200,13 @@ export function DiceTab() {
   const [sides, setSides] = useState<number>(6)
   const [modifier, setModifier] = useState(0)
 
+  const throwing = useThrow()
+
   const go = () =>
-    roll.mutate({ characterId: member.id, count, sides, modifier }, { onSuccess: add })
+    roll.mutate({ characterId: member.id, count, sides, modifier }, { onSuccess: (r) => { add(r); throwing.received(r) } })
   const last = history[0]
+  const pending = roll.isPending
+  const dice = pending ? freeDice(count, sides, null) : last?.kind === 'dice' ? freeDice(last.count, last.sides, last.results) : null
 
   return (
     <div className="flex flex-col gap-5">
@@ -218,7 +245,8 @@ export function DiceTab() {
         <Dices data-icon="inline-start" />
         {t('Lancer {dice}', { dice: diceFormula({ count, sides, modifier }) })}
       </Button>
-      {last && <RollResult key={last.id} roll={last} />}
+      {dice && <DiceTray dice={dice} throwKey={pending ? null : throwing.fresh} onSettled={throwing.onSettled} />}
+      {throwing.revealed(last, pending) && <RollResult key={last.id} roll={last} />}
       <p className="text-center text-xs text-muted-foreground">{t('Le gardien voit le résultat sur son écran.')}</p>
 
       {history.length > 1 && (

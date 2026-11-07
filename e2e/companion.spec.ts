@@ -436,6 +436,8 @@ test('a skill explains itself on the phone; rolls made on the phone show on the 
   const rolled = phone.waitForResponse((r) => r.url().includes('/rest/v1/rpc/companion_roll_check') && r.ok())
   await dialog.getByRole('button', { name: 'Lancer 1D100' }).click()
   const roll = (await (await rolled).json()) as { result: number; target: number }
+  // The dice are thrown first (one tens die per bonus die plus one, and the units die), then the result shows.
+  await expect(dialog.getByTestId('dice-tray').locator(':scope > div')).toHaveCount(3)
   await expect(dialog.getByTestId('roll-result').locator('output')).toHaveText(String(roll.result))
   await expect(dialog.getByRole('button', { name: 'Relancer' })).toBeVisible()
 
@@ -467,6 +469,7 @@ test('a skill explains itself on the phone; rolls made on the phone show on the 
   const thrown = phone.waitForResponse((r) => r.url().includes('/rest/v1/rpc/companion_roll_dice') && r.ok())
   await phone.getByRole('button', { name: 'Lancer 2D8' }).click()
   const dice = (await (await thrown).json()) as { result: number }
+  await expect(phone.getByTestId('dice-tray').locator(':scope > div')).toHaveCount(2)
   await expect(phone.getByTestId('roll-result').locator('output')).toHaveText(String(dice.result))
   await expect(keeper.locator('[data-sonner-toast]').filter({ hasText: 'Alpha lance 2D8' }).locator('output')).toHaveText(String(dice.result), LIVE)
   await expect(engine(keeper).locator('#jList li').filter({ hasText: `Alpha lance 2D8 : ${dice.result} (` })).toBeVisible()

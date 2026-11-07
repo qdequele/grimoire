@@ -204,12 +204,12 @@ $("#scene").addEventListener("click",e=>{
 
 /* ---------- Dés ---------- */
 const d=n=>1+Math.floor(Math.random()*n);
-function rollFormula(f){
+function rollFormula(f){const fr=[];
   const parts=f.replace(/\s/g,"").toUpperCase().replace(/−/g,"-").replace(/×/g,"*").match(/[+-]?[^+-]+/g)||[];let tot=0,det=[];
   for(const p of parts){const sg=p[0]==="-"?-1:1,b=p.replace(/^[+-]/,"");const m=b.match(/^(\d*)D(\d+)$/);
-    if(m){const n=+(m[1]||1),f2=+m[2];const rs=[];for(let i=0;i<Math.min(n,50);i++){const x=f2===3?Math.ceil(d(6)/2):d(f2);rs.push(x);tot+=sg*x;}det.push(`${sg<0?"−":""}${n}D${f2}[${rs.join(",")}]`);}
+    if(m){const n=+(m[1]||1),f2=+m[2];const rs=[];for(let i=0;i<Math.min(n,50);i++){const x=f2===3?Math.ceil(d(6)/2):d(f2);rs.push(x);fr.push([f2,x]);tot+=sg*x;}det.push(`${sg<0?"−":""}${n}D${f2}[${rs.join(",")}]`);}
     else if(/^\d+$/.test(b)){tot+=sg*+b;det.push(`${sg<0?"−":"+"}${b}`);} else return null;}
-  return {tot,det:det.join(" ")};
+  LASTF={rolls:fr,tot,at:Date.now()};return {tot,det:det.join(" ")};
 }
 function level(r,v){
   if(r<=Math.floor(v/5))return["ext","Réussite extrême"];
@@ -217,30 +217,37 @@ function level(r,v){
   if(r<=v)return["ord","Réussite ordinaire"];
   return["fail","Échec"];
 }
-let LASTD=null;
+let LASTD=null,LASTF=null;
+/* Grimoire: the dice behind a shown number, for the 3D dice (src/play/dice.tsx): the last d100 or
+   formula roll, if it is the number shown and was rolled in the last 2.5 s (like the tiles). */
+function diceRec(big){const now=Date.now(),D=LASTD,F=LASTF;
+  const d=D&&now-D.at<2500&&String(D.r)===String(big)?D:null,f=F&&now-F.at<2500&&String(F.tot)===String(big)?F:null;
+  return d&&f?(d.at>=f.at?d:f):d||f;}
 function diceTiles(){const L=LASTD;LASTD=null;if(!L||Date.now()-L.at>2500)return"";
   return `<div class="tiles">${L.tens.map((t,i)=>`<span class="tile ${i===0?"":L.net>0?"g":"r"} ${L.used===i?"use":"off"}" title="dizaines">${t===0&&L.u===0?"00":t*10}</span>`).join("")}<span class="tile u use" title="unités">${L.u}</span></div>`;}
 function d100(bonus,malus){
   const net=bonus-malus,u=d(10)%10,tens=[];for(let i=0;i<1+Math.abs(net);i++)tens.push(d(10)%10);
   const val=t=>(t===0&&u===0)?100:t*10+u;const vals=tens.map(val);
   const r=net>0?Math.min(...vals):net<0?Math.max(...vals):vals[0];
-  LASTD={tens,u,net,used:vals.indexOf(r),at:Date.now()};
+  LASTD={tens,u,net,used:vals.indexOf(r),r,at:Date.now()};
   return {r,det:`dizaines [${tens.map(t=>t*10).join(", ")}] · unité ${u}${net?` · ${net>0?"bonus":"malus"} ×${Math.abs(net)}`:""}`};
 }
 const FXOF={crit:"crit",ext:"great",maj:"good",ord:"good",fail:"bad",fumble:"fumble"};
 let rollT;
 function openDice(){$("#dicePanel").hidden=false;$("#fab").setAttribute("aria-expanded","true");}
 function showRes(big,lvlCls,lvlTxt,det,logTxt,fx){
-  openDice();const R=$("#result");clearTimeout(rollT);
+  openDice();const R=$("#result");clearTimeout(rollT);if(R._dice){R._dice();R._dice=null;}let dEl=null;
   const reduce=matchMedia("(prefers-reduced-motion: reduce)").matches;
-  const final=()=>{R.className="result"+(fx?" fx-"+fx:"");const tiles=diceTiles();
-    R.innerHTML=`<div class="r-top"><div class="big">${big}</div>${tiles}</div>${lvlTxt?`<div class="lvl ${lvlCls}">${esc(lvlTxt)}</div>`:""}<div class="det">${esc(det)}</div>`;
+  const final=()=>{R.className="result"+(fx?" fx-"+fx:"")+(dEl?" has-dice":"");const tiles=dEl?'<span class="r-slot"></span>':diceTiles();
+    R.innerHTML=`<div class="r-top"><div class="big">${big}</div>${tiles}</div>${lvlTxt?`<div class="lvl ${lvlCls}">${esc(lvlTxt)}</div>`:""}<div class="det">${esc(det)}</div>`;if(dEl)R.querySelector(".r-slot").replaceWith(dEl);
     if(fx&&!reduce){const F=$("#flash");F.hidden=false;F.className="flash on-"+(fx==="great"?"good":fx);void F.offsetWidth;
       setTimeout(()=>{F.hidden=true;F.className="flash";},1300);
       if(fx==="crit"||fx==="great"||fx==="good"){const col=fx==="crit"?"#cdb06a":fx==="great"?"#72b8a3":"#86b56f";const n=fx==="good"?10:22;
         for(let i=0;i<n;i++){const sp=document.createElement("i");sp.className="spark";const a=Math.random()*Math.PI*2,dist=40+Math.random()*90;
           sp.style.cssText=`left:40px;top:28px;background:${col};--dx:${Math.cos(a)*dist}px;--dy:${Math.sin(a)*dist}px`;R.appendChild(sp);}}}
     S.log.unshift(logTxt);S.log=S.log.slice(0,30);save();renderLog();};
+  if(window.GRIMOIRE_DICE){const rec=diceRec(big);if(rec){dEl=document.createElement("div");dEl.className="r-dice";R.className="result rolling has-dice";R.innerHTML="";R.appendChild(dEl);
+    const stop=GRIMOIRE_DICE.throw(dEl,rec,final,60);if(stop){R._dice=stop;LASTD=LASTF=null;return;}dEl=null;R.className="result";}}
   if(reduce){final();return;}
   R.className="result rolling";R.innerHTML=`<div class="big">··</div><div class="det">Les dés roulent…</div>`;
   let k=0;const spin=()=>{R.querySelector(".big").textContent=String(1+Math.floor(Math.random()*99)).padStart(2,"0");if(++k<9)rollT=setTimeout(spin,55);else final();};spin();
@@ -1343,7 +1350,7 @@ function renderPick(){const P=PICK,st=ST();const title=P.kind==="san"?`SAN · ${
     let extra="";if(P.kind==="test"){const f=valFor(c,sl,P.label);const v=P.vals[sl.cid]??f.v;extra=`<input type="number" min="1" max="99" class="pv-in" id="pv-${sl.cid}" data-pv="${sl.cid}" value="${v??""}" placeholder="?" aria-label="Valeur de ${esc(c.n)}">`;}
     if(P.kind==="san")extra=`<span class="pv-s">SAN ${sl.san}</span>`;if(P.kind==="dmg")extra=`<span class="pv-s">PV ${sl.pv}/${c.pv}</span>`;
     return `<label class="pk ${on?"on":""} ${dead?"dead":""}">${head(sl,g)}<input type="checkbox" data-pk="${sl.cid}" ${on?"checked":""} ${dead?"disabled":""}><span class="pn">${esc(c.n)}${sl.player?` <span class="mut">${esc(sl.player)}</span>`:""}</span>${extra}</label>`;}).join("");
-  const res=P.res?`<ul class="pres">${P.res.map(r=>`<li class="${r.cls}"><b>${esc(r.n)}</b> ${esc(r.txt)}</li>`).join("")}</ul>`:"";
+  const res=P.res?`<ul class="pres">${P.res.map(r=>`<li class="${r.cls}${r.dz&&!r.shown?" pk-wait":""}"><span class="pk-dice"></span><span class="pk-txt"><b>${esc(r.n)}</b> ${esc(r.txt)}</span></li>`).join("")}</ul>`:"";
   $("#pickBox").innerHTML=`<div class="pk-head"><span class="gm-eyebrow">${P.kind==="san"?"Test de Santé mentale":P.kind==="dmg"?"Dégâts":"Test de compétence"}</span><h3>${esc(title)}</h3>
     ${P.kind==="san"?`<p class="mut">Réussite : −${esc(P.val.split("/")[0])} · échec : −${esc(P.val.split("/")[1])}. La perte est retirée automatiquement.</p>`:P.kind==="dmg"?`<p class="mut">${esc(P.val)} par cible, retirés des PV avec la règle de blessure grave.</p>`:`<p class="mut">Valeur trouvée sur la fiche, modifiable. Une réussite coche la compétence pour la progression.</p>`}</div>
     ${P.res?res:`<div class="pk-all"><button class="lnk" data-pkall="1">Tout le groupe suivi</button> · <button class="lnk" data-pkall="2">Tous</button> · <button class="lnk" data-pkall="0">Aucun</button></div><div class="pk-list">${rows}</div>
@@ -1355,25 +1362,29 @@ function applyDamage(sl,v){const c=charById(sl.cid),max=c.pv,was=sl.state;sl.pv=
   else if(sl.pv===0&&was==="bless"){sl.state="mour";note="0 PV avec blessure grave : mourant (p. 20)";}
   else if(sl.pv===0){sl.state="incon";note="0 PV : inconscient (p. 20)";}
   if(sl.state!==was)histAdd(sl.cid,`${SC().t} : ${STATES.find(x=>x[0]===sl.state)[1].toLowerCase()}`);return note;}
+/* Grimoire: each result line of the picker throws its dice, its text shows once they rest. */
+function pickDice(){const P=PICK;if(!P||!P.res)return;const lis=document.querySelectorAll("#pickBox .pres li");
+  P.res.forEach((r,i)=>{const li=lis[i];if(!li||!r.dz||r.shown)return;r.shown=1;const show=()=>li.classList.remove("pk-wait");
+    const stop=window.GRIMOIRE_DICE&&GRIMOIRE_DICE.throw(li.querySelector(".pk-dice"),r.dz,show,34);if(!stop)show();});}
 function rollPick(){const P=PICK,st=ST();const res=[];PICK_BUSY=true;
   const targets=st.party.filter(sl=>P.sel.has(sl.cid));
-  if(P.kind==="dmg"&&!targets.length){const x=rollFormula(P.val);res.push({n:P.label,txt:`${P.val} = ${x.tot}`,cls:"bad"});jlog(`${P.label} : ${P.val} = ${x.tot}`,"pv");}
+  if(P.kind==="dmg"&&!targets.length){const x=rollFormula(P.val),dz=LASTF;res.push({dz,n:P.label,txt:`${P.val} = ${x.tot}`,cls:"bad"});jlog(`${P.label} : ${P.val} = ${x.tot}`,"pv");}
   targets.forEach(sl=>{const c=charById(sl.cid);
-    if(P.kind==="san"){const [a,b]=P.val.split("/");const x=d100(0,0);const ok=x.r<=sl.san;const f=ok?a:b;const loss=/D/i.test(f)?Math.max(0,rollFormula(f).tot):+f;const from=sl.san;sl.san=Math.max(0,sl.san-loss);
+    if(P.kind==="san"){const [a,b]=P.val.split("/");const x=d100(0,0),dz=LASTD;const ok=x.r<=sl.san;const f=ok?a:b;const loss=/D/i.test(f)?Math.max(0,rollFormula(f).tot):+f;const from=sl.san;sl.san=Math.max(0,sl.san-loss);
       let txt=`jet ${x.r} sur ${from} : ${ok?"réussi":"raté"}, −${loss} SAN (${from} → ${sl.san})`;let cls=ok?"ok":"bad";
       if(!ok&&loss>=5){const int=carOf(c).INT;if(int){const y=d100(0,0);if(y.r<=int){sl.state="ftemp";const fr=1+Math.floor(Math.random()*10),rd=1+Math.floor(Math.random()*10),hh=1+Math.floor(Math.random()*10);
           txt+=`. Test d'INT ${y.r} sur ${int} réussi : folie temporaire ${hh} h, folie passagère « ${FOLIES[fr-1].split(" :")[0]} » ${rd} rounds`;histAdd(sl.cid,`${SC().t} : folie temporaire (${P.label})`);cls="mad";}
           else txt+=`. Test d'INT ${y.r} sur ${int} raté : il reste sain d'esprit pour l'instant`;}
         else txt+=". Perte de 5 ou plus : fais un test d'INT (réussi = folie temporaire 1D10 h)";}
-      res.push({n:c.n,txt,cls});jlog(`${c.n} · SAN ${P.label} : ${txt}`,"san");}
+      res.push({n:c.n,txt,cls,dz});jlog(`${c.n} · SAN ${P.label} : ${txt}`,"san");}
     if(P.kind==="test"){const f=valFor(c,sl,P.label);const v=+(P.vals[sl.cid]??f.v)||0;if(!v){res.push({n:c.n,txt:"valeur manquante, pas de jet",cls:""});return;}
-      const x=d100(P.B,P.M),L=level(x.r,v);const ok=L[0]!=="fail";let txt=`${x.r} sur ${v} : ${L[1].toLowerCase()}`;
+      const x=d100(P.B,P.M),L=level(x.r,v),dz=LASTD;const ok=L[0]!=="fail";let txt=`${x.r} sur ${v} : ${L[1].toLowerCase()}`;
       if(ok&&f.sk&&!CHARS_K.includes(P.label.toUpperCase())&&P.label!=="Chance"){const p=P_(sl.cid);if(!p.checks.includes(f.sk)){p.checks.push(f.sk);txt+=` · ${f.sk} cochée`;}}
-      res.push({n:c.n,txt,cls:ok?"ok":"bad"});jlog(`${c.n} · ${P.label} : ${txt}`,"test");}
-    if(P.kind==="dmg"){const x=rollFormula(P.val);const v=Math.max(0,x.tot);const from=sl.pv;const note=applyDamage(sl,v);const txt=`${P.val} = ${v} dégâts (PV ${from} → ${sl.pv})${note?" · "+note:""}`;
-      res.push({n:c.n,txt,cls:"bad"});jlog(`${c.n} · ${P.label} : ${txt}`,"pv");}
+      res.push({n:c.n,txt,cls:ok?"ok":"bad",dz});jlog(`${c.n} · ${P.label} : ${txt}`,"test");}
+    if(P.kind==="dmg"){const x=rollFormula(P.val),dz=LASTF;const v=Math.max(0,x.tot);const from=sl.pv;const note=applyDamage(sl,v);const txt=`${P.val} = ${v} dégâts (PV ${from} → ${sl.pv})${note?" · "+note:""}`;
+      res.push({n:c.n,txt,cls:"bad",dz});jlog(`${c.n} · ${P.label} : ${txt}`,"pv");}
   });
-  PICK_BUSY=false;P.res=res;save();renderPick();renderInv();renderNav();
+  PICK_BUSY=false;P.res=res;save();renderPick();pickDice();renderInv();renderNav();
   const good=res.filter(r=>r.cls==="ok").length,bad=res.filter(r=>r.cls==="bad"||r.cls==="mad").length;
   const fx=res.some(r=>r.cls==="mad")?"fumble":good&&!bad?"good":bad&&!good?"bad":null;
   if(fx&&!matchMedia("(prefers-reduced-motion: reduce)").matches){const F=$("#flash");F.hidden=false;F.className="flash on-"+fx;setTimeout(()=>{F.hidden=true;F.className="flash";},1200);}}
