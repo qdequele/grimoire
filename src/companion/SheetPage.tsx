@@ -1,13 +1,15 @@
-import { Check, Dices, Minus, Plus } from 'lucide-react'
+import { Camera, Check, Dices, Minus, Plus } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { Link, Navigate, NavLink, Outlet, useOutletContext, useParams } from 'react-router'
+import { Avatar } from '@/characters/Avatar'
+import { PhotoDialog } from '@/characters/PhotoDialog'
 import { Button } from '@/components/ui/button'
 import { skillName, useT, type T } from '@/i18n/t'
 import { cn } from '@/lib/utils'
 import type { Points } from '@/play/companion'
 import { CHARACTERISTIC_INFO, CHARACTERISTICS, PROFILE_FIELDS, SKILL_BY_ID } from '@/rules/d100'
 import { Masthead } from '@/theme/Masthead'
-import { pointsOf, rememberCharacter, useSetPoints, type CompanionMember } from './api'
+import { pointsOf, rememberCharacter, useSetPhoto, useSetPoints, type CompanionMember } from './api'
 import { useCompanionContext, type CompanionContext } from './CompanionLayout'
 import type { PickState } from './PickPage'
 import { RollDialog, type RollTarget } from './Dice'
@@ -33,6 +35,8 @@ export function SheetPage() {
   const { token, view, live } = ctx
   const { characterId = '' } = useParams()
   const member = view.party.find((m) => m.id === characterId)
+  const [photoOpen, setPhotoOpen] = useState(false)
+  const setPhoto = useSetPhoto(token)
 
   useEffect(() => {
     if (member && !view.focus) rememberCharacter(token, member.id)
@@ -55,6 +59,17 @@ export function SheetPage() {
   return (
     <>
       <header className="flex flex-col items-center gap-2">
+        <button
+          type="button"
+          className="group relative rounded-full focus-visible:ring-2 focus-visible:ring-gold focus-visible:outline-none"
+          aria-label={member.photo ? t('Changer la photo de {name}', { name: d.name }) : t('Ajouter une photo de {name}', { name: d.name })}
+          onClick={() => setPhotoOpen(true)}
+        >
+          <Avatar name={d.name} photo={member.photo} className="size-20 text-2xl group-hover:border-foreground" />
+          <span aria-hidden="true" className="absolute -right-1 -bottom-1 grid size-7 place-items-center rounded-full border border-gold bg-background text-gold">
+            <Camera className="size-3.5" />
+          </span>
+        </button>
         <Masthead compact eyebrow={view.game.title || t('À la table')} title={d.name} subtitle={subtitle || undefined} />
         <p
           className={cn(
@@ -70,6 +85,13 @@ export function SheetPage() {
       <span className="double-rule" />
       <Outlet context={{ ...ctx, member } satisfies SheetContext} />
       {!view.focus && <ChangeLink token={token} />}
+      <PhotoDialog
+        name={d.name}
+        photo={member.photo}
+        open={photoOpen}
+        onOpenChange={setPhotoOpen}
+        onSave={(photo) => setPhoto.mutateAsync({ characterId: member.id, photo })}
+      />
       <nav
         aria-label={t('Fiche')}
         className="fixed inset-x-0 bottom-0 z-10 border-t border-border bg-background/95 backdrop-blur"

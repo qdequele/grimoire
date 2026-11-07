@@ -118,6 +118,7 @@ export type Database = {
           id: string
           name: string | null
           owner_id: string
+          photo: string | null
           player_id: string | null
           updated_at: string
         }
@@ -127,6 +128,7 @@ export type Database = {
           id?: string
           name?: never
           owner_id?: string
+          photo?: string | null
           player_id?: string | null
           updated_at?: string
         }
@@ -136,6 +138,7 @@ export type Database = {
           id?: string
           name?: never
           owner_id?: string
+          photo?: string | null
           player_id?: string | null
           updated_at?: string
         }
@@ -673,6 +676,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      character_photo_ok: { Args: { p: string }; Returns: boolean }
       companion_add_note: {
         Args: { p_body: string; p_character: string; p_token: string }
         Returns: string
@@ -738,6 +742,10 @@ export type Database = {
         Returns: Json
       }
       companion_roll_prune: { Args: { p_game: string }; Returns: undefined }
+      companion_set_photo: {
+        Args: { p_character: string; p_photo: string; p_token: string }
+        Returns: undefined
+      }
       companion_set_point: {
         Args: {
           p_character: string

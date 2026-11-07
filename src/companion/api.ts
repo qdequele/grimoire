@@ -3,6 +3,7 @@ import { useMutation, useQuery, useQueryClient, type QueryClient, type UseQueryR
 import { useEffect, useState } from 'react'
 import { toast } from 'sonner'
 import type { CharacterData } from '@/characters/character'
+import { photoOr } from '@/characters/photo'
 import { currentT } from '@/i18n/t'
 import type { Json } from '@/lib/database.types'
 import { supabase } from '@/lib/supabase'
@@ -11,7 +12,13 @@ import { asRoll, subjectKey, type Roll, type RollSubject } from './rolls'
 import { clampPoints } from './sheet'
 
 export interface CompanionNote { id: string; characterId: string; body: string; createdAt: string }
-export interface CompanionMember { id: string; data: CharacterData; player: string | null }
+export interface CompanionMember {
+  id: string
+  data: CharacterData
+  player: string | null
+  /** Data URL (checked), null when the investigator has none. */
+  photo: string | null
+}
 
 export interface CompanionView {
   game: { id: string; channel: string; title: string }
@@ -119,7 +126,12 @@ function asView(raw: unknown): CompanionView {
     canCreate: r.canCreate === true,
     party: objects(r.party)
       .filter((m) => typeof m.id === 'string' && !!m.data && typeof m.data === 'object')
-      .map((m) => ({ id: m.id as string, data: m.data as CharacterData, player: typeof m.player === 'string' ? m.player : null })),
+      .map((m) => ({
+        id: m.id as string,
+        data: m.data as CharacterData,
+        player: typeof m.player === 'string' ? m.player : null,
+        photo: photoOr(m.photo),
+      })),
     points: objects(r.points).map(asPointsRow).filter((p): p is PointsRow => !!p),
     notes: objects(r.notes)
       .filter((n) => typeof n.id === 'string' && typeof n.characterId === 'string')
@@ -282,6 +294,25 @@ export function useAddNote(token: string) {
 }
 
 /**
+ * Sets (a data URL from photoFromFile) or removes (null) an investigator's photo. The view is updated
+ * at once on success; the server's `photo` hint refetches the other phones.
+ */
+export function useSetPhoto(token: string) {
+  const qc = useQueryClient()
+  const key = companionKeys.one(token)
+  return useMutation<void, CompanionError, { characterId: string; photo: string | null }>({
+    mutationFn: ({ characterId, photo }) =>
+      call(() => supabase.rpc('companion_set_photo', { p_token: token, p_character: characterId, p_photo: photo ?? '' })),
+    onSuccess: (_d, { characterId, photo }) => {
+      const view = qc.getQueryData<CompanionView>(key)
+      if (view) qc.setQueryData<CompanionView>(key, { ...view, party: view.party.map((m) => (m.id === characterId ? { ...m, photo } : m)) })
+    },
+    onError: (e) => onWriteError(qc, token, e),
+    onSettled: () => qc.invalidateQueries({ queryKey: key }),
+  })
+}
+
+/**
  * A player creates their investigator from a table link: it joins the game at once. On success this
  * device remembers it and the view is refetched (awaited, so its sheet exists when navigating to it).
  * Errors are left to the page (each code has its own message); `link_invalid` refetches like other writes.
@@ -345,7 +376,7 @@ export function useRollDice(token: string) {
 /**
  * Listens to the game's channel: `points` (keeper or phone) go straight into the cache, clamped to
  * what the server accepts (anyone with a link can send on this public topic; writes are re-checked
- * by the RPCs), `notes` and `member` refetch. Returns true while subscribed (the "live" badge).
+ * by the RPCs), `notes`, `member` and `photo` refetch. Returns true while subscribed (the "live" badge).
  * A revoke sends `rotate` on the old topic before moving the game: refetching gives a still-valid
  * link the new channel (this hook resubscribes) and a revoked one the invalid-link state.
  */
@@ -375,6 +406,7 @@ export function useCompanionLive(token: string, channel: string | undefined): bo
       })
       .on('broadcast', { event: 'notes' }, () => void qc.invalidateQueries({ queryKey: key }))
       .on('broadcast', { event: 'member' }, () => void qc.invalidateQueries({ queryKey: key }))
+      .on('broadcast', { event: 'photo' }, () => void qc.invalidateQueries({ queryKey: key }))
       .on('broadcast', { event: 'rotate' }, () => void qc.invalidateQueries({ queryKey: key }))
       .subscribe((status) => {
         setLive(status === 'SUBSCRIBED')

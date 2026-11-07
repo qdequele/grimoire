@@ -1,6 +1,7 @@
 import { NotebookPen, UserPlus, Users } from 'lucide-react'
 import { useState } from 'react'
 import { Link } from 'react-router'
+import { toast } from 'sonner'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -8,8 +9,10 @@ import { Card, CardDescription, CardFooter, CardHeader, CardTitle } from '@/comp
 import { Empty, EmptyContent, EmptyDescription, EmptyHeader, EmptyMedia, EmptyTitle } from '@/components/ui/empty'
 import { Skeleton } from '@/components/ui/skeleton'
 import { useT } from '@/i18n/t'
-import { useCharacters, type CharacterRow } from './api'
+import { useCharacters, useSetCharacterPhoto, type CharacterRow } from './api'
+import { Avatar } from './Avatar'
 import { NotebookDialog } from './NotebookDialog'
+import { PhotoDialog } from './PhotoDialog'
 import { useNoteCounts } from './notes'
 
 export function CharactersPage() {
@@ -17,6 +20,16 @@ export function CharactersPage() {
   const { data, isPending, error } = useCharacters()
   const counts = useNoteCounts()
   const [notebook, setNotebook] = useState<CharacterRow | null>(null)
+  const [photoOf, setPhotoOf] = useState<CharacterRow | null>(null)
+  const setPhoto = useSetCharacterPhoto()
+  const savePhoto = async (characterId: string, photo: string | null) => {
+    try {
+      await setPhoto.mutateAsync({ characterId, photo })
+    } catch (e) {
+      toast.error(t("Impossible d'enregistrer la photo : {error}", { error: (e as Error).message }))
+      throw e
+    }
+  }
 
   return (
     <section className="flex flex-col gap-6">
@@ -51,7 +64,16 @@ export function CharactersPage() {
           {data.map((c) => {
             return (
               <Card key={c.id} size="sm" className="relative">
-                <CardHeader>
+                <CardHeader className="grid-cols-[auto_1fr] gap-x-3">
+                  <button
+                    type="button"
+                    className="relative z-10 row-span-2 self-center rounded-full hover:[&>span]:border-foreground focus-visible:ring-2 focus-visible:ring-gold focus-visible:outline-none"
+                    aria-label={c.photo ? t('Changer la photo de {name}', { name: c.data.name }) : t('Ajouter une photo de {name}', { name: c.data.name })}
+                    title={t('Photo')}
+                    onClick={() => setPhotoOf(c)}
+                  >
+                    <Avatar name={c.data.name} photo={c.photo} className="size-11 text-sm" />
+                  </button>
                   <CardTitle>
                     <Link to={`/characters/${c.id}`} className="after:absolute after:inset-0">{c.data.name}</Link>
                   </CardTitle>
@@ -72,6 +94,15 @@ export function CharactersPage() {
             )
           })}
         </div>
+      )}
+      {photoOf && (
+        <PhotoDialog
+          name={photoOf.data.name}
+          photo={data?.find((c) => c.id === photoOf.id)?.photo ?? photoOf.photo}
+          open
+          onOpenChange={(open) => !open && setPhotoOf(null)}
+          onSave={(photo) => savePhoto(photoOf.id, photo)}
+        />
       )}
       {notebook && (
         <NotebookDialog

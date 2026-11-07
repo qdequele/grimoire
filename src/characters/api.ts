@@ -80,6 +80,18 @@ export function useAssignPlayer() {
   })
 }
 
+/** Set (a data URL from photoFromFile) or remove (null) an investigator's photo. */
+export function useSetCharacterPhoto() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: async ({ characterId, photo }: { characterId: string; photo: string | null }) => {
+      const { error } = await supabase.from('characters').update({ photo }).eq('id', characterId)
+      if (error) throw error
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: characterKeys.all }),
+  })
+}
+
 export function useDeleteCharacter() {
   const qc = useQueryClient()
   return useMutation({

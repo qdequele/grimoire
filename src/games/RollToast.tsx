@@ -2,6 +2,7 @@
 // (sonner's default card in a corner was too easy to miss during a game). It also goes to the Journal.
 import { XIcon } from 'lucide-react'
 import { toast } from 'sonner'
+import { Avatar } from '@/characters/Avatar'
 import { diceDetail, LEVEL_LABEL, netLabel, rollMessage, type Roll } from '@/companion/rolls'
 import { cn } from '@/lib/utils'
 import type { T } from '@/i18n/t'
@@ -9,7 +10,7 @@ import type { T } from '@/i18n/t'
 /** Shown until closed by hand, or after this long (paused while the pointer is over it). */
 const DURATION = 30_000
 
-export function showRollToast(t: T, roll: Roll, name: string) {
+export function showRollToast(t: T, roll: Roll, name: string, photo?: string | null) {
   const { title } = rollMessage(t, roll, name)
   const failed = roll.kind === 'check' && roll.level === 'failure'
   const extra = roll.kind === 'check' ? netLabel(t, roll.net) : ''
@@ -24,6 +25,7 @@ export function showRollToast(t: T, roll: Roll, name: string) {
         role="status"
         className="flex w-[min(26rem,calc(100vw-2rem))] items-center gap-4 border border-gold bg-card px-4 py-3 text-card-foreground shadow-2xl outline outline-1 outline-offset-[3px] outline-gold/40"
       >
+        <Avatar name={name} photo={photo} className="size-10 text-sm" />
         <output
           className={cn('min-w-[2ch] text-center font-heading text-4xl leading-none tabular-nums', failed ? 'text-destructive' : 'text-gold')}
         >

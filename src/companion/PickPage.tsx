@@ -1,5 +1,6 @@
 import { Plus } from 'lucide-react'
 import { Link, Navigate, useLocation } from 'react-router'
+import { Avatar } from '@/characters/Avatar'
 import { Button } from '@/components/ui/button'
 import { useT } from '@/i18n/t'
 import { Masthead } from '@/theme/Masthead'
@@ -35,9 +36,9 @@ export function PickPage() {
                 <Link
                   to={`c/${m.id}`}
                   onClick={() => rememberCharacter(token, m.id)}
-                  className="group flex items-baseline gap-3 border-b border-border py-3"
+                  className="group flex items-center gap-3 border-b border-border py-3"
                 >
-                  <span aria-hidden="true" className="diamond group-hover:bg-gold" />
+                  <Avatar name={m.data.name} photo={m.photo} className="size-10 text-sm group-hover:border-foreground" />
                   <span className="flex-1 font-serif text-xl group-hover:text-gold">{m.data.name}</span>
                   <span className="text-sm text-muted-foreground">{m.player || '—'}</span>
                 </Link>

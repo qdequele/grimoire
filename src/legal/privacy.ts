@@ -15,8 +15,8 @@ export const PRIVACY: Bilingual = {
         blocks: [
           [
             '**Ton compte** : adresse e-mail, mot de passe (stocké chiffré par notre fournisseur d’authentification, jamais lisible), nom affiché et langue. Si tu te connectes avec Google : ton nom et ton adresse e-mail Google, rien d’autre.',
-            '**Ce que tu crées** : histoires privées et leurs fichiers (textes, images, sons), investigateurs, joueurs (prénoms), parties et leur état, images envoyées à l’écran d’ambiance.',
-            '**Ce que les joueurs saisissent sur leur téléphone** depuis un lien de table : prénom, fiche d’investigateur, points de vie et autres points, notes du carnet, jets de dés. Les joueurs n’ont pas de compte : ces données appartiennent au compte du gardien qui a partagé le lien.',
+            '**Ce que tu crées** : histoires privées et leurs fichiers (textes, images, sons), investigateurs et leur photo, joueurs (prénoms), parties et leur état, images envoyées à l’écran d’ambiance.',
+            '**Ce que les joueurs saisissent sur leur téléphone** depuis un lien de table : prénom, fiche d’investigateur, photo de l’investigateur, points de vie et autres points, notes du carnet, jets de dés. Les joueurs n’ont pas de compte : ces données appartiennent au compte du gardien qui a partagé le lien. Une photo est réduite à une petite image carrée dans le navigateur avant l’envoi ; tous ceux qui ont un lien de la partie la voient, et le gardien ou le joueur peut la retirer à tout moment.',
             '**Compteurs d’utilisation** des fonctions d’IA (nombre d’appels par mois), pour appliquer les limites mensuelles.',
             '**Connexion à ChatGPT ou Claude** : le nom de l’application autorisée et la date de l’autorisation, et les plans et scènes que l’application envoie à Grimoire pendant la création d’une histoire.',
           ],
@@ -102,8 +102,8 @@ export const PRIVACY: Bilingual = {
         blocks: [
           [
             '**Your account**: e-mail address, password (stored hashed by our authentication provider, never readable), display name and language. If you sign in with Google: your Google name and e-mail address, nothing else.',
-            '**What you create**: private stories and their files (texts, images, sounds), investigators, players (first names), games and their state, pictures sent to the ambiance screen.',
-            '**What players enter on their phones** from a table link: first name, investigator sheet, hit points and other points, notebook notes, dice rolls. Players have no account: this data belongs to the account of the keeper who shared the link.',
+            '**What you create**: private stories and their files (texts, images, sounds), investigators and their photo, players (first names), games and their state, pictures sent to the ambiance screen.',
+            '**What players enter on their phones** from a table link: first name, investigator sheet, investigator photo, hit points and other points, notebook notes, dice rolls. Players have no account: this data belongs to the account of the keeper who shared the link. A photo is shrunk to a small square picture in the browser before it is sent; everyone with a link to the game sees it, and the keeper or the player can remove it at any time.',
             '**Usage counters** for the AI features (number of calls per month), to apply the monthly limits.',
             '**Connection to ChatGPT or Claude**: the name of the authorised app and the date you authorised it, and the outlines and scenes the app sends to Grimoire while creating a story.',
           ],
