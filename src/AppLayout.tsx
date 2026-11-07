@@ -1,7 +1,8 @@
-import { LogOut, Settings, UserRound } from 'lucide-react'
+import { LogOut, Settings } from 'lucide-react'
 import type { ReactNode } from 'react'
 import { Link, Navigate, NavLink, Outlet, useLocation } from 'react-router'
 import { useAuth, useProfile } from '@/auth/auth'
+import { KeeperAvatar } from '@/auth/KeeperAvatar'
 import { ResumeAfterLogin } from '@/auth/LoginPage'
 import { rememberedNext, returnedOAuthError } from '@/auth/oauth'
 import { Button } from '@/components/ui/button'
@@ -33,8 +34,8 @@ function AccountMenu() {
   const profile = useProfile()
   return (
     <DropdownMenu>
-      <DropdownMenuTrigger render={<Button variant="ghost" size="icon" aria-label={t('Compte')} />}>
-        <UserRound />
+      <DropdownMenuTrigger render={<Button variant="ghost" size="icon" className="rounded-full" aria-label={t('Compte')} />}>
+        <KeeperAvatar />
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-auto min-w-56">
         <DropdownMenuGroup>

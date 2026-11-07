@@ -14,7 +14,7 @@ export const PRIVACY: Bilingual = {
         title: 'Ce que Grimoire garde',
         blocks: [
           [
-            '**Ton compte** : adresse e-mail, mot de passe (stocké chiffré par notre fournisseur d’authentification, jamais lisible), nom affiché et langue. Si tu te connectes avec Google : ton nom et ton adresse e-mail Google, rien d’autre.',
+            '**Ton compte** : adresse e-mail, mot de passe (stocké chiffré par notre fournisseur d’authentification, jamais lisible), nom affiché, langue et, si tu en choisis une, ta photo. Si tu te connectes avec Google : ton nom et ton adresse e-mail Google, rien d’autre.',
             '**Ce que tu crées** : histoires privées et leurs fichiers (textes, images, sons), investigateurs et leur photo, joueurs (prénoms), parties et leur état, images envoyées à l’écran d’ambiance.',
             '**Ce que les joueurs saisissent sur leur téléphone** depuis un lien de table : prénom, fiche d’investigateur, photo de l’investigateur, points de vie et autres points, notes du carnet, jets de dés. Les joueurs n’ont pas de compte : ces données appartiennent au compte du gardien qui a partagé le lien. Une photo est réduite à une petite image carrée dans le navigateur avant l’envoi ; tous ceux qui ont un lien de la partie la voient, et le gardien ou le joueur peut la retirer à tout moment.',
             '**Compteurs d’utilisation** des fonctions d’IA (nombre d’appels par mois), pour appliquer les limites mensuelles.',
@@ -50,6 +50,7 @@ export const PRIVACY: Bilingual = {
             '**Anthropic** : fonctions d’IA décrites ci-dessus.',
             '**Resend** : envoi des e-mails du compte.',
             '**Google** : connexion avec Google, seulement si tu la choisis.',
+            '**Gravatar** (Automattic) : tant que tu n’as pas choisi de photo, ton navigateur lui demande ton image de profil à partir d’une empreinte (hachage SHA-256) de ton adresse e-mail, jamais l’adresse elle-même ; Gravatar voit aussi ton adresse IP.',
           ],
           'Certains de ces prestataires sont situés aux États-Unis. Les transferts reposent sur les garanties prévues par le RGPD (cadre de protection des données UE–États-Unis ou clauses contractuelles types). Aucune donnée n’est vendue ni partagée à des fins publicitaires.',
           'Tes histoires privées ne sont visibles que par toi. Les liens de table et d’écran que tu partages donnent accès à ce qu’ils montrent à quiconque les détient, jusqu’à ce que tu les révoques.',
@@ -101,7 +102,7 @@ export const PRIVACY: Bilingual = {
         title: 'What Grimoire keeps',
         blocks: [
           [
-            '**Your account**: e-mail address, password (stored hashed by our authentication provider, never readable), display name and language. If you sign in with Google: your Google name and e-mail address, nothing else.',
+            '**Your account**: e-mail address, password (stored hashed by our authentication provider, never readable), display name, language and, if you choose one, your photo. If you sign in with Google: your Google name and e-mail address, nothing else.',
             '**What you create**: private stories and their files (texts, images, sounds), investigators and their photo, players (first names), games and their state, pictures sent to the ambiance screen.',
             '**What players enter on their phones** from a table link: first name, investigator sheet, investigator photo, hit points and other points, notebook notes, dice rolls. Players have no account: this data belongs to the account of the keeper who shared the link. A photo is shrunk to a small square picture in the browser before it is sent; everyone with a link to the game sees it, and the keeper or the player can remove it at any time.',
             '**Usage counters** for the AI features (number of calls per month), to apply the monthly limits.',
@@ -137,6 +138,7 @@ export const PRIVACY: Bilingual = {
             '**Anthropic**: the AI features described above.',
             '**Resend**: sending account e-mails.',
             '**Google**: sign-in with Google, only if you choose it.',
+            '**Gravatar** (Automattic): until you choose a photo, your browser asks it for your profile picture using a fingerprint (SHA-256 hash) of your e-mail address, never the address itself; Gravatar also sees your IP address.',
           ],
           'Some of these providers are located in the United States. Transfers rely on the safeguards provided by the GDPR (EU–US Data Privacy Framework or standard contractual clauses). No data is sold or shared for advertising.',
           'Your private stories are visible to you only. The table and screen links you share give access to what they show to anyone who holds them, until you revoke them.',
