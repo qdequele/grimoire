@@ -12,7 +12,9 @@ import type { PlaceId } from './ambiance'
 const W = 1600
 const H = 900
 
-type Depth = 'far' | 'mid' | 'near' | 'lit' | 'pulse' | 'water'
+// A light goes in the lit layer of its shape's depth (`lit-far`, `lit` = mid, `lit-near`): layers of
+// different depths drift apart, so a lamp's glass drawn at another depth than its post slides off it.
+type Depth = 'far' | 'mid' | 'near' | 'lit' | 'lit-far' | 'lit-near' | 'pulse' | 'water'
 
 function Layer({ depth, children }: { depth: Depth; children: ReactNode }) {
   return (
@@ -37,15 +39,18 @@ function rng(seed: number): () => number {
 
 const f = (n: number) => n.toFixed(1)
 
-/** Rolling ground or hills: a filled ridge line around `base`. */
-function ridge(base: number, amp: number, seed: number, step = 20): string {
+/** The height of a ridge (see `ridge`) at x: to plant trees and stones on the ground, not above it. */
+function ridgeAt(base: number, amp: number, seed: number): (x: number) => number {
   const r = rng(seed)
   const p = [r() * 6, r() * 6, r() * 6]
-  let d = `M-40 ${H} L-40 ${base}`
-  for (let x = -40; x <= W + 40; x += step) {
-    const y = base - amp * (0.5 * Math.sin(x / 260 + p[0]) + 0.3 * Math.sin(x / 97 + p[1]) + 0.2 * Math.sin(x / 41 + p[2]))
-    d += ` L${x} ${f(y)}`
-  }
+  return (x) => base - amp * (0.5 * Math.sin(x / 260 + p[0]) + 0.3 * Math.sin(x / 97 + p[1]) + 0.2 * Math.sin(x / 41 + p[2]))
+}
+
+/** Rolling ground or hills: a filled ridge line around `base`. */
+function ridge(base: number, amp: number, seed: number, step = 20): string {
+  const y = ridgeAt(base, amp, seed)
+  let d = `M-40 ${H} L-40 ${f(y(-40))}`
+  for (let x = -40; x <= W + 40; x += step) d += ` L${x} ${f(y(x))}`
   return `${d} L${W + 40} ${H} Z`
 }
 
@@ -148,15 +153,21 @@ const Halo = ({ id, x, y, r, o = 1 }: { id: string; x: number; y: number; r: num
   <circle cx={x} cy={y} r={r} fill={`url(#${id})`} opacity={o} />
 )
 
-/** Windows on a grid, some lit (seeded): `lit` gets the lit ones, `dark` the rest. */
-function windowGrid(x: number, y: number, cols: number, rows: number, w: number, h: number, gx: number, gy: number, seed: number, chance: number) {
+type Box = [x1: number, y1: number, x2: number, y2: number]
+
+/** Windows on a grid, some lit (seeded): `lit` gets the lit ones, `dark` the rest. No window where it
+ *  would overlap one of the `hidden` boxes (a porch in front of the wall). */
+function windowGrid(x: number, y: number, cols: number, rows: number, w: number, h: number, gx: number, gy: number, seed: number, chance: number, hidden: Box[] = []) {
   const r = rng(seed)
   const lit: string[] = []
   const dark: string[] = []
   for (let j = 0; j < rows; j++) {
     for (let i = 0; i < cols; i++) {
-      const d = `M${x + i * gx} ${y + j * gy} h${w} v${h} h${-w} Z`
-      ;(r() < chance ? lit : dark).push(d)
+      const wx = x + i * gx
+      const wy = y + j * gy
+      const isLit = r() < chance
+      if (hidden.some(([x1, y1, x2, y2]) => wx < x2 && wx + w > x1 && wy < y2 && wy + h > y1)) continue
+      ;(isLit ? lit : dark).push(`M${wx} ${wy} h${w} v${h} h${-w} Z`)
     }
   }
   return { lit: lit.join(' '), dark: dark.join(' ') }
@@ -222,13 +233,13 @@ const church: Draw = (id) => {
         <path d={ridge(650, 55, 11)} />
       </Layer>
       <Layer depth="mid">
-        {/* tower and spire */}
-        <path d={`M560 860 V380 H700 V860 Z M548 384 L630 112 L712 384 Z ${cross(630, 120, 64)}`} />
+        {/* tower and spire (walls go down to the bottom: the ground is a wavy line, it must not show a gap under them) */}
+        <path d={`M560 900 V380 H700 V900 Z M548 384 L630 112 L712 384 Z ${cross(630, 120, 64)}`} />
         <path d={`M548 384 h164 v-14 h-164 Z`} />
         {/* nave, its roof, buttresses and the apse */}
-        <path d="M700 860 V560 H1180 V860 Z M688 566 L940 420 L1192 566 Z" />
-        <path d="M735 860 v-250 h16 v250 Z M835 860 v-250 h16 v250 Z M935 860 v-250 h16 v250 Z M1035 860 v-250 h16 v250 Z M1135 860 v-250 h16 v250 Z" />
-        <path d="M1180 860 V620 Q1290 620 1290 740 V860 Z" />
+        <path d="M700 900 V560 H1180 V900 Z M688 566 L940 420 L1192 566 Z" />
+        <path d="M735 900 v-290 h16 v290 Z M835 900 v-290 h16 v290 Z M935 900 v-290 h16 v290 Z M1035 900 v-290 h16 v290 Z M1135 900 v-290 h16 v290 Z" />
+        <path d="M1180 900 V620 Q1290 620 1290 740 V900 Z" />
         <path d={ridge(866, 8, 12)} />
       </Layer>
       <Layer depth="lit">
@@ -246,11 +257,13 @@ const church: Draw = (id) => {
 
 const graveyard: Draw = (id) => {
   const r = rng(21)
+  const ground = ridgeAt(790, 14, 25)
   const stones: ReactNode[] = []
   for (let i = 0; i < 26; i++) {
     const x = 60 + i * 60 + (r() - 0.5) * 30
     if (x > 980 && x < 1180) continue
-    const y = 770 + r() * 30
+    // Set into the ground (a tilted stone lifts a corner: sink it a little more).
+    const y = ground(x) + 8 + r() * 14
     const h = 50 + r() * 50
     const tilt = (r() - 0.5) * 14
     const d = r() < 0.3 ? cross(x, y, h * 1.4) : stone(x, y, h * 0.6, h)
@@ -270,8 +283,8 @@ const graveyard: Draw = (id) => {
         <path d={ridge(790, 14, 25)} />
         {stones}
         {/* the mausoleum */}
-        <path d="M1000 800 V630 H1160 V800 Z M985 636 L1080 570 L1175 636 Z M990 640 h180 v-10 h-180 Z" />
-        <path d="M1015 800 v-160 h14 v160 Z M1131 800 v-160 h14 v160 Z" />
+        <path d="M1000 830 V630 H1160 V830 Z M985 636 L1080 570 L1175 636 Z M990 640 h180 v-10 h-180 Z" />
+        <path d="M1015 830 v-190 h14 v190 Z M1131 830 v-190 h14 v190 Z" />
       </Layer>
       <Layer depth="near">
         <BareTree x={220} base={900} h={720} seed={26} lean={0.1} />
@@ -300,7 +313,7 @@ const crypt: Draw = (id) => {
         <path d={`M-80 -10 H${W + 80} V${H} H-80 Z M736 640 V440 A64 64 0 0 1 864 440 V640 Z`} fillRule="evenodd" />
         <path d="M700 900 L736 640 H864 L900 900 Z" opacity={0.6} />
       </Layer>
-      <Layer depth="lit">
+      <Layer depth="lit-far">
         <path d="M736 640 V440 A64 64 0 0 1 864 440 V640 Z" opacity={0.5} />
         <Halo id={`${id}-halo`} x={800} y={560} r={170} o={0.6} />
         <path d="M770 650 h60 v8 h-60 Z M762 680 h76 v8 h-76 Z M752 715 h96 v9 h-96 Z M740 760 h120 v10 h-120 Z M726 815 h148 v11 h-148 Z" opacity={0.2} />
@@ -317,10 +330,11 @@ const crypt: Draw = (id) => {
         <path d="M-40 900 V-10 H90 V900 Z M1510 900 V-10 H1640 V900 Z" />
       </Layer>
       <Layer depth="pulse">
-        <Halo id={`${id}-halo`} x={508} y={674} r={180} />
-        <Halo id={`${id}-halo`} x={1148} y={674} r={180} />
-        <path d="M502 704 v-22 h12 v22 Z M1142 704 v-22 h12 v22 Z" className="scr-wax" />
-        <path d="M508 682 q-7 -10 0 -24 q7 14 0 24 Z M1148 682 q-7 -10 0 -24 q7 14 0 24 Z" />
+        {/* candles centred on the stands' dishes (x 498 and 1138) */}
+        <Halo id={`${id}-halo`} x={498} y={674} r={180} />
+        <Halo id={`${id}-halo`} x={1138} y={674} r={180} />
+        <path d="M492 704 v-22 h12 v22 Z M1132 704 v-22 h12 v22 Z" className="scr-wax" />
+        <path d="M498 682 q-7 -10 0 -24 q7 14 0 24 Z M1138 682 q-7 -10 0 -24 q7 14 0 24 Z" />
       </Layer>
     </>
   )
@@ -357,22 +371,27 @@ const castle: Draw = (id) => {
 }
 
 const manor: Draw = (id) => {
-  const win = windowGrid(600, 560, 9, 2, 34, 64, 56, 130, 41, 0.35)
+  // No window behind the porch and its roof.
+  const win = windowGrid(600, 560, 9, 2, 34, 64, 56, 130, 41, 0.35, [[770, 660, 910, 830]])
+  const hill = ridgeAt(690, 40, 42)
   return (
     <>
       <Layer depth="far">
         <Moon x={1260} y={200} r={44} id={id} />
         <path d={ridge(690, 40, 42)} />
-        {Array.from({ length: 14 }, (_, i) => <path key={i} d={pine(60 + i * 115 + (i % 3) * 20, 700, 90 + (i % 4) * 30, 50)} />)}
+        {Array.from({ length: 14 }, (_, i) => {
+          const x = 60 + i * 115 + (i % 3) * 20
+          return <path key={i} d={pine(x, hill(x) + 8, 90 + (i % 4) * 30, 50)} />
+        })}
       </Layer>
       <Layer depth="mid">
         <path d={ridge(820, 18, 43)} />
-        {/* main block, two gables, a tower, chimneys, the porch */}
-        <path d="M560 830 V520 H1110 V830 Z" />
+        {/* main block, two gables, a tower, chimneys (down into the roof), the porch */}
+        <path d="M560 900 V520 H1110 V900 Z" />
         <path d="M545 528 L660 400 L775 528 Z M890 528 L1005 405 L1120 528 Z M760 528 L790 470 H900 L925 528 Z" />
-        <path d="M480 830 V420 H570 V830 Z M466 424 L525 280 L584 424 Z" />
-        <path d="M690 450 V350 h34 v100 Z M1030 460 V345 h34 v115 Z M686 350 h42 v-10 h-42 Z M1026 345 h42 v-10 h-42 Z" />
-        <path d="M790 830 V700 h100 v130 Z M770 704 L840 660 L910 704 Z" />
+        <path d="M480 900 V420 H570 V900 Z M466 424 L525 280 L584 424 Z" />
+        <path d="M690 528 V350 h34 V528 Z M1030 528 V345 h34 V528 Z M686 350 h42 v-10 h-42 Z M1026 345 h42 v-10 h-42 Z" />
+        <path d="M790 900 V700 h100 v200 Z M770 704 L840 660 L910 704 Z" />
         <path d={win.dark} opacity={0.6} fill="var(--sil-near)" />
       </Layer>
       <Layer depth="lit">
@@ -427,8 +446,9 @@ const library: Draw = (id) => {
       </Layer>
       <Layer depth="near">
         {/* the ladder, the desk, its lamp and a pile of books */}
-        <path d="M430 900 L540 60 h14 L444 900 Z M520 900 L620 60 h14 L534 900 Z" />
-        <path d={Array.from({ length: 13 }, (_, i) => { const y = 860 - i * 64; const k = (900 - y) / 840; return `M${f(437 + 103 * k)} ${y} h${f(90)} v8 h${f(-90)} Z` }).join(' ')} />
+        {/* its top rests on the bookcase (shelves end at x 572), with room for the near layer's drift */}
+        <path d="M330 900 L440 60 h14 L344 900 Z M420 900 L520 60 h14 L434 900 Z" />
+        <path d={Array.from({ length: 13 }, (_, i) => { const y = 860 - i * 64; const k = (900 - y) / 840; const x1 = 337 + 110 * k; const x2 = 427 + 100 * k; return `M${f(x1)} ${y} H${f(x2)} v8 H${f(x1)} Z` }).join(' ')} />
         <path d="M540 900 V780 H1080 V900 Z M520 784 H1100 v-18 H520 Z" />
         <path d="M640 766 h120 v-20 h-120 Z M650 746 h100 v-18 h-100 Z M662 728 h80 v-16 h-80 Z" />
         <path d="M930 766 h40 v-8 h-14 v-70 h-12 v70 h-14 Z M900 690 L920 640 H980 L1000 690 Z" />
@@ -461,8 +481,9 @@ const police: Draw = (id) => {
       </Layer>
       <Layer depth="mid">
         {/* the station: cornice, parapet, steps */}
-        <path d="M420 860 V330 H1180 V860 Z M400 336 H1200 V306 H400 Z M440 306 V284 H1160 V306 Z" />
-        <path d="M600 880 V860 H1000 V880 Z M620 860 V842 H980 V860 Z M640 842 V824 H960 V842 Z" />
+        {/* down to the pavement, behind the curb (no gap onto the town behind); the steps shaded to show */}
+        <path d="M420 880 V330 H1180 V880 Z M400 336 H1200 V306 H400 Z M440 306 V284 H1160 V306 Z" />
+        <path d="M600 880 V860 H1000 V880 Z M620 860 V842 H980 V860 Z M640 842 V824 H960 V842 Z" fill="var(--sil-near)" opacity={0.45} />
         <path d={win.dark} fill="var(--sil-near)" opacity={0.6} />
         <path d="M690 880 v-180 h8 v180 Z M902 880 v-180 h8 v180 Z" />
       </Layer>
@@ -474,8 +495,6 @@ const police: Draw = (id) => {
         <Halo id={`${id}-halo`} x={906} y={690} r={110} />
         <circle cx={694} cy={690} r={16} />
         <circle cx={906} cy={690} r={16} />
-        <Halo id={`${id}-halo`} x={1352} y={548} r={220} />
-        <path d="M1336 540 h32 l-6 22 h-20 Z" />
       </Layer>
       <Layer depth="near">
         {/* the curb, a street lamp, an old car */}
@@ -489,16 +508,24 @@ const police: Draw = (id) => {
         <circle cx="196" cy="866" r="38" />
         <circle cx="468" cy="866" r="38" />
       </Layer>
+      <Layer depth="lit-near">
+        {/* the street lamp's glass, on its post */}
+        <Halo id={`${id}-halo`} x={1352} y={548} r={220} />
+        <path d="M1336 540 h32 l-6 22 h-20 Z" />
+      </Layer>
     </>
   )
 }
 
 const forest: Draw = () => {
+  // Trees planted on their ridge (a little below its line), not standing on air above a dip.
   const r = rng(71)
+  const farGround = ridgeAt(680, 30, 72)
+  const midGround = ridgeAt(830, 16, 73)
   const far: string[] = []
-  for (let x = -20; x < W + 20; x += 22 + r() * 18) far.push(pine(x, 660 + r() * 30, 120 + r() * 90, 46 + r() * 20))
+  for (let x = -20; x < W + 20; x += 22 + r() * 18) far.push(pine(x, farGround(x) + 6 + r() * 24, 120 + r() * 90, 46 + r() * 20))
   const mid: string[] = []
-  for (let x = -20; x < W + 40; x += 70 + r() * 60) mid.push(pine(x, 810 + r() * 30, 280 + r() * 200, 110 + r() * 50))
+  for (let x = -20; x < W + 40; x += 70 + r() * 60) mid.push(pine(x, midGround(x) + 6 + r() * 24, 280 + r() * 200, 110 + r() * 50))
   return (
     <>
       <Layer depth="far">
@@ -551,21 +578,25 @@ const harbour: Draw = (id) => {
         <circle cx={1382} cy={405} r={9} />
       </Layer>
       <Layer depth="mid">
-        {/* warehouses, the pier, two boats */}
+        {/* warehouses on their quay (not on the water), the pier, two boats */}
         <path d="M-40 780 V470 L60 400 L160 470 V780 Z M150 780 V440 L280 360 L410 440 V780 Z M400 780 V500 L470 450 L540 500 V780 Z" />
+        <path d="M-40 900 V776 H640 V900 Z" />
         <path d="M520 772 H1120 v14 H520 Z" />
         <path d={Array.from({ length: 11 }, (_, i) => `M${540 + i * 56} 900 V772 h12 V900 Z`).join(' ')} />
         <path d={`${boat(760, 1)} ${boat(1010, 0.8)}`} />
       </Layer>
       <Layer depth="lit">
         <path d="M30 600 h26 v40 h-26 Z M210 560 h30 v44 h-30 Z M300 640 h30 v44 h-30 Z M455 560 h24 v36 h-24 Z" opacity={0.8} />
-        <Halo id={`${id}-halo`} x={1520} y={556} r={200} />
-        <path d="M1506 548 h28 l-6 20 h-16 Z" />
       </Layer>
       <Layer depth="near">
-        <path d="M1514 900 V566 h12 V900 Z M1506 548 h28 l-6 -12 h-16 Z" />
+        {/* on the quay: a lamp, bollards, crates */}
+        <path d="M584 900 V566 h12 V900 Z M576 548 h28 l-6 -12 h-16 Z" />
         <path d="M60 900 V820 q30 -14 60 0 V900 Z M210 900 V840 q24 -10 48 0 V900 Z" />
         <path d="M300 900 V830 H420 V900 Z M330 830 V790 H420 V830 Z" />
+      </Layer>
+      <Layer depth="lit-near">
+        <Halo id={`${id}-halo`} x={590} y={556} r={200} />
+        <path d="M576 548 h28 l-6 20 h-16 Z" />
       </Layer>
     </>
   )
@@ -581,14 +612,16 @@ const street: Draw = (id) => {
     const w = 170 + r() * 90
     const top = 260 + r() * 220
     const gable = r() < 0.5
-    houses.push(gable ? `M${f(x)} 820 V${f(top)} L${f(x + w / 2)} ${f(top - 80)} L${f(x + w)} ${f(top)} V820 Z` : `M${f(x)} 820 V${f(top)} H${f(x + w)} V820 Z M${f(x - 6)} ${f(top + 4)} H${f(x + w + 6)} v-14 H${f(x - 6)} Z`)
-    chimneys.push(`M${f(x + w * 0.7)} ${f(top - (gable ? 60 : 0))} v-50 h22 v50 Z`)
+    // Terraced: each house touches the next, down to the street (behind its edge).
+    houses.push(gable ? `M${f(x)} 840 V${f(top)} L${f(x + w / 2)} ${f(top - 80)} L${f(x + w)} ${f(top)} V840 Z` : `M${f(x)} 840 V${f(top)} H${f(x + w)} V840 Z M${f(x - 6)} ${f(top + 4)} H${f(x + w + 6)} v-14 H${f(x - 6)} Z`)
+    // The chimney starts inside the house, so it never floats above a sloping roof.
+    chimneys.push(`M${f(x + w * 0.7)} ${f(top)} V${f(top - (gable ? 110 : 50))} h22 V${f(top)} Z`)
     const cols = Math.max(2, Math.floor(w / 60))
     const gx = w / cols
     for (let y = top + 40; y < 700; y += 90) {
       for (let i = 0; i < cols; i++) (r() < 0.32 ? lit : dark).push(`M${f(x + i * gx + gx / 2 - 14)} ${f(y)} h28 v48 h-28 Z`)
     }
-    x += w + 8
+    x += w
   }
   return (
     <>
@@ -602,7 +635,13 @@ const street: Draw = (id) => {
       </Layer>
       <Layer depth="lit">
         <path d={lit.join(' ')} opacity={0.8} />
-        {/* lamps and their reflections on the wet street */}
+      </Layer>
+      <Layer depth="near">
+        <path d="M-40 900 V834 H1640 V900 Z" />
+        {[300, 1250].map((x) => <path key={x} d={`M${x - 6} 834 V576 h12 V834 Z M${x - 18} 834 l12 -30 h12 l12 30 Z M${x - 18} 552 h36 l-8 -14 h-20 Z M${x - 2} 538 v-10 h4 v10 Z`} />)}
+      </Layer>
+      <Layer depth="lit-near">
+        {/* the lamps' glass on their posts, and their reflections on the wet street */}
         {[300, 1250].map((x) => (
           <g key={x}>
             <Halo id={`${id}-halo`} x={x} y={560} r={210} />
@@ -610,10 +649,6 @@ const street: Draw = (id) => {
             <ellipse cx={x} cy={880} rx={30} ry={70} fill={`url(#${id}-halo)`} />
           </g>
         ))}
-      </Layer>
-      <Layer depth="near">
-        <path d="M-40 900 V834 H1640 V900 Z" />
-        {[300, 1250].map((x) => <path key={x} d={`M${x - 6} 834 V576 h12 V834 Z M${x - 18} 834 l12 -30 h12 l12 30 Z M${x - 18} 552 h36 l-8 -14 h-20 Z M${x - 2} 538 v-10 h4 v10 Z`} />)}
       </Layer>
     </>
   )

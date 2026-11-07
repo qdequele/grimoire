@@ -3,6 +3,7 @@ import { cn } from '@/lib/utils'
 import { DEFAULT_FIRE, LOOKS, paletteFor, type PresetEffect, type PresetId, type TimeOfDay } from './ambiance'
 import { Hearth } from './Hearth'
 import { Particles } from './Particles'
+import { PhotoLights } from './PhotoLights'
 import { Place } from './Places'
 import { sceneKey, type ScreenHandout, type ScreenScene } from './state'
 import './screen.css'
@@ -114,6 +115,7 @@ function SceneLayer({ layer, reduced, onShown }: { layer: Layer; reduced: boolea
         // The fire sits inside the pan-and-zoom, so it stays on the picture's hearth.
         <div className="scr-fill scr-kb">
           <img className="scr-fill scr-cover" src={layer.url} alt="" draggable={false} />
+          <PhotoLights imageUrl={layer.url} />
           {look.fire && <Hearth fire={fire} imageUrl={layer.url} still={reduced} />}
         </div>
       ) : (
