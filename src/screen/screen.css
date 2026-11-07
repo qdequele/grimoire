@@ -241,6 +241,7 @@
 .scr-par-lit-near { color: var(--lit); animation: scr-par-near 55s ease-in-out infinite alternate, scr-lit 7s ease-in-out infinite alternate; }
 .scr-par-water { color: var(--lit); animation: scr-par-water 9s ease-in-out infinite alternate; }
 .scr-par-pulse { color: var(--lit); animation: scr-par-near 55s ease-in-out infinite alternate, scr-flicker 3.1s infinite; }
+.scr-par-pulse-mid { color: var(--lit); animation: scr-par-mid 70s ease-in-out infinite alternate, scr-flicker 3.1s infinite; }
 .scr-place[data-place='harbour'] .scr-par-pulse { animation: scr-par-far 90s ease-in-out infinite alternate, scr-beacon 7s ease-in-out infinite; }
 .scr-moon { color: var(--moon); }
 .scr-sun { display: none; color: var(--sun); }

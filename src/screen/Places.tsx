@@ -12,7 +12,9 @@ import type { PlaceId } from './ambiance'
 const W = 1600
 const H = 900
 
-type Depth = 'far' | 'mid' | 'near' | 'lit' | 'pulse' | 'water'
+// A light goes in the lit layer of its shape's depth (`lit-far`, `lit` = mid, `lit-near`): layers of
+// different depths drift apart, so a lamp's glass drawn at another depth than its post slides off it.
+type Depth = 'far' | 'mid' | 'near' | 'lit' | 'lit-far' | 'lit-near' | 'pulse' | 'pulse-mid' | 'water'
 
 function Layer({ depth, children }: { depth: Depth; children: ReactNode }) {
   return (
@@ -555,7 +557,8 @@ const castle: Draw = (id) => {
         <Moon x={360} y={180} r={50} id={id} />
         <path d={ridge(520, 170, 37, 30)} fill="var(--sil-haze)" />
         <path d={ridge(640, 120, 31, 30)} />
-        <path d={`${bat(1180, 190, 0.9)} ${bat(1240, 240, 0.7)} ${bat(1130, 260, 0.6)}`} />
+        {/* bats in flight: free in the sky on purpose (data-free, see e2e/decors.spec.ts) */}
+        <path data-free d={`${bat(1180, 190, 0.9)} ${bat(1240, 240, 0.7)} ${bat(1130, 260, 0.6)}`} />
       </Layer>
       <Layer depth="mid">
         {/* the crag, the outcrop on the left, and the bridge between them */}
@@ -679,7 +682,8 @@ const manor: Draw = (id) => {
         <Fence y={904} h={84} gateFrom={760} gateTo={920} />
         <path d={grass(904, 47)} />
       </Layer>
-      <Layer depth="pulse">
+      <Layer depth="pulse-mid">
+        {/* the lantern by the door, on the wall: it drifts with the wall (mid), flickering */}
         <g className="scr-glow">
           <Halo id={`${id}-halo`} x={884} y={760} r={90} />
           <path d="M880 756 h8 v12 h-8 Z" />
@@ -762,9 +766,10 @@ const library: Draw = (id) => {
         </g>
       </Layer>
       <Layer depth="near">
-        {/* the rolling ladder on the left case */}
-        <path d="M430 900 L520 40 h14 L444 900 Z M512 900 L600 40 h14 L526 900 Z" />
-        <path d={Array.from({ length: 13 }, (_, i) => { const y = 860 - i * 64; const k = (900 - y) / 860; return `M${f(437 + 88 * k)} ${y} h${f(82)} v8 h${f(-82)} Z` }).join(' ')} />
+        {/* the rolling ladder on the left case: its top rests on the shelves (they end at x 592), with
+            room for the near layer's drift */}
+        <path d="M350 900 L440 40 h14 L364 900 Z M432 900 L520 40 h14 L446 900 Z" />
+        <path d={Array.from({ length: 13 }, (_, i) => { const y = 860 - i * 64; const k = (900 - y) / 860; return `M${f(357 + 88 * k)} ${y} h${f(82)} v8 h${f(-82)} Z` }).join(' ')} />
         {/* the desk, its drawers, a pile of books, an open book, the shaded lamp */}
         <path d="M560 900 V786 H1090 V900 Z M540 790 H1110 v-18 H540 Z" />
         <path d="M600 840 h120 v6 h-120 Z M930 840 h120 v6 h-120 Z" fill="var(--sil-mid)" />
@@ -867,9 +872,6 @@ const police: Draw = (id) => {
           </g>
         ))}
         <path d="M770 872 h60 l20 28 h-100 Z" fill={`url(#${id}-ray)`} />
-        <Halo id={`${id}-halo`} x={1352} y={548} r={220} />
-        <path d="M1336 540 h32 l-6 22 h-20 Z" />
-        <ellipse cx={1352} cy={892} rx={26} ry={60} fill={`url(#${id}-halo)`} />
       </Layer>
       <Layer depth="near">
         {/* the curb and the street, a street lamp, a motor car at the curb */}
@@ -885,6 +887,12 @@ const police: Draw = (id) => {
         <g className="scr-rim scr-rim-lamp" strokeWidth={2.5}>
           <path d="M166 716 H312 Q326 716 326 728 M326 792 L460 798 Q474 800 474 812 M360 810 Q418 812 440 854 M90 812 Q142 814 152 850" />
         </g>
+      </Layer>
+      <Layer depth="lit-near">
+        {/* the street lamp's glass on its post, and its light on the wet street */}
+        <Halo id={`${id}-halo`} x={1352} y={548} r={220} />
+        <path d="M1336 540 h32 l-6 22 h-20 Z" />
+        <ellipse cx={1352} cy={892} rx={26} ry={60} fill={`url(#${id}-halo)`} />
       </Layer>
     </>
   )
@@ -967,8 +975,8 @@ const forest: Draw = (id) => {
         <path d={mid.join(' ')} />
       </Layer>
       <Layer depth="pulse">
-        {/* something small glowing deep in the clearing */}
-        <g className="scr-glow">
+        {/* something small glowing deep in the clearing: it floats, on purpose */}
+        <g className="scr-glow" data-free>
           <Halo id={`${id}-halo`} x={968} y={800} r={60} o={0.8} />
           <circle cx={968} cy={800} r={3.5} />
         </g>
@@ -990,7 +998,7 @@ const forest: Draw = (id) => {
 }
 
 const harbour: Draw = (id) => {
-  // A fishing port at night: warehouses with loading doors and a hoist, a long pier with a derrick,
+  // A fishing port at night: warehouses with loading doors and a roof vent, a long pier with a derrick,
   // a schooner and a steam tug moored at it, the lighthouse on the headland sweeping its beam,
   // the moon's path on the water.
   const r = rng(81)
@@ -1019,10 +1027,10 @@ const harbour: Draw = (id) => {
         {/* the headland, the lighthouse and its keeper's cottage */}
         <path d={jagged([[1100, 710], [1170, 660], [1260, 622], [1380, 606], [1500, 612], [1640, 626], [1640, 710]], 83, 8)} />
         <g transform="translate(-70 0)">
-          <path d="M1358 612 L1366 436 H1398 L1406 612 Z M1348 438 h68 v-10 h-68 Z M1366 428 v-34 h32 v34 Z M1360 396 Q1382 362 1404 396 Z M1380 368 v-14 h4 v14 Z" />
+          <path d="M1357 640 L1366 436 H1398 L1407 640 Z M1348 438 h68 v-10 h-68 Z M1366 428 v-34 h32 v34 Z M1360 396 Q1382 362 1404 396 Z M1380 384 v-30 h4 v30 Z" />
           <path d="M1352 428 v-12 M1362 428 v-12 M1402 428 v-12 M1412 428 v-12 M1350 418 H1414" stroke="currentColor" strokeWidth={2} fill="none" />
-          <path d="M1398 436 L1406 612 M1382 364 Q1398 374 1404 396" className="scr-rim" strokeWidth={2} />
-          <path d="M1430 612 V578 H1500 V612 Z M1424 580 L1465 552 L1506 580 Z M1484 566 v-18 h8 v18 Z" />
+          <path d="M1398 436 L1406 618 M1382 364 Q1398 374 1404 396" className="scr-rim" strokeWidth={2} />
+          <path d="M1430 636 V578 H1500 V636 Z M1424 580 L1465 552 L1506 580 Z M1484 566 v-18 h8 v18 Z" />
           <path d="M1446 588 h10 v12 h-10 Z" fill="var(--lit)" className="scr-glow" opacity={0.75} />
         </g>
         {/* the water */}
@@ -1048,19 +1056,21 @@ const harbour: Draw = (id) => {
         <circle cx={1312} cy={410} r={9} />
       </Layer>
       <Layer depth="mid">
-        {/* warehouses: a tall one with loading doors and its hoist, a broad one, a low shed */}
-        <path d="M-40 790 V420 L50 360 L140 420 V790 Z M40 358 h22 v-8 h40 v8 h-22 v10 h-40 Z M150 790 V430 L280 350 L410 430 V790 Z M340 400 V350 h20 v50 Z M400 790 V560 L470 520 L540 560 V790 Z" />
-        <path d="M100 368 v30 h2 v-30 Z M96 398 h10 v6 h-10 Z" />
+        {/* warehouses: a tall one with loading doors, a broad one, a low shed */}
+        <path d="M-40 790 V420 L50 360 L140 420 V790 Z M150 790 V430 L280 350 L410 430 V790 Z M340 400 V350 h20 v50 Z M400 790 V560 L470 520 L540 560 V790 Z" />
+        {/* a vent housing on the ridge, its foot inside the roof */}
+        <path d="M38 378 V350 L50 341 L62 350 V378 Z" />
         <path d="M22 460 h56 v70 h-56 Z M22 570 h56 v70 h-56 Z M22 680 h56 v90 h-56 Z M430 680 h80 v110 h-80 Z" fill="var(--sil-near)" opacity={0.6} />
         {/* the pier, its piles and bollards, the derrick at its end */}
         <path d="M520 772 H1150 v14 H520 Z" />
-        <path d={Array.from({ length: 12 }, (_, i) => `M${532 + i * 52} 900 V786 h10 V900 Z`).join(' ')} />
+        <path d={Array.from({ length: 12 }, (_, i) => `M${532 + i * 52} 800 V786 h10 V800 Z`).join(' ')} />
+        <path d={Array.from({ length: 12 }, (_, i) => `M${532 + i * 52} 860 V804 h10 V860 Z`).join(' ')} fill="var(--sil-near)" opacity={0.3} />
         <path d="M600 772 v-10 h12 v10 Z M760 772 v-10 h12 v10 Z M940 772 v-10 h12 v10 Z M1090 772 v-10 h12 v10 Z" />
         <path d="M1110 772 V560 h8 V772 Z M1114 566 L1010 640 l-4 -6 L1110 558 Z M1010 640 v40" />
         <path d="M1008 640 v44 h2 v-44 Z M1002 684 h14 v8 h-14 Z" />
         {/* the schooner: hull, masts, rigging, furled sails on their booms */}
         <path d="M560 744 Q572 776 600 782 H896 Q920 770 930 742 Z M680 760 V420 h5 V760 Z M800 760 V456 h5 V760 Z M600 742 L556 728 l2 -4 L604 738 Z" />
-        <path d="M684 690 L770 700 v8 L684 702 Z M804 700 L900 708 v8 L804 712 Z M690 520 l70 6 v6 l-70 -6 Z" />
+        <path d="M684 690 L770 700 v8 L684 702 Z M804 700 L900 708 v8 L804 712 Z M682 520 l78 6 v6 l-78 -6 Z" />
         <path d={rig} stroke="currentColor" strokeWidth={1.6} fill="none" />
         {/* the steam tug: hull, wheelhouse, funnel, a mast */}
         <path d="M950 770 Q960 790 990 792 H1140 Q1158 784 1166 760 H950 Z M1000 760 V722 H1070 V760 Z M1084 760 V700 h22 V760 Z M1040 722 V650 h4 V722 Z" />
@@ -1073,8 +1083,6 @@ const harbour: Draw = (id) => {
       </Layer>
       <Layer depth="lit">
         <path d="M200 600 h26 v40 h-26 Z M300 520 h30 v44 h-30 Z M240 680 h30 v44 h-30 Z M30 470 h20 v30 h-20 Z M1012 730 h14 v14 h-14 Z M1036 730 h14 v14 h-14 Z" fill={`url(#${id}-glass)`} />
-        <Halo id={`${id}-halo`} x={1520} y={556} r={200} />
-        <path d="M1506 548 h28 l-6 20 h-16 Z" />
       </Layer>
       <Layer depth="near">
         {/* the stone quay in front, a bollard with its rope, crates and barrels, the lamp post */}
@@ -1085,6 +1093,11 @@ const harbour: Draw = (id) => {
         <path d="M300 846 V776 H380 V846 Z M318 776 V722 H380 V776 Z M300 846 h80 M440 846 v-50 q20 -8 40 0 v50 Z M488 846 v-40 q16 -6 32 0 v40 Z" />
         <path d="M300 800 h80 v3 h-80 Z M318 748 h62 v3 h-62 Z" fill="var(--sil-back)" opacity={0.5} />
         <path d="M1514 900 V566 h12 V900 Z M1506 548 h28 l-6 -12 h-16 Z M1500 900 l14 -24 h12 l14 24 Z" />
+      </Layer>
+      <Layer depth="lit-near">
+        {/* the lamp's glass, on its post */}
+        <Halo id={`${id}-halo`} x={1520} y={556} r={200} />
+        <path d="M1506 548 h28 l-6 20 h-16 Z" />
       </Layer>
     </>
   )
