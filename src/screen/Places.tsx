@@ -616,32 +616,83 @@ const castle: Draw = (id) => {
 }
 
 const manor: Draw = (id) => {
-  const win = windowGrid(600, 560, 9, 2, 34, 64, 56, 130, 41, 0.35)
+  // A Victorian mansion: mansard roof with dormers and iron cresting, a central tower with a bell-shaped
+  // cap, a gabled wing with a bay window, a veranda on slim columns. One window upstairs has someone in it.
+  const r = rng(41)
+  const sash = (x: number, y: number, w: number, h: number) => `M${x} ${y} h${w} v${h} h${-w} Z`
+  const upper = [560, 636, 712, 948, 1024, 1100].map((x) => sash(x, 600, 34, 66))
+  const lower = [560, 636, 712, 948, 1024, 1100].map((x) => sash(x, 742, 34, 70))
+  const tower = [arched(822, 372, 36, 60), arched(822, 476, 36, 66), arched(822, 590, 36, 66)]
+  const dormers = [600, 690, 990, 1080]
+  const lit = new Set([1, 4, 7, 9, 13, 16])
+  const all = [...upper, ...lower, ...tower, ...dormers.map((x) => arched(x + 4, 500, 22, 34)), arched(420, 740, 22, 50), arched(452, 736, 26, 56)]
+  const litD = all.filter((_, i) => lit.has(i)).join(' ')
+  const darkD = all.filter((_, i) => !lit.has(i)).join(' ')
+  const cresting = (x1: number, x2: number, y: number) => {
+    let d = `M${x1} ${y} h${x2 - x1} v-3 h${x1 - x2} Z`
+    for (let x = x1 + 4; x < x2; x += 12) d += ` M${x} ${y} v-12 l2 -4 l2 4 v12 Z`
+    return d
+  }
+  // Pines on the far ridge, in uneven clumps.
+  const pines: string[] = []
+  for (let x = -30; x < W + 30; x += 18 + r() * 60) {
+    if (r() < 0.25) continue
+    pines.push(pine(x, 712 + r() * 14, 70 + r() * 70, 34 + r() * 16))
+  }
   return (
     <>
       <Layer depth="far">
-        <Moon x={1260} y={200} r={44} id={id} />
-        <path d={ridge(690, 40, 42)} />
-        {Array.from({ length: 14 }, (_, i) => <path key={i} d={pine(60 + i * 115 + (i % 3) * 20, 700, 90 + (i % 4) * 30, 50)} />)}
+        <Moon x={1290} y={180} r={44} id={id} />
+        <path d={ridge(640, 40, 46, 30)} fill="var(--sil-haze)" />
+        <path d={ridge(716, 34, 42)} />
+        <path d={pines.join(' ')} />
       </Layer>
       <Layer depth="mid">
-        <path d={ridge(820, 18, 43)} />
-        {/* main block, two gables, a tower, chimneys, the porch */}
-        <path d="M560 830 V520 H1110 V830 Z" />
-        <path d="M545 528 L660 400 L775 528 Z M890 528 L1005 405 L1120 528 Z M760 528 L790 470 H900 L925 528 Z" />
-        <path d="M480 830 V420 H570 V830 Z M466 424 L525 280 L584 424 Z" />
-        <path d="M690 450 V350 h34 v100 Z M1030 460 V345 h34 v115 Z M686 350 h42 v-10 h-42 Z M1026 345 h42 v-10 h-42 Z" />
-        <path d="M790 830 V700 h100 v130 Z M770 704 L840 660 L910 704 Z" />
-        <path d={win.dark} opacity={0.6} fill="var(--sil-near)" />
+        <path d={ridge(830, 10, 43)} />
+        {/* the gabled wing and its bay window */}
+        <path d="M370 836 V640 H530 V836 Z M358 644 L450 560 L542 644 Z M404 836 V712 L416 700 H484 L496 712 V836 Z M400 712 L420 690 H480 L500 712 Z" />
+        {/* main block and mansard roof with its dormers and cresting */}
+        <path d={`M520 836 V566 H1180 V836 Z M508 570 L530 478 H1170 L1192 570 Z ${cresting(530, 1170, 478)}`} />
+        <path d={dormers.map((x) => `M${x} 544 V500 L${x + 15} 482 L${x + 30} 500 V544 Z`).join(' ')} />
+        {/* chimneys */}
+        <path d="M590 482 V404 h46 v78 Z M584 408 h58 v-10 h-58 Z M596 398 v-10 h10 v10 Z M618 398 v-14 h10 v14 Z M1076 482 V396 h46 v86 Z M1070 400 h58 v-10 h-58 Z M1082 390 v-12 h10 v12 Z M1104 390 v-10 h10 v10 Z" />
+        {/* the tower, its bell-shaped cap and finial */}
+        <path d={`M786 836 V350 H894 V836 Z M776 354 H904 v-12 H776 Z M780 344 Q808 320 816 270 H864 Q872 320 900 344 Z ${cresting(816, 864, 270)} M838 270 V214 l2 -8 l2 8 V270 Z`} />
+        <circle cx={840} cy={240} r={5} />
+        <path d="M818 330 v-26 a6 6 0 0 1 12 0 v26 Z M850 330 v-26 a6 6 0 0 1 12 0 v26 Z" fill="var(--sil-near)" opacity={0.6} />
+        {/* the veranda: roof, slim columns, railing, steps to the door */}
+        <path d="M540 716 L556 700 H1144 L1160 716 Z M546 716 H1154 v8 H546 Z" />
+        <path d={`${Array.from({ length: 11 }, (_, i) => `M${556 + i * 58} 724 h8 v108 h-8 Z`).join(' ')} M546 796 H788 v6 H546 Z M892 796 H1154 v6 H892 Z ${Array.from({ length: 34 }, (_, i) => { const x = 552 + i * 18; return x > 780 && x < 900 ? '' : `M${x} 802 h3 v30 h-3 Z` }).join(' ')}`} />
+        <path d="M800 836 V826 H880 V836 Z M808 826 V816 H872 V826 Z" />
+        {/* window panes, dark */}
+        <path d={darkD} fill="var(--sil-near)" opacity={0.55} />
+        <g className="scr-rim" strokeWidth={2}>
+          <path d="M1170 478 L1192 570 M864 270 Q872 320 900 344 M450 560 L542 644 M530 478 H1170 M1122 396 V482" />
+        </g>
       </Layer>
       <Layer depth="lit">
-        <path d={`${win.lit} ${arched(508, 480, 30, 56)}`} opacity={0.85} />
-        <path d="M812 830 v-100 h56 v100 Z" opacity={0.5} />
-        <Halo id={`${id}-halo`} x={840} y={790} r={150} o={0.6} />
+        <Halo id={`${id}-halo`} x={840} y={780} r={170} o={0.65} />
+        <path d={litD} fill={`url(#${id}-glass)`} />
+        {/* the front door, open */}
+        <path d="M818 816 V748 A22 22 0 0 1 862 748 V816 Z" fill={`url(#${id}-glass)`} />
+        {/* sash bars over the lit panes */}
+        <path d={[...upper, ...lower].filter((_, i) => lit.has(i)).map((d) => { const [x, y] = d.slice(1).split(' ').map(Number); return `M${x + 16} ${y} v${70} M${x} ${y + 30} h34` }).join(' ')} stroke="var(--sil-mid)" strokeWidth={3} fill="none" />
+        {/* someone standing at the window upstairs */}
+        <path d="M641 666 V650 Q641 640 650 637 Q646 632 646 627 A7 7 0 0 1 660 627 Q660 632 656 637 Q665 640 665 650 V666 Z" fill="var(--sil-mid)" opacity={0.9} />
+        <path d="M800 836 H880 L940 900 H740 Z" fill={`url(#${id}-ray)`} />
       </Layer>
       <Layer depth="near">
-        <BareTree x={1400} base={900} h={600} seed={44} lean={-0.12} />
-        <Fence y={900} h={100} gateFrom={760} gateTo={920} />
+        {/* clipped hedges, the drive and the gate */}
+        <path d={`${Array.from({ length: 9 }, (_, i) => `M${-40 + i * 80} 900 a${44 + (i % 3) * 8} ${34 + (i % 2) * 10} 0 0 1 ${96} 0 Z`).join(' ')} ${Array.from({ length: 8 }, (_, i) => `M${980 + i * 80} 900 a${44 + (i % 3) * 8} ${34 + (i % 2) * 10} 0 0 1 ${96} 0 Z`).join(' ')}`} />
+        <BareTree x={1420} base={904} h={640} seed={44} lean={-0.12} />
+        <Fence y={904} h={84} gateFrom={760} gateTo={920} />
+        <path d={grass(904, 47)} />
+      </Layer>
+      <Layer depth="pulse">
+        <g className="scr-glow">
+          <Halo id={`${id}-halo`} x={884} y={760} r={90} />
+          <path d="M880 756 h8 v12 h-8 Z" />
+        </g>
       </Layer>
     </>
   )
