@@ -861,3 +861,7 @@ html[data-skin="deco"] .gm-back{letter-spacing:.35em}
 /* Grimoire: investigators' photos in the round heads */
 .head.ph{background-color:var(--ink);background-size:cover;background-position:center}
 .head.ph.dead{filter:grayscale(1)}
+/* Grimoire: line-drawn die on the scene steps' roll lines */
+.flw .ft .ft-i{display:inline-flex;color:var(--gold);margin-right:4px}
+.flw .ft .ft-i svg{width:17px;height:17px;fill:none;stroke:currentColor;stroke-width:1.5;stroke-linejoin:round;stroke-linecap:round}
+.flw .ft .ft-i svg .pip{fill:currentColor;stroke:none}
