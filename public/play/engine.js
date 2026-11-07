@@ -594,7 +594,7 @@ $("#cbtBody").addEventListener("click",e=>{
 $("#cbtBody").addEventListener("change",e=>{const t=e.target;if(t.dataset.cw){const C=cbt();if(t.checked){if(!C.who.includes(t.dataset.cw))C.who.push(t.dataset.cw);}else C.who=C.who.filter(x=>x!==t.dataset.cw);save();}});
 
 $("#qaDice").onclick=()=>$("#fab").click();
-$("#qaCombat").onclick=()=>openCombat();
+
 if(false)$("#qaNotes").onclick=()=>{$("#notes").scrollIntoView({behavior:"smooth",block:"center"});setTimeout(()=>$("#notes").focus(),300);};
 $("#qaSan").onclick=()=>{const st=ST();ensureGroups();const mem=st.party.filter(p=>p.grp===st.active&&p.state!=="mort");
   if(!mem.length){toast("Aucun investigateur dans le groupe suivi.");return;}
@@ -1483,9 +1483,9 @@ Object.values(S.scen).forEach(st=>{if(st.scene==="profils")st.scene="fin";(st.gr
 /* ---------- Vues en surimpression (sheets) ---------- */
 function openSheet(id){["rulesSheet","cbtSheet"].forEach(x=>{if(x!==id)$("#"+x).hidden=true;});$("#"+id).hidden=false;}
 function closeSheet(id){$("#"+id).hidden=true;if(id==="cbtSheet")renderCtx();}
-function openCombat(){if(!S.cur)return;ST().mode="scene";openSheet("cbtSheet");renderCombat();$("#qaCombat").setAttribute("aria-pressed","true");}
+function openCombat(){if(!S.cur)return;ST().mode="scene";openSheet("cbtSheet");renderCombat();}
 function openRulesSheet(){const r=document.querySelector(".rules");$("#rulesSheetBody").appendChild(r);renderRules();openSheet("rulesSheet");}
-$("#qaRules").onclick=()=>openRulesSheet();
+
 $("#gmRules").onclick=()=>{closeMenu();openRulesSheet();};
 document.addEventListener("click",e=>{const c=e.target.closest("[data-shclose]");if(c){closeSheet(c.dataset.shclose);return;}
   if(e.target.classList&&e.target.classList.contains("sheetwrap"))closeSheet(e.target.id);});
