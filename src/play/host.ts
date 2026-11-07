@@ -1,3 +1,4 @@
+import type { EngineDice } from './dice'
 import type { SampleMessage, SampleOptions } from './narrator'
 
 // Contract between the app (GamePage) and the game screen iframe (play.html + boot.ts).
@@ -81,5 +82,7 @@ declare global {
     GRIMOIRE_DATA?: EngineGlobals & { NPCS?: Record<string, unknown> }
     GRIMOIRE_HOST?: PlayHost
     GRIMOIRE_ENGINE?: EngineApi
+    /** 3D dice for the engine's rolls (src/play/dice.tsx). */
+    GRIMOIRE_DICE?: EngineDice
   }
 }
