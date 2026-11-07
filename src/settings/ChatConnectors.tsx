@@ -1,13 +1,11 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { strToU8, zipSync } from 'fflate'
-import { Copy, Download, ExternalLink } from 'lucide-react'
+import { Download, ExternalLink } from 'lucide-react'
 import { Link } from 'react-router'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
 import { Skeleton } from '@/components/ui/skeleton'
 import { supabase } from '@/lib/supabase'
-import { Rich } from '@/i18n/Rich'
 import { useT } from '@/i18n/t'
 import { DIRECTORY_LISTING } from '@/legal/info'
 import { LEGAL_PATHS } from '@/legal/paths'
@@ -55,15 +53,6 @@ export function ChatConnectors() {
   const grants = useGrants()
   const revoke = useRevokeGrant()
 
-  const copy = async () => {
-    try {
-      await navigator.clipboard.writeText(url)
-      toast.success(t('Adresse copiée.'))
-    } catch {
-      toast.error(t('Impossible de copier l’adresse.'))
-    }
-  }
-
   return (
     <section className="flex flex-col gap-5" aria-labelledby="chat-connectors">
       <header className="flex flex-col gap-1">
@@ -89,37 +78,11 @@ export function ChatConnectors() {
           {DIRECTORY_LISTING.chatgpt ? t('Ajouter à ChatGPT') : t('Ouvrir ChatGPT')}
         </Button>
       </div>
-
-      <div className="flex flex-col gap-2">
-        <label htmlFor="connector-url" className="eyebrow">{t('Adresse du connecteur')}</label>
-        <div className="flex gap-2">
-          <Input id="connector-url" readOnly value={url} className="font-mono" onFocus={(e) => e.currentTarget.select()} />
-          <Button variant="outline" onClick={copy}>
-            <Copy data-icon="inline-start" />
-            {t('Copier')}
-          </Button>
-        </div>
-      </div>
-
-      <ol className="flex list-decimal flex-col gap-2 pl-5 font-serif">
-        <li>
-          <Rich
-            text={DIRECTORY_LISTING.claude
-              ? t('**Claude** : « Ajouter à Claude » ouvre la fiche de Grimoire. Clique sur Connecter, puis connecte-toi à Grimoire.')
-              : t('**Claude** : « Ajouter à Claude » ouvre Claude avec Grimoire déjà rempli. Clique sur Ajouter, puis Connecter, et connecte-toi à Grimoire.')}
-          />
-        </li>
-        <li>
-          <Rich
-            text={DIRECTORY_LISTING.chatgpt
-              ? t('**ChatGPT** : « Ajouter à ChatGPT » ouvre la fiche de Grimoire. Clique sur Connecter, puis connecte-toi à Grimoire.')
-              : t('**ChatGPT** : « Ouvrir ChatGPT », puis + → ajouter un serveur MCP personnalisé. Nomme-le Grimoire, colle l’adresse, choisis OAuth, accepte l’avertissement et crée-le, puis connecte-toi à Grimoire.')}
-          />
-        </li>
-        <li>{t('Demande par exemple : « Crée-moi une histoire Grimoire dans un village de pêcheurs en 1925, pour trois joueurs. »')}</li>
-      </ol>
-      <p className="text-sm text-muted-foreground">
-        <Link to={LEGAL_PATHS.help[t.lang]} className="text-gold underline underline-offset-4">{t('Mode d’emploi complet du connecteur')}</Link>
+      {/* When the install link opens no dialog (e.g. a Team or Enterprise member, where only an Owner adds
+          connectors) or for ChatGPT: the help page gives the address and the steps by hand. */}
+      <p className="-mt-2 text-sm text-muted-foreground">
+        {t('Rien ne s’ouvre, ou tu préfères le faire toi-même ?')}{' '}
+        <Link to={LEGAL_PATHS.help[t.lang]} className="text-gold underline underline-offset-4">{t('Ajouter Grimoire à la main')}</Link>
       </p>
 
       <div className="flex flex-wrap items-center gap-3">

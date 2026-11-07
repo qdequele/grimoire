@@ -1,5 +1,5 @@
 import { zodResolver } from '@hookform/resolvers/zod'
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { Navigate, useSearchParams } from 'react-router'
 import { z } from 'zod'
@@ -14,7 +14,7 @@ import { Epigraph, Masthead, SkinToggle } from '@/theme/Masthead'
 import { useT, type T } from '@/i18n/t'
 import { LegalLinks } from '@/legal/LegalPage'
 import { useAuth } from './auth'
-import { returnedOAuthError, signInWithGoogle, useGoogleEnabled } from './oauth'
+import { forgetNext, rememberNext, rememberedNext, returnedOAuthError, signInWithGoogle, useGoogleEnabled } from './oauth'
 
 const makeSchema = (t: T) =>
   z.object({
@@ -30,19 +30,28 @@ function safeNext(next: string | null): string {
 }
 type Mode = 'signin' | 'signup'
 
+/** Goes where the keeper was going once signed in, and forgets the remembered page (rememberNext). */
+export function ResumeAfterLogin({ to }: { to: string }) {
+  useEffect(forgetNext, [])
+  return <Navigate to={to} replace />
+}
+
 // Laid out like the legacy home screen: title block and menu on the left, quote on the right.
 export function LoginPage() {
   const { session } = useAuth()
   const t = useT()
-  const next = safeNext(useSearchParams()[0].get('next'))
+  const [params] = useSearchParams()
+  const next = safeNext(params.get('next'))
   const schema = useMemo(() => makeSchema(t), [t])
-  const [mode, setMode] = useState<Mode>('signin')
+  // ?mode=signup: the landing page's "Créer un compte" opens the sign-up tab.
+  const [mode, setMode] = useState<Mode>(params.get('mode') === 'signup' ? 'signup' : 'signin')
   const [error, setError] = useState<string | null>(returnedOAuthError)
   // Where accounts need an e-mail confirmation (hosted Supabase), sign-up returns no session.
   const [confirmTo, setConfirmTo] = useState<string | null>(null)
   const form = useForm<Values>({ resolver: zodResolver(schema), defaultValues: { email: '', password: '', displayName: '' } })
 
-  if (session) return <Navigate to={next} replace />
+  // Signed in here (password), or back from Google or the confirmation e-mail on another visit.
+  if (session) return <ResumeAfterLogin to={next !== '/' ? next : (rememberedNext() ?? '/')} />
 
   async function onSubmit(values: Values) {
     setError(null)
@@ -52,6 +61,8 @@ export function LoginPage() {
       if (error) setError(error.message)
       return
     }
+    // The confirmation link comes back to the site's root: remember where the keeper was going.
+    rememberNext(next)
     const { data, error } = await supabase.auth.signUp({
       email: values.email,
       password: values.password,
@@ -77,7 +88,7 @@ export function LoginPage() {
               <TabsTrigger value="signup">{t('Créer un compte')}</TabsTrigger>
             </TabsList>
           </Tabs>
-          <GoogleButton onError={setError} />
+          <GoogleButton next={next} onError={setError} />
           <form onSubmit={form.handleSubmit(onSubmit)} noValidate>
             <FieldGroup>
               {mode === 'signup' && (
@@ -136,7 +147,7 @@ export function LoginPage() {
 }
 
 /** Shown only when Google sign-in is enabled in Supabase Auth (nothing, not even the "or" rule, otherwise). */
-function GoogleButton({ onError }: { onError: (message: string | null) => void }) {
+function GoogleButton({ next, onError }: { next: string; onError: (message: string | null) => void }) {
   const t = useT()
   const enabled = useGoogleEnabled().data ?? false
   const [pending, setPending] = useState(false)
@@ -145,7 +156,7 @@ function GoogleButton({ onError }: { onError: (message: string | null) => void }
   async function go() {
     onError(null)
     setPending(true)
-    const { error } = await signInWithGoogle()
+    const { error } = await signInWithGoogle(next)
     // On success the browser is already leaving for Google's page.
     if (error) {
       onError(error.message)
