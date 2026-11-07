@@ -985,50 +985,101 @@ const forest: Draw = (id) => {
 }
 
 const harbour: Draw = (id) => {
+  // A fishing port at night: warehouses with loading doors and a hoist, a long pier with a derrick,
+  // a schooner and a steam tug moored at it, the lighthouse on the headland sweeping its beam,
+  // the moon's path on the water.
   const r = rng(81)
   let ripples = ''
-  for (let i = 0; i < 70; i++) {
-    const y = 680 + r() ** 1.6 * 210
-    ripples += `M${f(r() * W)} ${f(y)} h${f(20 + r() * 70 * (y / 900))} v1.6 h${f(-(20 + r() * 70))} Z `
+  for (let i = 0; i < 90; i++) {
+    const y = 694 + r() ** 1.5 * 200
+    const len = 10 + r() * 60 * ((y - 640) / 260)
+    ripples += `M${f(r() * W)} ${f(y)} h${f(len)} v1.4 h${f(-len)} Z `
   }
-  const boat = (x: number, s: number) =>
-    `M${x - 90 * s} ${760} Q${x - 80 * s} ${790} ${x - 50 * s} ${798} H${x + 70 * s} Q${x + 95 * s} ${780} ${x + 100 * s} ${752} Z ` +
-    `M${x - 30 * s} 760 v${-40 * s} h${60 * s} v${40 * s} Z M${x - 4 * s} ${720 * 1} v${-160 * s} h${6 * s} v${160 * s} Z ` +
-    `M${x + 2 * s} ${720 - 150 * s} L${x + 80 * s} ${740} L${x + 2 * s} ${740} Z`
+  // Broken streaks under a light: a reflection on moving water.
+  const streak = (x: number, y0: number, y1: number, w: number, seed: number) => {
+    const q = rng(seed)
+    let d = ''
+    for (let y = y0; y < y1; y += 7 + q() * 6) {
+      const k = w * (0.4 + q() * 0.8) * (0.6 + ((y - y0) / (y1 - y0)) * 0.8)
+      d += `M${f(x - k / 2 + (q() - 0.5) * w * 0.6)} ${f(y)} h${f(k)} v2.2 h${f(-k)} Z `
+    }
+    return d
+  }
+  const rig = 'M680 760 V420 M800 760 V456 M680 424 L560 760 M680 424 L800 460 M800 460 L930 744 M680 430 L640 760 M800 466 L830 760 M560 740 L910 742'
   return (
     <>
       <Layer depth="far">
-        <path d={ridge(660, 14, 82)} />
-        <path d="M1120 900 L1180 660 Q1300 600 1460 610 L1640 620 V900 Z" />
-        {/* the lighthouse */}
-        <path d="M1356 620 L1366 430 H1398 L1408 620 Z M1350 432 h64 v-12 h-64 Z M1366 420 v-30 h32 v30 Z M1360 392 L1382 366 L1404 392 Z" />
+        <Moon x={720} y={170} r={40} id={id} />
+        <path d={ridge(676, 12, 82)} fill="var(--sil-haze)" />
+        {/* the headland, the lighthouse and its keeper's cottage */}
+        <path d={jagged([[1100, 710], [1170, 660], [1260, 622], [1380, 606], [1500, 612], [1640, 626], [1640, 710]], 83, 8)} />
+        <g transform="translate(-70 0)">
+          <path d="M1358 612 L1366 436 H1398 L1406 612 Z M1348 438 h68 v-10 h-68 Z M1366 428 v-34 h32 v34 Z M1360 396 Q1382 362 1404 396 Z M1380 368 v-14 h4 v14 Z" />
+          <path d="M1352 428 v-12 M1362 428 v-12 M1402 428 v-12 M1412 428 v-12 M1350 418 H1414" stroke="currentColor" strokeWidth={2} fill="none" />
+          <path d="M1398 436 L1406 612 M1382 364 Q1398 374 1404 396" className="scr-rim" strokeWidth={2} />
+          <path d="M1430 612 V578 H1500 V612 Z M1424 580 L1465 552 L1506 580 Z M1484 566 v-18 h8 v18 Z" />
+          <path d="M1446 588 h10 v12 h-10 Z" fill="var(--lit)" className="scr-glow" opacity={0.75} />
+        </g>
+        {/* the water */}
         <rect x="-40" y="690" width={W + 80} height="260" fill="var(--sil-water)" />
       </Layer>
       <Layer depth="water">
-        <path d={ripples} fill="var(--lit)" opacity={0.22} />
+        <path d={ripples} opacity={0.2} />
+        {/* the moon's path, the lighthouse and the windows on the water */}
+        <g className="scr-moon">
+          <path d={streak(720, 700, 900, 60, 84)} opacity={0.32} />
+        </g>
+        <g className="scr-sun">
+          <path d={streak(720, 700, 900, 90, 84)} opacity={0.35} />
+        </g>
+        <g className="scr-glow">
+          <path d={`${streak(1312, 700, 800, 18, 85)} ${streak(1520, 790, 900, 22, 86)} ${streak(232, 800, 900, 14, 87)} ${streak(330, 800, 900, 14, 88)}`} opacity={0.45} />
+        </g>
       </Layer>
       <Layer depth="pulse">
-        <path d="M1382 405 L740 330 L740 470 Z" fill={`url(#${id}-beam)`} transform="scale(-1 1) translate(-2764 0)" />
-        <path d="M1382 405 L740 330 L740 470 Z" fill={`url(#${id}-beam)`} />
-        <Halo id={`${id}-halo`} x={1382} y={405} r={120} />
-        <circle cx={1382} cy={405} r={9} />
+        <path d="M1312 410 L670 335 L670 475 Z" fill={`url(#${id}-beam)`} transform="scale(-1 1) translate(-2624 0)" />
+        <path d="M1312 410 L670 335 L670 475 Z" fill={`url(#${id}-beam)`} />
+        <Halo id={`${id}-halo`} x={1312} y={410} r={120} />
+        <circle cx={1312} cy={410} r={9} />
       </Layer>
       <Layer depth="mid">
-        {/* warehouses, the pier, two boats */}
-        <path d="M-40 780 V470 L60 400 L160 470 V780 Z M150 780 V440 L280 360 L410 440 V780 Z M400 780 V500 L470 450 L540 500 V780 Z" />
-        <path d="M520 772 H1120 v14 H520 Z" />
-        <path d={Array.from({ length: 11 }, (_, i) => `M${540 + i * 56} 900 V772 h12 V900 Z`).join(' ')} />
-        <path d={`${boat(760, 1)} ${boat(1010, 0.8)}`} />
+        {/* warehouses: a tall one with loading doors and its hoist, a broad one, a low shed */}
+        <path d="M-40 790 V420 L50 360 L140 420 V790 Z M40 358 h22 v-8 h40 v8 h-22 v10 h-40 Z M150 790 V430 L280 350 L410 430 V790 Z M340 400 V350 h20 v50 Z M400 790 V560 L470 520 L540 560 V790 Z" />
+        <path d="M100 368 v30 h2 v-30 Z M96 398 h10 v6 h-10 Z" />
+        <path d="M22 460 h56 v70 h-56 Z M22 570 h56 v70 h-56 Z M22 680 h56 v90 h-56 Z M430 680 h80 v110 h-80 Z" fill="var(--sil-near)" opacity={0.6} />
+        {/* the pier, its piles and bollards, the derrick at its end */}
+        <path d="M520 772 H1150 v14 H520 Z" />
+        <path d={Array.from({ length: 12 }, (_, i) => `M${532 + i * 52} 900 V786 h10 V900 Z`).join(' ')} />
+        <path d="M600 772 v-10 h12 v10 Z M760 772 v-10 h12 v10 Z M940 772 v-10 h12 v10 Z M1090 772 v-10 h12 v10 Z" />
+        <path d="M1110 772 V560 h8 V772 Z M1114 566 L1010 640 l-4 -6 L1110 558 Z M1010 640 v40" />
+        <path d="M1008 640 v44 h2 v-44 Z M1002 684 h14 v8 h-14 Z" />
+        {/* the schooner: hull, masts, rigging, furled sails on their booms */}
+        <path d="M560 744 Q572 776 600 782 H896 Q920 770 930 742 Z M680 760 V420 h5 V760 Z M800 760 V456 h5 V760 Z M600 742 L556 728 l2 -4 L604 738 Z" />
+        <path d="M684 690 L770 700 v8 L684 702 Z M804 700 L900 708 v8 L804 712 Z M690 520 l70 6 v6 l-70 -6 Z" />
+        <path d={rig} stroke="currentColor" strokeWidth={1.6} fill="none" />
+        {/* the steam tug: hull, wheelhouse, funnel, a mast */}
+        <path d="M950 770 Q960 790 990 792 H1140 Q1158 784 1166 760 H950 Z M1000 760 V722 H1070 V760 Z M1084 760 V700 h22 V760 Z M1040 722 V650 h4 V722 Z" />
+        <path d="M1084 712 h22 v6 h-22 Z" fill="var(--sil-back)" />
+        {/* boats mirrored in the water, broken by the ripples */}
+        <path d="M560 792 Q572 810 600 812 H896 Q920 806 930 792 Z M950 796 Q960 806 990 808 H1140 Q1158 804 1166 796 Z M680 812 V880 h4 V812 Z M800 812 V860 h4 V812 Z" fill="var(--sil-near)" opacity={0.35} />
+        <g className="scr-rim" strokeWidth={2}>
+          <path d="M50 360 L140 420 M280 350 L410 430 M470 520 L540 560" />
+        </g>
       </Layer>
       <Layer depth="lit">
-        <path d="M30 600 h26 v40 h-26 Z M210 560 h30 v44 h-30 Z M300 640 h30 v44 h-30 Z M455 560 h24 v36 h-24 Z" opacity={0.8} />
+        <path d="M200 600 h26 v40 h-26 Z M300 520 h30 v44 h-30 Z M240 680 h30 v44 h-30 Z M30 470 h20 v30 h-20 Z M1012 730 h14 v14 h-14 Z M1036 730 h14 v14 h-14 Z" fill={`url(#${id}-glass)`} />
         <Halo id={`${id}-halo`} x={1520} y={556} r={200} />
         <path d="M1506 548 h28 l-6 20 h-16 Z" />
       </Layer>
       <Layer depth="near">
-        <path d="M1514 900 V566 h12 V900 Z M1506 548 h28 l-6 -12 h-16 Z" />
-        <path d="M60 900 V820 q30 -14 60 0 V900 Z M210 900 V840 q24 -10 48 0 V900 Z" />
-        <path d="M300 900 V830 H420 V900 Z M330 830 V790 H420 V830 Z" />
+        {/* the stone quay in front, a bollard with its rope, crates and barrels, the lamp post */}
+        <path d="M-40 900 V846 H560 L600 900 Z" />
+        <path d="M-40 846 H560 v4 H-40 Z" fill="var(--sil-back)" opacity={0.5} />
+        <path d="M80 846 v-30 q20 -12 40 0 v30 Z M74 818 h52 v-8 h-52 Z" />
+        <path d="M120 836 q40 10 60 -2 q20 -10 40 4" stroke="currentColor" strokeWidth={5} fill="none" />
+        <path d="M300 846 V776 H380 V846 Z M318 776 V722 H380 V776 Z M300 846 h80 M440 846 v-50 q20 -8 40 0 v50 Z M488 846 v-40 q16 -6 32 0 v40 Z" />
+        <path d="M300 800 h80 v3 h-80 Z M318 748 h62 v3 h-62 Z" fill="var(--sil-back)" opacity={0.5} />
+        <path d="M1514 900 V566 h12 V900 Z M1506 548 h28 l-6 -12 h-16 Z M1500 900 l14 -24 h12 l14 24 Z" />
       </Layer>
     </>
   )
