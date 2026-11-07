@@ -1,4 +1,4 @@
-import { BookOpen, FileUp, Feather, Store } from 'lucide-react'
+import { BookOpen, Store } from 'lucide-react'
 import type { ReactNode } from 'react'
 import { Link } from 'react-router'
 import { Alert, AlertDescription } from '@/components/ui/alert'
@@ -66,19 +66,6 @@ export function MyStoriesPage() {
   const { data, isPending, error } = useMyStories()
   return (
     <section className="flex flex-col gap-6">
-      <header className="flex flex-wrap items-center justify-between gap-4">
-        <p className="text-muted-foreground">{t('Visibles par toi seul : tes créations, tes imports et tes copies de la bibliothèque.')}</p>
-        <div className="flex flex-wrap gap-2">
-          <Button render={<Link to="/stories/create" />} nativeButton={false}>
-            <Feather data-icon="inline-start" />
-            {t('Créer une histoire')}
-          </Button>
-          <Button variant="outline" render={<Link to="/stories/import" />} nativeButton={false}>
-            <FileUp data-icon="inline-start" />
-            {t('Importer une histoire')}
-          </Button>
-        </div>
-      </header>
       <StoryGrid
         stories={data}
         isPending={isPending}

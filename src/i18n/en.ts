@@ -412,7 +412,6 @@ export const EN: Record<string, string> = {
   'Impossible de charger les histoires : {error}': 'Could not load the stories: {error}',
   "Des histoires prêtes à jouer, choisies par l'équipe Grimoire. Choisis-en une pour lancer une partie.": 'Ready-to-play stories picked by the Grimoire team. Choose one to start a game.',
   "La bibliothèque est vide pour l'instant": 'The library is empty for now',
-  'Visibles par toi seul : tes créations, tes imports et tes copies de la bibliothèque.': 'Visible to you only: your creations, your imports and your copies of library stories.',
   'Importer une histoire': 'Import a story',
   'Aucune histoire personnelle': 'No personal stories',
   "Crée une histoire originale avec l'aide de l'IA, importe les pages d'un scénario que tu possèdes, ou copie une histoire de la bibliothèque pour l'adapter.": 'Create an original story with the help of AI, import the pages of a scenario you own, or copy a library story to adapt it.',
