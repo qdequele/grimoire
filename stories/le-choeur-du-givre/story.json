@@ -1,0 +1,1825 @@
+{
+  "format": "grimoire-story/1",
+  "meta": {
+    "id": "le-choeur-du-givre",
+    "title": "Le Chœur du givre",
+    "lang": "fr",
+    "summary": "Janvier 1927. Votre plus vieil ami soigne sa tuberculose au sanatorium des Gentianes, sur le plateau d'Assy. Ses lettres ont dit le désespoir, puis la guérison, puis des chants, la nuit, dans les galeries de cure. La dernière tient en un mot : viens.",
+    "players": {
+      "min": 1,
+      "max": 1
+    },
+    "duration": "2 séances de 3 heures",
+    "era": "Janvier 1927",
+    "setting": "Le sanatorium des Gentianes, sur le plateau d'Assy au-dessus de Passy, et le hameau des Combes (Haute-Savoie)",
+    "system": "d100",
+    "author": "Grimoire",
+    "license": "CC-BY-4.0",
+    "version": "1.0",
+    "tags": [
+      "solo",
+      "montagne",
+      "sanatorium",
+      "huis clos",
+      "enquête",
+      "dilemme moral"
+    ],
+    "contentWarnings": [
+      "tuberculose (toux, crachements de sang, agonie évoquée)",
+      "horreur corporelle (un lichen qui remplace les poumons, des corps givrés)",
+      "éthique médicale : des patients sacrifiés à leur insu",
+      "mort de patients",
+      "perte de soi (somnambulisme, volonté qui s'efface)"
+    ]
+  },
+  "overview": {
+    "secret": "**1867-1868.** Sous le pré où s'élève aujourd'hui le sanatorium, la petite mine de plomb de la Chaux creuse la galerie Saint-Bernard. Au fond, sur la roche, pousse un lichen blanc comme le givre. Les mineurs aux poumons rongés par la poussière guérissent à son contact ; puis, au cœur de l'hiver, ils chantent la nuit. Le 7 février 1868, on en retrouve trois assis au fond, contre la roche, couverts de givre. Les hommes des Combes font trois jours de feu à l'entrée et murent la galerie le 20 mars ; ceux qui avaient respiré la « fleur blanche » crachent le sang tout le printemps, et plusieurs en meurent. Le feu n'est pas allé assez loin : au fond, la colonie survit.\n\n**Octobre 1924.** Le docteur **Henri Castagnier**, directeur du sanatorium des Gentianes (ouvert en 1923), fait creuser les fondations de l'aile Est. Le 6 octobre, les terrassiers crèvent le vieux mur : la galerie, le lichen, les trois Gelés intacts. Castagnier comprend que l'air glacé de la galerie porte des spores qui s'enracinent dans les poumons malades et comblent les cavernes. Il essaie d'abord sur sa femme, **Madeleine**, tuberculeuse : elle dort à l'entrée de la galerie dès novembre et guérit au printemps 1925. À l'été 1925, son mécanicien **Baptiste Ducrey** construit une gaine qui aspire l'air de la galerie et le souffle sous les chaises longues de la galerie de cure de nuit, dans l'aile Est. Les guérisons deviennent spectaculaires : 92 % en 1926, une liste d'attente.\n\n**Mais le lichen ne répare pas : il remplace.** Un poumon guéri est un poumon de lichen, et ce lichen fait partie de la colonie. Sept à dix mois après la guérison, les guéris entendent le chœur (une note tenue, dans les os) ; puis ils le chantent la nuit, en dormant ; douze à quinze mois après leur première nuit sur la galerie, ils se lèvent une nuit de grand froid, descendent dans la galerie et s'asseyent contre la paroi. Le givre les couvre en quelques heures et le lichen pousse à travers eux. Ils respirent encore, une fois toutes les quatre minutes ; les ramener à la chaleur les tue en une heure. Madeleine est descendue dans la nuit du 13 au 14 janvier 1926. Depuis septembre 1926, dix patients ont suivi ; Castagnier les inscrit « transférés à la clinique du Chamossaire, à Leysin ».\n\nDeux lois, que Castagnier a apprises à ses dépens. **La chaleur apaise** : près d'un feu, un guéri redevient lucide ; les guéris partis à Nice ou à Alger n'entendent presque rien, ceux qui retournent au froid finissent par revenir (Anatole Rey est remonté à pied de la gare en décembre). **La colonie et les poumons qu'elle a faits ne sont qu'un** : la nuit du 18 au 19 mars 1926, une fuite de vapeur a réchauffé la galerie ; sept guéris ont craché le sang, Pellissier en est mort. Détruire la colonie, c'est faire rechuter tous les guéris.\n\nCastagnier sait tout. Il descend s'asseoir devant Madeleine, qu'il croit vivante. Il fait son compte : sur cent poumons sauvés, dix finiront dans la paroi. Il sait que le mensonge des transferts ne tiendra pas jusqu'à l'été et que l'hiver prochain, ceux de 1926 seront une vingtaine à descendre.\n\n**Julien Mercadier**, le vieil ami de l'investigateur, gazé en 1918 puis tuberculeux, est arrivé en octobre 1925 et dort sur la galerie de nuit depuis novembre. Guéri en mars 1926, il est resté comme secrétaire du directeur et a tapé lui-même les lettres de transfert. Il chante depuis l'automne. Le samedi 8 janvier 1927, contre le poêle, lucide, il a écrit à l'investigateur. **Irène Lacombe**, sur la galerie depuis octobre 1925, descendra la deuxième nuit ; Julien, la troisième.\n\n**Si personne n'intervient** : lundi 17 janvier au soir, la tempête coupe la route des lacets et le téléphone jusqu'au jeudi midi. Dans la nuit du mardi au mercredi, Irène descend ; au matin, Castagnier la dit « transférée », alors que la route est coupée. Dans la nuit du mercredi au jeudi, Julien descend et s'assoit près d'elle. Le jeudi, Castagnier présente à l'investigateur ses regrets : Julien serait parti pour la Suisse. Au printemps, le mensonge craque, et l'hiver suivant une vingtaine de patients descendent.\n\nLes poumons sains n'accrochent pas les spores : l'investigateur ne risque rien de ce côté. Au fond, le danger, c'est le froid et le chant.",
+    "steps": [
+      "[[les-gentianes]] (lundi 17 janvier) : la montée dans la neige avec Baptiste, l'accueil de Castagnier, Julien trop gai.",
+      "[[premiere-nuit]] : la tempête coupe la route ; la galerie de nuit chante ; Julien dort fenêtre ouverte dans la neige.",
+      "[[le-matin-blanc]] (mardi 18) : isolés ; les bouches d'air froid ; Hortense Vial ; Irène au piano ; Julien près du poêle et son carnet.",
+      "[[la-chapelle]], [[l-infirmerie]], [[les-combes]], [[le-bureau-du-directeur]] : l'enquête, dans l'ordre que choisit l'investigateur.",
+      "[[deuxieme-nuit]] : le givre dans la chambre chauffée de Julien ; Irène descend ; au matin, elle est « transférée ».",
+      "[[la-chaufferie]] (mercredi 19) : Baptiste, la gaine, la porte de fer, ce que peuvent la vapeur et la dynamite.",
+      "[[la-galerie]] : le lichen, les Gelés, Madeleine, et le marché du docteur Castagnier.",
+      "[[la-nuit-du-choeur]] : tous les guéris chantent, Julien descend ; détruire, sauver Julien seul, ou laisser faire.",
+      "[[epilogue]] (jeudi 20) : la route rouvre, et chaque choix a son prix."
+    ],
+    "mustNotMiss": [
+      "**Les guéris chantent la nuit, et la chaleur rend Julien à lui-même** : la galerie de nuit et la fenêtre ouverte ([[premiere-nuit]], sans jet), Julien près du poêle ([[les-gentianes]], [[le-matin-blanc]]), le cahier d'Odile ([[l-infirmerie]]), l'abbé ([[la-chapelle]]).",
+      "**Les transferts en Suisse sont faux** : Hortense ([[le-matin-blanc]], sans jet), le carnet de Julien, les valises ([[l-infirmerie]]), la patronne des Combes ([[les-combes]]), le registre et la lettre de Leysin ([[le-bureau-du-directeur]]), Irène « transférée » alors que la route est coupée ([[deuxieme-nuit]], sans jet).",
+      "**Ce qui guérit vient de la vieille mine sous l'aile Est** : les bouches d'air froid montrées par Castagnier ([[le-matin-blanc]]), les radiographies ([[l-infirmerie]]), le registre de 1868 ([[la-chapelle]]), Joséphine ([[les-combes]]), le journal de Castagnier ([[le-bureau-du-directeur]]), Baptiste ([[la-chaufferie]]).",
+      "**Où est la galerie** : la porte de fer derrière la chaudière (carnet de Julien, Baptiste, Irène suivie dans [[deuxieme-nuit]], plan de Joséphine, clé du tiroir du bureau).",
+      "**Détruire la colonie fera rechuter les guéris, Julien compris** : la semaine de mars 1926 (lettre de Julien, Odile, journal de Castagnier, Baptiste) et le printemps 1868 (Joséphine) ; Castagnier le dit lui-même ([[la-galerie]])."
+    ],
+    "branches": [
+      "Retenir Irène la deuxième nuit ([[deuxieme-nuit]]) : elle vit un jour de plus et se lèvera avec Julien la troisième nuit ; il faudra garder deux personnes.",
+      "Convaincre Castagnier ([[la-galerie]]) : il donne sa clé, ordonne à Baptiste d'aider, et demande à rester au fond près de Madeleine.",
+      "Accepter le marché de Castagnier : Julien part pour Menton dès jeudi, à ses frais, en échange du silence. La colonie vit.",
+      "Détruire la colonie par la vapeur, le feu ou la dynamite ([[la-nuit-du-choeur]]) : tous les guéris rechutent, Julien aussi ; il y aura des morts.",
+      "Sauver Julien seul : le garder contre la chaudière jusqu'à l'aube puis l'emmener au soleil, ou le descendre cette nuit même par le câble de ravitaillement.",
+      "Laisser faire : Julien descend. L'investigateur peut au moins obtenir de Castagnier que les patients soient prévenus et choisissent."
+    ],
+    "ifStuck": [
+      "Hortense Vial dit tout haut au réfectoire ce que personne n'ose dire : « Transférés par où ? »",
+      "Près d'un poêle, Julien retrouve sa lucidité d'un coup et parle vite : son carnet, les lettres de transfert, la porte de fer.",
+      "Odile frappe à la porte de l'investigateur au milieu de la nuit, son cahier de ronde à la main.",
+      "Baptiste, malade d'inquiétude pour sa sœur Mélanie, vient de lui-même raconter la nuit de mars 1926.",
+      "Le givre qui pousse dans les chambres chauffées dessine toujours ses fougères dans la même direction : vers l'aile Est."
+    ],
+    "keeperTips": [
+      "C'est une histoire d'amitié. Dès la première scène, donnez à Julien et à l'investigateur des souvenirs communs (le front, le lycée, une ville, un été). Les lettres évitent le genre de l'investigateur : adaptez les répliques.",
+      "Personne n'est méchant. Castagnier sauve réellement des vies et le sait ; il a perdu sa femme et refuse de le dire. Jouez-le doux, épuisé, logique, jamais menaçant.",
+      "Le surnaturel reste discret jusqu'à la galerie : une note, du givre, des gens trop heureux. Pas de monstre. Les Gelés ne bougent qu'une fois, à la fin.",
+      "Aucun combat n'est nécessaire. Si Castagnier sort son pistolet, c'est pour lui-même.",
+      "Rattrapez les mauvais jets par les alliés (Odile, l'abbé, Baptiste, Hortense) et par le temps : chaque fait important a plusieurs sources ; un échec coûte une heure, une nuit ou la confiance de quelqu'un, jamais la vérité.",
+      "Rythme : première séance jusqu'au mardi soir ([[le-bureau-du-directeur]] ou le début de [[deuxieme-nuit]]), seconde séance de la deuxième nuit à l'aube du jeudi.",
+      "En 1927, la tuberculose tue, surtout les pauvres et les anciens soldats. Ne la rendez pas pittoresque : le dilemme doit peser."
+    ]
+  },
+  "acts": [
+    {
+      "id": "la-montee",
+      "title": "La montée",
+      "scenes": [
+        {
+          "id": "les-gentianes",
+          "title": "Les Gentianes",
+          "lead": "Lundi 17 janvier : la montée dans la neige, l'accueil, et Julien qui va trop bien.",
+          "screen": {
+            "place": "manor",
+            "preset": "snow",
+            "time": "dusk"
+          },
+          "readAloud": [
+            "À la gare du Fayet, un autocar bleu marqué SANATORIUM DES GENTIANES attend sous la neige, moteur tournant. Le chauffeur hisse votre valise sur le toit, entre des sacs de courrier et une caisse d'oranges. « Montez vite. Ça va tomber fort cette nuit. »",
+            "La route grimpe en lacets entre les sapins. À chaque virage, la vallée s'enfonce un peu plus dans le gris. Puis la forêt s'ouvre : sur le plateau, un long bâtiment blanc aligne ses galeries vitrées face aux montagnes qu'on ne voit plus. Sur les terrasses, des silhouettes couchées sous des couvertures ne bougent pas.",
+            "Dans le hall surchauffé flotte une odeur d'encaustique et de phénol. Un homme en blouse blanche vient à vous, les mains tendues. « Vous venez pour Julien ! Il ne parle que de vous depuis une semaine. Bienvenue aux Gentianes. »"
+          ],
+          "flow": [
+            {
+              "title": "Avant de partir",
+              "text": "L'investigateur a avec lui les lettres de Julien → {{handout:lettres-de-julien}} et la dernière → {{handout:derniere-lettre}}. Les lui donner à lire dans le train.",
+              "extra": "La lettre du 28 mars 1926 parle déjà de la semaine où les guéris ont rechuté ensemble : un indice pour la fin."
+            },
+            {
+              "title": "L'autocar",
+              "text": "{{npc:baptiste-ducrey}}, mécanicien et chauffeur du sanatorium, conduit. Il parle volontiers : les « miraculés » du docteur, la liste d'attente, la neige qui arrive. Il s'arrête au hameau des Combes pour déposer le courrier au café.",
+              "extra": "Il dit sans y penser que la Renault du docteur « n'a pas fait cent kilomètres depuis l'été ». Les « transferts » à Leysin, à cent cinquante kilomètres, sont censés se faire dans cette voiture."
+            },
+            {
+              "title": "Les Gelés de Saint-Bernard",
+              "text": "Lancer Baptiste sur le pays, les Combes, les vieilles histoires.",
+              "roll": {
+                "type": "skill",
+                "options": [
+                  "charm",
+                  "persuade",
+                  "history"
+                ]
+              },
+              "success": "Il raconte la légende de son grand-père : une vieille mine de plomb sous le plateau, fermée en 1868 après que trois mineurs sont « restés en bas, gelés, assis contre la roche, à chanter ». « Des histoires de vieux. » Il se tait d'un coup quand l'autocar longe l'aile Est.",
+              "failure": "Il ne parle plus que de la route et du prix du charbon. (La légende reste à trouver aux Combes, [[les-combes]], ou chez l'abbé, [[la-chapelle]].)"
+            },
+            {
+              "title": "Le docteur Castagnier",
+              "text": "{{npc:henri-castagnier}} accueille avec chaleur et fait visiter : réfectoire, salon de musique, galeries de cure plein sud, et la galerie de l'aile Est où dorment la nuit les patients de « cure de nuit ». Il remet la brochure → {{handout:brochure-gentianes}}. Dans son bureau : un graphique des guérisons au mur, le portrait d'une femme blonde. « Madeleine, ma femme. Elle se soigne en Suisse. »",
+              "roll": {
+                "type": "skill",
+                "options": [
+                  "psychology"
+                ]
+              },
+              "success": "Il est sincèrement heureux de cette visite, et épuisé jusqu'à l'os. Il regarde le portrait quand il croit qu'on ne le voit pas.",
+              "failure": "Un médecin aimable et fier de son œuvre."
+            },
+            {
+              "title": "L'infirmière",
+              "text": "{{npc:odile-perrollaz}}, infirmière-major, conduit l'investigateur à sa chambre d'hôte, au premier étage, deux portes après celle de Julien. Polie, pressée, elle demande à voix basse : « Vous restez combien de temps ? », puis se reprend.",
+              "roll": {
+                "type": "skill",
+                "options": [
+                  "psychology"
+                ]
+              },
+              "success": "Elle espérait que quelqu'un vienne. Elle ne sait pas encore si elle peut parler. Elle parlera plus tard ([[l-infirmerie]]) si on la ménage.",
+              "failure": "Une infirmière débordée, rien de plus."
+            },
+            {
+              "title": "Julien",
+              "text": "{{npc:julien-mercadier}} arrive en courant, rose, rieur, sans une toux. Il serre l'investigateur dans ses bras et parle de tout. De la dernière lettre, il rit : « Un coup de cafard, j'ai eu honte après. Je guéris, tu vois bien ! » Pendant qu'il parle, il fredonne sans s'en rendre compte une note tenue, toujours la même.",
+              "extra": "Il a les mains glacées. Près du poêle du salon, il se tait un instant, se frotte les yeux et regarde l'investigateur comme s'il venait seulement d'arriver. Puis il s'éloigne du poêle, et le sourire revient."
+            },
+            {
+              "title": "Observer Julien",
+              "roll": {
+                "type": "skill",
+                "options": [
+                  "medicine",
+                  "spot-hidden"
+                ]
+              },
+              "success": "Médecine : pas un râle, un souffle profond et lent comme celui d'un dormeur, une température de 35,8°. Trouver Objet Caché : de minuscules cristaux de givre au coin de ses lèvres, qui fondent quand il passe près du poêle.",
+              "failure": "Il a l'air en parfaite santé. Peut-être un peu pâle des mains."
+            },
+            {
+              "title": "Le dîner",
+              "text": "Au réfectoire, les guéris rient aux longues tables ; {{npc:irene-lacombe}} parle musique avec Julien. À une petite table près du poêle, les malades qui ne guérissent pas toussent dans leur serviette ; {{npc:hortense-vial}} lève son face-à-main vers l'investigateur avec intérêt. Baptiste annonce que l'autocar ne redescendra pas ce soir : la neige tombe trop fort.",
+              "goto": [
+                "premiere-nuit"
+              ]
+            }
+          ],
+          "notes": [
+            {
+              "title": "Calendrier",
+              "items": [
+                "**Lundi 17 janvier 1927** : arrivée vers 15 h 30. Vers 23 h, une coulée de neige coupe la route au lacet des Ravines ; le téléphone est mort, le câble de ravitaillement arrêté par le givre.",
+                "**Mardi 18** : isolés. Nuit du mardi au mercredi : Irène descend.",
+                "**Mercredi 19** : Irène est dite « transférée ». Nuit du mercredi au jeudi : Julien descend.",
+                "**Jeudi 20** : le chasse-neige des Ponts et Chaussées rouvre la route vers midi.",
+                "Le jour se lève vers 7 h, la nuit tombe vers 16 h 30."
+              ]
+            },
+            {
+              "title": "Le sanatorium",
+              "items": [
+                "**Bâtiment principal** (trois niveaux) : au rez-de-chaussée le hall, le réfectoire, le salon de musique et le **bureau du directeur** ([[le-bureau-du-directeur]]) ; au premier, les chambres du personnel et des hôtes (Julien, l'investigateur) ; au deuxième, des chambres de malades, la **lingerie** et l'**infirmerie** avec la salle de radiologie ([[l-infirmerie]]).",
+                "**Aile Est** (1925) : la galerie de cure de nuit, une trentaine de chaises longues ; au sous-sol, la **chaufferie**, et derrière elle la **porte de fer** ([[la-chaufferie]]).",
+                "**Chapelle** accolée à l'aile ouest ([[la-chapelle]]). Garage (la Renault du docteur), station du câble de ravitaillement au bord du plateau.",
+                "**Les Combes** : le hameau, vingt minutes plus bas en raquettes ([[les-combes]])."
+              ]
+            }
+          ],
+          "npcs": [
+            "baptiste-ducrey",
+            "henri-castagnier",
+            "odile-perrollaz",
+            "julien-mercadier",
+            "irene-lacombe",
+            "hortense-vial"
+          ],
+          "handouts": [
+            "lettres-de-julien",
+            "derniere-lettre",
+            "brochure-gentianes"
+          ],
+          "ambience": [
+            "wind",
+            "fireplace"
+          ],
+          "sfx": [
+            "door-open",
+            "footsteps"
+          ],
+          "next": [
+            "premiere-nuit"
+          ]
+        },
+        {
+          "id": "premiere-nuit",
+          "title": "La première nuit",
+          "lead": "La tempête coupe la route ; vers deux heures, la galerie de nuit chante.",
+          "screen": {
+            "place": "manor",
+            "preset": "snow",
+            "time": "night"
+          },
+          "readAloud": [
+            "Le vent cogne aux volets toute la soirée. Vers minuit, la lumière vacille, s'éteint une seconde, revient plus jaune. Le radiateur de votre chambre claque doucement.",
+            "Puis, sous le vent, autre chose. Une note. Longue, tenue, faite de beaucoup de voix ensemble, si basse qu'elle passe dans le bois du lit avant d'arriver aux oreilles."
+          ],
+          "flow": [
+            {
+              "title": "La tempête",
+              "text": "Vers 23 h, la route a été coupée au lacet des Ravines et le téléphone est tombé. Personne ne le sait encore : on l'apprendra au matin ([[le-matin-blanc]])."
+            },
+            {
+              "title": "Le chant",
+              "text": "Vers 2 h. Il suffit de sortir dans le couloir pour l'entendre mieux.",
+              "roll": {
+                "type": "skill",
+                "options": [
+                  "listen"
+                ]
+              },
+              "success": "Il vient de l'est, de la galerie de nuit, mais aussi d'en dessous : par la grille d'aération du couloir, la même note monte du sous-sol.",
+              "failure": "Le chant semble venir de partout à la fois, comme le vent."
+            },
+            {
+              "title": "La galerie de nuit",
+              "text": "Par le couloir vitré de l'aile Est, l'investigateur arrive au bout de la galerie. Une trentaine de chaises longues alignées, les patients emmaillotés sous les couvertures, la neige qui entre par rafales. Tous dorment. Tous chantent, bouche fermée, la même note. Du givre sur les cils. Sous chaque chaise, une grille de fonte souffle un air glacé.",
+              "roll": {
+                "type": "san",
+                "label": "Le chœur endormi",
+                "san": "0/1D3"
+              }
+            },
+            {
+              "title": "Irène",
+              "text": "Au bout de la rangée, {{npc:irene-lacombe}} ne dort pas. Assise, les yeux ouverts, elle chante plus fort que les autres et sourit à l'investigateur sans s'arrêter.",
+              "extra": "Si on lui parle, elle répond entre deux souffles : « Écoutez. On nous attend. » Puis elle reprend la note."
+            },
+            {
+              "title": "Odile",
+              "text": "{{npc:odile-perrollaz}} fait sa ronde avec une lampe et une seringue de bromure. Elle sursaute. « Retournez vous coucher, je vous en prie. Ce n'est rien. Ils rêvent. »",
+              "roll": {
+                "type": "skill",
+                "options": [
+                  "psychology",
+                  "charm"
+                ]
+              },
+              "success": "Elle chuchote : « Ça dure depuis l'automne. Le docteur dit de ne rien noter. Moi, je note. » Elle n'en dira pas plus cette nuit.",
+              "failure": "Elle raccompagne l'investigateur jusqu'au couloir, sans un mot de plus.",
+              "pushed": "Elle appelle le docteur, qui arrive en robe de chambre, très calme, et donne un somnifère « pour le dépaysement ». L'investigateur dort jusqu'à 9 h, et Castagnier se méfie désormais : un dé de malus pour obtenir quoi que ce soit de lui."
+            },
+            {
+              "title": "La chambre de Julien",
+              "text": "En revenant par le couloir du premier : la porte de Julien est entrouverte, la chambre glacée, la fenêtre grande ouverte sur la tempête. Julien dort dans la neige qui couvre le parquet, souriant, et chante. Le radiateur est brûlant. Pas de jet pour fermer la fenêtre et le recoucher.",
+              "extra": "Réveillé, il ne se souvient de rien et grelotte. Collé au radiateur, il se met à trembler et murmure : « Ne me laisse pas dormir dehors. » Au matin, il n'en saura plus rien."
+            },
+            {
+              "title": "Le reste de la nuit",
+              "text": "Vers 4 h, le chant s'éteint d'un coup, partout à la fois, comme une lampe qu'on souffle.",
+              "goto": [
+                "le-matin-blanc"
+              ]
+            }
+          ],
+          "npcs": [
+            "odile-perrollaz",
+            "irene-lacombe",
+            "julien-mercadier"
+          ],
+          "ambience": [
+            "wind-howling",
+            "clock"
+          ],
+          "sfx": [
+            "footsteps",
+            "door-creak",
+            "latch"
+          ],
+          "next": [
+            "le-matin-blanc"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "les-miracules",
+      "title": "Les miraculés",
+      "scenes": [
+        {
+          "id": "le-matin-blanc",
+          "title": "Le matin blanc",
+          "lead": "Mardi 18 : le plateau coupé du monde, les guéris trop gais, le carnet de Julien.",
+          "screen": {
+            "place": "manor",
+            "preset": "snow",
+            "time": "day"
+          },
+          "readAloud": [
+            "Au matin, le monde a disparu. La neige monte jusqu'aux rebords des fenêtres du rez-de-chaussée, le ciel est blanc, la vallée n'existe plus. Dans le réfectoire, on rit.",
+            "Aux longues tables du fond, les guéris mangent de bon appétit, le teint clair, la voix forte. À une petite table près du poêle, quelques malades toussent dans leur serviette et ne regardent personne."
+          ],
+          "flow": [
+            {
+              "title": "L'annonce",
+              "text": "{{npc:henri-castagnier}} se lève : la route est coupée au lacet des Ravines, le téléphone aussi, le câble de ravitaillement arrêté par le givre. « Deux ou trois jours. Nous avons des vivres pour un mois. » Il invite l'investigateur à rester autant qu'il le faudra.",
+              "extra": "Personne ne peut descendre à Passy avant jeudi. Les Combes, plus bas sur le plateau, restent accessibles en raquettes."
+            },
+            {
+              "title": "La visite de la galerie Est",
+              "text": "Castagnier montre fièrement son « procédé » : sous chaque chaise longue de la galerie de nuit, une bouche de fonte souffle l'air du sous-sol, « plus froid, plus pur, sans une poussière : un procédé à moi ». Il en parle sans se faire prier.",
+              "roll": {
+                "type": "skill",
+                "options": [
+                  "spot-hidden"
+                ]
+              },
+              "success": "Sur les grilles, un dépôt blanc, fin comme de la farine, qui ne fond pas sous le doigt et sent la pierre mouillée.",
+              "failure": "Des grilles de fonte propres et froides."
+            },
+            {
+              "title": "Madame Vial",
+              "text": "{{npc:hortense-vial}}, à la table des toussants, fait signe à l'investigateur de s'asseoir. Elle refuse la galerie : « Je n'ai pas fait soixante-sept ans pour geler sur une chaise longue. » Pas de jet : elle adore parler. Ce qu'elle dit sans qu'on demande : les guéris chantent la nuit, « tous, et jamais nous autres » ; on ne voit jamais partir les « transférés », jamais de voiture, toujours la nuit ; le petit Excoffier, le 9, a laissé ses pantoufles au pied de son lit ; elle a vu le docteur revenir de l'aile Est à l'aube, du givre sur les épaules de son manteau."
+            },
+            {
+              "title": "Irène au piano",
+              "text": "Au salon de musique, {{npc:irene-lacombe}} joue, très lentement, une mélodie sans début ni fin.",
+              "roll": {
+                "type": "skill",
+                "options": [
+                  "listen"
+                ]
+              },
+              "success": "C'est la note de la nuit, déployée en mélodie. Irène sourit : « Je vais partir bientôt. Le docteur dit la Suisse. Moi, je sais que c'est plus près. » Elle n'a pas peur.",
+              "failure": "Une jolie mélodie triste. Si on l'interroge, Irène dit quand même qu'elle va « partir bientôt »."
+            },
+            {
+              "title": "Julien près du poêle",
+              "text": "Au grand jour, Julien est gai et nie tout : le chant, la fenêtre, la lettre. Pour qu'il parle, il faut l'amener près d'une vraie chaleur (le poêle du salon, un bain chaud, la chaufferie) et l'y garder un moment.",
+              "roll": {
+                "type": "skill",
+                "options": [
+                  "psychology",
+                  "persuade"
+                ]
+              },
+              "success": "Contre le poêle, il redevient lui-même d'un coup, livide, et parle vite : il a tapé lui-même les lettres de transfert ; personne n'est jamais parti ; Irène descendra la première, lui ensuite. Il donne son carnet, caché sous le tiroir de sa table → {{handout:carnet-julien}}.",
+              "failure": "Il rit, puis s'assoupit près du poêle. À son réveil, il dit seulement : « Mon carnet. Sous le tiroir. » et ne s'en souvient plus l'instant d'après. Le carnet est bien là → {{handout:carnet-julien}}."
+            },
+            {
+              "title": "Où aller ?",
+              "text": "La journée est à l'investigateur : l'abbé à la chapelle ([[la-chapelle]]), Odile à l'infirmerie ([[l-infirmerie]]), les Combes en raquettes ([[les-combes]]), et le bureau du directeur, de préférence quand il n'y est pas ([[le-bureau-du-directeur]]).",
+              "extra": "Le soir venu, passer à [[deuxieme-nuit]].",
+              "goto": [
+                "la-chapelle",
+                "l-infirmerie",
+                "les-combes",
+                "le-bureau-du-directeur"
+              ]
+            }
+          ],
+          "npcs": [
+            "henri-castagnier",
+            "hortense-vial",
+            "irene-lacombe",
+            "julien-mercadier"
+          ],
+          "handouts": [
+            "carnet-julien"
+          ],
+          "ambience": [
+            "crowd-indoor",
+            "fireplace",
+            "clock"
+          ],
+          "sfx": [
+            "door-open"
+          ],
+          "next": [
+            "la-chapelle",
+            "l-infirmerie",
+            "les-combes",
+            "le-bureau-du-directeur"
+          ]
+        },
+        {
+          "id": "la-chapelle",
+          "title": "La chapelle",
+          "lead": "L'abbé Mugnier, le registre de 1868, et ce que les guéris disent en confession.",
+          "screen": {
+            "place": "church",
+            "preset": "snow",
+            "time": "day"
+          },
+          "readAloud": [
+            "La chapelle est accolée à l'aile ouest : un toit pentu sous la neige, un petit clocher de bois. À l'intérieur, il fait presque aussi froid que dehors ; un poêle de fonte ronfle près de la sacristie.",
+            "Un vieux prêtre en pèlerine balaie la neige que le vent a poussée sous la porte. Il s'arrête en vous voyant, appuyé sur son balai. « Vous êtes la visite de Julien. Venez près du poêle, on y parle mieux. »"
+          ],
+          "flow": [
+            {
+              "title": "L'abbé",
+              "text": "{{npc:abbe-mugnier}} est aumônier des Gentianes et curé des Combes. Il aime Julien, qui lui sert la messe le dimanche."
+            },
+            {
+              "title": "Les guéris",
+              "text": "Sur les guéris, sur Julien.",
+              "roll": {
+                "type": "skill",
+                "options": [
+                  "psychology",
+                  "persuade"
+                ]
+              },
+              "success": "« Je ne peux rien vous dire de ce qu'on me confie. Mais je peux vous dire ce qu'on ne me confiait pas avant : des hommes guéris qui pleurent de joie et qui me disent qu'on les attend, en bas, et que c'est doux. Ce n'est pas la voix de Dieu, ça. » Plus bas : « Julien s'est confessé samedi. Ne le laissez pas seul la nuit. »",
+              "failure": "Il parle du secret de la confession et n'en démord pas. Mais en raccompagnant l'investigateur, il lui serre le bras : « Ne laissez pas Julien seul la nuit. »"
+            },
+            {
+              "title": "Octobre 1924",
+              "text": "Interrogé sur l'aile Est (pas de jet) : il a béni le chantier en octobre 1924. Le contremaître lui a dit, blanc comme un linge, qu'on avait crevé « le mur des Gelés », la vieille galerie Saint-Bernard. Le docteur a payé les terrassiers et les a renvoyés le lendemain. Baptiste Ducrey était du chantier ([[la-chaufferie]])."
+            },
+            {
+              "title": "Le registre des Combes",
+              "text": "Les vieux registres des Combes sont à la sacristie depuis l'automne : le toit du presbytère fuit.",
+              "roll": {
+                "type": "skill",
+                "options": [
+                  "library-use",
+                  "history"
+                ]
+              },
+              "success": "L'année 1868 → {{handout:registre-1868}}.",
+              "failure": "La reliure est en morceaux, les années mélangées. L'abbé passe l'après-midi à chercher et apporte la page le soir, au dîner → {{handout:registre-1868}}. L'investigateur a perdu le temps d'une visite."
+            },
+            {
+              "title": "Madame Castagnier",
+              "text": "L'abbé se souvient (pas de jet) : Madeleine Castagnier était malade, la première soignée par son mari. En décembre 1925, il l'a entendue chanter seule dans la chapelle, la nuit, cette même note. En janvier, elle était « partie en Suisse ». « Il ne va jamais la voir là-bas. Il descend à l'aile Est le dimanche et revient les yeux rouges. »"
+            },
+            {
+              "title": "Un allié",
+              "text": "L'abbé aidera si on lui dit la vérité : veiller Julien, calmer les somnambules, porter, prier. Il refuse de mettre le feu « à des chrétiens », sauf si on lui montre que les Gelés ne reviendront pas.",
+              "roll": {
+                "type": "skill",
+                "options": [
+                  "persuade"
+                ]
+              },
+              "success": "Il sera là la troisième nuit, dès le premier chant, et donne un dé bonus pour garder Julien.",
+              "failure": "Il hésite. Il viendra quand même la troisième nuit, s'il entend Julien passer devant la chapelle."
+            }
+          ],
+          "notes": [
+            {
+              "title": "Ce que dit l'abbé si on le lance sur le pays",
+              "items": [
+                "La mine de la Chaux a fermé en 1868 ; la Compagnie est partie au printemps, sans payer les veuves.",
+                "On dit aux Combes que la galerie « garde » ses hommes, et qu'il ne faut pas siffler sur le pré des Gentianes la nuit.",
+                "La vieille Joséphine Bochatay « y était » : son père a muré la galerie ([[les-combes]])."
+              ]
+            }
+          ],
+          "npcs": [
+            "abbe-mugnier"
+          ],
+          "handouts": [
+            "registre-1868"
+          ],
+          "ambience": [
+            "wind"
+          ],
+          "sfx": [
+            "door-creak",
+            "footsteps"
+          ],
+          "next": [
+            "l-infirmerie",
+            "les-combes",
+            "le-bureau-du-directeur"
+          ]
+        },
+        {
+          "id": "l-infirmerie",
+          "title": "L'infirmerie",
+          "lead": "Odile, les radiographies, le givre dans une chambre chauffée, les valises des transférés.",
+          "screen": {
+            "preset": "bulb",
+            "time": "day"
+          },
+          "readAloud": [
+            "Au deuxième étage, l'infirmerie sent l'éther et le linge bouilli. Une ampoule nue pend au-dessus de la table de radiologie ; elle grésille et baisse par moments, quand la chaudière force.",
+            "Sur le négatoscope, des radiographies de poitrines sont alignées. Sur certaines, entre les côtes, s'étend une trame pâle et ramifiée, fine comme des fougères de givre sur une vitre."
+          ],
+          "flow": [
+            {
+              "title": "Odile",
+              "text": "Elle travaille sans s'arrêter. Pour qu'elle parle, il faut la ménager, ou lui montrer qu'on sait déjà quelque chose (le chant, le carnet de Julien, ce que dit Hortense).",
+              "roll": {
+                "type": "skill",
+                "options": [
+                  "psychology",
+                  "charm"
+                ]
+              },
+              "success": "Elle ferme la porte et sort son cahier de ronde → {{handout:cahier-de-ronde}}. Elle raconte la semaine de mars 1926 : une nuit, la chaudière a fui dans la gaine de l'aile Est, et le lendemain tous les guéris ont craché le sang en même temps ; M. Pellissier en est mort. « Le docteur a crié sur Ducrey comme je ne l'avais jamais entendu crier. »",
+              "failure": "Elle se tait. Si l'investigateur l'aide une heure (porter les bassins, veiller un malade, Premiers soins), elle montre le cahier en fin de journée et raconte mars 1926.",
+              "pushed": "Elle parle, mais Castagnier entre à ce moment-là. Il ne dit rien et la retire du service de nuit : la troisième nuit, elle ne sera plus là pour aider."
+            },
+            {
+              "title": "Les radiographies",
+              "text": "Odile laisse regarder. Les films de Julien sont classés par mois depuis octobre 1925.",
+              "roll": {
+                "type": "skill",
+                "options": [
+                  "medicine",
+                  "natural-world"
+                ]
+              },
+              "success": "Ni calcification ni cicatrice : c'est trop régulier, presque cristallin. Mois après mois, la trame comble les cavernes de Julien en mars 1926, puis continue et gagne le tissu sain. En janvier 1927, ses poumons en sont presque entièrement faits. Ce qui l'a guéri ne répare pas : ça remplace (SAN 0/1).",
+              "failure": "Des cicatrices étranges. Odile répète ce que dit le docteur : « C'est la guérison qui se voit. » (Le journal de Castagnier le dit clairement : [[le-bureau-du-directeur]].)"
+            },
+            {
+              "title": "La chambre 21",
+              "text": "Odile montre (pas de jet) la chambre de M. Excoffier, vide depuis le 9 janvier. Le radiateur est brûlant ; pourtant un givre épais couvre l'intérieur des vitres, le pied du lit, l'oreiller, en fougères ramifiées qui partent toutes du traversin et pointent toutes vers l'est.",
+              "roll": {
+                "type": "san",
+                "label": "Le givre dans la chambre chaude",
+                "san": "0/1"
+              }
+            },
+            {
+              "title": "Les valises",
+              "text": "La lingerie, au fond du couloir, est fermée à clé. Avec Odile, pas de jet : elle a la clé. Seul :",
+              "roll": {
+                "type": "skill",
+                "options": [
+                  "locksmith"
+                ]
+              },
+              "success": "Derrière les piles de draps, dix valises pleines, étiquetées au nom des « transférés », et une onzième, plus belle, aux initiales M. C. : celle de Madame Castagnier. Ils sont tous partis en pyjama.",
+              "failure": "La serrure tient. Il faut la clé d'Odile ou le passe de Baptiste ([[la-chaufferie]]).",
+              "pushed": "La serrure cède avec un bruit sec ; une infirmière accourt. Castagnier l'apprendra ce soir et gardera désormais sur lui la clé de la porte de fer."
+            },
+            {
+              "title": "Ce qu'Odile sait encore",
+              "text": "Une fois en confiance : le docteur ne prend jamais la voiture « pour aller voir Madame en Suisse » ; Julien est venu frapper chez elle en larmes, la nuit du 15 au 16, pour qu'elle l'enferme.",
+              "extra": "Son grand-oncle Claude Perrollaz est mort à la mine en 1868 ; elle ne fait le lien que si on lui montre le registre des Combes. Elle aidera la troisième nuit : soins, morphine, surveiller les malades."
+            }
+          ],
+          "notes": [
+            {
+              "title": "Les valises",
+              "items": [
+                "Dix valises des transférés (Morel, Saillet, Burnier, Thévenet, Ravanel, Gaillard, Charvet, Rey, Mollard, Excoffier), plus celle de Madeleine Castagnier : **onze en tout**. Si Irène est déjà descendue, la sienne y est aussi."
+              ]
+            }
+          ],
+          "npcs": [
+            "odile-perrollaz"
+          ],
+          "handouts": [
+            "cahier-de-ronde"
+          ],
+          "ambience": [
+            "clock",
+            "wind"
+          ],
+          "sfx": [
+            "latch",
+            "footsteps"
+          ],
+          "next": [
+            "la-chapelle",
+            "les-combes",
+            "le-bureau-du-directeur"
+          ]
+        },
+        {
+          "id": "les-combes",
+          "title": "Les Combes",
+          "lead": "Le hameau sous la neige, la mère d'une « transférée », la vieille Joséphine et le plan de la mine.",
+          "optional": true,
+          "screen": {
+            "place": "street",
+            "preset": "snow",
+            "time": "day"
+          },
+          "readAloud": [
+            "Vingt minutes de raquettes dans une neige jusqu'aux genoux, et le hameau sort du blanc : une dizaine de fermes aux toits écrasés, une fontaine gelée, une petite chapelle, la fumée droite des cheminées.",
+            "Au café-épicerie, trois hommes jouent aux cartes près du poêle. Ils se taisent quand vous entrez. La patronne s'essuie les mains à son tablier et vient à vous. « Vous descendez de là-haut ? Vous avez des nouvelles de notre Suzanne ? »"
+          ],
+          "flow": [
+            {
+              "title": "La descente",
+              "text": "Baptiste prête des raquettes ; le sentier est balisé de perches. Pas de jet s'il accompagne l'investigateur.",
+              "roll": {
+                "type": "skill",
+                "options": [
+                  "survival",
+                  "natural-world"
+                ]
+              },
+              "success": "Une heure aller-retour, sans encombre.",
+              "failure": "Une chute dans une combe : l'investigateur arrive trempé et transi (1 point de vie) et perd une heure à se sécher au poêle du café."
+            },
+            {
+              "title": "La patronne",
+              "text": "Rosalie Mollard (pas de jet) : sa fille Suzanne, guérie aux Gentianes, a été « transférée en Suisse » le 2 janvier. Pas une lettre depuis ; le docteur a écrit qu'elle « se reposait ». Suzanne avait laissé son chapelet sur sa table de nuit. « Elle ne s'en séparait jamais. Jamais. »"
+            },
+            {
+              "title": "Les joueurs de cartes",
+              "text": "Une tournée payée suffit (pas de jet) : la vieille mine sous le pré des Gentianes, les trois « Gelés » de 1868, « ceux de là-haut ont creusé dedans en 24, ça ne pouvait rien donner de bon ». Ils envoient chez la mère Bochatay, « la seule qui y était »."
+            },
+            {
+              "title": "Joséphine Bochatay",
+              "text": "{{npc:josephine-bochatay}}, au coin de son feu, raconte sans qu'on la presse : elle attendait que quelqu'un descende de là-haut pour lui demander. Pas de jet pour son récit (voir notes).",
+              "roll": {
+                "type": "san",
+                "label": "Le récit de Joséphine",
+                "san": "0/1"
+              }
+            },
+            {
+              "title": "Le plan de la mine",
+              "text": "Elle a gardé le plan de son père.",
+              "roll": {
+                "type": "skill",
+                "options": [
+                  "persuade",
+                  "charm",
+                  "psychology"
+                ]
+              },
+              "success": "Elle le donne → {{handout:plan-saint-bernard}}. « Il n'y a que le feu. Mais il faut le porter au fond. Nous, on n'a pas osé : les Gelés étaient nos hommes. »",
+              "failure": "Elle le garde : « Revenez quand vous saurez ce que vous ferez. » Elle le donnera si l'investigateur revient le lendemain avec une décision. Baptiste connaît le même chemin ([[la-chaufferie]])."
+            },
+            {
+              "title": "Le retour",
+              "text": "Il faut remonter avant la nuit : vers 16 h, la lumière baisse déjà et le vent reprend.",
+              "goto": [
+                "le-bureau-du-directeur",
+                "deuxieme-nuit"
+              ]
+            }
+          ],
+          "notes": [
+            {
+              "title": "Ce que raconte Joséphine",
+              "items": [
+                "Elle avait vingt-deux ans en 1868. Son père, Jean-Pierre Bochatay, était boiseur à la mine de la Chaux.",
+                "Il toussait depuis dix ans, « la maladie de la mine ». À l'automne 1867, on a trouvé la fleur blanche au fond de Saint-Bernard : en deux mois, il ne toussait plus. Les autres non plus.",
+                "À Noël, ils se sont mis à chanter la nuit, en dormant, tous les mêmes. Puis trois sont redescendus une nuit de février et on les a trouvés assis contre la roche, givrés, « encore tièdes ».",
+                "Les hommes ont fait trois jours de feu à l'entrée et muré la galerie le 20 mars. Son père a posé les pierres lui-même. Ceux qui avaient respiré la fleur ont craché le sang tout le printemps ; son père est mort à la Saint-Jean. « Il savait que ça le tuerait. Il l'a fait quand même. »",
+                "« Le feu n'est pas allé assez loin. La fleur est encore en bas. On l'entend, les nuits de grand froid, si on pose l'oreille sur la pierre de la fontaine. »"
+              ]
+            }
+          ],
+          "npcs": [
+            "josephine-bochatay"
+          ],
+          "handouts": [
+            "plan-saint-bernard"
+          ],
+          "ambience": [
+            "village-day",
+            "wind",
+            "fireplace"
+          ],
+          "sfx": [
+            "dog-bark",
+            "knocking",
+            "door-open"
+          ],
+          "next": [
+            "le-bureau-du-directeur",
+            "deuxieme-nuit"
+          ]
+        },
+        {
+          "id": "le-bureau-du-directeur",
+          "title": "Le bureau du directeur",
+          "lead": "Le registre des sorties, la lettre de Leysin, le journal de Castagnier.",
+          "screen": {
+            "place": "library",
+            "preset": "candle",
+            "time": "night"
+          },
+          "readAloud": [
+            "Le bureau sent le tabac froid et le papier. Une lampe verte, un fauteuil de cuir, des revues médicales jusqu'au plafond. Au mur, le graphique des guérisons monte en flèche à partir de l'été 1925.",
+            "Au-dessus de la cheminée éteinte, le portrait d'une femme blonde en robe claire, assise, les mains ouvertes sur les genoux. Elle a un léger sourire, comme quelqu'un qui écoute."
+          ],
+          "flow": [
+            {
+              "title": "Entrer",
+              "text": "Le jour, Castagnier y reçoit ; il en sort pour ses visites de 10 h et de 17 h, et la nuit il descend souvent à l'aile Est. Julien, son secrétaire, a une clé : lucide, il la donne ; sinon elle est dans la poche de sa veste. Sans clé, la serrure est simple.",
+              "roll": {
+                "type": "skill",
+                "options": [
+                  "stealth",
+                  "locksmith"
+                ]
+              },
+              "success": "Personne ne voit l'investigateur entrer.",
+              "failure": "Une infirmière de nuit l'aperçoit dans le couloir. Castagnier le saura au matin : froid, poli, attentif, il gardera sur lui la clé de la porte de fer.",
+              "pushed": "Castagnier entre pendant la fouille. Il préfère parler que crier : jouer la conversation de [[la-galerie]] (étapes « Castagnier » et « Le marché »), ici, à la lumière de la lampe verte."
+            },
+            {
+              "title": "Le registre des sorties",
+              "text": "Sur une étagère, à portée de main, pas de jet → {{handout:registre-des-sorties}}.",
+              "extra": "Si Irène est déjà descendue, une onzième ligne à l'encre fraîche : « 19 janv. 1927 — LACOMBE Irène, 26 ans, Lyon — id. »"
+            },
+            {
+              "title": "Les comptes",
+              "text": "Le grand livre est sur le bureau.",
+              "roll": {
+                "type": "skill",
+                "options": [
+                  "accounting"
+                ]
+              },
+              "success": "Aucune dépense de transport, d'essence, de douane ni de pension à Leysin depuis septembre. Les transférés restent inscrits comme payants jusqu'à la fin de leur mois : leurs familles paient encore.",
+              "failure": "Des comptes bien tenus, rien qui saute aux yeux."
+            },
+            {
+              "title": "Le tiroir fermé",
+              "text": "Le tiroir de gauche est fermé. La clé est collée derrière le portrait de Madeleine (Julien le sait).",
+              "roll": {
+                "type": "skill",
+                "options": [
+                  "spot-hidden",
+                  "locksmith"
+                ]
+              },
+              "success": "Dedans : la lettre de Leysin → {{handout:lettre-leysin}}, le journal d'observations → {{handout:journal-castagnier}}, un pistolet Browning chargé et une clé de fer longue comme la main : celle de la porte du sous-sol.",
+              "failure": "Le tiroir résiste. Forcé au coupe-papier, il cède en éclatant : tout est là, mais Castagnier le verra au matin.",
+              "pushed": "Le bois éclate avec un bruit de coup de feu dans le bâtiment endormi. Castagnier arrive en robe de chambre (voir « Entrer », coup de force)."
+            },
+            {
+              "title": "Lire le journal",
+              "roll": {
+                "type": "san",
+                "label": "Le journal de Castagnier",
+                "san": "0/1D3"
+              }
+            },
+            {
+              "title": "Le portrait",
+              "text": "Après le journal, regarder à nouveau le portrait : Madeleine est assise comme les Gelés, les mains ouvertes sur les genoux. Le peintre l'a faite ainsi en 1923, bien avant.",
+              "goto": [
+                "deuxieme-nuit",
+                "la-chaufferie"
+              ]
+            }
+          ],
+          "npcs": [
+            "henri-castagnier",
+            "julien-mercadier"
+          ],
+          "handouts": [
+            "registre-des-sorties",
+            "lettre-leysin",
+            "journal-castagnier"
+          ],
+          "ambience": [
+            "clock",
+            "wind-howling"
+          ],
+          "sfx": [
+            "latch",
+            "footsteps",
+            "door-creak"
+          ],
+          "next": [
+            "deuxieme-nuit",
+            "la-chaufferie"
+          ]
+        },
+        {
+          "id": "deuxieme-nuit",
+          "title": "La deuxième nuit",
+          "lead": "Du mardi au mercredi : le givre chez Julien, Irène descend, et au matin elle est « transférée ».",
+          "screen": {
+            "preset": "bulb",
+            "time": "night"
+          },
+          "readAloud": [
+            "Le vent est tombé. Dans le silence, le bâtiment craque de froid. Sur la vitre, côté intérieur, des fougères de givre poussent lentement, alors que le radiateur brûle sous la main.",
+            "À une heure, le chant commence. Cette fois, il ne vient pas seulement de la galerie : il est dans les murs, dans les tuyaux, dans le verre d'eau de la table de nuit, dont la surface tremble."
+          ],
+          "flow": [
+            {
+              "title": "Julien",
+              "text": "S'il a parlé près du poêle, Julien a supplié l'investigateur de veiller sur lui. Sa chambre se couvre de givre malgré le radiateur. Il dort, chante, s'agite.",
+              "extra": "Ce n'est pas encore son tour. L'investigateur ne le sait pas."
+            },
+            {
+              "title": "Des pas nus",
+              "text": "Vers 1 h 30, des pas nus passent dans le couloir : {{npc:irene-lacombe}}, en chemise de nuit, les yeux ouverts, qui marche vers l'aile Est en chantant. Rester avec Julien, la suivre, ou l'arrêter ?"
+            },
+            {
+              "title": "Rester avec Julien",
+              "branch": "Si l'investigateur reste avec Julien",
+              "text": "Vers 3 h, Julien se lève, va à la fenêtre et l'ouvre. Cette nuit, le retenir est facile (pas de jet) : il se laisse recoucher, pleure, puis dort. Au matin, il a du givre dans les cheveux."
+            },
+            {
+              "title": "Suivre Irène",
+              "branch": "Si l'investigateur suit Irène",
+              "text": "Couloir de l'aile Est, escalier de service, sous-sol : la chaudière ronfle, Irène passe derrière sans hésiter. Une porte de fer est ouverte ; une lampe attend dans l'antichambre : Castagnier.",
+              "roll": {
+                "type": "skill",
+                "options": [
+                  "stealth"
+                ]
+              },
+              "success": "L'investigateur voit sans être vu : Castagnier prend la main d'Irène et l'emmène au-delà de la porte. Il revient seul une heure plus tard, du givre sur les joues, et referme à clé.",
+              "failure": "Castagnier l'aperçoit. Il ne s'emporte pas : « Retournez vous coucher. Vous ne pouvez rien pour elle cette nuit. Demain, si vous voulez, je vous montrerai. » Il referme la porte de fer derrière Irène. (Il tiendra parole : [[la-galerie]].)"
+            },
+            {
+              "title": "Arrêter Irène",
+              "branch": "Si l'investigateur retient Irène",
+              "text": "Elle ne se débat pas vraiment : elle tire vers l'aile Est avec une force douce et obstinée. La convaincre, ou la porter (FOR, jets rapides de la scène).",
+              "roll": {
+                "type": "skill",
+                "options": [
+                  "persuade",
+                  "psychology"
+                ]
+              },
+              "success": "Ramenée au chaud (radiateur, bain chaud), Irène se réveille, lucide et terrifiée, et tousse du sang dans ses mains : « Je ne veux pas descendre. Mais j'ai si froid quand je ne descends pas. » Elle passe la nuit. La troisième, elle se lèvera avec Julien ([[la-nuit-du-choeur]]).",
+              "failure": "Elle glisse entre les mains de l'investigateur et court, pieds nus, plus vite qu'on ne le croirait. La porte de fer se referme sur elle avant qu'il n'arrive.",
+              "pushed": "L'investigateur la rattrape dans l'escalier, mais tombe avec elle sur les marches (1D3 points de vie chacun). Elle est sauvée pour cette nuit, comme sur une réussite."
+            },
+            {
+              "title": "Le matin",
+              "text": "Mercredi 19, au petit déjeuner, Castagnier annonce d'une voix égale : « Mademoiselle Lacombe nous a quittés cette nuit. Transférée à Leysin. » La route est coupée depuis lundi. {{npc:hortense-vial}}, très fort : « Transférée par où, docteur ? Par le câble ? » Pas de jet.",
+              "extra": "Si Irène a été retenue, Castagnier ne dit rien et regarde longuement l'investigateur. Il viendra lui parler dans la journée ([[la-galerie]])."
+            },
+            {
+              "title": "La chaise vide",
+              "text": "Sur la galerie de nuit, la chaise longue d'Irène est vide, la couverture raide de givre ; dessous, la bouche de fonte souffle toujours.",
+              "roll": {
+                "type": "san",
+                "label": "La chaise vide",
+                "san": "0/1"
+              },
+              "goto": [
+                "la-chaufferie",
+                "la-galerie"
+              ]
+            }
+          ],
+          "rolls": [
+            {
+              "type": "characteristic",
+              "label": "Porter Irène jusqu'au chaud",
+              "options": [
+                "STR"
+              ]
+            }
+          ],
+          "npcs": [
+            "julien-mercadier",
+            "irene-lacombe",
+            "henri-castagnier",
+            "hortense-vial"
+          ],
+          "ambience": [
+            "wind",
+            "clock"
+          ],
+          "sfx": [
+            "footsteps",
+            "door-slam",
+            "latch"
+          ],
+          "next": [
+            "la-chaufferie",
+            "la-galerie"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "sous-l-aile-est",
+      "title": "Sous l'aile Est",
+      "scenes": [
+        {
+          "id": "la-chaufferie",
+          "title": "La chaufferie",
+          "lead": "Baptiste Ducrey, la gaine, la porte de fer, et ce qu'on pourrait faire avec une chaudière.",
+          "screen": {
+            "place": "crypt",
+            "preset": "bulb",
+            "time": "day"
+          },
+          "readAloud": [
+            "L'escalier de service descend dans une chaleur de four. Sous une rangée d'ampoules nues, la grande chaudière ronfle, la gueule rouge ouverte ; un homme en maillot de corps y jette le charbon à grandes pelletées.",
+            "Au fond de la salle, la chaleur s'arrête net, comme devant un mur. Une gaine de tôle large comme un homme part du plafond et s'enfonce dans le béton. À côté, une porte de fer peinte en gris. Sur ses gonds, du givre."
+          ],
+          "flow": [
+            {
+              "title": "Baptiste",
+              "text": "{{npc:baptiste-ducrey}} se méfie : il tient à sa place, et sa sœur Mélanie, lingère, est une guérie de l'automne dernier. Un dé bonus si l'investigateur lui montre une preuve (registre, lettre de Leysin, valises, Irène « transférée » malgré la route).",
+              "roll": {
+                "type": "skill",
+                "options": [
+                  "persuade",
+                  "psychology"
+                ]
+              },
+              "success": "Il pose sa pelle, s'essuie le front et parle (voir notes).",
+              "failure": "Il nie tout et retourne à son charbon. Le soir, il vient frapper à la porte de l'investigateur : il a eu peur pour Mélanie toute la journée. Il parle alors."
+            },
+            {
+              "title": "La gaine",
+              "text": "Avec Baptiste, pas de jet : il l'a construite à l'été 1925, sur ordre du docteur. Un ventilateur aspire l'air de l'antichambre, derrière la porte de fer, et le souffle jusqu'aux grilles de la galerie de nuit. Ordre formel : jamais de chaleur de ce côté-ci. Seul :",
+              "roll": {
+                "type": "skill",
+                "options": [
+                  "mechanical-repair",
+                  "spot-hidden"
+                ]
+              },
+              "success": "L'investigateur suit le circuit : la gaine prend l'air derrière la porte de fer et le pousse jusqu'aux bouches de la galerie de nuit.",
+              "failure": "Une gaine d'aération, et un froid qui en tombe."
+            },
+            {
+              "title": "Mars 1926",
+              "text": "Baptiste raconte (pas de jet) : la nuit du 18 au 19 mars 1926, une vanne a fui et la vapeur est passée dans la gaine. Au matin, les guéris crachaient le sang. Pellissier est mort le 23. Mélanie n'était pas encore guérie : elle n'a rien eu. « Le docteur m'a dit : c'est comme si tu leur avais brûlé les poumons toi-même. »"
+            },
+            {
+              "title": "Ce que peut la chaudière",
+              "text": "Baptiste le sait (pas de jet) : en arrêtant le ventilateur et en ouvrant la conduite de vapeur de l'aile Est, jamais raccordée, on pousserait la vapeur dans l'antichambre et jusqu'au fond de la galerie. Trois heures de chaudière forcée pour réchauffer le fond. Et dans l'ancienne poudrière de la mine, à mi-galerie, il a rangé en 1924 trois caisses de dynamite du chantier. « Elle suinte. Je n'y touche plus. »"
+            },
+            {
+              "title": "La porte de fer",
+              "text": "Baptiste a une clé, comme le docteur (et celle du tiroir du bureau, [[le-bureau-du-directeur]]). Sans clé :",
+              "roll": {
+                "type": "skill",
+                "options": [
+                  "locksmith"
+                ],
+                "difficulty": "hard"
+              },
+              "success": "La serrure tourne. Derrière, le froid.",
+              "failure": "Une serrure de coffre, gelée par-dessus le marché. Il faut une clé : Baptiste, Castagnier ou le tiroir du bureau.",
+              "goto": [
+                "la-galerie"
+              ]
+            },
+            {
+              "title": "Le dilemme de Baptiste",
+              "text": "Il veut que Mélanie vive. Si on lui explique que détruire la colonie la fera rechuter, il blêmit et propose plutôt de l'envoyer dans le Midi. Il aidera à ce que l'investigateur décidera s'il en est convaincu, et il viendra la troisième nuit s'il entend Julien descendre.",
+              "extra": "Le câble de ravitaillement : Baptiste peut remettre le treuil en marche malgré le givre. La benne à charbon descend à Chedde en vingt minutes. Personne n'y monte jamais."
+            }
+          ],
+          "notes": [
+            {
+              "title": "Ce que sait Baptiste",
+              "items": [
+                "Son grand-père était mineur à la Chaux ; il a aidé à murer Saint-Bernard en 1868.",
+                "Le 6 octobre 1924, il était du chantier quand la pioche a crevé le vieux mur. Il a vu les trois Gelés. Le docteur l'a gardé, les autres ont été payés et renvoyés.",
+                "Il a construit la gaine à l'été 1925. Il entretient la chaudière et le ventilateur, et n'est jamais allé plus loin que l'antichambre depuis 1924.",
+                "La Renault du docteur n'a pas fait cent kilomètres depuis l'été : c'est lui qui l'entretient.",
+                "En décembre, un ancien patient, Anatole Rey, est remonté à pied de la gare du Fayet, la nuit, en souliers de ville. On l'a trouvé au matin dans le hall, à moitié gelé, qui disait qu'il était « rentré »."
+              ]
+            }
+          ],
+          "npcs": [
+            "baptiste-ducrey"
+          ],
+          "ambience": [
+            "fireplace"
+          ],
+          "sfx": [
+            "latch",
+            "door-slam"
+          ],
+          "next": [
+            "la-galerie"
+          ]
+        },
+        {
+          "id": "la-galerie",
+          "title": "La galerie Saint-Bernard",
+          "lead": "Le lichen, les Gelés, Madeleine et Irène, et le choix du docteur Castagnier.",
+          "screen": {
+            "place": "crypt",
+            "preset": "ritual",
+            "time": "night"
+          },
+          "readAloud": [
+            "Derrière la porte de fer, une antichambre de béton, puis la roche. Le froid prend aux dents. La galerie descend doucement entre de vieux étais noircis, et votre lampe allume sur les parois un givre épais, blanc, qui ne fond pas sous la flamme.",
+            "Plus loin, la lampe devient inutile. Le givre luit de lui-même, très faiblement, comme la neige sous la lune. L'air est plein d'une poussière fine qui scintille. Quelque part devant vous, très bas, on chante.",
+            "La galerie s'ouvre sur une salle basse. Le long des parois, des gens sont assis."
+          ],
+          "flow": [
+            {
+              "title": "Le froid du fond",
+              "text": "Environ −8° dans la salle. Sans pelisse de cure (il y en a à la réserve de la galerie de nuit), 1 point de vie par demi-heure passée au fond.",
+              "extra": "Les poumons sains de l'investigateur n'accrochent pas les spores."
+            },
+            {
+              "title": "Le lichen",
+              "roll": {
+                "type": "skill",
+                "options": [
+                  "natural-world",
+                  "medicine"
+                ]
+              },
+              "success": "Un lichen, mais aucun connu : il pousse sur la roche nue sans lumière, en fines fougères cristallines, et il est tiède sous le doigt. La poussière qui scintille, ce sont ses spores. C'est la trame des radiographies.",
+              "failure": "Du givre qui n'en est pas, tiède sous le doigt."
+            },
+            {
+              "title": "La salle des Gelés",
+              "text": "Quinze personnes assises contre la roche, givrées (quatorze si Irène a été retenue) : trois mineurs en vieux habits, lampes à huile éteintes sur les genoux ; une femme blonde en chemise de nuit et châle, une chaise de cuisine posée devant elle ; dix patients en pyjama ; et, au bout, Irène, le visage encore visible sous un givre mince.",
+              "roll": {
+                "type": "san",
+                "label": "Les Gelés",
+                "san": "1/1D6"
+              }
+            },
+            {
+              "title": "De près",
+              "roll": {
+                "type": "skill",
+                "options": [
+                  "medicine",
+                  "first-aid"
+                ]
+              },
+              "success": "Ils respirent : une fois toutes les quatre minutes, un souffle qui fait chanter le givre. Le lichen sort de leurs narines et de leur bouche en fines fougères et rentre dans la roche. Les détacher, les remonter à la chaleur : ils mourraient en une heure (le journal de Castagnier le dit aussi).",
+              "failure": "Des corps gelés. Puis l'un d'eux respire, et le givre tinte (SAN 0/1)."
+            },
+            {
+              "title": "Irène",
+              "text": "Si elle est ici, Irène a les yeux ouverts et elle sourit. On ne peut plus rien pour elle : la détacher de la paroi la tuerait."
+            },
+            {
+              "title": "Castagnier",
+              "text": "{{npc:henri-castagnier}} est là, assis sur la chaise devant Madeleine, ou il descend derrière l'investigateur. Il ne crie pas. Il explique (voir notes). Si l'investigateur parle de feu, il pose la main sur la poche où est son pistolet."
+            },
+            {
+              "title": "Le marché",
+              "text": "Castagnier propose : il signe la sortie de Julien et l'envoie à Menton dès que la route rouvre, à ses frais. Au soleil, Julien vivra, s'il ne revient jamais dans le froid. En échange : le silence, et qu'on le laisse continuer."
+            },
+            {
+              "title": "Le faire changer d'avis",
+              "text": "Un dé bonus si l'investigateur lui oppose ce qu'il ne peut pas balayer : la lettre de Leysin, Rey remonté à pied de la gare, l'hiver prochain (une vingtaine, il l'a écrit), Irène « transférée » alors que la route est coupée.",
+              "roll": {
+                "type": "skill",
+                "options": [
+                  "persuade",
+                  "psychology"
+                ]
+              },
+              "success": "Il se tait longtemps, la main sur le genou de Madeleine. « Faites ce que vous devez. Mais je reste avec elle. » Il donne sa clé, dira à Baptiste d'obéir, et demande une seule chose : qu'on le laisse descendre s'asseoir près d'elle avant. S'il refuse la destruction mais accepte la vérité, il écrira à chaque patient ce qu'il risque.",
+              "failure": "Il remonte, referme la porte de fer et garde sa clé. Il ne dénoncera pas l'investigateur, il n'en a pas les moyens, mais ne le quitte plus des yeux. Son marché tient toujours.",
+              "pushed": "Il sort le pistolet. Psychologie : le canon n'est pas pour l'investigateur, il est pour lui. Le désarmer demande une FOR opposée (jets rapides de la scène) ; le laisser parler une minute de plus le fait renoncer et poser l'arme sur la chaise."
+            }
+          ],
+          "notes": [
+            {
+              "title": "La galerie",
+              "items": [
+                "Porte de fer → antichambre de béton (1924), où débouchent la gaine et la conduite de vapeur jamais raccordée.",
+                "Galerie ancienne : descend vers le nord sur environ cent cinquante mètres. Rails rouillés, étais noircis par le feu de 1868 sur les trente premiers mètres : là, pas de lichen.",
+                "À soixante-dix mètres, à gauche : l'ancienne **poudrière**, trois caisses de dynamite de 1924, suintantes.",
+                "Au bout : la **salle des Gelés**, ancienne salle de la veine, basse, entièrement couverte de lichen, sol compris."
+              ]
+            },
+            {
+              "title": "Ce que dit Castagnier",
+              "items": [
+                "« Quatre-vingt-douze pour cent. Avant moi, sur ce plateau, on en enterrait un sur deux. »",
+                "« Ils ne sont pas morts. Ils respirent. Ils chantent. Madeleine m'entend, j'en suis sûr. »",
+                "« Sur cent que je sauve, dix descendent. Quel médecin oserait refuser ce marché à cent malades ? »",
+                "« Je sais que le mensonge ne tiendra pas. Je cherche une autre solution avant l'été. Je n'en ai pas. »",
+                "« Si vous la brûlez, ils rechutent tous. Tous ceux que j'ai guéris. Votre ami aussi. »"
+              ]
+            }
+          ],
+          "npcs": [
+            "henri-castagnier",
+            "madeleine-castagnier",
+            "le-choeur",
+            "irene-lacombe"
+          ],
+          "ambience": [
+            "wind"
+          ],
+          "sfx": [
+            "footsteps",
+            "latch",
+            "door-slam"
+          ],
+          "next": [
+            "la-nuit-du-choeur"
+          ],
+          "rolls": [
+            {
+              "type": "characteristic",
+              "label": "Désarmer Castagnier (FOR opposée)",
+              "options": [
+                "STR"
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "le-chant",
+      "title": "Le chœur",
+      "scenes": [
+        {
+          "id": "la-nuit-du-choeur",
+          "title": "La nuit du chœur",
+          "lead": "Du mercredi au jeudi : tous les guéris chantent, Julien descend. Détruire, sauver Julien seul, ou laisser faire.",
+          "screen": {
+            "place": "manor",
+            "preset": "nightmare",
+            "time": "night"
+          },
+          "readAloud": [
+            "Toute la soirée, le froid gagne le bâtiment. Les radiateurs tiédissent, puis refroidissent, alors que la chaudière hurle en bas. Le givre monte aux vitres du réfectoire, aux miroirs, au verre des lampes.",
+            "À minuit et demi, le chant commence partout à la fois. Les guéris chantent dans leurs lits, dans les couloirs, sur la galerie. Le bâtiment entier vibre sur une seule note, et l'eau des carafes frémit."
+          ],
+          "flow": [
+            {
+              "title": "Le chœur",
+              "roll": {
+                "type": "san",
+                "label": "Le bâtiment qui chante",
+                "san": "0/1D3"
+              }
+            },
+            {
+              "title": "Julien se lève",
+              "text": "Vers 2 h, Julien se lève, et Irène avec lui si elle a été retenue la veille. Tracker « Julien vers la galerie » : +1 à chaque étape franchie. Contre une vraie chaleur, il redevient lucide par moments et supplie qu'on le retienne.",
+              "extra": "Les alliés convaincus sont là : Baptiste à la chaudière, Odile auprès des malades, l'abbé auprès de Julien, peut-être Castagnier. L'aube vient vers 7 h : alors le chant faiblit et Julien s'endort."
+            },
+            {
+              "title": "Que faire ?",
+              "text": "L'investigateur a jusqu'à l'aube. Les choix ci-dessous peuvent se combiner (sauver Julien pendant que Baptiste force la chaudière), mais détruire la colonie fera rechuter Julien quoi qu'il arrive."
+            },
+            {
+              "title": "La vapeur",
+              "branch": "Détruire par la vapeur",
+              "text": "Baptiste (ou l'investigateur, Mécanique) arrête le ventilateur et ouvre la conduite de l'aile Est. Trois heures de chaudière forcée : tracker « Agonie de la colonie », +1 par demi-heure réussie. Le givre gagne les vannes.",
+              "roll": {
+                "type": "skill",
+                "options": [
+                  "mechanical-repair",
+                  "operate-heavy-machinery"
+                ]
+              },
+              "success": "La vapeur passe : +1.",
+              "failure": "Une vanne gèle ; il faut la dégeler à la lampe à souder. La demi-heure est perdue.",
+              "pushed": "La vanne cède d'un coup : jet de vapeur brûlante, 1D6 points de vie, mais le palier est gagné."
+            },
+            {
+              "title": "Le feu",
+              "branch": "Détruire par le feu",
+              "text": "Deux bidons de pétrole (la Renault, la réserve des lampes) portés jusqu'à la salle des Gelés. Le lichen brûle comme de la cire : +2 par round de feu au fond, trois rounds suffisent avec les deux bidons. Les Gelés brûlent avec lui. Sortir avant la fumée : DEX.",
+              "roll": {
+                "type": "san",
+                "label": "Les Gelés brûlent",
+                "san": "1/1D6"
+              }
+            },
+            {
+              "title": "La dynamite",
+              "branch": "Faire sauter la salle des Gelés",
+              "text": "La dynamite de la poudrière, portée jusqu'au fond, la mèche posée par Baptiste (ou Mécanique). La voûte écrase la salle : +6 d'un coup ; écrasée et coupée de l'air, la colonie meurt en quelques jours.",
+              "roll": {
+                "type": "luck"
+              },
+              "success": "La dynamite suintante tient jusqu'au fond. Deux minutes de mèche pour remonter : largement assez.",
+              "failure": "Un bâton glisse et explose à mi-chemin : DEX pour se jeter à terre (1D3 points de vie, sinon 2D6). La galerie s'effondre entre la poudrière et la salle : la colonie est murée, pas tuée, comme en 1868 (voir [[epilogue]])."
+            },
+            {
+              "title": "Sauver Julien",
+              "branch": "Sauver Julien seul",
+              "text": "Le garder contre la chaudière jusqu'à l'aube, puis l'emmener dès que la route rouvre. Ou cette nuit même par le câble : Baptiste au treuil, la benne à charbon jusqu'à Chedde, vingt minutes dans le vent (Escalade ou Chance pour tenir dans la benne qui tangue). Chaque heure avant l'aube, il faut le garder. L'abbé ou Odile donnent un dé bonus.",
+              "roll": {
+                "type": "skill",
+                "options": [
+                  "psychology",
+                  "persuade"
+                ]
+              },
+              "success": "Julien reste. Il pleure, chante, se calme contre la chaleur.",
+              "failure": "Tracker +1 : il s'arrache et franchit une étape. Le rattraper : FOR contre 45 (jets rapides de la scène)."
+            },
+            {
+              "title": "Laisser faire",
+              "branch": "Laisser faire",
+              "text": "Julien descend. L'investigateur peut l'accompagner, lui tenir la main jusqu'à la salle, le voir s'asseoir près d'Irène. Lucide une dernière fois, il dit : « Ce n'est pas froid, tu sais. »",
+              "roll": {
+                "type": "san",
+                "label": "Julien prend sa place",
+                "san": "1/1D6"
+              }
+            },
+            {
+              "title": "Au fond, le chant",
+              "text": "Pour qui descend dans la salle des Gelés cette nuit (feu, dynamite, ou pour accompagner Julien) : le chœur appelle aussi les vivants.",
+              "roll": {
+                "type": "characteristic",
+                "options": [
+                  "POW"
+                ]
+              },
+              "success": "L'investigateur garde la tête claire.",
+              "failure": "Il s'arrête, s'assoit presque contre la paroi ; le givre prend ses cils. Un allié présent le tire en arrière. Seul : jet de Chance pour se reprendre ; échec, 1D3 points de vie de froid avant de se relever."
+            },
+            {
+              "title": "Les Gelés ouvrent les yeux",
+              "text": "Dès que la colonie souffre (tracker à 3, ou au premier round de feu), les Gelés ouvrent les yeux tous ensemble, et le chant devient un cri sans bouche, dans la roche et dans les os.",
+              "roll": {
+                "type": "san",
+                "label": "Les yeux des Gelés",
+                "san": "1/1D4"
+              }
+            },
+            {
+              "title": "Les guéris crachent le sang",
+              "text": "Tracker à 3 : dans tout le sanatorium, les guéris toussent et crachent le sang. Julien s'effondre, s'il n'est pas déjà au fond.",
+              "roll": {
+                "type": "skill",
+                "options": [
+                  "first-aid",
+                  "medicine"
+                ]
+              },
+              "success": "L'investigateur le garde en vie jusqu'à l'aube, la tête sur le côté, au chaud.",
+              "failure": "Odile arrive avec la morphine (ou l'abbé, s'il est là) : Julien passe la nuit de justesse. Son sort se joue dans l'épilogue."
+            },
+            {
+              "title": "Castagnier",
+              "text": "Convaincu, il descend s'asseoir devant Madeleine avant la vapeur, le feu ou la dynamite, et n'en remonte pas. Sinon, il tente de fermer la conduite ou d'arracher la mèche : le convaincre (Persuasion), ou l'en empêcher (FOR, jets rapides de la scène). Il ne tire pas sur l'investigateur.",
+              "goto": [
+                "epilogue"
+              ],
+              "roll": {
+                "type": "skill",
+                "options": [
+                  "persuade"
+                ]
+              },
+              "success": "Il lâche la vanne ou la mèche et s'assoit par terre, la tête dans les mains.",
+              "failure": "Il faut l'écarter de force (FOR) ou perdre un palier du tracker le temps de réparer ce qu'il a défait."
+            }
+          ],
+          "notes": [
+            {
+              "title": "Le déroulé de la nuit",
+              "items": [
+                "22 h : les radiateurs refroidissent, le givre monte dans les chambres.",
+                "0 h 30 : le chant, partout.",
+                "2 h : Julien se lève (et Irène, si elle a été retenue). Une étape du tracker par quart d'heure s'il n'est pas retenu : chambre, couloir, escalier de l'aile Est, sous-sol, porte de fer.",
+                "Si la colonie souffre : les guéris somnambules descendent vers la chaufferie et se tiennent devant les vannes, sans violence. Les écarter : Persuasion, ou l'aide de l'abbé et d'Odile.",
+                "7 h : l'aube. Le chant faiblit. Ceux qui ne sont pas au fond s'endorment où ils sont."
+              ]
+            }
+          ],
+          "npcs": [
+            "julien-mercadier",
+            "baptiste-ducrey",
+            "odile-perrollaz",
+            "abbe-mugnier",
+            "henri-castagnier",
+            "le-choeur"
+          ],
+          "ambience": [
+            "wind-howling",
+            "clock"
+          ],
+          "sfx": [
+            "footsteps",
+            "door-slam",
+            "latch"
+          ],
+          "next": [
+            "epilogue"
+          ],
+          "rolls": [
+            {
+              "type": "characteristic",
+              "label": "Retenir Julien (FOR contre 45)",
+              "options": [
+                "STR"
+              ]
+            },
+            {
+              "type": "characteristic",
+              "label": "Se jeter à terre / sortir avant la fumée",
+              "options": [
+                "DEX"
+              ]
+            },
+            {
+              "type": "luck",
+              "label": "Tenir dans la benne du câble"
+            }
+          ]
+        },
+        {
+          "id": "epilogue",
+          "title": "Le jeudi blanc",
+          "lead": "Jeudi 20 janvier : la route rouvre. Ce que chaque choix a coûté.",
+          "screen": {
+            "place": "manor",
+            "preset": "fog",
+            "time": "dusk"
+          },
+          "readAloud": [
+            "Au matin, le ciel est d'un bleu dur. Les montagnes sont revenues, immenses, et la vallée fume de brume. Vers midi, on entend monter dans les lacets le moteur du chasse-neige.",
+            "Sur la galerie de nuit, les chaises longues sont alignées sous la neige fraîche. On n'entend plus rien."
+          ],
+          "flow": [
+            {
+              "title": "La route",
+              "text": "Vers midi, le chasse-neige des Ponts et Chaussées atteint le plateau. Baptiste peut redescendre l'investigateur, Julien et qui voudra partir. Le téléphone revient dans l'après-midi.",
+              "extra": "Si l'investigateur prévient les autorités (gendarmerie de Saint-Gervais, préfecture d'Annecy) : enquête, scandale, l'aile Est murée par ordre du préfet. Voir « Colonie murée »."
+            },
+            {
+              "title": "Récompenses et pertes",
+              "text": "Appliquer les notes ci-dessous selon ce qui s'est passé."
+            }
+          ],
+          "notes": [
+            {
+              "title": "Épilogue",
+              "items": [
+                "**Colonie détruite** (vapeur, feu, ou dynamite au fond) : l'investigateur gagne **1D6 SAN**. Dans les jours qui suivent, tous les guéris rechutent. Aux Gentianes, sept meurent avant Pâques ; parmi les anciens patients dispersés en France, une douzaine de plus avant l'été (**1/1D4 SAN** en l'apprenant par Odile). Les Gelés dégèlent et s'affaissent : on peut enfin les enterrer aux Combes, avec une vraie messe. Joséphine y vient.",
+                "**Julien, si la colonie est détruite** : jet de Chance de l'investigateur. Réussite : Julien survit, très affaibli ; il part pour Vence et vivra encore quelques années, en toussant, en écrivant chaque dimanche. Échec : il meurt en mars à Passy, lucide jusqu'au bout, et remercie l'investigateur de lui avoir rendu sa tête (perte de **1D4 SAN**).",
+                "**Colonie murée seulement** (dynamite tombée à mi-chemin, ou l'aile Est murée par les autorités) : les guéris rechutent comme au printemps 1868, moins gravement (trois morts aux Gentianes ; Julien survit, affaibli). La colonie vit derrière la roche. L'hiver suivant, d'anciens patients reviennent gratter la neige sur le pré des Gentianes, la nuit. Pas de gain de SAN.",
+                "**Julien sauvé seul** (gardé jusqu'à l'aube puis emmené, descendu par le câble, ou parti grâce au marché) : **1D4 SAN**. Julien vit à Menton ; il chante un peu les nuits de mistral et ne doit jamais revoir la neige. L'hiver suivant, une vingtaine de patients de 1926 descendent : **1/1D3 SAN** quand Odile l'écrit à l'investigateur.",
+                "**Laisser faire** : perte de **1D6 SAN**. Si Castagnier a promis d'avertir les patients, la perte n'est que de **1D3** : il écrit à chacun ce qu'il risque, et certains choisissent la galerie en le sachant.",
+                "**Castagnier** : convaincu et la colonie détruite, on le retrouve au fond, assis devant Madeleine, mort de froid ou de feu. Sinon, le sanatorium ferme en 1928 et il disparaît. Si la colonie vit, la plainte des Saillet amène une enquête au printemps ; il se tue dans la galerie et l'aile Est est murée : voir « Colonie murée ».",
+                "**Les autres** : Mélanie Ducrey rechute si la colonie meurt, mais elle est jeune et guérie depuis peu : elle survit. Si Julien part dans le Midi, Baptiste y envoie sa sœur aussi. Hortense Vial, si la colonie vit, demande à dormir sur la galerie de nuit : « À mon âge, quinze mois, c'est une éternité. »"
+              ]
+            }
+          ],
+          "rolls": [
+            {
+              "type": "damage",
+              "label": "Gain de SAN (colonie détruite)",
+              "dice": "1D6"
+            },
+            {
+              "type": "damage",
+              "label": "Gain de SAN (Julien sauvé)",
+              "dice": "1D4"
+            },
+            {
+              "type": "luck",
+              "label": "Julien survit-il à la rechute ?"
+            }
+          ],
+          "npcs": [
+            "julien-mercadier",
+            "baptiste-ducrey",
+            "odile-perrollaz",
+            "henri-castagnier"
+          ],
+          "ambience": [
+            "wind",
+            "village-day"
+          ],
+          "sfx": [
+            "door-open"
+          ]
+        }
+      ]
+    }
+  ],
+  "npcs": [
+    {
+      "id": "julien-mercadier",
+      "name": "Julien Mercadier",
+      "kind": "person",
+      "role": "Le vieil ami, guéri, secrétaire du directeur",
+      "description": "Trente-trois ans, grand, maigre, le teint redevenu rose, une cicatrice d'éclat d'obus au menton. Ancien instituteur à Lyon, gazé en 1918, tuberculeux depuis 1923.",
+      "personality": "Gai, doux, absent, et il fredonne. Près d'une vraie chaleur, il redevient lui-même : lucide, terrifié, pressé de tout dire avant que ça ne reparte.",
+      "knows": [
+        "Il a tapé lui-même les dix lettres de transfert pour Leysin ; aucune voiture n'est partie.",
+        "Les valises des transférés sont à la lingerie du deuxième étage.",
+        "Le chant monte par les grilles de la galerie de nuit ; au sous-sol, derrière la chaudière, il y a une porte de fer (Ducrey et le docteur en ont la clé).",
+        "La clé du tiroir du bureau est collée derrière le portrait de Madeleine.",
+        "Irène descendra d'abord, puis lui. Il ne sait pas comment il le sait.",
+        "Il a rêvé de Madame Castagnier, assise dans la pierre, qui lui faisait de la place."
+      ],
+      "characteristics": {
+        "STR": 45,
+        "CON": 50,
+        "SIZ": 60,
+        "DEX": 55,
+        "APP": 55,
+        "INT": 70,
+        "POW": 45,
+        "EDU": 70
+      },
+      "hp": 11,
+      "dodge": 27
+    },
+    {
+      "id": "henri-castagnier",
+      "name": "Dr Henri Castagnier",
+      "kind": "person",
+      "role": "Directeur médical des Gentianes",
+      "description": "Cinquante-quatre ans, barbe grise taillée court, lunettes cerclées d'or, blouse impeccable. Il a les yeux de quelqu'un qui ne dort plus.",
+      "personality": "Courtois, brillant, sincère. Il a sauvé des centaines de malades et sacrifié onze personnes, dont sa femme, et il a fait le compte. Mis devant la vérité, il ne ment plus : il argumente.",
+      "knows": [
+        "Tout : la galerie, le lichen (*Pruina canens*, dans son journal), la gaine, Madeleine, les transferts inventés.",
+        "La chaleur rend les guéris lucides ; les guéris partis dans le Midi ne reviennent pas.",
+        "Détruire ou réchauffer la colonie fait rechuter tous les guéris (mars 1926).",
+        "Irène puis Julien descendront ; l'hiver prochain, une vingtaine.",
+        "Le mensonge des transferts ne tiendra pas jusqu'à l'été."
+      ],
+      "characteristics": {
+        "STR": 50,
+        "CON": 55,
+        "SIZ": 65,
+        "DEX": 50,
+        "APP": 60,
+        "INT": 80,
+        "POW": 65,
+        "EDU": 85
+      },
+      "hp": 12,
+      "dodge": 25,
+      "skills": {
+        "medicine": 75,
+        "persuade": 60,
+        "psychology": 55
+      },
+      "attacks": [
+        {
+          "name": "Pistolet Browning 6,35",
+          "skill": 30,
+          "damage": "1D6",
+          "note": "Il ne tire pas sur l'investigateur. L'arme est pour lui-même."
+        },
+        {
+          "name": "Coup de poing",
+          "skill": 35,
+          "damage": "1D3"
+        }
+      ]
+    },
+    {
+      "id": "odile-perrollaz",
+      "name": "Odile Perrollaz",
+      "kind": "person",
+      "role": "Infirmière-major",
+      "description": "Quarante et un ans, Savoyarde de Passy, coiffe blanche, mains rougies par le désinfectant.",
+      "personality": "Dévouée aux malades, sèche avec les visiteurs, terrifiée de perdre sa place et plus encore de ce qu'elle voit la nuit. Elle a besoin qu'on la croie.",
+      "knows": [
+        "Les guéris chantent la nuit depuis l'automne ; ils disparaissent toujours la nuit, en pyjama, et le docteur dit « transféré ».",
+        "Le docteur lui a ordonné de ne rien noter ; elle tient un cahier de ronde.",
+        "La semaine de mars 1926 : une fuite de la chaudière dans la gaine, et le lendemain tous les guéris ont craché le sang ; Pellissier est mort.",
+        "Les valises des transférés sont à la lingerie, dont celle de Madame Castagnier.",
+        "Julien est venu la supplier de l'enfermer la nuit du 15 au 16 janvier."
+      ],
+      "characteristics": {
+        "STR": 50,
+        "CON": 60,
+        "SIZ": 55,
+        "DEX": 60,
+        "INT": 65,
+        "POW": 60
+      },
+      "hp": 11,
+      "dodge": 30,
+      "skills": {
+        "first-aid": 70,
+        "medicine": 45,
+        "psychology": 45
+      }
+    },
+    {
+      "id": "abbe-mugnier",
+      "name": "Abbé Anselme Mugnier",
+      "kind": "person",
+      "role": "Aumônier des Gentianes et curé des Combes",
+      "description": "Soixante-deux ans, pèlerine noire, gros souliers cloutés, un nez cassé de montagnard.",
+      "personality": "Simple, têtu, bon. Lié par le secret de la confession, il cherche à avertir sans le trahir.",
+      "knows": [
+        "Des guéris lui confient qu'on les attend « en bas » et que c'est doux.",
+        "Julien s'est confessé samedi : il ne faut pas le laisser seul la nuit.",
+        "En octobre 1924, les terrassiers ont crevé « le mur des Gelés » ; le docteur les a payés et renvoyés.",
+        "Le registre des Combes de 1868 (à la sacristie).",
+        "Madeleine Castagnier chantait seule dans la chapelle en décembre 1925 ; le docteur ne va jamais la voir « en Suisse »."
+      ],
+      "characteristics": {
+        "STR": 40,
+        "CON": 45,
+        "SIZ": 55,
+        "DEX": 40,
+        "INT": 70,
+        "POW": 75
+      },
+      "hp": 10,
+      "dodge": 20,
+      "skills": {
+        "history": 50,
+        "psychology": 60
+      }
+    },
+    {
+      "id": "baptiste-ducrey",
+      "name": "Baptiste Ducrey",
+      "kind": "person",
+      "role": "Mécanicien, chauffeur et chauffagiste des Gentianes",
+      "description": "Trente-huit ans, des épaules de bûcheron, de la suie dans les rides, enfant des Combes.",
+      "personality": "Taiseux, loyal au docteur qui l'a embauché, rongé par la nuit de mars 1926 et par la peur pour sa sœur Mélanie, lingère, guérie l'automne dernier.",
+      "knows": [
+        "La légende des Gelés de Saint-Bernard ; son grand-père a aidé à murer la galerie.",
+        "Il était du chantier le 6 octobre 1924 et a vu les trois Gelés.",
+        "Il a construit la gaine en 1925 ; jamais de chaleur côté porte de fer.",
+        "La nuit du 18 au 19 mars 1926, sa vanne a fui dans la gaine : les guéris ont craché le sang.",
+        "Comment pousser la vapeur au fond de la galerie ; où sont les trois caisses de dynamite ; comment faire marcher le câble.",
+        "La Renault du docteur n'a pas fait cent kilomètres depuis l'été ; Anatole Rey est remonté à pied de la gare en décembre."
+      ],
+      "characteristics": {
+        "STR": 70,
+        "CON": 70,
+        "SIZ": 70,
+        "DEX": 55,
+        "INT": 55,
+        "POW": 50
+      },
+      "hp": 14,
+      "dodge": 27,
+      "damageBonus": "1D4",
+      "skills": {
+        "mechanical-repair": 75,
+        "operate-heavy-machinery": 60,
+        "drive-auto": 60,
+        "climb": 50,
+        "survival": 50
+      },
+      "attacks": [
+        {
+          "name": "Clé à molette",
+          "skill": 50,
+          "damage": "1D6+1D4"
+        },
+        {
+          "name": "Coup de poing",
+          "skill": 55,
+          "damage": "1D3+1D4"
+        }
+      ]
+    },
+    {
+      "id": "irene-lacombe",
+      "name": "Irène Lacombe",
+      "kind": "person",
+      "role": "Patiente guérie, pianiste",
+      "description": "Vingt-six ans, professeur de piano à Lyon, cheveux noirs coupés court, d'une pâleur lumineuse.",
+      "personality": "Sereine, presque heureuse. Elle sait qu'elle va descendre et n'en a pas peur. Ramenée de force à la chaleur, elle redevient une jeune femme terrifiée qui tousse du sang.",
+      "knows": [
+        "Elle va « partir bientôt », « plus près que la Suisse ».",
+        "La mélodie qu'elle joue est la note de la nuit.",
+        "Elle dort sur la galerie de nuit depuis octobre 1925, un mois avant Julien."
+      ],
+      "characteristics": {
+        "STR": 35,
+        "CON": 45,
+        "SIZ": 45,
+        "DEX": 60,
+        "APP": 65,
+        "INT": 60,
+        "POW": 50
+      },
+      "hp": 9,
+      "dodge": 30
+    },
+    {
+      "id": "hortense-vial",
+      "name": "Hortense Vial",
+      "kind": "person",
+      "role": "Patiente qui ne guérit pas",
+      "description": "Soixante-sept ans, veuve d'un notaire de Grenoble, châle violet, face-à-main, une toux de crécelle.",
+      "personality": "Mauvaise langue, lucide, courageuse. Elle refuse la galerie par coquetterie et par instinct, et dit tout haut ce que les autres taisent.",
+      "knows": [
+        "Les guéris chantent la nuit, jamais les malades.",
+        "On ne voit jamais partir les transférés ni la voiture ; toujours la nuit.",
+        "Le petit Excoffier a laissé ses pantoufles au pied de son lit, le 9 janvier.",
+        "Elle a vu le docteur revenir de l'aile Est à l'aube, du givre sur son manteau."
+      ],
+      "characteristics": {
+        "CON": 30,
+        "INT": 70,
+        "POW": 60
+      },
+      "hp": 7
+    },
+    {
+      "id": "josephine-bochatay",
+      "name": "Joséphine Bochatay",
+      "kind": "person",
+      "role": "Doyenne des Combes",
+      "description": "Quatre-vingt-deux ans, toute petite, coiffe noire, des yeux très clairs.",
+      "personality": "Patiente et grave. Elle attend depuis soixante ans que quelqu'un vienne lui demander.",
+      "knows": [
+        "La fleur blanche a guéri les poumons de son père et des mineurs en 1867 ; puis ils ont chanté ; trois sont restés au fond en février 1868.",
+        "Trois jours de feu à l'entrée, la galerie murée le 20 mars ; ceux qui avaient respiré la fleur ont craché le sang, son père en est mort à la Saint-Jean.",
+        "« Il n'y a que le feu, et il faut le porter au fond. »",
+        "Le plan de la mine levé par son père."
+      ],
+      "characteristics": {
+        "CON": 40,
+        "INT": 65,
+        "POW": 70
+      },
+      "hp": 8
+    },
+    {
+      "id": "madeleine-castagnier",
+      "name": "Madeleine Castagnier",
+      "kind": "person",
+      "role": "La femme du directeur, la première descendue",
+      "description": "Assise contre la roche dans la salle des Gelés, en chemise de nuit et châle, les mains ouvertes sur les genoux, le visage du portrait sous un an de givre. Une chaise de cuisine est posée devant elle.",
+      "personality": "Elle ne parle pas. Elle respire une fois toutes les quatre minutes, et le givre tinte.",
+      "sanLoss": "0/1D3",
+      "knows": [
+        "Descendue dans la nuit du 13 au 14 janvier 1926. Officiellement, elle « se soigne en Suisse »."
+      ]
+    },
+    {
+      "id": "le-choeur",
+      "name": "Le Chœur",
+      "kind": "creature",
+      "role": "La colonie de lichen blanc de la galerie Saint-Bernard, et les Gelés qu'elle garde",
+      "description": "Un lichen pâle, en fougères cristallines, qui couvre la salle des Gelés du sol à la voûte, tiède au toucher, luisant faiblement. Ses spores scintillent dans l'air froid. Quinze personnes assises dans la paroi, givrées, respirent avec lui.",
+      "personality": "Pas une volonté qu'on puisse raisonner : une faim lente et douce, qui guérit pour prendre.",
+      "sanLoss": "1/1D6",
+      "special": [
+        "Ses spores ne s'accrochent qu'aux poumons malades ; elles comblent les cavernes, puis remplacent le tissu sain.",
+        "Les guéris font partie de lui : s'il souffre (chaleur, feu), ils crachent le sang ; s'il meurt, ils rechutent tous.",
+        "Il appelle les guéris par le froid, douze à quinze mois après leur première nuit sur la galerie. La chaleur les rend lucides ; le Midi les fait presque taire.",
+        "Pour les vivants dans la salle : un jet de POU quand le chant enfle (échec : s'asseoir contre la paroi, 1D3 points de vie de froid).",
+        "Insensible aux coups. La vapeur (trois heures), le feu porté au fond ou l'effondrement de la salle le tuent. Le feu à l'entrée seulement ne fait que le blesser (1868).",
+        "Les Gelés ne bougent pas, sauf une fois : quand il souffre, ils ouvrent les yeux (SAN 1/1D4). Les détacher de la paroi les tue en une heure."
+      ]
+    }
+  ],
+  "handouts": [
+    {
+      "id": "lettres-de-julien",
+      "title": "Les lettres de Julien",
+      "scene": "les-gentianes",
+      "text": "*Les Gentianes, dimanche 22 novembre 1925*\n\n… On nous couche dehors sur la galerie, douze heures par jour, face au Mont-Blanc qu'on ne voit jamais, sous trois couvertures. Depuis cette semaine, je dors même dehors la nuit : le docteur m'a mis à la « cure de nuit ». Le froid entre partout. Je crache rouge le matin. Je compte les chaises vides. Ne viens pas : je ne veux pas que tu me voies comme ça.\n\n*Dimanche 28 mars 1926*\n\nJe guéris. Je l'écris et je n'y crois pas. Plus de fièvre, plus de sang. Le docteur m'a montré ma radiographie : les cavernes sont comblées, « comme du givre sur une vitre », dit-il. Pourtant, quelle semaine : plusieurs guéris ont rechuté d'un coup, tous ensemble, et le pauvre Pellissier en est mort. Moi, j'ai toussé deux jours, puis plus rien. Le docteur me garde comme secrétaire. Je reste : je respire si bien, ici.\n\n*Dimanche 7 novembre 1926*\n\nJe guéris tout à fait. Je ne tousse plus du tout, même dans le froid. Surtout dans le froid. La nuit, on chante dans les galeries. Pas des chansons : une seule note, longue, que tout le monde connaît sans l'avoir apprise. Je crois que je la chante aussi. C'est très doux. Je n'ai jamais si bien dormi.\n\nTon Julien"
+    },
+    {
+      "id": "derniere-lettre",
+      "title": "La dernière lettre de Julien",
+      "scene": "les-gentianes",
+      "text": "*Les Gentianes, samedi 8 janvier 1927*\n\nViens. Viens tout de suite, je t'en prie.\n\nJe ne peux pas l'écrire ici, ça ne veut pas venir sur le papier ; j'écris contre le poêle et déjà ma main ralentit. Dis au docteur que tu viens me rendre visite, rien de plus. Ne lui montre pas cette lettre. Ne m'écris pas : viens.\n\nJulien\n\n*Au dos, de la même main, mais plus lente, plus droite :*\n\nTout va bien. Ne viens pas. Je guéris."
+    },
+    {
+      "id": "brochure-gentianes",
+      "title": "Brochure du sanatorium des Gentianes",
+      "scene": "les-gentianes",
+      "text": "**SANATORIUM DES GENTIANES**\nPlateau d'Assy (Haute-Savoie), altitude 1 000 mètres\nGare du Fayet (ligne P.-L.-M.), service d'autocar quotidien\n\nDirection médicale : **Dr Henri Castagnier**, ancien interne des Hôpitaux de Lyon\n\n120 lits. Galeries de cure exposées plein sud, face à la chaîne du Mont-Blanc. Chauffage central, eau chaude, radiologie. Chapelle.\n\n**Résultats 1926 : 92 % de guérisons cliniques** (ni bacilles ni fièvre à la sortie).\n\n*Règlement de la cure*\n— Cure de galerie de 9 h à 12 h et de 14 h à 18 h. Silence absolu de 14 h à 16 h.\n— Les malades désignés par le Directeur suivent la **cure de nuit** sur la galerie de l'aile Est, alimentée en air froid filtré selon le procédé du Dr Castagnier.\n— Extinction des feux à 21 h. Les visiteurs sont logés au premier étage."
+    },
+    {
+      "id": "carnet-julien",
+      "title": "Le carnet de Julien",
+      "scene": "le-matin-blanc",
+      "text": "*Pages écrites au crayon, d'une écriture pressée*\n\nJe n'écris ici que contre le poêle. Loin du feu, je ne veux plus rien écrire. Je ne veux plus rien du tout.\n\nLes transferts. J'ai tapé moi-même dix lettres pour Leysin. Aucune voiture n'est partie : Ducrey dit que la Renault n'a pas bougé du garage. Leurs valises sont à la lingerie du deuxième. Ils sont partis en pyjama.\n\nLe chant monte par les grilles de la galerie de nuit. Il vient d'en dessous. Au sous-sol, derrière la chaudière, il y a une porte de fer. Ducrey a une clé, et le docteur.\n\nIrène d'abord, puis moi. Je ne sais pas comment je le sais. C'est l'ordre du chant : ceux qui sont arrivés les premiers sur la galerie.\n\nLe portrait du bureau, c'est Madame Castagnier. Je l'ai vue cette nuit, en rêve, blanche, assise dans la pierre, les mains ouvertes. Elle m'a fait de la place.\n\nSi tu lis ceci : garde-moi au chaud. Ne me laisse pas dormir dehors. Et si je te dis que tout va bien, ne me crois pas."
+    },
+    {
+      "id": "registre-1868",
+      "title": "Registre des sépultures des Combes, 1868",
+      "scene": "la-chapelle",
+      "text": "*Registre des sépultures de la chapelle des Combes, année 1868*\n\nLe sept février mil huit cent soixante-huit ont été retrouvés au fond de la galerie Saint-Bernard, de la mine de la Chaux, les nommés Pierre Anthonioz, quarante et un ans, Claude Perrollaz, trente-six ans, et Joseph-Marie Bouvard, vingt-neuf ans, mineurs, morts de froid, assis contre la roche. Les familles s'étant opposées à ce qu'on les en détache, l'absoute a été donnée à l'entrée de la galerie.\n\n*En marge, de la même main :* Les mineurs disent qu'ils « chantent encore » et refusent de redescendre. Superstition à combattre. La galerie a été murée le vingt mars, après trois jours de feu à l'entrée.\n\n*J. Tissot, curé*"
+    },
+    {
+      "id": "cahier-de-ronde",
+      "title": "Le cahier de ronde d'Odile",
+      "scene": "l-infirmerie",
+      "text": "*Cahier de ronde de nuit, O. Perrollaz (extraits)*\n\n**Nuit du 12 au 13 septembre 1926.** 2 h, galerie de nuit : les guéris chantent en dormant, tous, bouche fermée. 4 h : M. Morel n'est plus sur sa chaise. Le docteur dit : « transféré ». Je n'ai vu aucune voiture.\n\n**Nuit du 1er au 2 janvier 1927.** Mlle Mollard debout à 1 h, les yeux ouverts. Le bromure ne fait rien. Partie à 4 h. Ses pantoufles sous la chaise.\n\n**Nuit du 8 au 9 janvier.** Du givre DANS la chambre 21 (M. Excoffier), le radiateur brûlant. 3 h : chambre vide. Le docteur m'a dit de ne plus rien noter. Je note.\n\n**Nuit du 15 au 16 janvier.** Mlle Lacombe chante seule, debout à sa fenêtre ouverte. 4 h : M. Mercadier frappe chez moi, en larmes, et me demande de l'enfermer à clé dans sa chambre. Le docteur a dit non : « Laissez-le dormir. »"
+    },
+    {
+      "id": "plan-saint-bernard",
+      "title": "Le plan de la galerie Saint-Bernard",
+      "scene": "les-combes",
+      "text": "*Mine de la Chaux, galerie Saint-Bernard. Levé par J.-P. Bochatay, boiseur, 1866.*\n\nL'entrée est au bas du pré des Gentianes, côté levant. La galerie descend vers le nord sur deux cents pas jusqu'à la salle de la veine. À quatre-vingt-dix pas, à main gauche, la niche à poudre.\n\n*Au crayon, d'une main qui tremble, 1868 :*\n\nLa fleur blanche pousse sur toute la salle de la veine, et à la voûte. Ceux qui l'ont respirée guérissent de la poitrine et ne toussent plus. Puis ils chantent. On a fait le feu trois jours et muré le 20 mars. Le feu n'a pas été assez loin. Il n'y a que le feu, et il faut le porter au fond. Que Dieu garde les nôtres là-dessous."
+    },
+    {
+      "id": "registre-des-sorties",
+      "title": "Registre des sorties, 1926-1927",
+      "scene": "le-bureau-du-directeur",
+      "text": "*Sanatorium des Gentianes, registre des sorties (extrait, dactylographié)*\n\n12 sept. 1926 — MOREL Lucien, 31 ans, Grenoble — guéri — transféré clinique du Chamossaire, Leysin (Vaud), voiture du Directeur.\n2 oct. — SAILLET Marguerite, 24 ans, Annecy — id.\n17 oct. — BURNIER Joseph, 45 ans, Chambéry — id.\n29 oct. — THÉVENET Germaine, 38 ans, Lyon — id.\n8 nov. — RAVANEL Paul, 27 ans, Sallanches — id.\n21 nov. — GAILLARD Henriette, 33 ans, Bonneville — id.\n4 déc. — CHARVET Émile, 52 ans, Saint-Étienne — id.\n19 déc. — REY Anatole, 29 ans, Lyon (sorti guéri le 14 juin, revenu le 18 déc.) — id.\n2 janv. 1927 — MOLLARD Suzanne, 22 ans, Les Combes — id.\n9 janv. — EXCOFFIER Raymond, 35 ans, Thonon — id.\n\n*Paraphé à chaque ligne :* H. C."
+    },
+    {
+      "id": "lettre-leysin",
+      "title": "Lettre de la clinique du Chamossaire",
+      "scene": "le-bureau-du-directeur",
+      "text": "*Clinique du Chamossaire, Leysin (Vaud), le 30 novembre 1926*\n\nMonsieur et cher Confrère,\n\nLa famille de Mademoiselle Marguerite Saillet, d'Annecy, s'inquiète auprès de nous de n'avoir aucune nouvelle de sa fille, que vous nous auriez adressée le 2 octobre dernier.\n\nNous n'avons reçu ni cette malade, ni aucun malade de votre établissement, ni aucune demande d'admission de votre part. Vous comprendrez que nous ne puissions laisser cette famille dans l'incertitude.\n\nVeuillez agréer, Monsieur et cher Confrère, l'assurance de nos sentiments distingués.\n\n**Dr E. Aebischer**, médecin-directeur\n\n*Au crayon, en travers, de la main de Castagnier :* Répondu le 6 déc. : erreur d'aiguillage, dirigée sur Montana. Gagner du temps."
+    },
+    {
+      "id": "journal-castagnier",
+      "title": "Le journal d'observations du Dr Castagnier",
+      "scene": "le-bureau-du-directeur",
+      "text": "*Journal d'observations, Dr H. Castagnier (extraits)*\n\n**6 octobre 1924.** Le mur a cédé sous la pioche des terrassiers. Derrière, une galerie ancienne, l'air à −6°. Trois hommes assis contre la roche, givrés, intacts. Sur toute la paroi, un lichen blanc que je ne connais pas. Faute de mieux : *Pruina canens*.\n\n**2 novembre 1924.** Madeleine dort à l'entrée de la galerie, sous les fourrures. Je n'en ai pas le droit. Je n'ai plus d'autre remède.\n\n**24 mars 1925.** Plus un bacille dans ses crachats. À la radiographie, les cavernes sont comblées par une trame claire, ramifiée, comme du givre sur une vitre.\n\n**14 janvier 1926.** Madeleine est descendue cette nuit. Je l'ai trouvée au fond, assise près des trois autres, les mains ouvertes. Elle respire, une fois toutes les quatre minutes. Je l'ai portée dans l'antichambre : à la chaleur, son souffle s'est arrêté. Redescendue, il est revenu. Elle n'est pas morte. Elle demeure.\n\n**19 mars 1926.** Fuite de vapeur dans la gaine cette nuit : +9° au fond. Ce matin, sept guéris crachent le sang. (*Plus bas :* 23 mars. Pellissier est mort.) La colonie a souffert, et ils ont souffert avec elle. Ils sont elle. Elle ne doit jamais avoir chaud.\n\n**13 septembre 1926.** Morel. Le premier des patients. Il faut un mot pour les registres. J'écris : transféré.\n\n**20 décembre 1926.** Rey, sorti guéri en juin, est remonté à pied depuis la gare, en souliers de ville, par la neige. Les guéris partis à Nice ou à Alger ne reviennent pas. C'est le froid qui les appelle.\n\n**9 janvier 1927.** Excoffier, le dixième. Lacombe ensuite, puis Mercadier : je le sais à leur souffle. Mercadier tape mes lettres ; il sait. Le mensonge ne tiendra pas jusqu'à l'été, et l'hiver prochain ils seront vingt. Mais sur cent que je sauve, quatre-vingt-dix vivent. Qui d'autre peut en dire autant ?"
+    }
+  ],
+  "knowledge": [
+    {
+      "need": "Faire parler Julien",
+      "best": "La chaleur (poêle, bain, chaufferie) et Psychologie",
+      "backup": "Persuasion ; son carnet dit tout s'il échoue"
+    },
+    {
+      "need": "Gagner la confiance d'Odile",
+      "best": "Psychologie",
+      "backup": "Charme ; l'aider une heure dans son service"
+    },
+    {
+      "need": "Lire les radiographies",
+      "best": "Médecine",
+      "backup": "Naturalisme ; le journal de Castagnier"
+    },
+    {
+      "need": "Fouiller le bureau du directeur",
+      "best": "La clé de Julien",
+      "backup": "Discrétion, Serrurerie, Trouver Objet Caché"
+    },
+    {
+      "need": "Comprendre la gaine et la chaudière",
+      "best": "Baptiste",
+      "backup": "Mécanique, Trouver Objet Caché"
+    },
+    {
+      "need": "Ouvrir la porte de fer",
+      "best": "La clé de Baptiste, de Castagnier ou du tiroir",
+      "backup": "Serrurerie (difficile)"
+    },
+    {
+      "need": "Forcer la vapeur dans la galerie",
+      "best": "Baptiste",
+      "backup": "Mécanique, Conduite d'engins lourds"
+    },
+    {
+      "need": "Porter la dynamite au fond",
+      "best": "Baptiste pour la mèche",
+      "backup": "Chance, DEX"
+    },
+    {
+      "need": "Garder Julien jusqu'à l'aube",
+      "best": "Psychologie, Persuasion",
+      "backup": "La chaleur ; l'abbé ou Odile (dé bonus) ; FOR pour le retenir"
+    },
+    {
+      "need": "Résister au chant dans la salle des Gelés",
+      "best": "POU",
+      "backup": "Un allié qui tire en arrière ; Chance"
+    }
+  ],
+  "trackers": [
+    {
+      "id": "nuits",
+      "label": "Nuits aux Gentianes",
+      "max": 3,
+      "unit": "nuits",
+      "help": "Nuit 1 : la tempête et le chant. Nuit 2 : Irène descend. Nuit 3 : Julien descend.",
+      "scenes": [
+        "premiere-nuit",
+        "le-matin-blanc",
+        "deuxieme-nuit",
+        "la-nuit-du-choeur"
+      ]
+    },
+    {
+      "id": "descente-julien",
+      "label": "Julien vers la galerie",
+      "max": 5,
+      "unit": "étapes",
+      "help": "Chambre, couloir, escalier de l'aile Est, sous-sol, porte de fer. +1 par quart d'heure s'il n'est pas retenu, ou à chaque échec pour le garder. À 5, il passe la porte de fer et descend s'asseoir dans la salle des Gelés.",
+      "scenes": [
+        "la-nuit-du-choeur"
+      ]
+    },
+    {
+      "id": "agonie-colonie",
+      "label": "Agonie de la colonie",
+      "max": 6,
+      "unit": "paliers",
+      "help": "Vapeur : +1 par demi-heure réussie. Feu porté au fond : +2 par round. Dynamite au fond : 6 d'un coup. À 3, les Gelés ouvrent les yeux et les guéris crachent le sang. À 6, la colonie meurt.",
+      "scenes": [
+        "la-nuit-du-choeur"
+      ]
+    }
+  ]
+}

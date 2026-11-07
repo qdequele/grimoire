@@ -1,0 +1,1960 @@
+{
+  "format": "grimoire-story/1",
+  "meta": {
+    "id": "le-livre-de-l-envers",
+    "title": "Le Livre de l'Envers",
+    "lang": "fr",
+    "summary": "Lyon, fin novembre 1924. Sur les pentes de la Croix-Rousse, un relieur est retrouvé mort dans son atelier fermé de l'intérieur, tous ses miroirs tournés vers le mur. Il reliait un livre ancien pour une cliente que personne ne connaît. Dans une semaine, la ville posera des lumignons à toutes ses fenêtres.",
+    "players": {
+      "min": 4,
+      "max": 5
+    },
+    "duration": "2 séances de 3 à 4 heures",
+    "era": "Décembre 1924",
+    "setting": "Lyon : les pentes de la Croix-Rousse et leurs traboules, le Vieux-Lyon, la Presqu'île, Fourvière",
+    "system": "d100",
+    "author": "Grimoire",
+    "license": "CC-BY-4.0",
+    "version": "1.0",
+    "tags": [
+      "groupe",
+      "enquête urbaine",
+      "Lyon",
+      "années 1920",
+      "miroirs",
+      "société secrète"
+    ],
+    "contentWarnings": [
+      "meurtre",
+      "miroirs et doubles",
+      "sacrifice humain",
+      "deuil (guerre de 1914-1918)",
+      "enfant menacé (évoqué)"
+    ]
+  },
+  "overview": {
+    "secret": "**Le Livre de l'Envers** est un in-quarto imprimé à rebours sur soie, à Lyon, en 1852, d'après un très vieux texte de banquiers lucquois de la rue Juiverie. Lu dans un miroir à la lumière d'une flamme, il ouvre sur l'**Envers**, un Lyon retourné où se tient le **Teneur**, une présence toujours vue de dos qui tient les comptes : on peut y faire passer une ruine, une dette, un malheur sur quelqu'un d'autre, et prendre sa fortune. Le mercredi 8 décembre 1852, la nuit où Lyon posa pour la première fois des lumignons à ses fenêtres, le fabricant de soieries **Claude Mazaud**, au bord de la faillite, l'ouvrit dans son atelier des pentes ; son frère Étienne fut pris en arrhes. Avec les Bellevrand, les Vial et les Dumoulin, il fonda le **Cercle de la Navette** et signa la **garde**, une page de soie signée au fil d'argent : tous les vingt-quatre ans, le soir où la ville s'allume, le compte se solde d'un vivant du sang du **premier nom** brodé, celui des Mazaud. Joséphine en 1876, Louis en 1900. Le lundi 8 décembre 1924, c'est le tour de **Lucie Perret-Mazaud**, 31 ans ; après elle, en 1948, viendra son fils Jean, 9 ans. Lucie veut sortir : vers le 20 novembre, elle a pris le livre dans la Salle des Glaces (les Mazaud en ont les clés) et, sous le nom de « Mme Morel », l'a confié le lundi 24 au relieur **Joannès Ravier** pour qu'il en ôte la garde sans l'abîmer. Elle voulait découdre le nom des Mazaud, en sachant que le nom suivant, Bellevrand, paierait à sa place. Ravier, curieux, a lu le livre au miroir le mardi 25 au soir, et a écrit à son ami le libraire Montcharmont. Le jeudi 27, l'homme de main du maître, **Gaudin**, qui faisait le tour des relieurs, est venu demander le livre ; Ravier a nié. Le soir, vers 22 h, Ravier relisait le livre quand son apprenti Firmin a vu, dans la vitre noire, un grand homme de dos debout entre eux, dans une pièce où il n'y avait personne. Ravier a confié la garde à Firmin, l'a renvoyé, s'est barricadé et a tout couvert, sauf l'encrier ouvert devant lui. Le Teneur l'a pris par ce petit miroir noir et a laissé son reflet à sa place : un cadavre à l'envers, le cœur à droite. Le vendredi 28, la police a trouvé le corps et saisi le livre ; le samedi 29, le maître du Cercle, le charmant **Hector Bellevrand**, l'a fait rendre par le commissaire central et a envoyé Gaudin chercher la garde chez la mère de Firmin. Sans garde, c'est le lecteur qui paie : Bellevrand ne lira pas sans elle. Si personne n'intervient, le lundi 8 décembre à 21 h, dans la Salle des Glaces au-dessus d'une traboule des pentes, Bellevrand lit, et Lucie entre dans la glace. Le livre et sa garde ne brûlent que cette nuit-là, quand le passage est ouvert : brûlé, le livre défait tout ce qui a été échangé, et les quatre familles perdent tout, Lucie comprise.",
+    "steps": [
+      "**Acte I** · [[l-atelier]] (lundi 1ᵉʳ décembre) : la chambre close, les glaces retournées, l'encrier, le livre de commandes (« Mme Morel »), la lettre de la rue Juiverie.",
+      "[[firmin]] : l'apprenti a vu le reflet dans la vitre ; il cache la garde de soie. L'enterrement (mardi 2) montre l'écusson de la Navette et la dame voilée.",
+      "**Acte II, dans l'ordre que choisissent les joueurs** : [[commissariat]] (le corps inversé ; Bellevrand a repris le livre ; le dossier de 1900), [[rue-juiverie]] (l'avertissement : le livre ne brûle pas), [[palais-saint-jean]] (un Mazaud disparu tous les vingt-quatre ans, le soir du 8 décembre), [[traboule]] (l'écusson, la porte de fer, la mère Brossard), [[hotel-bellevrand]] (le maître charmant et sa récompense), [[fourviere]] (Lucie avoue tout et donne ses clés).",
+      "**Acte III** · [[le-reflet]] (vendredi 5 au soir) : le reflet de Ravier écrit « le premier nom paie » ; Gaudin attaque Firmin. [[les-caves]] (facultatif) : le Grand-Livre du Cercle et l'escalier secret.",
+      "**Acte IV** · [[salle-des-glaces]] (lundi 8, 21 h) : le Cercle solde son compte ; brûler le livre, faire payer Bellevrand, ou laisser faire. [[apres-les-lumieres]] : ce que cela coûte.",
+      "Séance 1 : actes I et II, jusqu'à la rencontre avec Lucie ou l'attaque de Gaudin. Séance 2 : actes III et IV."
+    ],
+    "mustNotMiss": [
+      "**Bellevrand et la Navette** : le dossier de police (sans jet, [[commissariat]]), la gerbe de l'enterrement ([[firmin]]), l'écusson ([[traboule]]), la carte et la chevalière ([[hotel-bellevrand]]), les échos mondains ([[palais-saint-jean]]).",
+      "**Le 8 décembre et les Mazaud** : les journaux ([[palais-saint-jean]]), le dossier de 1900 ([[commissariat]]), la mère Brossard ([[traboule]]), la clause de la garde ([[firmin]]), Lucie et sa convocation ([[fourviere]]), le Grand-Livre ([[les-caves]]).",
+      "**Le premier nom paie, on peut le découdre** : la garde ([[firmin]]), la lettre de Louis ([[fourviere]]), le message du reflet ([[le-reflet]]).",
+      "**Le livre ne brûle que la nuit du passage** : Montcharmont ([[rue-juiverie]]), Lucie et la lettre de Louis ([[fourviere]]), le Grand-Livre ([[les-caves]]).",
+      "**Où et quand** : la Salle des Glaces au-dessus de la traboule, lundi 8 à 21 h : la convocation ([[fourviere]]), la mère Brossard ([[traboule]]), Gaudin ([[le-reflet]]), le dossier de 1900 ([[commissariat]])."
+    ],
+    "branches": [
+      "Brûler le livre pendant que le passage est ouvert : personne n'est pris (ceux qui ont été pris cette nuit reviennent), les reflets prisonniers sont libérés, et les quatre familles, Lucie comprise, sont ruinées dans l'année.",
+      "Découdre le nom des Mazaud, avant la nuit ou pendant : la glace prend Bellevrand, dernier de son sang. Le pousser dans la glace ouverte a le même effet, au prix de 1D6 SAN pour celui qui pousse.",
+      "Rapporter la garde à Bellevrand (5 000 francs) : intacte, elle condamne Lucie ; décousue en secret, elle condamne le maître, s'il ne voit pas les trous d'aiguille.",
+      "Garder la garde loin de la cérémonie ne sauve pas Lucie : Bellevrand la fait lire à sa place, et sans garde c'est le lecteur qui paie.",
+      "Convaincre Clotilde Vial de passer à la place de Lucie : Lucie vit, mais en 1948 ce sera le tour de son fils Jean.",
+      "Garder le livre : le pouvoir d'échanger, contre de la SAN et un reflet qui retarde.",
+      "Voler le livre avant le 8 : il ne brûle pas encore ; la nuit venue, le passage s'ouvre là où il est, et le Cercle vient le reprendre."
+    ],
+    "ifStuck": [
+      "Rabatel fait signe : le secrétaire de Bellevrand est revenu demander « la page de soie brodée ».",
+      "Bellevrand invite les investigateurs ({{handout:carte-bellevrand}}) : il veut qu'ils trouvent la garde pour lui.",
+      "Firmin vient les trouver, terrifié, après la visite de Gaudin chez sa mère.",
+      "Lucie envoie son mot : Fourvière, dimanche, quatre heures.",
+      "Le reflet de Ravier dans une vitrine ([[le-reflet]]) : à jouer dès qu'une piste s'épuise.",
+      "Montcharmont envoie chercher les investigateurs : Gaudin est passé chez lui demander une « page de soie »."
+    ],
+    "keeperTips": [
+      "À quatre ou cinq, laissez le groupe se séparer en journée : chaque accroche ouvre une piste (l'ami de l'inspecteur au commissariat, le journaliste à la bibliothèque, le libraire rue Juiverie, l'ancien apprenti chez Firmin, le client à l'atelier). Réunissez-les le soir, autour d'un mâchon, pour mettre les pièces en commun.",
+      "Tenez le compteur **Jours** : une piste prend une demi-journée, une piste ratée une journée. Les événements du calendrier ([[l-atelier]]) arrivent même si personne n'y va.",
+      "Bellevrand n'est pas un monstre de théâtre : il est drôle, généreux, il pleure son fils, il aime ses canuts. Il pense sincèrement qu'une famille qui paie vaut mieux qu'une ville qui a faim. Faites-le aimer un peu.",
+      "Le Teneur n'a pas de visage : on le voit toujours de dos, de quelque côté qu'on se place. Il ne parle pas. Montrez-le rarement : la vitre du jeudi (racontée), la vitrine du café, puis les quarante glaces.",
+      "Petit détail à semer : le reflet de quiconque a tenu la garde a une demi-seconde de retard dans les vitrines.",
+      "Lyon en 1924 : les traboules, le claquement des métiers derrière les hautes fenêtres, la ficelle qui monte à la Croix-Rousse et à Fourvière, le brouillard de la Saône, les mâchons du matin. Le 8 décembre, des lumignons dans leurs verres de couleur sur chaque rebord de fenêtre."
+    ]
+  },
+  "acts": [
+    {
+      "id": "le-relieur",
+      "title": "Le relieur de la montée Saint-Sébastien",
+      "scenes": [
+        {
+          "id": "l-atelier",
+          "title": "L'atelier de la montée Saint-Sébastien",
+          "lead": "Lundi 1ᵉʳ décembre : la chambre close du relieur, ses glaces retournées, son livre de commandes.",
+          "screen": {
+            "place": "library",
+            "preset": "dust",
+            "time": "day"
+          },
+          "readAloud": [
+            "La montée Saint-Sébastien grimpe raide entre des immeubles hauts et gris, percés de grandes fenêtres. Derrière les vitres, partout, le claquement des métiers à tisser. Au numéro 12, une voûte mène à une cour humide où sèche du linge.",
+            "La porte de l'atelier a été forcée : le bois est fendu autour des deux verrous. À l'intérieur, une odeur de colle de peau et de cuir. Sur les murs, huit miroirs de toutes tailles sont tournés face au plâtre. Les carreaux des fenêtres sont couverts, du haut en bas, de papier marbré bleu et rouge.",
+            "La concierge reste sur le seuil, les bras croisés sur son tablier. « Moi, je n'entre pas. Il était pas superstitieux, M. Ravier. Pas avant jeudi. »"
+          ],
+          "flow": [
+            {
+              "title": "La pièce",
+              "text": "Établi sous les fenêtres, presse à percussion, cousoir, fers à dorer rangés au-dessus du poêle. Une armoire, tirée devant la porte, a été repoussée par la police. Sur l'établi : une bougie entièrement consumée, un encrier ouvert, des fils de soie ivoire coupés, des ais de bois nus. Le cuivre de la presse est enveloppé d'un chiffon.",
+              "extra": "Pas de jet : tout cela se voit. Le livre n'est plus là (voir [[commissariat]])."
+            },
+            {
+              "title": "Les miroirs",
+              "text": "Si on en retourne un : un simple miroir. Sur le plus grand, à hauteur de visage, la trace d'une main posée à plat. Elle ne part pas au chiffon : elle est de l'autre côté du verre. On peut croire à un défaut du tain.",
+              "roll": {
+                "type": "san",
+                "san": "0/1",
+                "label": "La main dans la glace"
+              }
+            },
+            {
+              "title": "L'encrier",
+              "roll": {
+                "type": "skill",
+                "options": [
+                  "spot-hidden"
+                ]
+              },
+              "success": "Tout ce qui pouvait refléter a été couvert : glaces, vitres, cuivre. Tout, sauf l'encrier, ouvert juste devant la place où Ravier était assis, à côté du livre. À la flamme d'une bougie, l'encre noire fait un miroir parfait.",
+              "failure": "Un encrier ouvert, de l'encre qui sèche.",
+              "extra": "Si quelqu'un se penche sur l'encre à la bougie : une silhouette passe dans le reflet, de dos. Peut-être celle d'un des investigateurs."
+            },
+            {
+              "title": "Le livre de commandes",
+              "text": "Sur l'étagère près de la porte, ouvert à la dernière page → {{handout:registre-commandes}}. Pas de jet.",
+              "extra": "« Mme Morel » est Lucie Perret-Mazaud ([[fourviere]]). La note en marge est de la main de Ravier."
+            },
+            {
+              "title": "La lettre de la rue Juiverie",
+              "roll": {
+                "type": "skill",
+                "options": [
+                  "spot-hidden"
+                ]
+              },
+              "success": "Dans la poche du tablier pendu derrière la porte, une lettre froissée → {{handout:lettre-montcharmont}}.",
+              "failure": "Rien. Mais la concierge se souvient : « Jeudi matin, il a reçu une lettre de la rue Juiverie. Il l'a lue dans la cour et il est devenu tout blanc. » La lettre finit par être retrouvée dans le tiroir de l'établi, sous les fers, une heure plus tard."
+            },
+            {
+              "title": "Interroger la concierge",
+              "text": "{{npc:benoite-gros}} parle volontiers, surtout de ce qu'elle n'a pas compris.",
+              "roll": {
+                "type": "skill",
+                "options": [
+                  "charm",
+                  "persuade",
+                  "fast-talk"
+                ]
+              },
+              "success": "Elle raconte tout : la dame voilée du lundi 24, en demi-deuil gris, gantée, qui sentait l'iris et regardait sans cesse derrière elle ; le grand costaud en casquette, l'oreille gauche fendue d'une vieille cicatrice, venu jeudi vers trois heures demander « un livre en soie » ; jeudi soir vers dix heures et demie, un bruit de meubles traînés ; l'adresse de Firmin, l'apprenti.",
+              "failure": "Elle parle surtout de la dame voilée (« une dame de la haute ») et donne l'adresse de Firmin. Le costaud, elle ne s'en souviendra qu'en le revoyant.",
+              "pushed": "Elle se vexe et raconte dans tout le quartier qu'on fouine chez le mort : Gaudin l'apprend le soir même."
+            },
+            {
+              "title": "La sœur de Ravier",
+              "text": "La concierge prévient : Mme Jacquet, la sœur du relieur, fait vider l'atelier samedi 6. Ce qui n'aura pas été vu d'ici là partira à la brocante.",
+              "goto": [
+                "firmin",
+                "commissariat",
+                "rue-juiverie"
+              ]
+            }
+          ],
+          "notes": [
+            {
+              "title": "Accroches (une par investigateur)",
+              "items": [
+                "**L'ami de l'inspecteur** : {{npc:germain-rabatel}} n'aime pas qu'on lui ait fait classer l'affaire en vingt-quatre heures. Il demande à un vieil ami de regarder, sans bruit. Ouvre le [[commissariat]] sans jet.",
+                "**L'ancien apprenti** : formé chez Ravier il y a quinze ans, aujourd'hui relieur à son compte. Il connaît l'atelier par cœur (dé bonus aux fouilles), et Firmin lui fait confiance ([[firmin]]).",
+                "**Le client** : collectionneur, il avait confié à Ravier un livre d'heures lyonnais de 1548 (commande n° 1190). Il veut le récupérer avant la vente de samedi, et comprendre.",
+                "**Le journaliste du *Progrès*** : son rédacteur en chef veut « la chambre close de la Croix-Rousse » en trois colonnes. Il a accès aux archives du journal (une seconde source pour [[palais-saint-jean]]).",
+                "**Le libraire ancien** : confrère d'{{npc:isidore-montcharmont}}, qui l'appelle à l'aide : « Joannès devait venir dimanche. Il est mort jeudi. Et je crois savoir pourquoi. »",
+                "**Le médecin** : camarade de faculté du {{npc:lucien-fayolle}}, qui lui écrit : « Viens voir un cadavre qui n'aurait pas dû exister. »"
+              ]
+            },
+            {
+              "title": "Calendrier",
+              "items": [
+                "Vers le 20 novembre : Lucie prend le livre dans la Salle des Glaces.",
+                "Lun. 24 nov. : « Mme Morel » (Lucie) apporte le livre à Ravier.",
+                "Mar. 25 au soir : Ravier lit le livre dans un miroir pour la première fois. Il écrit à Montcharmont.",
+                "Mer. 26 : Bellevrand découvre le vol. Gaudin fait le tour des relieurs.",
+                "Jeu. 27 : la lettre de Montcharmont le matin ; Gaudin à l'atelier vers 15 h ; à 22 h, Firmin voit le reflet. Ravier lui confie la garde et s'enferme.",
+                "Ven. 28, 8 h 20 : la police force la porte. Le livre est mis sous scellés. Le soir, un entrefilet du *Progrès* parle d'un « livre ancien imprimé sur soie ».",
+                "Sam. 29 : autopsie ; plainte de Bellevrand à 11 h, livre rendu à 16 h. Gaudin chez la mère de Firmin vers 17 h.",
+                "**Lun. 1ᵉʳ déc. : début de la partie.** Lucie reçoit sa convocation.",
+                "Mar. 2, 10 h : enterrement de Ravier à Saint-Polycarpe, puis au cimetière de Loyasse.",
+                "Ven. 5 au soir : Gaudin s'en prend à Firmin ([[le-reflet]]). Sam. 6 : l'atelier est vidé ; Lucie envoie son mot si personne n'est venu à elle. Dim. 7, 16 h : Fourvière.",
+                "**Lun. 8 déc.** : lumignons à la nuit tombée ; le Cercle monte à 21 h ([[salle-des-glaces]])."
+              ]
+            }
+          ],
+          "npcs": [
+            "benoite-gros"
+          ],
+          "handouts": [
+            "registre-commandes",
+            "lettre-montcharmont"
+          ],
+          "ambience": [
+            "street",
+            "clock"
+          ],
+          "sfx": [
+            "door-creak",
+            "latch"
+          ],
+          "next": [
+            "firmin",
+            "commissariat",
+            "rue-juiverie",
+            "palais-saint-jean"
+          ]
+        },
+        {
+          "id": "firmin",
+          "title": "Firmin, l'apprenti",
+          "lead": "Le témoin du reflet, la garde de soie qu'il cache, et l'enterrement du mardi.",
+          "screen": {
+            "place": "street",
+            "preset": "fog",
+            "time": "dusk"
+          },
+          "readAloud": [
+            "En haut de la colline, sur le plateau, les immeubles de canuts alignent leurs fenêtres immenses. Au cinquième, sans ascenseur, une porte s'entrouvre sur une pièce de quatre mètres sous plafond, où une femme dévide de la soie sur un rouet.",
+            "Le garçon qui se lève de la table a quinze ans, des mains tachées de colle et des yeux qui n'ont pas dormi. Avant de vous répondre, il regarde la fenêtre. Puis il tire le rideau."
+          ],
+          "flow": [
+            {
+              "title": "Trouver Firmin",
+              "text": "Rue d'Austerlitz, chez sa mère, Mme Chabert, dévideuse. L'adresse vient de la concierge. La mère est méfiante : un homme est déjà venu samedi."
+            },
+            {
+              "title": "Le récit du jeudi soir",
+              "text": "Sans jet, si on l'écoute : vers dix heures, {{npc:firmin-chabert}} balayait. Le patron lisait un livre de soie dans un miroir à main, à la bougie, en parlant tout seul. Firmin a regardé la fenêtre noire. Dedans, il y avait l'atelier, le patron, lui-même, et entre eux deux un grand homme en redingote, de dos. Il s'est retourné : personne. Le patron l'avait vu aussi.",
+              "extra": "C'est le reflet vu dans la vitre alors qu'il n'y avait personne dans la pièce. Psychologie : Firmin est terrifié, et sincère."
+            },
+            {
+              "title": "Les derniers mots du patron",
+              "text": "« Il m'a donné un paquet. Il m'a dit : *Prends ça, ne l'ouvre jamais devant une glace, ne le donne à personne, même pas à la dame.* Il a dit qu'il essaierait de le brûler, et puis il a ri : *ça ne brûle pas, ces choses-là.* Il m'a mis dehors. Je l'ai entendu pousser les verrous, et traîner l'armoire. »"
+            },
+            {
+              "title": "Gagner sa confiance",
+              "text": "L'ancien apprenti de Ravier obtient le paquet sans jet.",
+              "roll": {
+                "type": "skill",
+                "options": [
+                  "persuade",
+                  "charm",
+                  "psychology"
+                ]
+              },
+              "success": "Il sort de sous son matelas un papier kraft ficelé. Dedans, une feuille de soie brodée → {{handout:garde-de-soie}}.",
+              "failure": "Il jure qu'il n'a rien. Il la donnera s'ils le protègent de Gaudin ([[le-reflet]]), ou s'il vient les trouver, terrifié, après une nouvelle visite du costaud.",
+              "pushed": "Firmin s'enfuit dans l'escalier avec le paquet. Il revient le soir, mais Gaudin l'a vu courir : il reviendra plus tôt."
+            },
+            {
+              "title": "Lire la garde",
+              "text": "Toute la broderie est à l'envers. Il faut un miroir, ou regarder l'étoffe par derrière, à contre-jour : sur l'envers de la soie, le texte se lit à l'endroit.",
+              "roll": {
+                "type": "skill",
+                "options": [
+                  "spot-hidden",
+                  "art-craft"
+                ]
+              },
+              "success": "Quelqu'un remarque qu'à contre-jour, par l'envers, les lettres se lisent : pas besoin de miroir.",
+              "failure": "Il faudra un miroir. C'est sans danger : la garde n'est pas le livre. Mais Firmin supplie qu'on ne le fasse pas chez lui.",
+              "extra": "Désormais, le reflet de quiconque a tenu la garde a un très léger retard dans les vitres. Ne le dites que si quelqu'un regarde."
+            },
+            {
+              "title": "L'homme de samedi",
+              "text": "Mme Chabert : samedi vers cinq heures, un grand costaud poli, l'oreille fendue, a demandé « le paquet du patron, de la part du propriétaire ». Elle n'a rien dit. Il a laissé une pièce de cinq francs et promis de revenir.",
+              "extra": "C'est {{npc:ferreol-gaudin}}. Si personne ne protège Firmin, il revient le vendredi 5 au soir ([[le-reflet]])."
+            },
+            {
+              "title": "L'enterrement (mardi 2, 10 h)",
+              "text": "Église Saint-Polycarpe, sur les pentes, puis le cimetière de Loyasse. Firmin y va. Au fond de l'église, une dame voilée de gris, seule ; près du portail, Gaudin. Parmi les couronnes, une gerbe de lys avec un ruban de soie tissé : *Le Cercle de la Navette à M. J. Ravier*, et un écusson : une navette posée sur un miroir ovale, une clef au-dessus.",
+              "roll": {
+                "type": "skill",
+                "options": [
+                  "stealth",
+                  "track"
+                ]
+              },
+              "success": "Ils suivent la dame voilée à pied jusqu'à la rue Puits-Gaillot : la maison Mazaud, soieries. Ils remarquent que Gaudin la suit aussi.",
+              "failure": "Elle monte dans un fiacre. Le cocher, retrouvé à la station, se souvient de la course : rue Puits-Gaillot, maison Mazaud.",
+              "goto": [
+                "fourviere",
+                "hotel-bellevrand"
+              ]
+            }
+          ],
+          "npcs": [
+            "firmin-chabert",
+            "ferreol-gaudin",
+            "lucie-mazaud"
+          ],
+          "handouts": [
+            "garde-de-soie"
+          ],
+          "ambience": [
+            "street",
+            "wind"
+          ],
+          "sfx": [
+            "footsteps",
+            "knocking"
+          ],
+          "next": [
+            "commissariat",
+            "rue-juiverie",
+            "palais-saint-jean",
+            "traboule",
+            "hotel-bellevrand",
+            "fourviere"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "les-fils",
+      "title": "Les fils de la soie",
+      "scenes": [
+        {
+          "id": "commissariat",
+          "title": "Le commissariat du 1ᵉʳ arrondissement",
+          "lead": "Le dossier classé en vingt-quatre heures, le cadavre à l'envers, et un nom : Bellevrand.",
+          "screen": {
+            "place": "police",
+            "preset": "rain",
+            "time": "day"
+          },
+          "readAloud": [
+            "Une salle de garde qui sent le poêle à charbon et le drap mouillé. Des agents en pèlerine secouent la pluie de leur képi. Derrière un guichet, un planton tape à la machine avec deux doigts.",
+            "L'inspecteur Rabatel vous emmène dans un bureau minuscule et referme la porte. Il pose sur la table une chemise cartonnée, très mince, et garde la main dessus. « Avant que vous lisiez : officiellement, c'est un cœur qui a lâché. »"
+          ],
+          "flow": [
+            {
+              "title": "Rabatel",
+              "text": "{{npc:germain-rabatel}} montre le dossier sans jet à l'ami de l'accroche. Les autres doivent le convaincre.",
+              "roll": {
+                "type": "skill",
+                "options": [
+                  "persuade",
+                  "law",
+                  "credit-rating"
+                ]
+              },
+              "success": "Il fait passer le dossier → {{handout:rapport-police}}.",
+              "failure": "Il refuse. Le soir, il glisse le dossier sous la porte de l'un d'eux avec un mot : *À me rendre demain.*"
+            },
+            {
+              "title": "Le cadavre à l'envers",
+              "text": "Le rapport du {{npc:lucien-fayolle}} : cœur à droite, alliance à la main droite, la vieille cicatrice de la paume gauche passée à droite. Le docteur, à l'Hôtel-Dieu, en parle volontiers.",
+              "roll": {
+                "type": "skill",
+                "options": [
+                  "medicine",
+                  "first-aid"
+                ]
+              },
+              "success": "Ce n'est pas une rareté de naissance : tout est inversé, jusqu'aux grains de beauté et à la raie des cheveux, que Firmin décrit de l'autre côté. Fayolle, à voix basse : « Comme si on avait enterré son reflet. »",
+              "failure": "Une anomalie de naissance très rare, dit Fayolle, mais qu'un conseil de révision n'aurait jamais pu manquer. Il n'en dort plus.",
+              "extra": "Le Teneur a pris Ravier de l'autre côté et laissé ici son reflet, qui ne vit pas de ce côté-ci."
+            },
+            {
+              "title": "La plainte et la restitution",
+              "text": "Sans jet, dans le dossier : samedi 29, 11 h, plainte de M. Hector Bellevrand, négociant en soieries, pour le vol du livre ; 16 h, scellé n° 4 rendu à son secrétaire, sur ordre du commissaire central. Rabatel : « Et le secrétaire a demandé trois fois s'il n'y avait pas aussi une page de soie brodée. »",
+              "goto": [
+                "hotel-bellevrand"
+              ]
+            },
+            {
+              "title": "L'affaire de 1900",
+              "text": "Si on parle de la Navette, des Mazaud ou du 8 décembre, Rabatel fouille les archives de l'hôtel de police (une demi-journée).",
+              "roll": {
+                "type": "skill",
+                "options": [
+                  "library-use"
+                ]
+              },
+              "success": "Le dossier de disparition de Louis Mazaud, 31 ans, fabricant de soieries : vu pour la dernière fois le samedi 8 décembre 1900 vers 20 h, en habit, entrant dans une traboule de la rue des Tables-Claudiennes. Une note : *son cercle, la Navette, y a un local. M. Jules Bellevrand, président, affirme qu'il n'y est jamais arrivé.* Classé : présumé noyé.",
+              "failure": "Le dossier est introuvable ce jour-là. Rabatel le retrouve le lendemain matin (un jour de perdu).",
+              "goto": [
+                "traboule"
+              ]
+            },
+            {
+              "title": "La mise en garde",
+              "text": "« Le commissaire central m'a dit de laisser tomber. Les soyeux ont le bras long, ici. Si vous trouvez quelque chose, apportez-le-moi. Pas à lui. »",
+              "extra": "Rabatel peut venir le 8 au soir si on le prévient : un revolver de plus, mais il aura du mal à croire ce qu'il verra."
+            }
+          ],
+          "npcs": [
+            "germain-rabatel",
+            "lucien-fayolle"
+          ],
+          "handouts": [
+            "rapport-police"
+          ],
+          "ambience": [
+            "crowd-indoor",
+            "rain"
+          ],
+          "sfx": [
+            "door-open",
+            "footsteps"
+          ],
+          "next": [
+            "hotel-bellevrand",
+            "traboule",
+            "palais-saint-jean",
+            "rue-juiverie"
+          ]
+        },
+        {
+          "id": "rue-juiverie",
+          "title": "La librairie de la rue Juiverie",
+          "lead": "Le vieil ami de Ravier sait ce qu'est le livre, d'où il vient, et qu'il ne brûle pas.",
+          "screen": {
+            "place": "library",
+            "preset": "candle",
+            "time": "dusk"
+          },
+          "readAloud": [
+            "Rue Juiverie, dans le Vieux-Lyon, les façades de la Renaissance se penchent les unes vers les autres. Une enseigne de fer : *I. Montcharmont, livres anciens*. Le grelot de la porte sonne longtemps.",
+            "La boutique est un couloir de livres jusqu'au plafond. Contre les rayonnages, des formes drapées de blanc, hautes comme des hommes. Un vieil homme en calotte de velours sort de l'ombre, une loupe à la main. « Vous venez pour Joannès. Fermez la porte. »"
+          ],
+          "flow": [
+            {
+              "title": "Les draps",
+              "text": "{{npc:isidore-montcharmont}} a couvert tous les miroirs anciens de sa boutique depuis dimanche soir, quand il a appris la mort de Ravier. Il ne s'en cache pas : « Une précaution de vieux fou. »"
+            },
+            {
+              "title": "Ce qu'il sait du livre",
+              "text": "Sans jet, l'essentiel : un in-quarto imprimé à rebours sur soie, à Lyon, en 1852, pour un fabricant nommé Mazaud. Le texte est bien plus ancien. On l'appelle le Livre de l'Envers.",
+              "roll": {
+                "type": "skill",
+                "options": [
+                  "occult",
+                  "history"
+                ]
+              },
+              "success": "L'histoire entière : au XVIᵉ siècle, ici même, rue Juiverie, un banquier de Lucques aurait écrit un *Miroir des débiteurs*, qu'on lisait au miroir pendant les paiements des foires pour voir « l'envers des comptes » : qui paie, au bout du compte, la fortune des autres. Le manuscrit s'est perdu ; Mazaud en a trouvé une copie et l'a fait imprimer sur soie, « parce que la soie est une étoffe vivante ». Il a fondé ensuite un cercle de soyeux : la Navette.",
+              "failure": "Il ne connaît que le nom, et une rumeur : « un cercle de soyeux, la Navette, s'en sert depuis soixante-dix ans »."
+            },
+            {
+              "title": "La visite de 1899",
+              "text": "Sans jet : « En octobre 1899, Louis Mazaud est venu ici, blanc comme un linge, avec le livre. Il voulait que je l'achète et que je l'emporte loin, en Amérique s'il le fallait. Il l'avait jeté au feu : le feu s'était couché dessus sans le prendre. J'ai refusé. J'avais peur. Il a disparu le soir des illuminations de l'année suivante. »",
+              "extra": "Deux faits clés : le livre ne brûle pas (Montcharmont ignore qu'il brûle la nuit où le passage est ouvert), et les Mazaud disparaissent le 8 décembre."
+            },
+            {
+              "title": "Le conseil",
+              "text": "« Couvrez les glaces. Ne lisez jamais ce livre dans un miroir, surtout le soir, à la flamme. Et méfiez-vous de la Navette : ils sont charmants. Ils ont toujours été charmants. »",
+              "roll": {
+                "type": "skill",
+                "options": [
+                  "occult"
+                ]
+              },
+              "success": "Il ajoute ce que disent les vieux catalogues des livres de miroir : *qui tient la garde tient le compte*. La page de garde compte plus que tout le reste.",
+              "failure": "Il n'en sait pas plus."
+            },
+            {
+              "title": "Le visiteur",
+              "text": "Le mercredi 3 (ou le lendemain de leur visite), Gaudin passe demander si Ravier ne lui aurait pas confié « une page de soie ». Montcharmont le dit s'ils reviennent, ou les envoie chercher.",
+              "goto": [
+                "traboule",
+                "hotel-bellevrand"
+              ]
+            }
+          ],
+          "npcs": [
+            "isidore-montcharmont"
+          ],
+          "ambience": [
+            "clock",
+            "rain-window"
+          ],
+          "sfx": [
+            "door-creak"
+          ],
+          "next": [
+            "palais-saint-jean",
+            "traboule",
+            "hotel-bellevrand",
+            "fourviere"
+          ]
+        },
+        {
+          "id": "palais-saint-jean",
+          "title": "La bibliothèque du palais Saint-Jean",
+          "lead": "Les journaux reliés : un Mazaud disparaît tous les vingt-quatre ans, le soir du 8 décembre.",
+          "screen": {
+            "place": "library",
+            "preset": "dust",
+            "time": "day"
+          },
+          "readAloud": [
+            "La Bibliothèque de la Ville occupe l'ancien palais des archevêques, collé à la cathédrale Saint-Jean. On monte un escalier de pierre usé en cuvette. Dans la salle de lecture, sous les hautes fenêtres, des lecteurs en pardessus prennent des notes dans le froid.",
+            "Les cloches de la cathédrale sonnent l'heure à travers les murs. Une bibliothécaire aux manches de lustrine vous regarde par-dessus ses lunettes. « Joannès Ravier ? Il nous restaurait nos registres. Nous l'aimions bien. »"
+          ],
+          "flow": [
+            {
+              "title": "Mlle Sauzet",
+              "text": "{{npc:adrienne-sauzet}} aide volontiers ceux qui viennent pour Ravier. Elle connaît les collections de journaux reliés : *Courrier de Lyon*, *Salut public*, *Progrès*. Le nom de Mazaud, de la Navette, de Bellevrand ou la date du 8 décembre suffisent à lancer la recherche."
+            },
+            {
+              "title": "Les journaux reliés",
+              "roll": {
+                "type": "skill",
+                "options": [
+                  "library-use"
+                ]
+              },
+              "success": "En deux heures, quatre entrefilets → {{handout:coupures}}.",
+              "failure": "Une journée entière de recherche (un jour de perdu sur le compteur), mais le résultat est le même.",
+              "pushed": "Ils trouvent, mais Mlle Sauzet, inquiète, en parle au secrétaire du Cercle, M. Collonges, qui vient chaque mois : Bellevrand sait qu'on fouille, et Gaudin les suit."
+            },
+            {
+              "title": "Compter les années",
+              "text": "1852, 1876, 1900 : chaque fois un Mazaud, chaque fois le soir des illuminations.",
+              "roll": {
+                "type": "characteristic",
+                "options": [
+                  "INT"
+                ]
+              },
+              "success": "Vingt-quatre ans d'écart. Le prochain soir tombe cette année : lundi 8 décembre 1924.",
+              "failure": "Mlle Sauzet fait le calcul à leur place, un doigt sur le calendrier : « Mais... c'est lundi prochain. »"
+            },
+            {
+              "title": "Le dernier Mazaud",
+              "text": "Sans jet, dans l'Annuaire du commerce : le dernier Mazaud vivant est une femme, Mme veuve Perret, née Mazaud, qui dirige la maison de soieries de la rue Puits-Gaillot. Son mari est mort à Verdun en 1916 ; elle a un fils.",
+              "goto": [
+                "fourviere"
+              ]
+            },
+            {
+              "title": "Les archives du Progrès",
+              "text": "Le journaliste peut faire la même recherche au journal, rue de la République, sans jet : la documentation du *Progrès* garde un dossier « Mazaud », ouvert en 1900, où quelqu'un a noté au crayon : *et 1876 ? et 1852 ?*",
+              "goto": [
+                "traboule"
+              ]
+            }
+          ],
+          "npcs": [
+            "adrienne-sauzet"
+          ],
+          "handouts": [
+            "coupures"
+          ],
+          "ambience": [
+            "clock"
+          ],
+          "sfx": [
+            "footsteps"
+          ],
+          "next": [
+            "fourviere",
+            "traboule",
+            "rue-juiverie",
+            "hotel-bellevrand"
+          ]
+        },
+        {
+          "id": "traboule",
+          "title": "La traboule de la Navette",
+          "lead": "Un écusson de pierre dans une cour des pentes, une vieille dévideuse, une porte de fer.",
+          "screen": {
+            "place": "street",
+            "preset": "fog",
+            "time": "night"
+          },
+          "readAloud": [
+            "On entre par une porte quelconque de la rue des Tables-Claudiennes. Derrière, un couloir voûté qui sent la pierre mouillée, une cour, un escalier à vis à jour, une seconde voûte. La traboule descend par paliers vers la montée des Carmélites, de cour en cour.",
+            "Dans la deuxième cour, au-dessus d'une porte de fer, un écusson sculpté, noirci par la suie : une navette de tisserand posée sur un miroir ovale, une clef au-dessus. Dessous court une devise dont toutes les lettres sont gravées à l'envers.",
+            "Au rez-de-chaussée, derrière une vitre, une très vieille femme fait tourner un rouet. Elle vous regarde lever la tête vers l'écusson, et son rouet s'arrête."
+          ],
+          "flow": [
+            {
+              "title": "Trouver la traboule",
+              "text": "Par le dossier de 1900 ([[commissariat]]), par Lucie, par Montcharmont, ou en suivant Gaudin ou Bellevrand un soir. Sans indication, les pentes comptent des dizaines de traboules.",
+              "roll": {
+                "type": "skill",
+                "options": [
+                  "spot-hidden",
+                  "navigate"
+                ]
+              },
+              "success": "Ils la trouvent dans la soirée.",
+              "failure": "Une soirée perdue dans les traboules ; ils la trouvent le lendemain."
+            },
+            {
+              "title": "L'écusson",
+              "text": "La devise, lue dans un miroir ou de mémoire : *CE QUI EST DESSOUS TIENT CE QUI EST DESSUS*.",
+              "roll": {
+                "type": "skill",
+                "options": [
+                  "history",
+                  "appraise"
+                ]
+              },
+              "success": "La pierre date des années 1850. C'est le même écusson que sur la garde, sur la gerbe de l'enterrement, sur la chevalière de Bellevrand. La porte de fer et sa serrure, elles, sont neuves.",
+              "failure": "Un vieil emblème de soyeux, comme il y en a cent sur les pentes."
+            },
+            {
+              "title": "La mère Brossard",
+              "text": "Un café, une brioche aux pralines et un peu de patience aident.",
+              "roll": {
+                "type": "skill",
+                "options": [
+                  "charm",
+                  "persuade"
+                ]
+              },
+              "success": "{{npc:mere-brossard}} : « Ils montent chaque année, le maître surtout, le soir des lumignons. Et tous les vingt-quatre ans, ils montent tous, en habit, avec quelqu'un qu'ils tiennent par le bras. En 76, une jeune fille en robe de bal. En 1900, un monsieur qui m'a dit bonsoir. Ils ne sont jamais redescendus. Lundi, c'est encore le tour. » Elle montre du menton les grandes fenêtres du cinquième : l'ancien atelier.",
+              "failure": "Elle se signe et ferme son volet. Mais à travers : « Lundi soir, n'y soyez pas. »"
+            },
+            {
+              "title": "La porte de fer",
+              "text": "Avec les clés de Lucie : pas de jet. Sinon, la serrure, ou forcer la porte (FOR, jets rapides de la scène).",
+              "roll": {
+                "type": "skill",
+                "options": [
+                  "locksmith"
+                ],
+                "difficulty": "hard"
+              },
+              "success": "Elle s'ouvre sans bruit : un escalier descend vers les caves ([[les-caves]]), un autre monte, fermé par une grille.",
+              "failure": "Trop de bruit : la mère Brossard frappe à sa vitre pour les prévenir que quelqu'un vient. Ils ont juste le temps de se cacher.",
+              "goto": [
+                "les-caves"
+              ]
+            },
+            {
+              "title": "Le guetteur",
+              "text": "Le soir, {{npc:ferreol-gaudin}} vient vérifier la porte, ou y conduit Bellevrand, qui monte seul avec une lanterne préparer la salle.",
+              "roll": {
+                "type": "group",
+                "options": [
+                  "stealth"
+                ]
+              },
+              "success": "Ils voient sans être vus : Bellevrand monte, Gaudin garde la porte en fumant. Gaudin a l'oreille gauche fendue.",
+              "failure": "Gaudin les voit. Il ne se bat pas ici : il les salue de la casquette. Bellevrand sait le soir même qu'on s'intéresse à la Navette, et les invite ({{handout:carte-bellevrand}})."
+            }
+          ],
+          "rolls": [
+            {
+              "type": "characteristic",
+              "options": [
+                "STR"
+              ],
+              "label": "Forcer la porte de fer (bruyant)"
+            }
+          ],
+          "npcs": [
+            "mere-brossard",
+            "ferreol-gaudin",
+            "hector-bellevrand"
+          ],
+          "ambience": [
+            "wind",
+            "village-night"
+          ],
+          "sfx": [
+            "footsteps",
+            "latch",
+            "dog-bark"
+          ],
+          "next": [
+            "les-caves",
+            "hotel-bellevrand",
+            "fourviere",
+            "le-reflet"
+          ]
+        },
+        {
+          "id": "hotel-bellevrand",
+          "title": "L'hôtel Bellevrand",
+          "lead": "Le maître de la Navette reçoit : charmant, généreux, et il veut la garde.",
+          "screen": {
+            "place": "manor",
+            "preset": "rain",
+            "time": "dusk"
+          },
+          "readAloud": [
+            "Rue Sala, près de Bellecour, une façade claire aux balcons de fer forgé. Un valet prend vos manteaux mouillés. Dans le vestibule, le grand miroir est voilé de crêpe noir, comme ceux de l'escalier, comme celui du salon.",
+            "Hector Bellevrand se lève de son fauteuil près du feu. Cheveux blancs, moustache soignée, une chevalière à la main gauche. Il vous serre la main un par un et retient vos noms du premier coup. « Pardonnez le deuil de cette maison. Mon fils est tombé au Chemin des Dames, et je n'ai jamais eu le cœur d'ôter les voiles. »"
+          ],
+          "flow": [
+            {
+              "title": "L'invitation",
+              "text": "S'ils ont fait parler d'eux (concierge, bibliothèque, Gaudin), Bellevrand les invite lui-même → {{handout:carte-bellevrand}}. Sinon, ils peuvent se présenter : il reçoit tout le monde, à l'heure du thé."
+            },
+            {
+              "title": "La conversation",
+              "text": "{{npc:hector-bellevrand}} parle du Cercle (une vieille société de bienfaisance qui entretient l'hospice des vieux canuts), de Ravier (« un artisan admirable, quelle tristesse »), du livre (« une curiosité de 1852 : notre fondateur voulait prouver qu'on peut tout imprimer sur soie, même à rebours »).",
+              "roll": {
+                "type": "skill",
+                "options": [
+                  "psychology"
+                ]
+              },
+              "success": "Il est sincère sur l'hospice et sur son fils. Il ment sur le livre, et très bien. Au nom de Mazaud, il a un instant de tristesse vraie.",
+              "failure": "Un homme de bien, affable, cultivé. Difficile de ne pas l'apprécier."
+            },
+            {
+              "title": "L'offre",
+              "text": "« Il manque au livre sa page de garde : une soie brodée des signatures de nos fondateurs. Une relique. Je donnerai cinq mille francs à qui me la rapportera, et je ne demanderai rien à personne. » Il soupçonne « une femme » d'avoir pris le livre, et refuse de dire laquelle : « Je ne porterai pas plainte contre elle. »",
+              "extra": "Cinq mille francs : plus d'un an de traitement d'un inspecteur de police."
+            },
+            {
+              "title": "S'ils lui rapportent la garde",
+              "branch": "S'ils lui rapportent la garde",
+              "text": "Il paie comptant, remercie avec chaleur, puis regarde la soie à la lampe. Si le nom des Mazaud a été décousu, jet de Chance du plus malchanceux du groupe.",
+              "roll": {
+                "type": "luck"
+              },
+              "success": "Il ne voit rien. Il range la garde dans son coffre, avec le livre.",
+              "failure": "Il voit les trous d'aiguille. Il sourit, très calme, et sonne Gaudin. Clotilde Vial recoudra le nom avant lundi, à moins qu'on ne reprenne la garde.",
+              "extra": "Il peut proposer à l'un d'eux d'entrer au Cercle : coudre son nom au bas de la garde. Ce qu'il promet est vrai : la fortune. Ce qu'il tait aussi : le sang d'un nom paie un jour."
+            },
+            {
+              "title": "S'ils refusent",
+              "branch": "S'ils refusent ou n'ont rien",
+              "text": "Il sourit, ne s'en offense pas, renouvelle l'offre « si vous la trouviez ». Gaudin les raccompagne en automobile et retient leurs adresses."
+            },
+            {
+              "title": "Clotilde Vial",
+              "text": "Si la visite dure, {{npc:clotilde-vial}}, vieille amie de la maison, entre sans se faire annoncer et parle trop : « Ce sont les gens pour la garde, Hector ? Pauvre petite Lucie... » Bellevrand la raccompagne doucement.",
+              "roll": {
+                "type": "skill",
+                "options": [
+                  "charm",
+                  "psychology"
+                ]
+              },
+              "success": "Seule un instant avec eux, elle murmure : « J'ai vu partir Joséphine Mazaud en 1876. Elle avait dix-neuf ans. Je ne veux pas voir partir sa petite-nièce. Mais je suis trop vieille pour être courageuse. »",
+              "failure": "Elle se tait dès que Bellevrand revient."
+            },
+            {
+              "title": "Regarder autour de soi",
+              "roll": {
+                "type": "skill",
+                "options": [
+                  "spot-hidden"
+                ]
+              },
+              "success": "La chevalière porte l'écusson de la traboule. Dans la bibliothèque, derrière un miroir voilé, un coffre-fort : le livre y reste jusqu'au 8.",
+              "failure": "Des livres reliés de soie, des portraits de famille, le portrait d'un jeune lieutenant au crêpe noir.",
+              "extra": "Voler le livre : Serrurerie difficile, de nuit, Gaudin et un valet dans la maison. Il ne brûle pas avant le 8 (voir [[salle-des-glaces]])."
+            }
+          ],
+          "npcs": [
+            "hector-bellevrand",
+            "clotilde-vial",
+            "ferreol-gaudin"
+          ],
+          "handouts": [
+            "carte-bellevrand"
+          ],
+          "ambience": [
+            "rain-window",
+            "fireplace",
+            "clock"
+          ],
+          "sfx": [
+            "door-open",
+            "knocking"
+          ],
+          "next": [
+            "fourviere",
+            "traboule",
+            "le-reflet"
+          ]
+        },
+        {
+          "id": "fourviere",
+          "title": "Lucie, à Fourvière",
+          "lead": "Celle qui veut sortir : la Mazaud qui doit payer lundi, ses lettres de soie, ses clés.",
+          "screen": {
+            "place": "church",
+            "preset": "candle",
+            "time": "dusk"
+          },
+          "readAloud": [
+            "La ficelle vous hisse au flanc de la colline, puis il faut monter à pied, dans le vent. En haut, la basilique toute neuve écrase de sa masse blanche la vieille chapelle. En bas, Lyon fume sous un ciel bas, entre ses deux fleuves.",
+            "Dans la chapelle, il fait presque noir. Des centaines de cierges brûlent devant la Vierge. Les murs sont couverts jusqu'à la voûte d'ex-voto : des plaques de marbre, des cœurs d'argent, des béquilles. Pas une glace.",
+            "Une femme en demi-deuil gris se lève d'un prie-Dieu et relève sa voilette. « Ici, ils ne nous voient pas. Asseyez-vous près de moi. »"
+          ],
+          "flow": [
+            {
+              "title": "Le rendez-vous",
+              "text": "Si on va chez elle, rue Puits-Gaillot, {{npc:lucie-mazaud}} nie tout devant ses employés (Gaudin la fait surveiller) et glisse un mot : *Demain, Fourvière, quatre heures, chapelle de la Vierge. Venez sans miroir.* Si personne ne vient à elle, elle envoie ce mot elle-même samedi 6, pour dimanche 7."
+            },
+            {
+              "title": "La confiance",
+              "text": "S'ils ont la garde et la lui montrent : pas de jet, elle pleure en la voyant.",
+              "roll": {
+                "type": "skill",
+                "options": [
+                  "persuade",
+                  "psychology",
+                  "charm"
+                ]
+              },
+              "success": "Elle raconte tout et montre ce qu'elle a apporté → {{handout:convocation-soie}} et {{handout:lettre-louis}}.",
+              "failure": "Elle avoue seulement être « Mme Morel » et avoir confié le livre à Ravier. Elle laisse la convocation sur le banc en partant ; la lettre de son père, elle la donnera lundi.",
+              "pushed": "Elle se lève et s'en va. Gaudin, qui l'a suivie, attend sur le parvis et voit leurs visages."
+            },
+            {
+              "title": "Ce qu'elle veut",
+              "text": "« Le premier nom brodé sur la garde est le nôtre. Le Teneur prend le sang du premier nom : Étienne, ma grand-tante Joséphine, mon père. Lundi, moi. Et dans vingt-quatre ans, mon fils Jean. Je voulais découdre notre nom. Le suivant, c'est Bellevrand. Je le sais. Il le sait depuis toujours. »",
+              "extra": "Elle ne cache rien de ce que coûte chaque issue (voir [[salle-des-glaces]])."
+            },
+            {
+              "title": "Brûler le livre ?",
+              "text": "« Il ne brûle pas. Mon père a essayé. Mon arrière-grand-mère aussi, en 1877, après Joséphine. Peut-être cette nuit-là seulement, quand la glace est ouverte : mon père l'a écrit. Et si on le brûle, tout ce que le Cercle a reçu repart. Ma maison, mes trois cents métiers, mes ouvriers. Je l'accepterais. Mais il faut que vous le sachiez. »"
+            },
+            {
+              "title": "L'ex-voto",
+              "roll": {
+                "type": "skill",
+                "options": [
+                  "spot-hidden"
+                ]
+              },
+              "success": "Au mur, une petite plaque de marbre : *À Notre-Dame, pour Joséphine, de l'autre côté des glaces. 1877. A. M.* La mère de Joséphine.",
+              "failure": "Lucie la leur montre en partant, sans un mot."
+            },
+            {
+              "title": "Les clés",
+              "text": "Les Mazaud sont les gardiens de la salle : Lucie a les clés de la porte de fer de la traboule et de la grille de l'escalier. Elle les donne s'ils promettent d'être là lundi soir. Elle-même montera avec le Cercle : « Si je n'y vais pas, ils iront chercher Jean. »",
+              "goto": [
+                "traboule",
+                "les-caves",
+                "salle-des-glaces"
+              ]
+            }
+          ],
+          "npcs": [
+            "lucie-mazaud"
+          ],
+          "handouts": [
+            "convocation-soie",
+            "lettre-louis"
+          ],
+          "ambience": [
+            "wind",
+            "crowd-indoor"
+          ],
+          "sfx": [
+            "footsteps",
+            "door-creak"
+          ],
+          "next": [
+            "traboule",
+            "les-caves",
+            "le-reflet",
+            "salle-des-glaces"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "les-reflets",
+      "title": "Les reflets",
+      "scenes": [
+        {
+          "id": "le-reflet",
+          "title": "La nuit des pentes",
+          "lead": "Le reflet de Ravier écrit sur une vitrine ; Gaudin vient chercher la garde.",
+          "screen": {
+            "place": "street",
+            "preset": "fog",
+            "time": "night"
+          },
+          "readAloud": [
+            "Il est tard. Le brouillard monte de la Saône et noie les becs de gaz des pentes. La montée est déserte, sauf un café dont la vitrine éclaire encore le pavé mouillé.",
+            "Dans la vitrine, vous vous voyez passer, tous. Puis vous voyez qu'il y a quelqu'un de plus parmi vous, dans le reflet : un homme en tablier de cuir, les manches retroussées. Sur le trottoir, à cet endroit, il n'y a personne."
+          ],
+          "flow": [
+            {
+              "title": "Quand jouer cette scène",
+              "text": "Vendredi 5 au soir par défaut, ou la première nuit où ils passent sur les pentes après avoir rencontré Firmin. Elle peut aussi relancer une table qui piétine."
+            },
+            {
+              "title": "Le reflet de Ravier",
+              "text": "Ceux qui l'ont connu reconnaissent {{npc:joannes-ravier}}. Il les regarde, pose un doigt sur ses lèvres, puis souffle sur la vitre, de l'intérieur.",
+              "roll": {
+                "type": "san",
+                "san": "0/1D4",
+                "label": "Ravier dans la vitrine"
+              }
+            },
+            {
+              "title": "Le message",
+              "text": "Dans la buée, il écrit avec le doigt, à l'envers pour eux, à l'endroit pour lui → {{handout:message-reflet}}.",
+              "extra": "S'ils n'ont pas encore la garde, il écrit d'abord FIRMIN, et montre du doigt la direction du plateau."
+            },
+            {
+              "title": "Celui qui se tient derrière",
+              "text": "Derrière Ravier, dans le reflet, un grand homme en redingote, de dos, lui pose la main sur l'épaule. La buée gèle d'un coup ; la vitre se couvre de givre. Quand elle s'éclaircit, il n'y a plus que leurs propres reflets.",
+              "roll": {
+                "type": "san",
+                "san": "1/1D6",
+                "label": "Le Teneur"
+              },
+              "extra": "Le patron du café n'a rien vu. Il a seulement froid."
+            },
+            {
+              "title": "Un cri",
+              "text": "Plus haut dans la montée (ou chez eux, si ce sont eux qui ont la garde) : {{npc:ferreol-gaudin}} et un {{npc:homme-de-main}} ont coincé Firmin dans l'escalier d'une traboule. Gaudin veut la garde, pas tuer : il fuit sous la moitié de ses points de vie, ou si un revolver sort."
+            },
+            {
+              "title": "L'homme de main",
+              "text": "Payé dix francs pour la soirée, il n'a pas envie de mourir.",
+              "roll": {
+                "type": "skill",
+                "options": [
+                  "intimidate"
+                ]
+              },
+              "success": "Il détale dans le brouillard ; Gaudin reste seul.",
+              "failure": "Il se bat aux côtés de Gaudin jusqu'à ce que celui-ci fuie."
+            },
+            {
+              "title": "Faire parler Gaudin",
+              "text": "S'il est pris ou à terre.",
+              "roll": {
+                "type": "skill",
+                "options": [
+                  "intimidate",
+                  "persuade"
+                ]
+              },
+              "success": "« M. Bellevrand veut la page avant lundi. Lundi soir, à neuf heures, ils montent tous dans la salle aux glaces de la traboule. Moi, je garde la porte d'en bas. La dame Mazaud monte avec eux. Il paraît que c'est son tour. Je pose pas de questions. »",
+              "failure": "Il se tait et attend que son patron le fasse sortir. Rabatel, s'il l'arrête, doit le relâcher le lendemain sur ordre."
+            },
+            {
+              "title": "Après",
+              "text": "Si Firmin est sauf et a encore la garde, il la leur donne sans condition. Si Gaudin l'a emportée, elle sera posée sur le livre lundi soir ([[salle-des-glaces]]).",
+              "goto": [
+                "les-caves",
+                "salle-des-glaces"
+              ]
+            }
+          ],
+          "npcs": [
+            "joannes-ravier",
+            "le-teneur",
+            "ferreol-gaudin",
+            "homme-de-main",
+            "firmin-chabert"
+          ],
+          "handouts": [
+            "message-reflet"
+          ],
+          "ambience": [
+            "village-night",
+            "wind"
+          ],
+          "sfx": [
+            "footsteps",
+            "door-slam"
+          ],
+          "next": [
+            "les-caves",
+            "fourviere",
+            "salle-des-glaces"
+          ]
+        },
+        {
+          "id": "les-caves",
+          "title": "Les caves de la Navette",
+          "lead": "Sous la traboule : le Grand-Livre du Cercle, les portraits de dos, et le chemin secret vers la salle.",
+          "optional": true,
+          "screen": {
+            "place": "crypt",
+            "preset": "candle",
+            "time": "night"
+          },
+          "readAloud": [
+            "L'escalier descend plus bas que des caves ordinaires. La pierre change : de grands blocs taillés, très anciens, puis une voûte de briques plates. L'air est sec et sent le papier.",
+            "La lanterne éclaire des rayonnages de registres, des liasses de cartons perforés de métiers Jacquard, des pièces de soie roulées. Au fond, trois tableaux dans des cadres dorés. Les trois personnages sont peints de dos."
+          ],
+          "flow": [
+            {
+              "title": "Entrer",
+              "text": "Par la porte de fer de la [[traboule]] : clés de Lucie, ou Serrurerie. Ou par la cave de la mère Brossard, qui communique par un soupirail à moitié muré (FOR, jets rapides de la scène) : elle les y conduit si elle leur fait confiance."
+            },
+            {
+              "title": "Le Grand-Livre",
+              "text": "Ouvert sur un pupitre, à la dernière page écrite → {{handout:grand-livre}}. Pas de jet pour la lire.",
+              "roll": {
+                "type": "skill",
+                "options": [
+                  "accounting",
+                  "library-use"
+                ]
+              },
+              "success": "En feuilletant : soixante-douze ans d'échanges. Chaque fortune du Cercle a son revers, une ruine chez quelqu'un d'autre, à Lyon. Les noms de ces autres sont soigneusement tenus.",
+              "failure": "Ils s'en tiennent à la dernière page, qui suffit."
+            },
+            {
+              "title": "Les portraits de dos",
+              "text": "Étiquettes : *Étienne, 1852. Joséphine, 1876. Louis, 1900.* Un quatrième cadre, vide, attend contre le mur.",
+              "roll": {
+                "type": "san",
+                "san": "0/1D3",
+                "label": "Les portraits de dos"
+              }
+            },
+            {
+              "title": "La glace voilée",
+              "text": "Dans une niche, un miroir couvert d'un drap noir. Si on le découvre, à la lanterne : la cave s'y reflète à l'envers, et quatre silhouettes s'y tiennent, de dos : les trois des portraits et Ravier. L'une d'elles, en habit (Louis), trace sur la glace, à l'envers : LUCIE. Puis : PAS ELLE.",
+              "roll": {
+                "type": "san",
+                "san": "1/1D4",
+                "label": "Les soldés dans la glace"
+              },
+              "extra": "Recouvrir la glace suffit. Qui reste plus d'une minute devant fait un jet de POU : en cas d'échec, une main sort du verre (voir {{npc:le-teneur}})."
+            },
+            {
+              "title": "Les galeries",
+              "text": "De vieilles galeries maçonnées, peut-être romaines, filent sous la colline. L'une remonte par un escalier de service jusque derrière le mur de glaces de la salle du cinquième.",
+              "roll": {
+                "type": "skill",
+                "options": [
+                  "navigate",
+                  "spot-hidden"
+                ]
+              },
+              "success": "Ils trouvent l'escalier : lundi soir, ils pourront arriver derrière les glaces sans passer devant Gaudin (dé bonus pour entrer, [[salle-des-glaces]]).",
+              "failure": "Une heure perdue dans les galeries ; ils ressortent par une cave de la montée des Carmélites."
+            },
+            {
+              "title": "La Salle des Glaces, avant lundi",
+              "text": "Par la grille (clé de Lucie) ou l'escalier de service : un ancien atelier de canut, plafond de quatre mètres, trois hautes fenêtres sur la Saône et Fourvière. Le mur d'en face n'est que miroirs anciens, une quarantaine, cadre contre cadre. Au centre, un vieux métier Jacquard sert de pupitre. Des centaines de lumignons attendent, déjà posés sur le plancher. Le livre n'est pas là : Bellevrand l'apportera lundi.",
+              "extra": "Briser des glaces ou les couvrir avant lundi ne fait que retarder : le passage s'ouvrira aussi dans les vitres. Comptez un round de plus avant de lancer le compteur **Le passage s'ouvre**.",
+              "goto": [
+                "salle-des-glaces"
+              ]
+            }
+          ],
+          "rolls": [
+            {
+              "type": "characteristic",
+              "options": [
+                "STR"
+              ],
+              "label": "Dégager le soupirail de la cave Brossard"
+            }
+          ],
+          "npcs": [
+            "les-soldes",
+            "joannes-ravier",
+            "le-teneur",
+            "mere-brossard"
+          ],
+          "handouts": [
+            "grand-livre"
+          ],
+          "ambience": [
+            "wind-howling"
+          ],
+          "sfx": [
+            "latch",
+            "door-creak",
+            "footsteps"
+          ],
+          "next": [
+            "salle-des-glaces"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "la-nuit-des-lumieres",
+      "title": "La nuit des lumières",
+      "scenes": [
+        {
+          "id": "salle-des-glaces",
+          "title": "La nuit des lumières",
+          "lead": "Lundi 8 décembre, neuf heures du soir : le Cercle solde son compte devant quarante miroirs.",
+          "screen": {
+            "preset": "ritual",
+            "time": "night"
+          },
+          "readAloud": [
+            "À la nuit tombée, Lyon s'allume fenêtre par fenêtre. Sur chaque rebord, des lumignons dans leurs verres de couleur. Les rues sont noires de monde ; une procession de flambeaux monte vers Fourvière, et là-haut la basilique brille comme une lanterne.",
+            "Dans la salle du cinquième étage, trois cents petites flammes tremblent sur le plancher. Par les hautes fenêtres, toute la ville brille jusqu'aux collines. Et sur le mur d'en face, dans quarante miroirs, toute la ville brille une seconde fois, à l'envers.",
+            "Devant le métier à tisser, Hector Bellevrand ouvre un livre aux pages de soie et lève les yeux vers la plus grande glace. « Mes amis, dit-il doucement. Il est l'heure. »"
+          ],
+          "flow": [
+            {
+              "title": "Arriver",
+              "text": "Les rues sont pleines, les tramways bondés : partir avant huit heures. À la porte de fer, {{npc:ferreol-gaudin}}, s'il est libre, avec un gourdin. Le Cercle monte à neuf heures : {{npc:hector-bellevrand}}, {{npc:clotilde-vial}}, le banquier Henri Dumoulin et son fils {{npc:gaston-dumoulin}}, et {{npc:lucie-mazaud}} en gris, qui marche seule."
+            },
+            {
+              "title": "Entrer",
+              "text": "Dé bonus s'ils connaissent l'escalier de service ([[les-caves]]). Avec Rabatel en uniforme, personne ne les arrête, mais Bellevrand le fait asseoir comme un invité.",
+              "roll": {
+                "type": "group",
+                "options": [
+                  "stealth"
+                ]
+              },
+              "success": "Ils arrivent sans être vus (derrière les glaces par l'escalier de service, ou cachés dans l'atelier voisin). Ils voient tout, et choisissent leur moment.",
+              "failure": "On les voit. Gaston Dumoulin barre la porte. Bellevrand, sans hausser la voix : « Laissez-les. Qu'ils voient ce que coûte Lyon. » Ils sont tenus contre le mur, sous la garde de Gaston, mais peuvent agir dès que la lecture commence."
+            },
+            {
+              "title": "Où est la garde ?",
+              "text": "Si Bellevrand l'a récupérée, elle est posée sur le livre, et le nom des Mazaud est le premier (sauf s'il a été décousu à son insu). Si les investigateurs l'ont, Bellevrand ouvre le livre puis le tend à Lucie : sans garde, c'est le lecteur qui paie. Elle accepte, pour Jean.",
+              "extra": "Règles complètes dans les notes ci-dessous."
+            },
+            {
+              "title": "La lecture",
+              "text": "Le lecteur lit à voix basse, dans la grande glace. Une à une, les villes reflétées s'éteignent. Dans chaque miroir, la même pièce, sans personne, et la même silhouette en redingote, de dos, au milieu. Lancez le compteur **Le passage s'ouvre**.",
+              "roll": {
+                "type": "san",
+                "san": "1/1D8",
+                "label": "Le Teneur dans quarante glaces"
+              }
+            },
+            {
+              "title": "Chaque round",
+              "text": "Les glaces se bombent comme une eau sur le point de déborder. Des mains sortent du verre vers quiconque tient le livre ou s'approche à moins de deux pas (attaque des Mains, voir {{npc:le-teneur}}). À 3, on peut franchir la glace, ou y être poussé. À 6, le solde. À 9, le passage se referme."
+            },
+            {
+              "title": "Le solde",
+              "text": "À 6, la glace prend un vivant du premier nom brodé sur la garde, ou le lecteur si la garde manque, sauf si quelqu'un du sang de la Navette a franchi la glace avant. La personne marche vers la glace, prend la main de son propre reflet et entre. La surface se referme comme une eau calme."
+            },
+            {
+              "title": "Ce qu'ils peuvent faire",
+              "text": "Tant que le compteur tourne, chacun agit à son tour. Les choix ci-dessous se combinent : l'un brûle le livre pendant qu'un autre retient Lucie, qu'un troisième tient Gaston à distance."
+            },
+            {
+              "title": "Brûler le livre",
+              "branch": "S'ils brûlent le livre",
+              "text": "Arracher le livre au lecteur, puis le tenir dans les lumignons trois rounds (compteur **Le livre brûle**). Cette nuit, la soie brûle : lentement, avec une odeur de cheveux. Gaston et Gaudin veulent l'empêcher ; les mains des glaces se tendent vers celui qui le tient.",
+              "roll": {
+                "type": "opposed",
+                "options": [
+                  "sleight-of-hand",
+                  "fighting-brawl"
+                ],
+                "against": {
+                  "npc": "hector-bellevrand",
+                  "skill": "dodge"
+                }
+              },
+              "success": "Ils ont le livre. Au troisième round dans la flamme, les quarante glaces se fendent ensemble, du haut en bas. Dans les fissures, de dos, Étienne, Joséphine, Louis et Ravier s'éloignent dans une rue à l'envers, puis plus rien. Le passage est clos pour toujours. Si quelqu'un a été pris cette nuit et que le compteur n'avait pas atteint 9, la glace le rejette sur le plancher, vivant.",
+              "failure": "Le lecteur garde le livre contre lui et recule vers la glace. Réessayez au round suivant."
+            },
+            {
+              "title": "Découdre le nom des Mazaud",
+              "branch": "Si le nom des Mazaud est décousu",
+              "text": "Avant la nuit, ou maintenant : prendre la garde sur le livre puis découdre le nom, deux rounds. Sans le savoir-faire, DEX difficile (jets rapides de la scène).",
+              "roll": {
+                "type": "skill",
+                "options": [
+                  "art-craft"
+                ],
+                "difficulty": "hard"
+              },
+              "success": "À 6, ce n'est pas Lucie que la glace appelle. Dans la grande glace, le reflet de Bellevrand s'avance seul et lui tend la main. Il comprend, regarde Lucie, et murmure : « Bien joué, petite. » Il pose le livre sur le métier et entre.",
+              "failure": "Le fil casse, l'aiguille tremble : encore un round.",
+              "extra": "Si la garde n'est plus sur le livre à 6, c'est le lecteur qui paie : Bellevrand s'il lit, Lucie si c'est elle. Pour sauver Bellevrand ensuite, il faudrait un autre solde, ou brûler le livre avant 9."
+            },
+            {
+              "title": "Pousser Bellevrand",
+              "branch": "S'ils poussent Bellevrand dans la glace",
+              "text": "Une fois le compteur à 3, la glace est assez ouverte pour qu'on y tombe. Bellevrand est du sang de la Navette : il solde le compte.",
+              "roll": {
+                "type": "opposed",
+                "options": [
+                  "fighting-brawl"
+                ],
+                "against": {
+                  "npc": "hector-bellevrand",
+                  "skill": "fighting-brawl"
+                }
+              },
+              "success": "Il bascule dans le verre comme dans une eau froide. Sa main reste un instant tendue hors de la glace, puis la surface se referme. Celui qui a poussé perd 1D6 SAN, sans jet.",
+              "failure": "Il se dégage ; Gaston Dumoulin se jette sur l'investigateur."
+            },
+            {
+              "title": "Clotilde Vial",
+              "branch": "Si Clotilde Vial prend la place de Lucie",
+              "text": "Possible seulement si on lui a parlé avant ([[hotel-bellevrand]]), ou si on lui rappelle Joséphine en 1876.",
+              "roll": {
+                "type": "skill",
+                "options": [
+                  "persuade"
+                ],
+                "difficulty": "hard"
+              },
+              "success": "La vieille dame se lève, embrasse Lucie et entre dans la glace avant que Bellevrand puisse la retenir. Elle est de la Navette par son mariage : le compte est soldé.",
+              "failure": "Elle pleure, mais ne bouge pas."
+            },
+            {
+              "title": "Traverser la glace",
+              "branch": "S'ils traversent la glace",
+              "text": "À partir de 3, on peut entrer dans la glace (l'Envers, en note). Pour ramener quelqu'un déjà pris, il faut le trouver, le prendre par la main et revenir avant 9. Le Teneur se tient dans l'encadrement, de dos ; sur le verre, à l'envers : UN NOM POUR UN NOM.",
+              "roll": {
+                "type": "san",
+                "san": "1/1D6",
+                "label": "Entrer dans l'Envers"
+              },
+              "extra": "Deux manières de ressortir avec la personne : le livre brûle de ce côté pendant ce temps, ou quelqu'un de la Navette reste à sa place. Sinon, ceux qui sont entrés restent de l'autre côté, de dos, pour toujours."
+            },
+            {
+              "title": "Si personne n'arrête la lecture",
+              "branch": "Si personne n'arrête la lecture",
+              "text": "Lucie s'avance. Dans la glace, son reflet l'attend et, à côté, de dos, un homme en habit de 1900. Elle ne se retourne pas."
+            },
+            {
+              "title": "Après le solde",
+              "text": "À 9, le passage se referme. Bellevrand, s'il est encore là, ferme le livre et souffle les lumignons un par un. S'il reste un livre, quelqu'un peut le prendre.",
+              "goto": [
+                "apres-les-lumieres"
+              ]
+            }
+          ],
+          "notes": [
+            {
+              "title": "Les règles de l'Envers (pour le Gardien)",
+              "items": [
+                "Le livre se lit dans un miroir, à la lumière d'une flamme. Le lecteur voit l'Envers, et l'Envers le voit. Un intrus qui insiste est pris (Ravier).",
+                "Le 8 décembre, tous les vingt-quatre ans, quand la ville s'allume, la lecture ouvre le passage : le Teneur prend un vivant du sang du **premier nom** brodé sur la garde.",
+                "Si la garde n'est pas sur le livre, c'est le **lecteur** qui paie.",
+                "Toute personne de la Navette (de sang ou par mariage) qui franchit la glace ouverte solde le compte à la place du premier nom.",
+                "On ajoute un nom en le cousant, on l'ôte en le décousant.",
+                "Le livre et sa garde ne brûlent, ne se déchirent ni ne se mouillent, sauf quand le passage est ouvert.",
+                "Le livre brûlé, tout ce qui a été passé à l'envers revient à son propriétaire : fortunes, ruines, dettes. Les morts d'autrefois ne reviennent pas ; ceux qui ont été pris cette nuit, si.",
+                "Lire le livre, pour un investigateur : SAN 1/1D6, puis un jet de POU par minute ; au premier échec, les mains du Teneur sortent de la glace."
+              ]
+            },
+            {
+              "title": "L'Envers",
+              "items": [
+                "Lyon retourné : la Saône coule à l'est, le Rhône à l'ouest ; Fourvière est en bas, la Croix-Rousse au fond d'un creux. Les enseignes se lisent à rebours.",
+                "Les lumignons brûlent d'une flamme noire qui ne chauffe pas. Pas un bruit, sauf, très loin, celui d'une navette qui va et vient.",
+                "Tous les passants sont vus de dos, de quelque côté qu'on se place. Étienne, Joséphine, Louis et Ravier se tiennent là, immobiles.",
+                "À la place de la basilique, un comptoir immense et un registre ouvert, où une plume écrit seule."
+              ]
+            },
+            {
+              "title": "Si le livre a été volé avant le 8",
+              "items": [
+                "Il ne brûle pas avant la nuit. Le 8, quand la ville s'allume, les glaces et les vitres autour du livre s'assombrissent : le passage s'ouvre là où il est, sans lecteur, et le Teneur prend à 6 le premier nom de la garde, ou celui qui tient le livre si la garde manque.",
+                "Bellevrand, Gaston Dumoulin et Gaudin viennent le reprendre avant neuf heures. Jouez cette scène là où se trouvent les investigateurs."
+              ]
+            },
+            {
+              "title": "Forces en présence",
+              "items": [
+                "Bellevrand (canne-épée), Gaston Dumoulin, Gaudin s'il est libre. Henri Dumoulin et Clotilde ne se battent pas.",
+                "Lucie aide les investigateurs dès qu'ils agissent ; sinon, elle marche vers la glace."
+              ]
+            }
+          ],
+          "rolls": [
+            {
+              "type": "characteristic",
+              "options": [
+                "DEX"
+              ],
+              "label": "Découdre sans savoir-faire (difficile)"
+            },
+            {
+              "type": "characteristic",
+              "options": [
+                "POW"
+              ],
+              "label": "Se dégager des mains des glaces"
+            },
+            {
+              "type": "damage",
+              "dice": "1D6",
+              "label": "SAN perdue par celui qui pousse"
+            }
+          ],
+          "npcs": [
+            "hector-bellevrand",
+            "lucie-mazaud",
+            "clotilde-vial",
+            "gaston-dumoulin",
+            "ferreol-gaudin",
+            "le-teneur",
+            "les-soldes"
+          ],
+          "ambience": [
+            "street",
+            "wind-howling",
+            "clock"
+          ],
+          "sfx": [
+            "footsteps",
+            "door-slam",
+            "knocking"
+          ],
+          "next": [
+            "apres-les-lumieres"
+          ]
+        },
+        {
+          "id": "apres-les-lumieres",
+          "title": "Le matin du 9 décembre",
+          "lead": "Ce que la nuit a coûté, issue par issue.",
+          "screen": {
+            "place": "street",
+            "preset": "rain",
+            "time": "dusk"
+          },
+          "readAloud": [
+            "Au petit jour, une pluie fine lave les pentes. Sur les rebords des fenêtres, les lumignons éteints gardent un fond de cire noire. D'un immeuble à l'autre, les métiers reprennent leur claquement, comme chaque matin."
+          ],
+          "flow": [
+            {
+              "title": "Le 9 au matin",
+              "text": "Choisissez l'issue qui correspond à la nuit. Plusieurs peuvent se combiner."
+            },
+            {
+              "title": "Le livre a brûlé",
+              "branch": "Si le livre a brûlé",
+              "text": "Chaque investigateur présent regagne 1D8 SAN. Dans l'année, la Navette se défait : la banque Dumoulin suspend ses paiements au printemps, l'hospice des vieux canuts ferme, la maison Mazaud fait faillite à l'automne 1925. Lucie vend tout, garde Jean, et remercie les investigateurs sans amertume. Bellevrand ne sort plus de chez lui ; on le trouve un matin de 1926 assis devant un miroir dévoilé, l'air paisible.",
+              "roll": {
+                "type": "damage",
+                "dice": "1D8",
+                "label": "SAN regagnée (livre brûlé)"
+              }
+            },
+            {
+              "title": "Bellevrand a soldé le compte",
+              "branch": "Si Bellevrand a soldé le compte",
+              "text": "Chacun regagne 1D6 SAN pour Lucie sauvée ; celui qui a poussé a déjà payé. Le Cercle se tait. Lucie devient la gardienne du livre. Le nom des Bellevrand meurt avec le maître : en 1948, le premier nom vivant de la garde sera celui des Vial. Lucie promet de brûler le livre ce soir-là. Tiendra-t-elle parole, quand la ville s'allumera ?",
+              "roll": {
+                "type": "damage",
+                "dice": "1D6",
+                "label": "SAN regagnée (Lucie sauvée)"
+              }
+            },
+            {
+              "title": "Clotilde s'est offerte",
+              "branch": "Si Clotilde Vial s'est offerte",
+              "text": "Chacun regagne 1D4 SAN. Lucie est sauve, mais le nom des Mazaud reste le premier : en 1948, ce sera le tour de Jean, à moins qu'on ne découse le nom d'ici là.",
+              "roll": {
+                "type": "damage",
+                "dice": "1D4",
+                "label": "SAN regagnée (Clotilde)"
+              }
+            },
+            {
+              "title": "Lucie est passée",
+              "branch": "Si Lucie est passée",
+              "text": "Le Cercle prospère. Jean est confié à Clotilde Vial. Quelques semaines plus tard, l'un des investigateurs aperçoit, dans une vitrine de la rue de la République, une femme en gris qui lui tourne le dos et ne bouge pas avec la foule.",
+              "roll": {
+                "type": "san",
+                "san": "1/1D6",
+                "label": "Lucie perdue"
+              }
+            },
+            {
+              "title": "Ils ont gardé le livre",
+              "branch": "S'ils ont gardé le livre",
+              "text": "Le livre marche pour eux : une dette passée à un inconnu, une chance prise à un rival. Chaque échange coûte 1D4 SAN et allonge d'un instant le retard du reflet de celui qui lit. Le compte court toujours : le 8 décembre 1948 tombe un mercredi.",
+              "roll": {
+                "type": "san",
+                "san": "0/1D4",
+                "label": "Premier échange"
+              }
+            },
+            {
+              "title": "Ravier",
+              "text": "Quelle que soit l'issue, l'affaire reste classée. Mme Jacquet vend les outils du relieur ; Firmin en rachète un à un avec ses gages. Si le livre a brûlé, aucune vitre ne montre plus Ravier. Sinon, certains soirs, dans la vitrine du café de la montée, un homme en tablier de cuir regarde passer les gens."
+            }
+          ],
+          "notes": [
+            {
+              "title": "Ce que deviennent les autres",
+              "items": [
+                "**Rabatel** demande sa mutation à Marseille, ou reste, et devient un allié fidèle pour d'autres affaires.",
+                "**Montcharmont** ôte les draps de ses miroirs si le livre a brûlé. Sinon, il ferme boutique au printemps.",
+                "**Gaudin** disparaît de Lyon si son patron n'est plus là ; sinon, il reste son chauffeur, et se souvient des visages.",
+                "**Le journaliste** : *Le Progrès* refuse l'article entier. Trois lignes paraissent en page six : « Mort naturelle d'un relieur des pentes »."
+              ]
+            }
+          ],
+          "npcs": [
+            "lucie-mazaud",
+            "firmin-chabert",
+            "germain-rabatel"
+          ],
+          "ambience": [
+            "rain",
+            "street"
+          ],
+          "sfx": [
+            "door-open"
+          ]
+        }
+      ]
+    }
+  ],
+  "npcs": [
+    {
+      "id": "joannes-ravier",
+      "name": "Joannès Ravier",
+      "role": "Relieur-doreur, la victime (son reflet)",
+      "description": "Cinquante-huit ans, veuf, tablier de cuir, mains brûlées par les fers à dorer, une vieille cicatrice de couteau à parer dans la paume gauche.",
+      "personality": "Artisan scrupuleux et curieux, qui lisait toujours ce qu'il reliait. Son reflet, prisonnier de l'Envers, veut prévenir les vivants.",
+      "knows": [
+        "Le texte est imprimé à rebours et se lit au miroir.",
+        "Il a confié la garde à Firmin le jeudi 27 au soir.",
+        "Dans l'Envers, il a compris la règle : le premier nom paie, et on peut le découdre."
+      ]
+    },
+    {
+      "id": "firmin-chabert",
+      "name": "Firmin Chabert",
+      "role": "Apprenti de Ravier",
+      "description": "Quinze ans, maigre, des mains tachées de colle, une casquette trop grande.",
+      "personality": "Loyal à son patron jusqu'au bout, terrifié, fier. Il ne fait confiance qu'à ceux qui le protègent ou qui ont connu Ravier.",
+      "characteristics": {
+        "STR": 50,
+        "CON": 55,
+        "SIZ": 45,
+        "DEX": 65,
+        "INT": 60,
+        "POW": 45
+      },
+      "hp": 10,
+      "dodge": 32,
+      "knows": [
+        "Jeudi 27 vers 22 h, il a vu dans la vitre noire un grand homme de dos entre lui et son patron, dans une pièce vide.",
+        "Ravier lui a confié un paquet (la garde) : ne jamais l'ouvrir devant une glace, ne le donner à personne.",
+        "Un costaud à l'oreille fendue est venu chez sa mère le samedi 29.",
+        "Ravier avait la cicatrice dans la paume gauche, la raie des cheveux à gauche."
+      ]
+    },
+    {
+      "id": "benoite-gros",
+      "name": "Benoîte Gros",
+      "role": "Concierge du 12, montée Saint-Sébastien",
+      "description": "La soixantaine, tablier bleu, chat sur l'épaule, voix qui porte dans toute la cour.",
+      "personality": "Bavarde, curieuse, susceptible. Elle aimait bien Ravier, « un homme tranquille ».",
+      "knows": [
+        "Lundi 24 : une dame voilée en demi-deuil gris, qui sentait l'iris, a apporté un paquet.",
+        "Jeudi 27 vers 15 h : un grand costaud en casquette, oreille gauche fendue, a demandé « un livre en soie ».",
+        "Jeudi matin, Ravier a reçu une lettre de la rue Juiverie et il est devenu tout blanc.",
+        "Jeudi vers 22 h 30 : des meubles traînés dans l'atelier.",
+        "L'adresse de Firmin ; la sœur de Ravier fait vider l'atelier samedi 6."
+      ]
+    },
+    {
+      "id": "germain-rabatel",
+      "name": "Germain Rabatel",
+      "role": "Inspecteur de police",
+      "description": "Quarante-six ans, moustache tombante, pardessus usé, un mégot éteint toujours aux lèvres.",
+      "personality": "Honnête, têtu, amer qu'on lui ait fait classer l'affaire. Il croit aux preuves, pas aux fantômes.",
+      "characteristics": {
+        "STR": 60,
+        "CON": 60,
+        "SIZ": 65,
+        "DEX": 55,
+        "INT": 65,
+        "POW": 55
+      },
+      "hp": 12,
+      "dodge": 27,
+      "attacks": [
+        {
+          "name": "Revolver d'ordonnance",
+          "skill": 55,
+          "damage": "1D10"
+        },
+        {
+          "name": "Poings",
+          "skill": 55,
+          "damage": "1D3"
+        }
+      ],
+      "knows": [
+        "Le constat, l'autopsie et ses anomalies.",
+        "Le livre a été rendu à Bellevrand sur ordre du commissaire central, le jour même de l'autopsie.",
+        "Le secrétaire de Bellevrand cherchait une « page de soie brodée ».",
+        "Il peut retrouver le dossier de la disparition de Louis Mazaud (1900)."
+      ]
+    },
+    {
+      "id": "lucien-fayolle",
+      "name": "Dr Lucien Fayolle",
+      "role": "Médecin légiste",
+      "description": "Cinquante ans, lorgnon, blouse tachée, fume trop.",
+      "personality": "Rigoureux, ébranlé : ce cadavre contredit tout ce qu'il sait.",
+      "knows": [
+        "Le corps de Ravier est inversé : cœur à droite, foie à gauche, alliance à droite, cicatrice et grains de beauté du mauvais côté.",
+        "Le conseil de révision de 1886 n'a rien relevé : impossible pour un cœur à droite."
+      ]
+    },
+    {
+      "id": "isidore-montcharmont",
+      "name": "Isidore Montcharmont",
+      "role": "Libraire ancien, rue Juiverie",
+      "description": "Soixante et onze ans, calotte de velours, loupe au cou, voix douce.",
+      "personality": "Érudit, peureux, honteux d'avoir refusé d'aider Louis Mazaud en 1899. Il veut se racheter, de loin.",
+      "knows": [
+        "Le Livre de l'Envers : un texte lucquois du XVIᵉ siècle, imprimé sur soie et à rebours en 1852 pour Claude Mazaud.",
+        "En octobre 1899, Louis Mazaud a voulu lui vendre le livre ; il l'avait jeté au feu sans qu'il brûle.",
+        "Louis a disparu le soir des illuminations de 1900.",
+        "« Qui tient la garde tient le compte. »",
+        "La Navette a un local dans une traboule des pentes, rue des Tables-Claudiennes."
+      ]
+    },
+    {
+      "id": "adrienne-sauzet",
+      "name": "Adrienne Sauzet",
+      "role": "Bibliothécaire au palais Saint-Jean",
+      "description": "Trente-huit ans, manches de lustrine, chignon serré, lunettes sur le bout du nez.",
+      "personality": "Précise, vive, aime les énigmes. Elle avait de l'affection pour Ravier.",
+      "knows": [
+        "Ravier restaurait les registres de la bibliothèque.",
+        "Les collections de journaux reliés depuis 1830.",
+        "Le secrétaire du Cercle de la Navette, M. Collonges, vient consulter les échos chaque mois."
+      ]
+    },
+    {
+      "id": "mere-brossard",
+      "name": "La mère Brossard",
+      "role": "Vieille dévideuse de la traboule",
+      "description": "Soixante-dix-huit ans, châle noir, doigts déformés par cinquante ans de soie. Elle vit au rez-de-chaussée de la deuxième cour depuis 1869.",
+      "personality": "Pieuse, gourmande, maligne. Elle a tout vu et n'a jamais rien dit à personne.",
+      "knows": [
+        "Le maître monte chaque année le soir des lumignons.",
+        "En 1876, une jeune fille en robe de bal est montée avec eux ; en 1900, un monsieur en habit. Ils ne sont jamais redescendus.",
+        "Lundi 8, « c'est encore le tour ».",
+        "Sa cave communique avec celles de la Navette par un soupirail à moitié muré."
+      ]
+    },
+    {
+      "id": "lucie-mazaud",
+      "name": "Lucie Perret-Mazaud",
+      "role": "Fabricante de soieries, le premier nom",
+      "description": "Trente et un ans, demi-deuil gris, parfum d'iris, le bout des doigts durci par la soie : elle travaille dans ses ateliers avec ses ouvrières.",
+      "personality": "Lucide, droite, épuisée. Elle veut sortir du Cercle et sauver son fils Jean, neuf ans. Elle n'a pas peur pour elle ; elle a honte de vouloir qu'un autre paie à sa place.",
+      "characteristics": {
+        "STR": 45,
+        "CON": 50,
+        "SIZ": 50,
+        "DEX": 60,
+        "APP": 65,
+        "INT": 75,
+        "POW": 70,
+        "EDU": 70
+      },
+      "hp": 10,
+      "dodge": 30,
+      "skills": {
+        "art-craft": 70,
+        "accounting": 60,
+        "persuade": 50
+      },
+      "knows": [
+        "Elle est « Mme Morel » : elle a confié le livre à Ravier pour faire ôter la garde et découdre le nom des Mazaud.",
+        "Le premier nom paie ; sans garde, c'est le lecteur qui paie.",
+        "Étienne en 1852, sa grand-tante Joséphine en 1876, son père Louis en 1900, pour l'épargner, elle.",
+        "Le livre ne brûle pas, sauf peut-être la nuit où le passage est ouvert.",
+        "Elle a les clés de la porte de fer et de la grille : les Mazaud sont les gardiens de la salle.",
+        "Brûler le livre ruinerait les quatre familles, la sienne et ses trois cents ouvriers compris."
+      ]
+    },
+    {
+      "id": "hector-bellevrand",
+      "name": "Hector Bellevrand",
+      "role": "Négociant en soieries, maître du Cercle de la Navette",
+      "description": "Soixante et un ans, cheveux blancs, moustache soignée, chevalière à l'écusson de la navette. Veuf depuis 1920 ; son fils unique, le lieutenant Marc Bellevrand, est tombé le 16 avril 1917.",
+      "personality": "Courtois, drôle, cultivé, généreux avec les pauvres, sincèrement attaché à Lyon et à ses canuts. Il croit qu'il vaut mieux qu'une famille paie qu'une ville entière. Il ne menace jamais lui-même : il laisse Gaudin s'en charger. Sa peur : être le premier nom.",
+      "characteristics": {
+        "STR": 45,
+        "CON": 50,
+        "SIZ": 65,
+        "DEX": 45,
+        "APP": 70,
+        "INT": 80,
+        "POW": 75,
+        "EDU": 85
+      },
+      "hp": 11,
+      "dodge": 22,
+      "attacks": [
+        {
+          "name": "Canne-épée",
+          "skill": 45,
+          "damage": "1D6"
+        },
+        {
+          "name": "Poings",
+          "skill": 30,
+          "damage": "1D3"
+        }
+      ],
+      "skills": {
+        "dodge": 22,
+        "fighting-brawl": 30,
+        "persuade": 80,
+        "charm": 75,
+        "psychology": 65,
+        "occult": 55,
+        "spot-hidden": 50
+      },
+      "knows": [
+        "Toutes les règles du livre ; il a vu les soldes de 1876 et 1900.",
+        "Lucie a pris le livre et l'a confié à Ravier ; il le lui a pardonné en souriant.",
+        "Sans la garde, le lecteur paie : il ne lira pas sans elle, et fera lire Lucie s'il le faut.",
+        "En 1917, il a demandé à l'Envers de lui rendre son fils : refusé.",
+        "Si le nom des Mazaud disparaît de la garde, c'est lui qui paie : il est le dernier des Bellevrand."
+      ]
+    },
+    {
+      "id": "ferreol-gaudin",
+      "name": "Ferréol Gaudin",
+      "role": "Chauffeur et homme de main de Bellevrand",
+      "description": "Quarante et un ans, ancien marinier du Rhône, épaules de débardeur, casquette, l'oreille gauche fendue par un vieux coup de gaffe.",
+      "personality": "Poli, patient, sans curiosité. Fidèle à qui le paie. Il ne veut pas savoir ce qui se passe là-haut.",
+      "characteristics": {
+        "STR": 80,
+        "CON": 70,
+        "SIZ": 80,
+        "DEX": 50,
+        "INT": 45,
+        "POW": 40
+      },
+      "hp": 15,
+      "dodge": 25,
+      "build": 1,
+      "damageBonus": "+1D4",
+      "attacks": [
+        {
+          "name": "Poings",
+          "skill": 65,
+          "damage": "1D3+1D4"
+        },
+        {
+          "name": "Gourdin",
+          "skill": 60,
+          "damage": "1D8+1D4"
+        },
+        {
+          "name": "Couteau",
+          "skill": 45,
+          "damage": "1D4+1D4"
+        }
+      ],
+      "skills": {
+        "intimidate": 55,
+        "stealth": 40,
+        "drive-auto": 60
+      },
+      "knows": [
+        "Il a fait le tour des relieurs de Lyon le mercredi 26 et le jeudi 27 ; Ravier a nié avoir le livre.",
+        "Il est allé chez la mère de Firmin le samedi 29.",
+        "Lundi 8 à 21 h, le Cercle monte dans la salle aux glaces de la traboule ; il garde la porte d'en bas.",
+        "« La dame Mazaud monte avec eux. Il paraît que c'est son tour. »"
+      ]
+    },
+    {
+      "id": "homme-de-main",
+      "name": "Un débardeur du port Rambaud",
+      "role": "Homme de main payé à la soirée",
+      "description": "Trente ans, bras énormes, bonnet de laine, sent le vin rouge.",
+      "personality": "Payé dix francs, il n'a pas l'intention de mourir pour ça.",
+      "characteristics": {
+        "STR": 70,
+        "CON": 65,
+        "SIZ": 70,
+        "DEX": 50,
+        "INT": 40,
+        "POW": 40
+      },
+      "hp": 13,
+      "dodge": 25,
+      "damageBonus": "+1D4",
+      "attacks": [
+        {
+          "name": "Poings",
+          "skill": 55,
+          "damage": "1D3+1D4"
+        },
+        {
+          "name": "Barre de fer",
+          "skill": 45,
+          "damage": "1D8+1D4"
+        }
+      ],
+      "knows": [
+        "Rien, sinon que « le costaud » paie bien."
+      ]
+    },
+    {
+      "id": "clotilde-vial",
+      "name": "Clotilde Vial",
+      "role": "Doyenne du Cercle de la Navette",
+      "description": "Soixante-quatorze ans, canne à pommeau d'argent, robe noire de l'ancien temps. Entrée chez les Vial par son mariage en 1875.",
+      "personality": "Fière, fidèle au Cercle, hantée par ce qu'elle a vu. Elle parle trop quand elle a peur.",
+      "characteristics": {
+        "STR": 30,
+        "CON": 40,
+        "SIZ": 45,
+        "DEX": 35,
+        "INT": 70,
+        "POW": 60
+      },
+      "hp": 8,
+      "dodge": 17,
+      "knows": [
+        "Elle a vu Joséphine Mazaud entrer dans la glace en 1876, et Louis en 1900.",
+        "Les règles, à peu près : le premier nom paie.",
+        "Elle sait broder ; c'est elle qui recoudrait un nom sur la garde."
+      ]
+    },
+    {
+      "id": "gaston-dumoulin",
+      "name": "Gaston Dumoulin",
+      "role": "Fils du banquier Henri Dumoulin, membre du Cercle",
+      "description": "Vingt-huit ans, nez cassé, habit trop étroit aux épaules. Ancien boxeur amateur.",
+      "personality": "Brutal par loyauté envers son père, pas par goût. Il a peur des glaces.",
+      "characteristics": {
+        "STR": 70,
+        "CON": 65,
+        "SIZ": 70,
+        "DEX": 60,
+        "INT": 50,
+        "POW": 45
+      },
+      "hp": 13,
+      "dodge": 30,
+      "damageBonus": "+1D4",
+      "attacks": [
+        {
+          "name": "Poings",
+          "skill": 65,
+          "damage": "1D3+1D4"
+        }
+      ],
+      "skills": {
+        "fighting-brawl": 65,
+        "dodge": 30
+      },
+      "knows": [
+        "Le Cercle monte le 8 à 21 h ; c'est sa première fois.",
+        "Son père lui a dit : « Tu ne regardes pas les glaces, tu tiens la porte. »"
+      ]
+    },
+    {
+      "id": "le-teneur",
+      "kind": "creature",
+      "name": "Le Teneur",
+      "role": "Celui qui tient les comptes de l'Envers",
+      "description": "Un homme très grand en redingote noire de coupe ancienne, toujours vu de dos, de quelque côté qu'on le regarde. Il n'existe que dans les reflets.",
+      "personality": "Exact, patient, indifférent. Il ne veut que des comptes justes.",
+      "characteristics": {
+        "POW": 100
+      },
+      "sanLoss": "1/1D8",
+      "attacks": [
+        {
+          "name": "Mains des glaces",
+          "skill": 60,
+          "damage": "1D3",
+          "note": "Des mains glacées sortent du verre et tirent vers la glace. La victime fait un jet de POU pour se dégager ; deux échecs de suite et elle passe de l'autre côté. Un compagnon qui la retient lui donne un dé bonus."
+        }
+      ],
+      "special": [
+        "N'existe que dans les reflets : glaces, vitres la nuit, eau ou encre sous une flamme. Couvrir ou briser le reflet le chasse de là.",
+        "Ne parle jamais. Écrit parfois, à l'envers, dans la buée ou le givre.",
+        "Ne sort du verre que ses mains et ses bras, sauf la nuit où le passage est ouvert.",
+        "Rien ne le blesse. Le livre brûlé, il disparaît avec le passage."
+      ],
+      "knows": [
+        "Le compte de chaque échange depuis 1852."
+      ]
+    },
+    {
+      "id": "les-soldes",
+      "kind": "creature",
+      "name": "Les soldés",
+      "role": "Les reflets de ceux qui ont payé",
+      "description": "Étienne Mazaud (1852), en redingote de jeune homme ; Joséphine Mazaud (1876), en robe de bal ; Louis Mazaud (1900), en habit. Ravier les a rejoints. Dans l'Envers, toujours de dos.",
+      "personality": "Muets, tristes, sans haine. Louis veut sauver sa fille.",
+      "sanLoss": "0/1D4",
+      "special": [
+        "Ne parlent pas ; écrivent à l'envers sur les glaces.",
+        "Ne peuvent rien contre le Teneur.",
+        "Libérés si le livre brûle : ils s'éloignent et disparaissent."
+      ],
+      "knows": [
+        "Louis : « PAS ELLE ». Il sait que le nom peut être décousu."
+      ]
+    }
+  ],
+  "handouts": [
+    {
+      "id": "registre-commandes",
+      "title": "Le livre de commandes de Ravier",
+      "scene": "l-atelier",
+      "text": "**Atelier J. Ravier, relieur-doreur — 12, montée Saint-Sébastien**\n*Livre des commandes, novembre 1924*\n\nN° 1186 — 14 nov. — M. l'abbé Coste, Saint-Polycarpe : missel, recouvrir en chagrin noir. 12 fr. *Livré.*\n\nN° 1187 — 18 nov. — Bibliothèque de la Ville (palais Saint-Jean), Mlle Sauzet : six registres paroissiaux, restaurer les dos. 90 fr. *Livré le 22.*\n\nN° 1188 — 21 nov. — M. Faure, avocat : trois volumes de jurisprudence, demi-basane. 30 fr.\n\nN° 1189 — 24 nov. — **Mme Morel** (pas d'adresse, repassera) : ouvrage ancien imprimé sur soie, in-quarto, sans titre. Dérelier sans rien abîmer. Ôter la garde brodée, la rendre à part, en main propre. Relier le reste à l'identique. *Payé d'avance : 200 fr.*\n*(en marge, d'une autre encre, d'une écriture qui tremble)* Texte imprimé à rebours. Lu au miroir le 25 au soir. NE PAS RECOMMENCER. Écrit à Montcharmont.\n\nN° 1190 — 25 nov. — Un collectionneur : livre d'heures, Lyon, 1548. Consolider la couture, ne pas toucher à la reliure d'origine."
+    },
+    {
+      "id": "lettre-montcharmont",
+      "title": "Lettre de la rue Juiverie",
+      "scene": "l-atelier",
+      "text": "*Lyon, le mercredi 26 novembre 1924*\n\nMon cher Joannès,\n\nTa lettre m'a glacé. Un in-quarto sur soie, imprimé à rebours, une navette et une clef sur la garde : je crois savoir ce que tu as sur ton établi, et je te supplie de le rendre à ta cliente sans le lire davantage.\n\nNe le lis plus dans une glace. Surtout pas le soir, à la chandelle. Et retourne tes miroirs en attendant. Je sais que tu vas rire.\n\nIl y a vingt-cinq ans, un homme est venu me proposer ce livre, ou son jumeau. Il me suppliait de l'acheter pour l'emporter loin de Lyon. J'ai refusé, Dieu me pardonne. L'année suivante, le soir des illuminations, il a disparu.\n\nViens me voir dimanche après la messe, rue Juiverie. Je te dirai le reste de vive voix : il y a des choses qu'on n'écrit pas.\n\nTon vieil ami,\n**Isidore M.**"
+    },
+    {
+      "id": "rapport-police",
+      "title": "Dossier de police (extraits)",
+      "scene": "commissariat",
+      "text": "**Police de Lyon — Commissariat du 1ᵉʳ arrondissement**\n*Procès-verbal de constat, vendredi 28 novembre 1924, 8 h 20*\n\nAffaire : RAVIER Joannès, 58 ans, relieur-doreur, veuf, 12 montée Saint-Sébastien.\n\nPorte de l'atelier fermée de l'intérieur par deux verrous, une armoire poussée contre. Fenêtres closes, carreaux entièrement couverts de papier marbré collé. Huit miroirs retournés face au mur ; la presse de cuivre enveloppée d'un chiffon. Le corps est assis à l'établi, sans trace de lutte. Sur l'établi : une bougie consumée, un encrier ouvert, un ouvrage ancien imprimé sur soie, dérelié, texte illisible (**scellé n° 4**).\n\n*Rapport d'autopsie du Dr L. Fayolle, samedi 29 novembre :* décès par arrêt du cœur dans la nuit du 27 au 28. **Observations** : inversion complète des viscères (cœur à droite, foie à gauche). Alliance portée à l'annulaire droit. La cicatrice ancienne que le témoin (l'apprenti Chabert) situe dans la paume gauche se trouve dans la paume droite. Le soussigné s'étonne qu'une telle anomalie n'ait pas été relevée au conseil de révision de 1886.\n\nConclusion : mort naturelle. Affaire classée.\n\n*Samedi 29 novembre, 11 h :* plainte de M. Hector BELLEVRAND, négociant en soieries, 4 rue Sala, pour le vol, courant novembre, dans sa bibliothèque, d'un ouvrage de famille imprimé sur soie.\n*Samedi 29 novembre, 16 h :* scellé n° 4 restitué à M. Désiré Collonges, secrétaire du plaignant, sur ordre de M. le Commissaire central.\n\n*(au crayon, dans la marge, de la main de Rabatel)* Rendu le jour même de l'autopsie ! Le secrétaire a demandé trois fois : « et la page de soie brodée ? » Pas de page dans le scellé."
+    },
+    {
+      "id": "coupures",
+      "title": "Quatre entrefilets",
+      "scene": "palais-saint-jean",
+      "text": "*Le Courrier de Lyon, vendredi 10 décembre 1852*\nAu milieu de l'allégresse qui a illuminé notre ville le soir du 8, une famille est dans l'angoisse : M. Étienne MAZAUD, vingt-quatre ans, frère d'un fabricant estimé des pentes de la Croix-Rousse, n'a pas reparu depuis cette soirée.\n\n*Le Salut public, dimanche 10 décembre 1876*\nOn est toujours sans nouvelles de Mlle Joséphine MAZAUD, dix-neuf ans, fille de M. Claude Mazaud, fabricant de soieries, sortie vendredi soir pour voir les illuminations. On craint qu'elle ne soit tombée dans la Saône.\n\n*Le Progrès, lundi 10 décembre 1900*\nDISPARITION. M. Louis MAZAUD, trente et un ans, fabricant de soieries rue Puits-Gaillot, a quitté son domicile samedi vers huit heures du soir, en habit, en disant se rendre à son cercle. Il n'y est jamais arrivé. Il laisse une fillette de sept ans.\n\n*Le Salut public, échos, décembre 1902*\nLe Cercle de la Navette, fondé le 8 décembre 1852 par MM. Claude Mazaud, Antoine-Marie Bellevrand, Pierre Vial et Jean-Baptiste Dumoulin, a donné son banquet annuel au profit de l'hospice des vieux canuts, sous la présidence de M. Jules Bellevrand."
+    },
+    {
+      "id": "garde-de-soie",
+      "title": "La garde de soie",
+      "scene": "firmin",
+      "text": "*Une feuille de soie ivoire, brodée de fil d'argent terni. Tout est brodé à l'envers : on la lit dans un miroir, ou par l'envers de l'étoffe, à contre-jour.*\n\nEn tête : une navette posée sur un miroir ovale, une clef au-dessus.\n\nCE QUI EST DESSOUS TIENT CE QUI EST DESSUS\n\nNous, soussignés, ouvrons compte au Teneur de l'Envers, ce huitième jour de décembre 1852, nuit où la ville s'allume.\nTout ce qui sera passé à l'envers sera tenu.\nLe solde de chaque exercice de vingt-quatre années se paiera au soir où la ville s'allume, d'un vivant du sang du premier nom brodé ci-dessous.\nSi la garde manque au livre, le lecteur solde.\n\n**Claude Mazaud**\nAntoine-Marie Bellevrand\nPierre Vial\nJean-Baptiste Dumoulin\n\n*Plus bas, en soies plus récentes, d'autres mains :* Jules Bellevrand, maître, 1881. Hector Bellevrand, maître, 1908."
+    },
+    {
+      "id": "convocation-soie",
+      "title": "La convocation sur soie",
+      "scene": "fourviere",
+      "text": "*Un ruban de soie gris perle, tissé au métier Jacquard, roulé dans une enveloppe sans nom. Arrivé le lundi 1ᵉʳ décembre.*\n\nCERCLE DE LA NAVETTE\nExercice 1900-1924\nLundi 8 décembre, neuf heures du soir\nSalle des Glaces\nSOLDE\nLe premier nom est attendu."
+    },
+    {
+      "id": "lettre-louis",
+      "title": "La lettre de Louis Mazaud",
+      "scene": "fourviere",
+      "text": "*Une lettre sur soie fine, pliée en huit, l'encre un peu passée. Lucie la porte toujours sur elle.*\n\n*Le 8 décembre 1900, sept heures du soir.*\n\nMa Lucie,\n\nTu liras ceci quand tu seras grande. Ce soir, je vais là où ta grand-tante Joséphine est allée avant moi, et Étienne avant elle. C'est le prix que notre nom paie pour la Navette, parce que le nôtre est le premier brodé sur la garde. Le Teneur prend un vivant du premier nom. Si ce n'est pas moi, ce sera toi un jour.\n\nJ'ai voulu brûler ce livre l'an dernier : le feu n'en a pas voulu. Il ne brûle peut-être que la nuit où la glace s'ouvre. Je n'ai pas eu ce courage-là.\n\nSi un jour tu peux découdre notre nom, fais-le. Mais sache que le nom suivant paiera à notre place. Moi, je n'ai pas pu me résoudre à faire peser cela sur un autre.\n\nNe crois jamais les Bellevrand quand ils sont aimables. Ils le sont toujours.\n\nTon papa qui t'aime,\n**Louis**"
+    },
+    {
+      "id": "message-reflet",
+      "title": "Le message dans la buée",
+      "scene": "le-reflet",
+      "text": "*Dans la buée de la vitrine, tracé du doigt depuis l'intérieur. Pour qui regarde de la rue, les lettres sont à l'envers.*\n\nLA GARDE\nLE 1ᵉʳ NOM PAIE\nDÉCOUDRE\nNE LISEZ PAS"
+    },
+    {
+      "id": "grand-livre",
+      "title": "Le Grand-Livre du Cercle (dernière page)",
+      "scene": "les-caves",
+      "text": "*Grand-Livre du Cercle de la Navette. Compte ouvert au Teneur. Écrit à l'endroit, d'écritures différentes.*\n\n1853. Passé à l'envers : la faillite de la maison Mazaud, sur la maison Rivoire-Besson. Tenu.\n1867. L'incendie de l'entrepôt Bellevrand, sur l'entrepôt Morillon, quai de la Pêcherie. Tenu.\n8 décembre 1876. Solde : Joséphine Mazaud, 19 ans. Payé.\n1877. Mme Mazaud a jeté le livre au feu. Il n'a pas brûlé.\n1889. Les dettes de jeu de M. Henri Dumoulin, sur son créancier. Tenu.\n8 décembre 1900. Solde : Louis Mazaud, 31 ans. Payé.\n1912. La faillite de la banque Dumoulin, sur la banque Giraudier. Tenu.\n1917. Demandé à l'envers : la vie du lieutenant Marc Bellevrand. Refusé. Ce qui est payé en vie ne se rend pas.\n1921. Le marché des soies de l'armée, pris à la maison Pélissier, qui ferme. Tenu.\n8 décembre 1924. Solde : *(au crayon, déjà écrit)* L. Perret, née Mazaud."
+    },
+    {
+      "id": "carte-bellevrand",
+      "title": "L'invitation de M. Bellevrand",
+      "scene": "hotel-bellevrand",
+      "text": "*Un carton épais, doublé d'une soie tissée où l'on reconnaît une navette posée sur un miroir ovale, une clef au-dessus.*\n\nM. Hector Bellevrand, président du Cercle de la Navette, a appris avec intérêt que vous vous souciez de la mort de M. Joannès Ravier, qui fut aussi un ami de notre maison.\n\nIl serait honoré de vous recevoir demain, à cinq heures, en son hôtel, 4 rue Sala, pour le thé.\n\n*Une ligne à la plume, d'une belle écriture :* Il est question d'une récompense."
+    }
+  ],
+  "knowledge": [
+    {
+      "need": "Comprendre ce qu'a vu Ravier",
+      "best": "Le récit de Firmin (pas de jet)",
+      "backup": "Psychologie, Trouver Objet Caché dans l'atelier"
+    },
+    {
+      "need": "Obtenir le dossier de police",
+      "best": "L'ami de Rabatel (pas de jet)",
+      "backup": "Persuasion, Droit, Crédit"
+    },
+    {
+      "need": "Retrouver les disparus du 8 décembre",
+      "best": "Bibliothèque",
+      "backup": "Archives du Progrès (le journaliste), la mère Brossard, Lucie"
+    },
+    {
+      "need": "Lire la garde",
+      "best": "La regarder par l'envers, à contre-jour",
+      "backup": "Un miroir, Trouver Objet Caché, Art (broderie)"
+    },
+    {
+      "need": "Reconnaître l'écusson de la Navette",
+      "best": "La gerbe de l'enterrement, la chevalière de Bellevrand",
+      "backup": "Histoire, Évaluation"
+    },
+    {
+      "need": "Ouvrir la porte de fer de la traboule",
+      "best": "Les clés de Lucie",
+      "backup": "Serrurerie (difficile), FOR"
+    },
+    {
+      "need": "Faire parler Gaudin",
+      "best": "Intimidation",
+      "backup": "Persuasion"
+    },
+    {
+      "need": "Découdre le nom des Mazaud",
+      "best": "Art/Artisanat (couture, broderie), ou Lucie",
+      "backup": "DEX (difficile), deux rounds"
+    },
+    {
+      "need": "Brûler le livre",
+      "best": "Une flamme, trois rounds, seulement quand le passage est ouvert",
+      "backup": "Les lumignons de la salle, une lampe à pétrole"
+    }
+  ],
+  "trackers": [
+    {
+      "id": "jours",
+      "label": "Jours avant la nuit des lumières",
+      "max": 7,
+      "unit": "jours",
+      "help": "Lundi 1ᵉʳ décembre au matin : 0. Avancez d'un cran chaque soir. À 7, c'est le lundi 8 au soir : [[salle-des-glaces]].",
+      "scenes": [
+        "l-atelier",
+        "firmin",
+        "commissariat",
+        "rue-juiverie",
+        "palais-saint-jean",
+        "traboule",
+        "hotel-bellevrand",
+        "fourviere",
+        "le-reflet",
+        "les-caves"
+      ],
+      "fullMessage": "Lundi 8 décembre : la ville s'allume."
+    },
+    {
+      "id": "passage",
+      "label": "Le passage s'ouvre",
+      "max": 9,
+      "unit": "rounds",
+      "help": "Démarre quand le livre est lu. À 3, on peut franchir la glace, ou y être poussé. À 6, le Teneur prend son dû. À 9, le passage se referme.",
+      "scenes": [
+        "salle-des-glaces"
+      ],
+      "fullMessage": "Le passage se referme."
+    },
+    {
+      "id": "livre-brule",
+      "label": "Le livre brûle",
+      "max": 3,
+      "unit": "rounds",
+      "help": "Seulement quand le passage est ouvert. Tenir le livre dans la flamme trois rounds de suite ; s'il est lâché, recommencer.",
+      "scenes": [
+        "salle-des-glaces"
+      ],
+      "fullMessage": "Les quarante glaces se fendent : le passage est clos pour toujours."
+    }
+  ]
+}

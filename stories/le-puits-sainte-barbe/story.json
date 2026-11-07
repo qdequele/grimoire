@@ -1,0 +1,1652 @@
+{
+  "format": "grimoire-story/1",
+  "meta": {
+    "id": "le-puits-sainte-barbe",
+    "title": "Le Puits Sainte-Barbe",
+    "lang": "fr",
+    "summary": "Février 1931, dans le bassin minier du Pas-de-Calais. Après cinq jours au fond de la fosse 7, les sept mineurs qu'on croyait perdus sont remontés sans une égratignure, et toute la cité crie au miracle. La Compagnie veut rouvrir la fosse dès jeudi. Mais à l'enterrement du sauveteur mort pour eux, les sept disent les prières une demi-seconde après tout le monde, comme un écho.",
+    "players": {
+      "min": 4,
+      "max": 5
+    },
+    "playersText": "4 à 5 joueurs",
+    "duration": "3 à 4 heures",
+    "era": "Février 1931",
+    "setting": "Hennequelle-les-Mines, cité minière du Pas-de-Calais entre Lens et Béthune : les corons de la cité 7, la fosse n° 7 « Sainte-Barbe » de la Compagnie des Mines d'Hennequelle et ses galeries à 480 mètres sous terre",
+    "system": "d100",
+    "author": "Grimoire",
+    "license": "CC-BY-4.0",
+    "version": "1.0",
+    "tags": [
+      "groupe",
+      "mine",
+      "enquête",
+      "souterrain",
+      "années 1930"
+    ],
+    "contentWarnings": [
+      "catastrophe minière",
+      "ensevelissement vivant",
+      "claustrophobie",
+      "mort d'un sauveteur (évoquée)",
+      "deuil",
+      "xénophobie de l'époque envers les ouvriers étrangers (évoquée)"
+    ]
+  },
+  "overview": {
+    "secret": "Sous le bassin houiller, la grande faille dite « du Midi » a poussé jadis des roches bien plus vieilles que le charbon par-dessus les veines. Dans cette vieille roche dort un creux : une bulle de pierre vitreuse, noire et verte, close depuis avant les forêts du houiller. Ce qui vit là n'a pas de nom ; les anciens d'Hennequelle l'appelaient **le Répondant**. Il ne crée rien : il copie. D'abord ce qu'il entend (des coups, des voix), puis ce qu'il touche (un corps). En mars 1867, un éboulement à l'ancienne fosse du Marais l'a effleuré et lui a pris un abatteur, **Sébastien « Bastien » Coquelle** : un Bastien propre et calme est remonté au bout de trois jours, qui répétait la fin de chaque phrase qu'on lui disait. Les vieux mineurs ont muré la galerie ; le soir où le mur a été fini, le 18 avril, la copie s'est défaite en sable noir dans son lit. Derrière le mur, le vrai a frappé jusqu'au 2 mai.\n\nLe **mardi 10 février 1931 à 10 h 40**, à l'étage 480 de la fosse 7 « Sainte-Barbe », la taille de la veine Joséphine a crevé une poche de grisou venue du Creux ; la lampe fêlée du galibot Lucien Delattre l'a allumée. Le coup de grisou a effondré la bowette Nord sur soixante mètres et ouvert, au bout de la taille, une cassure qui descend dans le Creux. Les sept hommes de la taille ont survécu, parlé, prié, frappé pendant trois jours, trop loin pour être entendus. Le Répondant a écouté. Dans la nuit du vendredi 13 au samedi 14, le verre a coulé sur eux comme de la cire. La dernière chose qu'Augustin Lefebvre, le chef de taille, a dite aux autres pour les rassurer : « On est bien, à c't'heure. » Ils dorment debout dans la paroi, **vivants**, et ils rêvent ; dans leur rêve, Augustin frappe encore le code : sept coups, sept vivants.\n\nLe samedi 14 à **3 h 05**, le Répondant a répondu aux coups des sauveteurs en les répétant. À **17 h 50**, quand la dernière paroi a été percée, sept copies attendaient dans la taille, propres, calmes, avec sept lampes allumées copiées sur les vraies. Les vraies lampes sont restées sous les déblais, au fond de la taille. Les copies ne savent que ce que les sept savaient le matin du 10 et ce qu'elles ont entendu au fond. Elles n'apprennent rien de neuf, ne mangent pas, ne boivent pas, ne suent pas, ne dorment pas, n'ont plus les cicatrices bleues que le charbon laisse aux vieux mineurs ; leur peau est froide, leur pouls lent et égal ; elles répètent ce qu'elles entendent, avec n'importe quelle voix. Elles ne veulent qu'une chose : qu'on rouvre le quartier Nord, pour ramener des voix au Creux.\n\nPersonne n'a comploté. La Compagnie n'a péché que par hâte : poussé par la crise et par un télégramme du Conseil, le directeur **Raymond Thiéry** veut rouvrir le jeudi 19 à 6 h, et il a fait mettre dans un tiroir le relevé du géomètre Carpentier, qui montre un vide là où les plans disent « roche pleine ».\n\n**Si personne n'intervient** : le mercredi 18 à 22 h, les sept descendent avec l'équipe de nuit chargée de préparer la taille et l'emmènent voir « la belle chose ». À l'aube, douze hommes remontent, propres et calmes, en fredonnant tous la même note. Le jeudi, le poste du matin descend. Avant Pâques, on ne mange plus dans les corons de la cité 7.\n\n**Deux façons d'en finir.** Quand un homme est dégagé de la paroi, sa copie se défait en sable noir, où qu'elle soit. Quand le Creux est scellé (un mur, comme en 1867, ou un coup de grisou volontaire qui effondre la bowette), toutes les copies se défont d'un coup, et les vrais hommes restés dans le verre meurent avec lui. Le Répondant s'éveille au bruit : le silence le ralentit. On dégage un homme en lui murmurant, contre le verre, un souvenir que seul le vrai possède ; ou au pic, bruyamment.",
+    "steps": [
+      "[[enterrement]] (lundi 16, 10 h) : l'enterrement du sauveteur Gaston Pruvost. Les sept répondent aux prières un temps après tout le monde, comme un écho, et Augustin demande pourquoi Gaston n'est pas venu. L'avis de réouverture.",
+      "[[les-corons]] (lundi et mardi) : les femmes des sept, la cicatrice disparue, le pain qu'on ne mange pas, le rêve des sept coups ; la vieille Victorine et l'histoire de Bastien Coquelle.",
+      "[[le-dispensaire]] : le registre de samedi soir, l'examen d'un des sept, le sang qui tourne en sable.",
+      "[[le-carreau]] : quatorze lampes pour sept hommes, le journal de sauvetage, le canari mort, les coups entendus la nuit au 480.",
+      "[[les-bureaux]] : Thiéry, le télégramme du Conseil, le relevé caché de Carpentier, le registre des accidents de 1867.",
+      "[[maison-du-peuple]] (mardi 17, 19 h) : le vote de la reprise ; une copie parle avec la voix d'un investigateur ; les sept annoncent qu'ils descendront mercredi soir.",
+      "[[la-descente]] (mercredi 18, 22 h) : la bowette Nord, la cassure, le Creux. Libérer les sept, sceller tout au grisou, ou les deux.",
+      "[[le-jeudi]] (jeudi 19, 6 h) : la sirène, la foule au carreau, et ce que chaque chemin a coûté."
+    ],
+    "mustNotMiss": [
+      "**Les sept ne sont pas eux-mêmes** : la cicatrice bleue disparue et le pain jamais mangé (Germaine, [[les-corons]], sans jet), les répons en écho et la question sur Gaston ([[enterrement]]), le registre du dispensaire ([[le-dispensaire]], sans jet), les quatorze lampes ([[le-carreau]]), la voix volée ([[maison-du-peuple]]).",
+      "**Quelque chose en bas répète ce qu'il entend** : le journal de sauvetage et ses coups qui rendent exactement les coups ([[le-carreau]], sans jet), l'histoire de Bastien Coquelle ([[les-corons]]), le registre de 1867 ([[les-bureaux]]), la copie qui parle avec la voix d'un investigateur ([[maison-du-peuple]]).",
+      "**Les vrais sont vivants en bas** : les coups de sept entendus la nuit au 480 ([[le-carreau]], [[maison-du-peuple]]), le rêve des femmes ([[les-corons]], sans jet), les vraies lampes écrasées restées au fond de la taille ([[le-carreau]]), les coups derrière le mur de 1867 ([[les-bureaux]], [[les-corons]]).",
+      "**Où** : sous la taille, dans la vieille roche de la faille du Midi, là où les plans disent roche pleine. Le relevé de Carpentier ([[les-bureaux]]), la poussière de verre sous les ongles et sur le canari ([[le-dispensaire]], [[le-carreau]]), les coups qui venaient « d'en dessous » dans le journal de sauvetage.",
+      "**Comment en finir** : murer le Creux défait les copies (Victorine, [[les-corons]] ; registres de 1867, [[les-bureaux]] et [[enterrement]]). Dégager un homme défait la sienne : on le découvre au fond ([[la-descente]])."
+    ],
+    "branches": [
+      "Convaincre Thiéry ([[les-bureaux]]) : il renvoie l'équipe de nuit, donne aux investigateurs le passage de la cage et la clé du coffre du boutefeu, et descend avec eux. Les sept descendent quand même, seuls, par les échelles du puits d'aérage (ils arrivent au 480 vers minuit).",
+      "Le vote de la Maison du Peuple ([[maison-du-peuple]]) : grève de sécurité votée, l'équipe de nuit ne compte que 4 hommes (et Thiéry, pour montrer l'exemple) ; reprise votée, elle en compte 12.",
+      "Au fond, dégager les sept un par un (au murmure ou au pic) ou sceller le Creux au grisou. On peut faire les deux : en dégager autant que possible, puis tout sceller.",
+      "Achille Delattre, s'il descend, aide à dégager son fils et se bat contre ceux qui veulent tout sceller tant que Lucien est dans le verre.",
+      "Fuir sans rien faire : le jeudi, le poste du matin descend ([[le-jeudi]])."
+    ],
+    "ifStuck": [
+      "Germaine Lefebvre frappe à la porte d'un investigateur, le soir : « Ch'est pas min Augustin. Il a pus s'cicatrice. »",
+      "Le porion Wattebled, ivre de fatigue, demande qu'on lise son journal : « Il m'a rendu mes coups. Exactement mes coups. »",
+      "Victorine Dhainaut demande au curé une messe pour Bastien Coquelle, « mort en 1867, et qui va remonter ».",
+      "Le géomètre Carpentier, terrifié, glisse son relevé sous la porte de l'ingénieur ou du journaliste dans la nuit de mardi.",
+      "À 3 h 05, les sept sortent sous la pluie et restent debout dans la rue, face au chevalement."
+    ],
+    "keeperTips": [
+      "Les sept ne menacent personne avant le fond. Ils sont calmes, polis, et ils répètent : la fin de vos phrases, un temps trop tard, parfois avec la voix ou les mots d'un autre. L'horreur vient de ce qu'ils ne font pas : manger, transpirer, pleurer Gaston.",
+      "Avec 4 ou 5 joueurs, laissez le groupe se séparer en acte II : les familles, le dispensaire, le carreau et les bureaux se jouent dans n'importe quel ordre. Réunissez tout le monde à la Maison du Peuple.",
+      "La Compagnie n'est pas méchante : Thiéry a peur des licenciements et de s'être trompé. Les familles veulent croire au miracle. Ce sont eux, les obstacles.",
+      "Notez les phrases que disent les investigateurs devant les sept : à la Maison du Peuple, une copie en répète une, mot pour mot, avec leur voix.",
+      "Au fond, faites respecter le silence. Chaque mot dit à voix haute fait monter le Réveil du Creux : les joueurs finiront par chuchoter autour de la table.",
+      "Mots de la mine : la fosse (le puits et ses bâtiments), le chevalement (la tour du puits), la cage (l'ascenseur), la recette (le palier d'un étage), la bowette (galerie dans la roche), la taille (le front de charbon, basse), le toit et le mur (plafond et sol de la veine), le porion (contremaître), le galibot (jeune mineur), le grisou (gaz explosif)."
+    ]
+  },
+  "acts": [
+    {
+      "id": "le-miracle",
+      "title": "Le miracle",
+      "scenes": [
+        {
+          "id": "enterrement",
+          "title": "L'enterrement du sauveteur",
+          "lead": "Lundi 16 février, 10 h : la cité enterre Gaston Pruvost, mort pour les sept. Les sept sont là, et ils disent les prières un temps après tout le monde.",
+          "screen": {
+            "place": "church",
+            "preset": "fog",
+            "time": "day"
+          },
+          "readAloud": [
+            "Le glas sonne sur la cité 7. Au bout des rangées de corons en brique, le chevalement de la fosse Sainte-Barbe se dresse dans le brouillard, et ses molettes ne tournent pas. Devant l'église, la foule en noir piétine la boue : des mineurs endimanchés, des femmes en châle, des enfants qu'on fait taire.",
+            "Le cercueil passe sur les épaules de six sauveteurs en casque de cuir. Derrière la famille, un peu à l'écart, sept hommes se tiennent côte à côte, rasés de près, les mains propres. On leur serre l'épaule, on les touche comme on touche une relique. « Ça fait du bien de vous revoir », dit une femme. « De vous revoir », répond l'un d'eux, doucement, un temps après."
+          ],
+          "flow": [
+            {
+              "title": "Qui est là, et pourquoi",
+              "text": "Lire le bloc **Accroches** : chaque investigateur a sa raison d'être à l'enterrement. Les présenter les uns aux autres sur le parvis, avant la messe. Le journaliste est arrivé de Lille par le premier train.",
+              "extra": "Donnez à chacun le petit article du dimanche → {{handout:article-vigie}}. Il pose les dates officielles."
+            },
+            {
+              "title": "La messe",
+              "text": "Messe de requiem. Les sept sont au troisième rang. Ils disent les répons avec la foule.",
+              "roll": {
+                "type": "skill",
+                "options": [
+                  "listen",
+                  "spot-hidden"
+                ]
+              },
+              "success": "Les sept disent chaque répons un souffle après tout le monde, mot pour mot, avec les mêmes hésitations que leurs voisins. Comme un écho. Aucun ne fait le signe de croix avant que l'homme devant lui ne le fasse.",
+              "failure": "Sept hommes recueillis, un peu raides.",
+              "extra": "Le curé (joueur ou {{npc:abbe-delcourt}}) le remarque sans jet : c'était déjà pareil dimanche, au Te Deum d'action de grâces."
+            },
+            {
+              "title": "Germaine",
+              "text": "{{npc:germaine-lefebvre}} enterre son frère. Son mari Augustin se tient à côté d'elle, tranquille, et fredonne tout bas une note, toujours la même.",
+              "roll": {
+                "type": "skill",
+                "options": [
+                  "psychology"
+                ]
+              },
+              "success": "Elle ne pleure pas seulement son frère : elle a peur de l'homme à côté d'elle. Elle ne le touche pas, et elle se décale quand il se rapproche.",
+              "failure": "Une sœur brisée de chagrin, soutenue par un mari miraculé."
+            },
+            {
+              "title": "Parler aux sept",
+              "text": "Sur le parvis, à la sortie. Ils répondent tous la même chose : « On est bien, à c't'heure. » Et : « Faut rouvrir. Faut redescendre. » Sur les cinq jours : « On a attendu. On savait que vous viendriez. » Au cimetière, devant la fosse ouverte, Augustin se penche vers Germaine : « Gaston, il est pas venu ? »",
+              "roll": {
+                "type": "skill",
+                "options": [
+                  "psychology"
+                ]
+              },
+              "success": "Ils ne mentent pas : ils ne savent pas. Ils parlent comme si on était encore le mardi 10 au matin. Germaine lui a pourtant annoncé la mort de Gaston samedi soir.",
+              "failure": "Des hommes encore sous le choc, qui n'ont pas tout compris.",
+              "extra": "Si quelqu'un les photographie ou les interroge longuement, ils se taisent et regardent le chevalement."
+            },
+            {
+              "title": "L'avis de la Compagnie",
+              "text": "À la sortie du cimetière, un employé colle une affiche sur la grille du carreau, et une autre à la porte de l'église → {{handout:avis-reouverture}}. {{npc:raymond-thiery}} serre des mains. À l'ingénieur, à voix basse : « Je compte sur votre signature mercredi soir. »"
+            },
+            {
+              "title": "La vieille Victorine",
+              "text": "À la grille du cimetière, {{npc:rosalie-dhainaut}}, quatre-vingts ans, regarde passer les sept et marmonne en patois : « I z'ont pus leus bleus. » (Ils n'ont plus leurs bleus : les cicatrices bleues que le charbon laisse dans les blessures des mineurs.) Elle se signe et s'en va.",
+              "extra": "Germaine l'entend, et pâlit. Victorine habite au bout de la rue des Galibots → [[les-corons]].",
+              "goto": [
+                "les-corons"
+              ]
+            },
+            {
+              "title": "Le registre de 1867",
+              "text": "Pour le curé, ou si on le lui demande : le presbytère garde les vieux registres de l'ancienne paroisse Saint-Vaast. Victorine a demandé ce matin une messe pour un certain Bastien Coquelle, « mort en 1867, et qui va remonter ».",
+              "roll": {
+                "type": "skill",
+                "options": [
+                  "library-use",
+                  "history"
+                ]
+              },
+              "success": "L'acte de sépulture de 1867, en une heure → {{handout:registre-paroissial}}.",
+              "failure": "Les registres sont rangés n'importe comment : il faut tout l'après-midi, mais on le trouve → {{handout:registre-paroissial}}."
+            }
+          ],
+          "notes": [
+            {
+              "title": "Accroches",
+              "items": [
+                "**L'ingénieur de la Compagnie** : Thiéry lui demande de signer, mercredi soir au plus tard, le procès-verbal de remise en état du quartier Nord. Le géomètre Carpentier, qui a fait le relevé, évite son regard depuis dimanche.",
+                "**Le délégué mineur** : élu par les ouvriers, il a le droit de visiter les travaux du fond. Le syndicat veut une enquête avant la reprise. Ce matin, Germaine Lefebvre l'a arrêté dans la rue et lui a dit tout bas : « Ch'est pas min Augustin. »",
+                "**Le médecin** : il doit délivrer aux sept, avant jeudi, le certificat d'aptitude au travail. Sœur Marie-Clotilde lui a laissé un mot : « Docteur, venez voir le registre de samedi soir. »",
+                "**Le journaliste de Lille** : *La Vigie du Nord* l'envoie écrire « le miracle de la fosse 7 », avec les familles, des photographies, des larmes. Son rédacteur veut trois colonnes pour jeudi.",
+                "**Le curé de la paroisse Sainte-Barbe** : il célèbre l'enterrement. Dimanche, au Te Deum, il a entendu les sept répondre aux prières avec un temps de retard. Et la vieille Victorine lui a demandé une messe pour un mort de 1867. (Si aucun joueur n'est curé, {{npc:abbe-delcourt}} tient ce rôle.)"
+              ]
+            },
+            {
+              "title": "Ce que tout le monde sait",
+              "items": [
+                "Mardi 10, 10 h 40 : coup de grisou dans la taille Joséphine, à 480 mètres. Sept hommes emmurés derrière soixante mètres de bowette effondrée.",
+                "Jeudi 12, 15 h 10 : le sauveteur Gaston Pruvost, 34 ans, frère de Germaine Lefebvre, est tué par une chute de toit au front d'éboulement.",
+                "Samedi 14, 3 h du matin : les sauveteurs entendent répondre à leurs coups. 17 h 50 : ils percent. 19 h 30 : les sept remontent au jour, sans une égratignure, devant deux mille personnes.",
+                "Dimanche 15 : Te Deum à l'église Sainte-Barbe, les sept au premier rang. On a attendu leur retour pour enterrer Gaston.",
+                "Lundi 16 : la Compagnie annonce la reprise du quartier Nord pour jeudi, 6 h."
+              ]
+            },
+            {
+              "title": "Les sept",
+              "items": [
+                "**Augustin Lefebvre**, 46 ans, chef de taille. Femme : Germaine.",
+                "**Jules Caron**, 38 ans, abatteur, accordéoniste. Femme : Irma.",
+                "**Stanisław « Stach » Wiśniewski**, 31 ans, abatteur polonais venu de Westphalie en 1923. Femme : Helena, deux enfants.",
+                "**Léon Dubois**, 52 ans, boiseur, veuf, vit chez sa fille Simone.",
+                "**Henri Lemaire**, 24 ans, herscheur, fiancé à Odette Brunin.",
+                "**Fernand Vasseur**, 29 ans, haveur, cornet à l'Harmonie des Mines. Mère : Eugénie.",
+                "**Lucien Delattre**, 15 ans, galibot. Père : Achille, le lampiste."
+              ]
+            }
+          ],
+          "npcs": [
+            "abbe-delcourt",
+            "germaine-lefebvre",
+            "les-sept",
+            "raymond-thiery",
+            "rosalie-dhainaut"
+          ],
+          "handouts": [
+            "article-vigie",
+            "avis-reouverture",
+            "registre-paroissial"
+          ],
+          "ambience": [
+            "wind",
+            "crowd-indoor",
+            "crows"
+          ],
+          "sfx": [
+            "footsteps",
+            "door-open"
+          ],
+          "next": [
+            "les-corons",
+            "le-dispensaire",
+            "le-carreau",
+            "les-bureaux"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "ceux-d-en-haut",
+      "title": "Ceux qui sont remontés",
+      "scenes": [
+        {
+          "id": "les-corons",
+          "title": "Les corons de la cité 7",
+          "lead": "Les familles des sept : ce qu'elles voient à table, au lit, la nuit. Et la mémoire de la vieille Victorine.",
+          "screen": {
+            "place": "street",
+            "preset": "rain",
+            "time": "dusk"
+          },
+          "readAloud": [
+            "Les corons s'alignent au cordeau : brique noircie, une porte, une fenêtre, une porte, une fenêtre. Au fond de chaque jardin, le cabinet, le clapier, le pigeonnier. La pluie fine sent le charbon et la soupe aux poireaux.",
+            "Devant les maisons des sept, on a posé des fleurs en papier et de petits drapeaux. Les rideaux sont tirés. Derrière l'un d'eux, une silhouette d'homme se tient debout, immobile, tournée vers le chevalement."
+          ],
+          "flow": [
+            {
+              "title": "Chez les Lefebvre",
+              "text": "{{npc:germaine-lefebvre}} reçoit dans sa cuisine, la porte de la pièce d'à côté fermée. Augustin est au jardin.",
+              "roll": {
+                "type": "skill",
+                "options": [
+                  "psychology",
+                  "persuade",
+                  "charm"
+                ]
+              },
+              "success": "Elle dit tout : la cicatrice bleue qu'il avait au front depuis l'éboulement de 1912 a disparu. Il s'assoit à table, coupe son pain, ne le mange pas, pose le couteau toujours au même endroit. Il ne dort pas : il reste assis sur le lit, les yeux ouverts. Il ne sent rien, « même pas lui ». Samedi soir, elle lui a appris la mort de Gaston ; dimanche, il a demandé de ses nouvelles.",
+              "failure": "« Ch'est un miracle. Que Dieu soit loué. » Elle referme la porte. Le soir, elle vient d'elle-même frapper chez le délégué ou au presbytère, et dit l'essentiel : la cicatrice, le pain.",
+              "pushed": "Elle craque et hurle dans la rue : « Ch'est pas li ! » Les voisins accourent. Augustin sort, calme : « Germaine, rentre. » Les voisins lui donnent raison. Jusqu'à la Maison du Peuple, les jets de relation dans la cité se font avec un dé de malus."
+            },
+            {
+              "title": "Augustin au jardin",
+              "text": "Il se tient devant son pigeonnier, les bras le long du corps. Les pigeons s'affolent et ne rentrent pas tant qu'il est là. Il dit : « On est bien, à c't'heure. »",
+              "roll": {
+                "type": "skill",
+                "options": [
+                  "spot-hidden",
+                  "natural-world"
+                ]
+              },
+              "success": "Pas de cicatrice au front. Des mains douces, sans un cal, sur des bras de mineur. Sous les ongles, une poussière noire qui brille comme du verre pilé. Les pigeons se comportent comme devant un chat.",
+              "failure": "Un homme fatigué qui regarde ses pigeons."
+            },
+            {
+              "title": "Chez les Wiśniewski",
+              "text": "{{npc:helena-wisniewska}} s'est réfugiée chez sa voisine avec ses deux enfants. Elle parle polonais et un peu de français. Dimanche, elle est allée dire à la gendarmerie que « ce n'est pas lui » ; on lui a ri au nez et rappelé qu'on renvoie en Pologne les étrangers qui font des histoires.",
+              "roll": {
+                "type": "skill",
+                "options": [
+                  "language-other:polish",
+                  "charm",
+                  "psychology"
+                ]
+              },
+              "success": "Stach ne mange pas. La nuit, assis dans le noir, il récite le Notre Père en polonais, toujours les mêmes mots, sans s'arrêter : la prière qu'il a dû dire au fond. Le jour, il ne dit que « ça va, ça va ». Il ne dit plus son prénom à elle. Les enfants ont peur de lui.",
+              "failure": "« Dobrze, dobrze. Ça va. » Elle serre ses enfants et ferme la porte. Sans polonais, ce jet se fait avec un dé de malus."
+            },
+            {
+              "title": "Le rêve",
+              "text": "Pas de jet. Si l'on demande aux familles comment elles dorment : depuis samedi, Germaine et Odette Brunin (la fiancée d'Henri) font le même rêve. « Il m'appelle, dans le noir. Il dit qu'il a froid. Il toque. » Germaine : « Sept coups. Ch'est l'code des sauveteurs : sept vivants. »",
+              "extra": "Premier indice que les vrais sont vivants, quelque part en bas."
+            },
+            {
+              "title": "Mémé Victorine",
+              "text": "{{npc:rosalie-dhainaut}}, ancienne trieuse, vit seule au bout de la rue des Galibots. Elle parle à qui lui apporte une bistouille (un café arrosé de genièvre), ou à qui sait la prendre.",
+              "roll": {
+                "type": "skill",
+                "options": [
+                  "charm",
+                  "persuade",
+                  "history"
+                ]
+              },
+              "success": "Elle raconte l'histoire de Bastien Coquelle (voir **L'histoire de Victorine**), et finit par sa règle : « Quand la roche te répond, tais-toi. Et bouche le trou. »",
+              "failure": "Elle ne donne que sa règle, « Quand la roche te répond, tais-toi », et ajoute : « Allez voir l'curé, il a l'registre. »",
+              "pushed": "Elle raconte tout, mais le soir même toute la cité dit que les messieurs font peur aux vieilles avec des histoires de revenants : dé de malus pour convaincre à la [[maison-du-peuple]]."
+            },
+            {
+              "title": "Les souvenirs",
+              "text": "Pas de jet. En parlant aux familles (le journaliste, qui les interviewe pour son article, le curé, qui les connaît), on apprend sur chacun des sept un souvenir intime : voir **Les sept et leurs proches**. Noter ceux que les joueurs recueillent.",
+              "extra": "Ils serviront au fond : on dégage un homme en lui murmurant un souvenir que seul le vrai possède ([[la-descente]])."
+            },
+            {
+              "title": "3 h 05",
+              "text": "La nuit de lundi ou de mardi, si quelqu'un veille dans la cité : à 3 h 05, les sept portes s'ouvrent. Les sept sortent sous la pluie, en chemise, et restent debout au milieu de la rue, face au chevalement, sans bouger, pendant un quart d'heure. Puis ils rentrent. Si on leur parle, ils répètent les derniers mots qu'on leur a dits.",
+              "roll": {
+                "type": "san",
+                "label": "Les sept dans la rue",
+                "san": "0/1D3"
+              },
+              "extra": "3 h 05 : l'heure où, samedi, la roche a répondu aux sauveteurs."
+            }
+          ],
+          "notes": [
+            {
+              "title": "Les sept et leurs proches (souvenirs pour le fond)",
+              "items": [
+                "**Augustin Lefebvre** (Germaine) : cicatrice bleue au front, éboulement de 1912. Sa pigeonne championne, *la Bleue*, rentrée seule d'Orléans en 1929. Germaine : « Ta Bleue est rentrée. Elle t'attend. »",
+                "**Stach Wiśniewski** (Helena) : elle l'appelle *Stasiu*. Elle chante aux enfants une berceuse de Noël polonaise, et il la sifflait en partant au poste.",
+                "**Lucien Delattre** (Achille) : il soigne *Bijou*, le cheval du fond. Son père l'appelle « min p'tit quinquet ».",
+                "**Jules Caron** (Irma) : la valse qu'il a composée pour leur noce et qu'il appelle « Irma des corons ».",
+                "**Léon Dubois** (Simone) : en 1928, il a abattu l'oiseau au tir à l'arc de Sainte-Barbe. Simone : « Papa, t'es toujours le roi. »",
+                "**Henri Lemaire** (Odette) : le mariage est fixé au samedi 11 avril. Odette : « La robe est finie. »",
+                "**Fernand Vasseur** (Eugénie) : il joue le solo de cornet de la marche de la Sainte-Barbe, chaque 4 décembre. Il avait répétition le mardi 10 au soir."
+              ]
+            },
+            {
+              "title": "Ce que racontent les familles (sans jet)",
+              "items": [
+                "Aucun des sept ne mange ni ne boit. Ils s'assoient à table et regardent leur assiette.",
+                "Ils portent encore les vêtements de samedi, impeccables. Ils ne se lavent pas, et n'en ont pas besoin.",
+                "Les chiens aboient sur leur passage ; les chats quittent la pièce.",
+                "Ils fredonnent, sans s'en rendre compte, tous la même note basse. Assis, ils tapotent la table du doigt : sept coups, un temps, sept coups.",
+                "Ils ne vont pas à l'estaminet. Ils vont tous les jours à la grille du carreau, et demandent quand on redescend.",
+                "Ils parlent du mardi 10 comme d'aujourd'hui : Fernand se prépare pour la répétition de l'Harmonie, Henri demande si la paye est arrivée."
+              ]
+            },
+            {
+              "title": "L'histoire de Victorine",
+              "items": [
+                "« J'avais dix-sept ans, j'étais trieuse à l'ancienne fosse du Marais. En mars 67, un éboulement a enfermé Bastien Coquelle au 210, la galerie du Midi. Trois jours. On l'a retrouvé debout, propre comme un sou neuf, qui répétait la fin de tout ce qu'on lui disait. »",
+                "« Sa femme a dit : ch'est pas li. Il mangeait pas. Il avait pus ses bleus. Et derrière l'éboulement, on entendait toquer. »",
+                "« Les anciens, mon père avec, sont allés trouver l'ingénieur. On a muré la galerie. Pendant un mois, on les entendait toquer derrière, pendant qu'on montait le mur. »",
+                "« Le soir où le mur a été fini, le Bastien d'en haut s'est défait dans son lit. Comme du sable noir. Et au cimetière, on a enterré un cercueil de sable. »",
+                "« Quand la roche te répond, tais-toi. Et bouche le trou. »"
+              ]
+            }
+          ],
+          "npcs": [
+            "germaine-lefebvre",
+            "helena-wisniewska",
+            "rosalie-dhainaut",
+            "les-sept"
+          ],
+          "ambience": [
+            "rain",
+            "street"
+          ],
+          "sfx": [
+            "dog-bark",
+            "door-creak",
+            "knocking"
+          ],
+          "next": [
+            "le-dispensaire",
+            "le-carreau",
+            "les-bureaux",
+            "maison-du-peuple"
+          ]
+        },
+        {
+          "id": "le-dispensaire",
+          "title": "Le dispensaire de la Compagnie",
+          "lead": "Le registre de samedi soir et l'examen d'un des sept : peau froide, pouls lent et égal, et un sang qui tourne en sable.",
+          "screen": {
+            "preset": "bulb",
+            "time": "day"
+          },
+          "readAloud": [
+            "Le dispensaire sent l'éther et le savon noir. Une ampoule nue grésille au-dessus de la table d'examen. Au mur, une affiche : « Mineur, ta lampe est ta vie », et un squelette aux os numérotés.",
+            "Une religieuse en cornette range des bandes sans lever les yeux. « Vous venez pour les sept, dit-elle. Tout le monde vient pour les sept. »"
+          ],
+          "flow": [
+            {
+              "title": "Sœur Marie-Clotilde",
+              "text": "{{npc:soeur-marie-clotilde}} a examiné les sept samedi à 20 h. Elle montre son registre au médecin sans jet → {{handout:registre-dispensaire}}. À un autre investigateur, il faut la convaincre.",
+              "roll": {
+                "type": "skill",
+                "options": [
+                  "persuade",
+                  "credit-rating",
+                  "charm"
+                ]
+              },
+              "success": "Elle ouvre le registre. « Ils n'ont rien voulu boire. Après cinq jours au fond. J'ai cru à un choc. Sept fois le même pouls, docteur. Sept fois. »",
+              "failure": "« Le registre est pour le docteur. » Elle le lui montrera s'il vient, ou si le curé le lui demande."
+            },
+            {
+              "title": "Faire venir un des sept",
+              "text": "Le médecin peut convoquer les sept pour leur certificat d'aptitude. Lucien vient avec son père {{npc:achille-delattre}} ; les autres viennent seuls, à l'heure exacte. Ils se déshabillent sans gêne et attendent, debout."
+            },
+            {
+              "title": "L'examen",
+              "roll": {
+                "type": "skill",
+                "options": [
+                  "medicine",
+                  "first-aid"
+                ]
+              },
+              "success": "Peau froide, 34 °C au thermomètre. Pouls à 40, parfaitement régulier, qui ne bouge pas même après dix montées d'escalier. Pas une goutte de sueur. Pupilles lentes à la lampe. Pas une cicatrice, pas un cal : une peau d'enfant sur un corps de mineur. Au stéthoscope, sous le cœur, un bruit fin, comme du sable qui coule.",
+              "failure": "Un homme en bonne santé, un peu froid. Quelque chose cloche, sans qu'on sache dire quoi.",
+              "extra": "Avec Premiers soins, le jet se fait avec un dé de malus."
+            },
+            {
+              "title": "La prise de sang",
+              "text": "Pas de jet si on la fait. Le sang est sombre, épais, et vient lentement. Dans le tube, en une heure, il se sépare : au fond, un sable noir qui brille ; au-dessus, un liquide clair comme de l'eau.",
+              "roll": {
+                "type": "san",
+                "label": "Le tube de sang",
+                "san": "0/1D4"
+              },
+              "extra": "Le tube est une preuve qu'on peut montrer à Thiéry ou à la Maison du Peuple."
+            },
+            {
+              "title": "Les ongles",
+              "text": "La poussière noire sous les ongles ne part pas au savon.",
+              "roll": {
+                "type": "skill",
+                "options": [
+                  "science:geology",
+                  "science:chemistry",
+                  "spot-hidden"
+                ]
+              },
+              "success": "Ni charbon ni schiste : du verre naturel, noir et vert, comme celui des volcans. Il n'y en a nulle part dans le bassin. La même poussière que sur le canari du poste de secours ([[le-carreau]]).",
+              "failure": "Une poussière noire, brillante. Pas tout à fait du charbon."
+            },
+            {
+              "title": "Ce que dit la copie",
+              "text": "Elle répond à tout : « On est bien, à c't'heure. » Et : « Quand c'est qu'on redescend, docteur ? »",
+              "roll": {
+                "type": "skill",
+                "options": [
+                  "psychology"
+                ]
+              },
+              "success": "Ni peur, ni douleur, ni envie. Il attend. Le seul mot qui le fasse bouger, c'est « fond » : il tourne la tête vers celui qui l'a dit, tout de suite.",
+              "failure": "Un homme calme, très calme."
+            },
+            {
+              "title": "Le certificat",
+              "text": "Le médecin signe ou refuse. S'il refuse, Thiéry fait venir mercredi un médecin de Lens qui signe sans examiner ; mais le refus est un argument de poids à la [[maison-du-peuple]] (dé de bonus pour convaincre)."
+            }
+          ],
+          "notes": [
+            {
+              "title": "Ce que sait la sœur",
+              "items": [
+                "Samedi soir, ils ont refusé l'eau et le bouillon. Dimanche, elle leur a porté de la soupe à domicile : on la lui a rendue intacte.",
+                "Ils sont arrivés propres. Ils n'ont pas eu besoin des bains-douches.",
+                "Lucien lui a demandé : « Ma sœur, quand c'est qu'on redescend ? » C'était la seule question de la soirée."
+              ]
+            }
+          ],
+          "npcs": [
+            "soeur-marie-clotilde",
+            "les-sept",
+            "achille-delattre"
+          ],
+          "handouts": [
+            "registre-dispensaire"
+          ],
+          "ambience": [
+            "clock"
+          ],
+          "sfx": [
+            "door-open",
+            "footsteps"
+          ],
+          "next": [
+            "le-carreau",
+            "les-bureaux",
+            "maison-du-peuple"
+          ]
+        },
+        {
+          "id": "le-carreau",
+          "title": "Le carreau de la fosse 7",
+          "lead": "La lampisterie et le poste de secours : quatorze lampes pour sept hommes, un journal de sauvetage, un canari mort, des coups la nuit.",
+          "screen": {
+            "preset": "fog",
+            "time": "day"
+          },
+          "readAloud": [
+            "Le carreau de la fosse 7 est une ville de brique et de fer : le chevalement, la machine d'extraction, les bains-douches, le grand terril qui fume dans le brouillard. Tout est à l'arrêt. On n'entend que les pompes, qui tournent jour et nuit pour que le fond ne se noie pas.",
+            "À la lampisterie, des centaines de lampes de sûreté pendent en rangs, chacune sous son numéro. Sur l'établi, quatorze lampes sont alignées à part. Sept sont écrasées, noires de charbon. Sept brillent comme au premier jour."
+          ],
+          "flow": [
+            {
+              "title": "Achille Delattre",
+              "text": "{{npc:achille-delattre}}, le lampiste, père de Lucien. C'est lui qui a aligné les lampes. Il voudrait parler et il a peur de ce qu'il dirait.",
+              "roll": {
+                "type": "skill",
+                "options": [
+                  "psychology",
+                  "charm",
+                  "persuade"
+                ]
+              },
+              "success": "« Les sept écrasées, l'équipe de déblaiement les a remontées lundi matin, du fond de la taille, sous les débris. Ce sont les leurs : 211 à 217. Les sept autres, ils les tenaient à la main en sortant samedi. Mêmes numéros. Allumées. Après cinq jours. Une lampe de sûreté, ça brûle douze heures. » Il montre son cahier → {{handout:cahier-lampisterie}}.",
+              "failure": "« Une erreur de comptage. » Il range les lampes dans une caisse. Son cahier reste sur le comptoir : on peut le lire (Comptabilité ou Trouver Objet Caché pour remarquer les numéros en double) → {{handout:cahier-lampisterie}}."
+            },
+            {
+              "title": "Les lampes de samedi",
+              "text": "Pas de jet pour constater qu'elles ne s'ouvrent pas. Elles se sont éteintes dimanche matin, toutes à la même heure, sans fumer.",
+              "roll": {
+                "type": "skill",
+                "options": [
+                  "mechanical-repair",
+                  "spot-hidden"
+                ]
+              },
+              "success": "Ni vis, ni joint, ni rivet de plomb de la lampisterie : le verre et le laiton ne font qu'un seul bloc. Le réservoir est plein, mais plein de la même matière que le reste. Elles sont trop lourdes. Ce sont des lampes vues de l'extérieur.",
+              "failure": "Des lampes neuves, bizarrement lourdes.",
+              "pushed": "On en casse une à la masse : elle se brise comme une bouteille, noire et verte à l'intérieur, sans mèche ni réservoir. Achille pâlit et chasse tout le monde (SAN 0/1)."
+            },
+            {
+              "title": "Le porion Wattebled",
+              "text": "Au poste de secours, {{npc:desire-wattebled}}, chef de l'équipe de sauvetage, n'a pas dormi depuis une semaine. Pas de jet : il veut qu'on lise son journal → {{handout:journal-sauvetage}}. « J'ai frappé trois coups, il m'a rendu trois coups. J'ai frappé deux, il m'a rendu deux. Personne répond au deux. J'ai crié : vous êtes sept ? Et il m'a rendu sept. J'aurais dû comprendre. »",
+              "extra": "Il ne dit pas « ils » : il dit « il »."
+            },
+            {
+              "title": "Le canari",
+              "text": "Fifine, le canari de l'équipe, est morte à la percée. Wattebled la garde dans une boîte d'allumettes, il n'a pas pu la jeter. À la lampe, il n'y avait pas de grisou.",
+              "roll": {
+                "type": "skill",
+                "options": [
+                  "natural-world",
+                  "medicine",
+                  "science:geology"
+                ]
+              },
+              "success": "Aucun signe d'asphyxie. Ses plumes sont couvertes d'une poussière noire et brillante, qui n'est pas du charbon : du verre, la même que sous les ongles des sept.",
+              "failure": "Un petit oiseau mort, raide, et une poussière noire dans les plumes."
+            },
+            {
+              "title": "La cassure",
+              "text": "Wattebled raconte le fond de la taille : une fente dans le mur (le sol de la veine), un air tiède qui monte, une odeur de pierre mouillée. « Les coups venaient de là. D'en dessous. » Dimanche, Thiéry l'a fait couvrir de planches. → [[les-bureaux]]"
+            },
+            {
+              "title": "Les coups de la nuit",
+              "text": "Pas de jet. Wattebled, ou le jeune sauveteur Florent Lagache s'il est là : la nuit de dimanche à lundi, puis la suivante, l'équipe des pompes a entendu frapper au 480, derrière le barrage de la bowette Nord. « Sept coups. Un temps. Sept coups. Ça répondait à rien. Ça appelait. »",
+              "extra": "Les vrais sont vivants : Augustin frappe le code dans son rêve."
+            },
+            {
+              "title": "Descendre au 480 avec les pompes",
+              "text": "Facultatif, une nuit : l'équipe des pompes descend à 23 h. Le délégué y a droit, l'ingénieur aussi ; les autres avec l'accord de Wattebled. À la recette, puis devant le barrage de planches de la bowette Nord.",
+              "roll": {
+                "type": "skill",
+                "options": [
+                  "listen"
+                ]
+              },
+              "success": "Sept coups faibles, irréguliers, qui ne répondent à rien. Si l'on frappe à son tour, une autre série répond aussitôt, nette, exacte, par en dessous, pendant que les sept coups faibles continuent plus loin, comme si de rien n'était.",
+              "failure": "Le silence, les pompes, l'eau qui goutte. Puis sept coups, une seule fois, très loin.",
+              "extra": "Près du barrage, la flamme des lampes de sûreté porte une petite auréole bleue : du grisou suinte de la taille. L'ingénieur et le délégué le savent sans jet."
+            },
+            {
+              "title": "Les coups d'en bas",
+              "text": "Seulement si l'on a entendu les deux séries de coups au 480.",
+              "roll": {
+                "type": "san",
+                "label": "Deux séries de coups",
+                "san": "0/1D3"
+              },
+              "goto": [
+                "les-bureaux",
+                "maison-du-peuple"
+              ]
+            }
+          ],
+          "notes": [
+            {
+              "title": "Le code de frappe des sauveteurs",
+              "items": [
+                "3 coups : « Y a-t-il quelqu'un ? »",
+                "Réponse : autant de coups que d'hommes vivants.",
+                "2 coups : « Compris, on arrive. » On n'y répond pas."
+              ]
+            },
+            {
+              "title": "La lampisterie",
+              "items": [
+                "Chaque mineur prend sa lampe à son numéro en descendant et la rend en remontant : c'est ainsi qu'on sait qui est au fond.",
+                "Les lampes sont fermées par un rivet de plomb de la lampisterie : un mineur ne peut pas les ouvrir au fond, où une flamme nue ferait exploser le grisou.",
+                "Les sept lampes de samedi n'ont pas de rivet : elles n'ont jamais été ouvertes, parce qu'elles ne s'ouvrent pas."
+              ]
+            }
+          ],
+          "npcs": [
+            "achille-delattre",
+            "desire-wattebled"
+          ],
+          "handouts": [
+            "cahier-lampisterie",
+            "journal-sauvetage"
+          ],
+          "ambience": [
+            "wind",
+            "crows"
+          ],
+          "sfx": [
+            "latch",
+            "knocking",
+            "footsteps"
+          ],
+          "next": [
+            "les-bureaux",
+            "maison-du-peuple"
+          ]
+        },
+        {
+          "id": "les-bureaux",
+          "title": "Les Grands Bureaux",
+          "lead": "Thiéry et le télégramme de Lille, le relevé caché du géomètre, et un registre des accidents de 1867.",
+          "screen": {
+            "place": "library",
+            "preset": "rain",
+            "time": "dusk"
+          },
+          "readAloud": [
+            "Les Grands Bureaux de la Compagnie des Mines d'Hennequelle ressemblent à un château de brique : un perron, une horloge, des grilles dorées. Dans le hall, le portrait du fondateur et, sous verre, la lampe du premier mineur de la Compagnie.",
+            "Au premier étage, la salle des plans : de longues tables, des tiroirs plats, des rouleaux de toile qui sentent l'encre et la poussière. Par la fenêtre, le chevalement de la fosse 7, immobile sous la pluie."
+          ],
+          "flow": [
+            {
+              "title": "Raymond Thiéry",
+              "text": "{{npc:raymond-thiery}} reçoit, courtois et épuisé. La crise, le charbon anglais et allemand moins cher, le Conseil à Lille, deux cents emplois. Le quartier Nord est le meilleur charbon de la fosse. « Et ce sont les sept eux-mêmes qui demandent à redescendre. »",
+              "roll": {
+                "type": "skill",
+                "options": [
+                  "psychology"
+                ]
+              },
+              "success": "Il y croit à moitié. Il a peur de s'être trompé, et plus encore d'avoir à le dire. Il n'est jamais descendu voir la cassure lui-même.",
+              "failure": "Un directeur sûr de lui, pressé."
+            },
+            {
+              "title": "La salle des plans",
+              "text": "L'ingénieur y entre de droit. Les autres doivent obtenir l'accord de Thiéry.",
+              "roll": {
+                "type": "skill",
+                "options": [
+                  "persuade",
+                  "credit-rating",
+                  "law"
+                ]
+              },
+              "success": "Thiéry les y fait conduire.",
+              "failure": "« Voyez cela avec M. l'ingénieur. » Si l'ingénieur est des leurs, il les fait entrer le soir, après le départ des employés."
+            },
+            {
+              "title": "Le plan de la veine Joséphine",
+              "text": "Pas de jet pour le lire. Au-delà du fond de la taille, la feuille porte : « massif calcaire, terrains du Midi : roche pleine ».",
+              "roll": {
+                "type": "skill",
+                "options": [
+                  "science:geology",
+                  "navigate"
+                ]
+              },
+              "success": "Le long de la faille du Midi, des roches bien plus anciennes que le charbon ont été poussées par-dessus les veines. Personne n'a jamais creusé de ce côté-là, à part une fois : l'ancienne fosse du Marais, fermée en 1884, avait une galerie « du Midi » au 210.",
+              "failure": "Roche pleine au-delà de la taille. Rien à signaler, en principe."
+            },
+            {
+              "title": "Émile Carpentier",
+              "text": "{{npc:emile-carpentier}}, le géomètre, dessine au fond de la salle et ne lève pas la tête. Il a fait le relevé dimanche ; Thiéry lui a dit de le mettre dans un tiroir.",
+              "roll": {
+                "type": "skill",
+                "options": [
+                  "persuade",
+                  "psychology",
+                  "intimidate"
+                ]
+              },
+              "success": "Il ouvre son tiroir → {{handout:releve-carpentier}}. « J'ai collé l'oreille à la fente. Ça frappait par sept. Et les sept étaient là-haut, dans la cour, à me regarder. »",
+              "failure": "Il nie. Dans la nuit, terrifié, il glisse le relevé sous la porte de l'ingénieur ou du journaliste → {{handout:releve-carpentier}}.",
+              "extra": "Si l'ingénieur lui donne l'ordre de le montrer, pas de jet."
+            },
+            {
+              "title": "Les archives",
+              "text": "Au sous-sol, les registres des accidents depuis 1852, si on sait où chercher (Victorine a donné la date, le plan a donné la fosse du Marais).",
+              "roll": {
+                "type": "skill",
+                "options": [
+                  "library-use"
+                ]
+              },
+              "success": "En une heure → {{handout:registre-1867}}.",
+              "failure": "Deux heures de poussière : on le trouve, mais Thiéry apprend qu'on a fouillé ses archives et devient méfiant (dé de malus pour le convaincre) → {{handout:registre-1867}}."
+            },
+            {
+              "title": "Le télégramme",
+              "text": "Sur le bureau de Thiéry, sous un presse-papier, un télégramme du vendredi 13, quand on croyait encore les sept perdus → {{handout:telegramme-conseil}}.",
+              "roll": {
+                "type": "skill",
+                "options": [
+                  "spot-hidden",
+                  "sleight-of-hand"
+                ]
+              },
+              "success": "On le lit sans être vu.",
+              "failure": "Thiéry surprend le geste et retourne le papier. Il le montrera plus tard, de lui-même, s'il est convaincu.",
+              "extra": "Pour le journaliste, c'est un article : la Compagnie voulait rouvrir avant même de retrouver les sept."
+            },
+            {
+              "title": "Convaincre Thiéry",
+              "text": "Il faut des preuves. Chacune donne un dé de bonus (au plus deux) : le tube de sang, une lampe de samedi, le relevé, le journal de sauvetage, le registre de 1867, le refus du médecin. Sans aucune preuve, le jet est Difficile.",
+              "roll": {
+                "type": "skill",
+                "options": [
+                  "persuade",
+                  "credit-rating"
+                ]
+              },
+              "success": "Il s'assoit, longtemps. Puis il renvoie l'équipe de nuit, repousse la reprise d'une semaine, donne aux investigateurs un laissez-passer pour la cage mercredi soir et la clé du coffre du boutefeu au 480. Il descendra avec eux. Les sept descendront quand même (voir [[la-descente]]).",
+              "failure": "Il refuse : la reprise aura lieu. Il fait interdire le carreau aux investigateurs, sauf à l'ingénieur, qui reçoit l'ordre de signer.",
+              "pushed": "Il appelle la gendarmerie : le journaliste et le délégué sont reconduits hors du carreau. Pour descendre, il faudra passer par Wattebled ou Achille."
+            }
+          ],
+          "notes": [
+            {
+              "title": "Ce que Thiéry sait et ce qu'il craint",
+              "items": [
+                "Il a lu le relevé de Carpentier dimanche soir et l'a enterré : une enquête du Service des Mines de l'État aurait fermé le quartier Nord pour des mois.",
+                "S'il ne rouvre pas jeudi, il doit licencier deux cents hommes à la fin du mois, les ouvriers polonais d'abord, sur ordre du Conseil.",
+                "Il a perdu Gaston Pruvost et ne se le pardonne pas : c'est lui qui a voulu presser le sauvetage jeudi.",
+                "Il ne croit pas au surnaturel. Mais une lampe qui ne s'ouvre pas, un tube de sable, un registre signé d'un de ses prédécesseurs le font vaciller."
+              ]
+            }
+          ],
+          "npcs": [
+            "raymond-thiery",
+            "emile-carpentier"
+          ],
+          "handouts": [
+            "releve-carpentier",
+            "registre-1867",
+            "telegramme-conseil"
+          ],
+          "ambience": [
+            "rain-window",
+            "clock"
+          ],
+          "sfx": [
+            "door-open",
+            "footsteps"
+          ],
+          "next": [
+            "maison-du-peuple"
+          ]
+        },
+        {
+          "id": "maison-du-peuple",
+          "title": "La Maison du Peuple",
+          "lead": "Mardi 17, 19 h : les mineurs votent la reprise. Les sept prennent la parole, avec des voix qui ne sont pas les leurs.",
+          "screen": {
+            "place": "street",
+            "preset": "rain",
+            "time": "night"
+          },
+          "readAloud": [
+            "La grande salle de la Maison du Peuple est pleine à craquer : trois cents hommes debout dans la fumée des pipes, les femmes au fond, les drapeaux du syndicat accrochés aux poutres. Il fait chaud. Les vitres ruissellent.",
+            "Au premier rang, sept hommes sont assis côte à côte, les mains à plat sur les genoux. Personne n'ose s'asseoir près d'eux, et tout le monde les regarde."
+          ],
+          "flow": [
+            {
+              "title": "L'enjeu",
+              "text": "Le secrétaire de Thiéry lit l'offre : reprise jeudi, prime de 25 francs. Le syndicat propose une grève de sécurité jusqu'à la visite de l'ingénieur des Mines de l'État. La salle veut du travail : la crise, les licenciements qu'on annonce. Les familles veulent croire au miracle."
+            },
+            {
+              "title": "La parole aux investigateurs",
+              "text": "Le délégué (ou un autre investigateur) prend la parole. Chaque preuve montrée à la salle donne un dé de bonus (au plus deux). Dé de malus si la cité les accuse déjà de faire peur aux vieilles ou si Germaine a été humiliée dans la rue.",
+              "roll": {
+                "type": "skill",
+                "options": [
+                  "persuade",
+                  "fast-talk"
+                ]
+              },
+              "success": "La salle hésite, puis gronde contre la Compagnie : on parle de grève de sécurité.",
+              "failure": "Huées : « Les sept sont vivants, et vous voulez nous affamer ! »"
+            },
+            {
+              "title": "Les sept prennent la parole",
+              "text": "Augustin se lève : « On est bien, à c't'heure. Faut rouvrir. Faut redescendre. » Puis il dit, mot pour mot, une phrase qu'un investigateur a prononcée devant l'un des sept ces deux derniers jours, avec la voix de cet investigateur. Personne d'autre dans la salle ne reconnaît la voix ; mais tout le monde entend que ce n'est pas celle d'Augustin. Une femme crie.",
+              "roll": {
+                "type": "san",
+                "label": "Sa propre voix",
+                "san": "0/1D3"
+              },
+              "extra": "L'investigateur dont la voix est volée perd 1/1D4 au lieu de 0/1D3."
+            },
+            {
+              "title": "Florent",
+              "text": "Le jeune sauveteur Florent Lagache se lève au fond : « Au 480, la nuit, on a entendu toquer ! Sept coups ! » Silence. Les sept tournent la tête vers lui, tous ensemble, et répondent avec sa voix : « Sept coups ! »",
+              "roll": {
+                "type": "san",
+                "label": "Sept voix de Florent",
+                "san": "0/1"
+              }
+            },
+            {
+              "title": "Démasquer une copie ?",
+              "text": "Un investigateur peut tenter de montrer à la salle ce que sont les sept."
+            },
+            {
+              "title": "La blessure",
+              "branch": "Si on blesse une copie devant tous",
+              "text": "Une coupure, même légère : pas de sang. Un filet de sable noir coule sur le plancher.",
+              "roll": {
+                "type": "san",
+                "label": "Le sable qui coule",
+                "san": "0/1D4"
+              },
+              "success": "Panique. La moitié de la salle s'enfuit, l'autre se jette sur les investigateurs (Chance ou 1D3 de coups). Le vote n'a pas lieu : c'est la grève de fait. Les sept sortent calmement, sous la pluie. Les gendarmes arrivent une heure plus tard."
+            },
+            {
+              "title": "Le repas",
+              "branch": "Si on les fait manger devant tous",
+              "text": "On leur tend du pain et de la bière. Ils mâchent, sans fin, sans avaler ; le pain retombe intact.",
+              "success": "La salle se tait. Dé de bonus au jet de parole des investigateurs, s'il n'a pas encore été fait."
+            },
+            {
+              "title": "Le silence",
+              "branch": "Si les investigateurs se taisent",
+              "success": "La reprise est votée à main levée. Les sept applaudissent, un instant après les autres."
+            },
+            {
+              "title": "Le vote",
+              "text": "Grève de sécurité votée (ou de fait) : l'équipe de nuit de mercredi ne compte que 4 hommes, et Thiéry descend en personne pour montrer que tout est sûr. Reprise votée : l'équipe de nuit compte 12 hommes. Si Thiéry a été convaincu, il n'y a pas d'équipe de nuit."
+            },
+            {
+              "title": "Les volontaires",
+              "text": "À la sortie, Augustin annonce à voix haute : « Demain soir, on descend préparer la taille. Nous sept. » Dans la cohue, {{npc:desire-wattebled}} glisse aux investigateurs : « Si vous voulez descendre, soyez au poste de secours à 21 h 30. Moi, j'y vais. »",
+              "goto": [
+                "la-descente"
+              ]
+            }
+          ],
+          "notes": [
+            {
+              "title": "Qui est dans la salle",
+              "items": [
+                "Les sept, au premier rang.",
+                "Germaine Lefebvre et Odette Brunin, au fond, qui ne quittent pas les sept des yeux. Helena n'est pas venue.",
+                "Achille Delattre, près de la porte, qui fixe son fils.",
+                "Wattebled et ses sauveteurs, dont Florent Lagache, vingt ans.",
+                "Le secrétaire de Thiéry, un gendarme à la porte."
+              ]
+            }
+          ],
+          "npcs": [
+            "les-sept",
+            "desire-wattebled",
+            "germaine-lefebvre",
+            "achille-delattre"
+          ],
+          "ambience": [
+            "crowd-indoor",
+            "rain-window"
+          ],
+          "sfx": [
+            "door-slam",
+            "footsteps"
+          ],
+          "next": [
+            "la-descente"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "le-creux",
+      "title": "Le Creux",
+      "scenes": [
+        {
+          "id": "la-descente",
+          "title": "La descente au 480",
+          "lead": "Mercredi 18, 22 h : 480 mètres sous la cité, la paroi de verre où dorment les sept. Les libérer, ou tout sceller.",
+          "screen": {
+            "place": "crypt",
+            "preset": "bulb",
+            "time": "night"
+          },
+          "readAloud": [
+            "La cage tombe dans le noir avec un bruit de ferraille, si vite que les oreilles se bouchent. Puis elle ralentit, s'arrête, et la recette du 480 s'ouvre devant vous : des voûtes blanchies à la chaux, des ampoules qui grésillent, de l'eau qui ruisselle le long des parois.",
+            "Au bout de la bowette Nord, après les cadres de bois neufs et le barrage de planches arraché, la taille s'enfonce dans la veine, si basse qu'il faut ramper. Au fond, une fente s'ouvre dans le sol. Il en monte un air tiède qui sent la pierre mouillée et, très loin, des coups. Sept. Un temps. Sept."
+          ],
+          "flow": [
+            {
+              "title": "Descendre",
+              "text": "Avec le laissez-passer de Thiéry, ou avec Wattebled à 21 h 30 : pas de jet. Le délégué mineur a le droit de visite : pas de jet, sauf si Thiéry l'a fait interdire.",
+              "roll": {
+                "type": "skill",
+                "options": [
+                  "law",
+                  "persuade",
+                  "fast-talk"
+                ]
+              },
+              "success": "L'encageur les laisse monter dans la cage suivante.",
+              "failure": "L'encageur refuse. Il faut attendre Wattebled, ou descendre par les échelles du puits d'aérage (une heure, CON ou épuisement : dé de malus aux jets physiques au fond).",
+              "extra": "Les sept descendent à 22 h avec l'équipe de nuit. Si Thiéry les a renvoyés, ils descendent seuls par les échelles et arrivent au 480 vers minuit : les investigateurs ont de l'avance."
+            },
+            {
+              "title": "La recette et la bowette",
+              "text": "Voir **Le fond**. Au passage, le coffre du boutefeu à la recette (clé de Thiéry, ou Wattebled sait où elle est), la porte d'aérage à 80 mètres de la taille. Près de la fente, la flamme des lampes porte une auréole bleue : le grisou monte du Creux.",
+              "roll": {
+                "type": "skill",
+                "options": [
+                  "science:geology",
+                  "operate-heavy-machinery"
+                ]
+              },
+              "success": "Si l'on ferme la porte d'aérage, l'air ne circule plus dans la bowette et le grisou du Creux la remplit en trois quarts d'heure. Une étincelle, et tout s'effondre.",
+              "failure": "Rien de plus. L'ingénieur, le délégué et Wattebled le savent sans jet."
+            },
+            {
+              "title": "Rattraper l'équipe",
+              "text": "S'il y a une équipe de nuit, les sept la mènent vers la taille en parlant de « la belle chose ». Les hommes suivent, mi-curieux, mi-effrayés.",
+              "roll": {
+                "type": "skill",
+                "options": [
+                  "persuade",
+                  "intimidate"
+                ]
+              },
+              "success": "Les hommes font demi-tour et retournent à la recette. Les sept continuent seuls. Dé de bonus si le délégué ou Wattebled parle.",
+              "failure": "Les hommes suivent les sept dans le Creux. Chaque quart d'heure, l'un d'eux s'arrête devant la paroi, écoute sa propre voix et commence à s'y enfoncer. On le dégage comme les sept."
+            },
+            {
+              "title": "La fente",
+              "text": "Une pente de vingt mètres, raide, vitreuse. Avec la corde de Wattebled : pas de jet.",
+              "roll": {
+                "type": "skill",
+                "options": [
+                  "climb"
+                ]
+              },
+              "success": "On descend sans bruit.",
+              "failure": "Une glissade : 1D6 points de vie, et le bruit fait monter le Réveil de 2."
+            },
+            {
+              "title": "Le Creux",
+              "text": "Une bulle de pierre noire et verte, lisse comme une bouteille, haute comme une église. La lumière des lampes y revient de partout. Dans la paroi, debout, les yeux fermés, les sept hommes, les vrais, sales, barbus, maigres, une main levée comme pour frapper. Plus loin dans le verre, un homme en habits d'un autre siècle, les yeux ouverts, mort depuis longtemps : Bastien Coquelle. Lancer le tracker **Réveil du Creux**.",
+              "roll": {
+                "type": "san",
+                "label": "Les hommes dans le verre",
+                "san": "1/1D6"
+              }
+            },
+            {
+              "title": "Le Répondant",
+              "text": "Tout ce qui est dit à voix haute est répété par la paroi, de partout, avec la voix de celui qui l'a dit, un temps après. Chaque phrase dite à voix haute : Réveil +1. Le murmure ne compte pas. Les copies présentes se rangent le long de la paroi et fredonnent la même note basse. Puis, ensemble : « On est bien, à c't'heure. »"
+            },
+            {
+              "title": "Que faire ?",
+              "text": "Le vrai choix. Dégager les sept, un par un ; ou fermer la porte d'aérage et sceller le Creux au grisou, avec ceux qui y restent ; ou dégager ceux qu'on peut, puis sceller. Ou fuir."
+            },
+            {
+              "title": "Dégager les mineurs",
+              "branch": "Si vous dégagez les mineurs",
+              "text": "Pour chaque homme, au choix : **murmurer** contre le verre un souvenir de sa famille (voir les souvenirs dans [[les-corons]]) ; jet de POU, avec un dé de bonus si le souvenir vient de ses proches ou si un proche le dit lui-même, Difficile sans aucun souvenir. Réveil +1, réussite ou non. Ou **le pic** : jet de FOR, Réveil +2, réussite ou non. Chaque tentative prend une dizaine de minutes.",
+              "roll": {
+                "type": "characteristic",
+                "options": [
+                  "POW",
+                  "STR"
+                ]
+              },
+              "success": "Le verre devient mou comme de la cire tiède et l'homme glisse dans les bras de ceux qui l'attendent, froid, vivant. Au même instant, sa copie se défait en sable noir, où qu'elle soit. Avancer le tracker **Mineurs dégagés**.",
+              "failure": "Le verre résiste. Recommencer.",
+              "extra": "Si Achille est là, il appelle Lucien « min p'tit quinquet » : pas de jet pour son fils."
+            },
+            {
+              "title": "Sceller au grisou",
+              "branch": "Si vous scellez le Creux au grisou",
+              "text": "Fermer la porte d'aérage (pas de jet pour l'ingénieur, le délégué ou Wattebled ; sinon Conduite d'engins lourds) et lancer le tracker **Grisou dans la bowette**. Placer un détonateur près de la fente, dérouler le câble de l'exploseur jusqu'à la recette, tout le monde derrière la seconde porte. Brancher l'exploseur :",
+              "roll": {
+                "type": "skill",
+                "options": [
+                  "electrical-repair",
+                  "mechanical-repair"
+                ]
+              },
+              "success": "Au bout des trois quarts d'heure, on tourne la manette. Un coup de tonnerre sous la terre : la bowette s'effondre sur quarante mètres. Le Creux est scellé. Partout, les copies se défont d'un coup. Ceux qui restaient dans le verre meurent avec lui. Jet de Chance pour chacun à la recette : en cas d'échec, le souffle fait 1D6.",
+              "failure": "Un fil mal serré : un quart d'heure de plus, et le grisou gagne vers la recette (le souffle fera 2D6).",
+              "extra": "Si Achille est là et que Lucien est encore dans le verre, il tente d'arrêter les investigateurs, à mains nues (voir sa fiche)."
+            },
+            {
+              "title": "Fuir",
+              "branch": "Si vous fuyez",
+              "text": "Les copies ne poursuivent personne. Elles ont tout leur temps.",
+              "goto": [
+                "le-jeudi"
+              ]
+            },
+            {
+              "title": "Les copies s'interposent",
+              "text": "Dès qu'un homme est dégagé ou que la porte d'aérage est fermée, les copies restantes s'avancent. Elles ne frappent pas : elles serrent, et poussent leur victime contre la paroi. Une victime tenue deux rounds contre le verre commence à s'y enfoncer : jet opposé de Corps à corps ou d'Esquive pour se dégager. Chaque round de lutte : Réveil +1.",
+              "roll": {
+                "type": "opposed",
+                "options": [
+                  "fighting-brawl",
+                  "dodge"
+                ],
+                "against": {
+                  "npc": "les-sept",
+                  "skill": "fighting-brawl"
+                }
+              },
+              "success": "On s'arrache à leur étreinte.",
+              "failure": "Plaqué contre le verre, froid comme la mort. Le verre monte aux chevilles.",
+              "extra": "Une copie brisée (0 point de vie) se défait en sable (SAN 0/1D4) ; le Creux en refait une, dans la paroi, une heure plus tard."
+            },
+            {
+              "title": "Le réveil",
+              "text": "À 6 sur le tracker : la paroi parle, avec la voix de tous ceux qu'elle a pris, et dit les prénoms des investigateurs. Chacun fait un jet de POU, ou reste figé un round. À 9 : le verre coule sur le sol ; quiconque reste immobile un round a les pieds pris (FOR pour se dégager, Réveil +1). À 12 : le Creux se referme.",
+              "roll": {
+                "type": "san",
+                "label": "La paroi qui parle",
+                "san": "0/1D4"
+              }
+            },
+            {
+              "title": "Si le Creux se referme",
+              "text": "Tous ceux qui sont encore dans le Creux font un jet de Chance.",
+              "roll": {
+                "type": "luck"
+              },
+              "success": "On s'arrache à la pente juste à temps.",
+              "failure": "Le verre le prend. Il dort debout dans la paroi, et rêve. Demain, sa copie remontera. Les autres peuvent revenir le dégager, s'ils l'osent."
+            },
+            {
+              "title": "Remonter les rescapés",
+              "text": "Les hommes dégagés sont froids, déshydratés, à peine conscients : il faut deux personnes pour en porter un, et des soins dans l'heure.",
+              "roll": {
+                "type": "skill",
+                "options": [
+                  "medicine",
+                  "first-aid"
+                ]
+              },
+              "success": "Il ouvre les yeux, reconnaît le visage au-dessus de lui, et demande quel jour on est.",
+              "failure": "Il vit, mais dort trois jours avant de se réveiller.",
+              "pushed": "Il meurt à l'aube, dans la cage, sans s'être réveillé.",
+              "goto": [
+                "le-jeudi"
+              ]
+            }
+          ],
+          "notes": [
+            {
+              "title": "Le fond",
+              "items": [
+                "**La recette du 480** : éclairée à l'électricité. Le coffre du boutefeu : cartouches, détonateurs, un exploseur à manivelle et 150 mètres de câble. Deux portes d'aérage entre la recette et la bowette Nord.",
+                "**La bowette Nord** : 300 mètres dans la roche, boisée à neuf sur les 60 mètres effondrés. À 80 mètres de la taille, la porte d'aérage principale : la fermer coupe l'air de la taille.",
+                "**La taille Joséphine** : 38 mètres de long, haute de 70 centimètres. Au bout, le barrage de planches arraché, la fente, l'air tiède.",
+                "**Le Creux** : 30 mètres de large, 15 de haut. Les sept sont dans la paroi est, côte à côte, à hauteur d'homme, dans l'ordre où ils travaillaient. Bastien Coquelle, plus loin, au sud, du côté de l'ancienne fosse du Marais."
+              ]
+            },
+            {
+              "title": "Rôles pendant la descente",
+              "items": [
+                "**L'ingénieur** : la porte d'aérage, le grisou, l'exploseur ; il lit la roche et sait où le Creux peut s'effondrer.",
+                "**Le délégué** : les hommes de l'équipe de nuit l'écoutent ; il peut les faire remonter. Il connaît le fond par cœur.",
+                "**Le médecin** : les rescapés mourront sans soins dans l'heure. Il décide qui on porte en premier.",
+                "**Le journaliste** : il a interviewé les familles ; son carnet est plein de souvenirs. Il peut murmurer à chacun ce qu'a dit sa femme ou sa mère.",
+                "**Le curé** : il garde le silence du groupe, calme les hommes pris de panique, connaît la berceuse d'Helena et les noms des enfants."
+              ]
+            },
+            {
+              "title": "Qui descend aussi",
+              "items": [
+                "{{npc:desire-wattebled}}, s'il a donné rendez-vous : une corde, une lampe, une rivelaine (le pic du mineur). Il porte les rescapés.",
+                "{{npc:achille-delattre}}, si les investigateurs lui ont parlé de son fils : il veut le vrai Lucien, et il ne laissera personne le tuer.",
+                "{{npc:raymond-thiery}}, s'il a été convaincu, ou si la grève a été votée (il mène alors l'équipe de nuit). Face au Creux, il comprend, et obéit à l'ingénieur."
+              ]
+            }
+          ],
+          "npcs": [
+            "le-repondant",
+            "les-sept",
+            "desire-wattebled",
+            "achille-delattre",
+            "raymond-thiery"
+          ],
+          "ambience": [
+            "wind"
+          ],
+          "sfx": [
+            "knocking",
+            "footsteps",
+            "latch",
+            "thunder"
+          ],
+          "next": [
+            "le-jeudi"
+          ]
+        },
+        {
+          "id": "le-jeudi",
+          "title": "Jeudi, six heures",
+          "lead": "L'aube sur le carreau, et ce que la cité 7 garde de cette nuit.",
+          "screen": {
+            "place": "street",
+            "preset": "fog",
+            "time": "dusk"
+          },
+          "readAloud": [
+            "Le jour se lève sur la cité 7, gris et mouillé. Devant les grilles du carreau, la foule attend comme il y a cinq jours : les femmes en châle, les enfants sur les épaules, les hommes qui ne disent rien.",
+            "La sirène de la fosse sonne six heures. Le chevalement se découpe dans le brouillard."
+          ],
+          "flow": [
+            {
+              "title": "Les maisons des sept",
+              "text": "Quand une copie se défait, elle laisse là où elle était un tas de sable noir et brillant, à la forme d'un homme : sur une chaise, dans un lit, sur le plancher de la recette. Les familles qui le découvrent cette nuit-là ne l'oublieront pas."
+            },
+            {
+              "title": "Les sept remontent",
+              "branch": "Si les sept ont été dégagés",
+              "text": "La cage remonte avec sept hommes sales, barbus, maigres, qui pleurent en voyant le jour. Germaine reconnaît la cicatrice bleue. Augustin demande : « Où il est, Gaston ? »",
+              "roll": {
+                "type": "damage",
+                "label": "Gain de SAN (les sept libérés)",
+                "dice": "1D8"
+              }
+            },
+            {
+              "title": "Quelques-uns",
+              "branch": "Si certains ont été dégagés, puis le Creux scellé",
+              "text": "Ceux qu'on a sauvés remontent. Pour les autres, la Compagnie annonce un second coup de grisou dans la nuit, et des cercueils fermés. Gain de 1D4 SAN, mais 0/1D3 pour ceux qu'on a laissés dans le verre.",
+              "roll": {
+                "type": "damage",
+                "label": "Gain de SAN (certains libérés)",
+                "dice": "1D4"
+              }
+            },
+            {
+              "title": "Le Creux scellé",
+              "branch": "Si le Creux a été scellé sans en dégager aucun",
+              "text": "Le second coup de grisou a fermé le quartier Nord pour toujours. Dans sept maisons, un tas de sable noir dans un lit. La cité enterre sept cercueils trop légers. Les investigateurs savent qui ils ont tué.",
+              "roll": {
+                "type": "san",
+                "label": "Sept hommes vivants",
+                "san": "1/1D6"
+              }
+            },
+            {
+              "title": "Rien n'a été fait",
+              "branch": "Si personne n'a arrêté les sept",
+              "text": "À l'aube, l'équipe de nuit remonte, propre, calme, en fredonnant la même note. À 6 h, le poste du matin descend : cent vingt hommes. Le soir, ils remontent tous. On ne mange plus dans les corons de la cité 7. Et l'un des sept, en passant, dit bonjour à un investigateur avec la voix de sa mère.",
+              "roll": {
+                "type": "san",
+                "label": "Ceux qui remontent",
+                "san": "1D3/1D10"
+              }
+            },
+            {
+              "title": "Thiéry et la Compagnie",
+              "text": "S'il est descendu, Thiéry fait construire un serrement de béton dans la bowette Nord (un mur étanche), ferme le quartier Nord et paie de sa poche les soins des rescapés. Il démissionne au printemps. S'il n'a rien vu, il fait interroger par les gendarmes ceux qui ont fait sauter sa bowette : l'ingénieur perd sa place, le délégué passe une nuit au violon, sauf si le sable des copies parle pour eux."
+            },
+            {
+              "title": "Le Creux vide",
+              "text": "Si les sept ont été dégagés sans que le Creux soit scellé, il attend, vide. Tant qu'on n'a pas muré la fente, la prochaine voix qui parlera trop fort au fond de la taille Joséphine recevra une réponse."
+            }
+          ],
+          "notes": [
+            {
+              "title": "Après",
+              "items": [
+                "Le journaliste peut écrire la vérité : personne ne la publiera. Le télégramme du Conseil, lui, fera scandale à Lille si on le publie : la Compagnie voulait rouvrir avant d'avoir retrouvé les sept.",
+                "Les rescapés ne se souviennent que du froid, et d'un rêve où ils frappaient sans fin. Augustin se souvient d'une phrase qu'il a dite aux autres pour les rassurer, et ne la dira plus jamais.",
+                "Victorine Dhainaut fait dire sa messe pour Bastien Coquelle. Elle meurt l'hiver suivant, rassurée.",
+                "Helena Wiśniewska et ses enfants : si Stach est revenu, la famille reste. Sinon, elle est renvoyée en Pologne avec la première vague de licenciements.",
+                "Un investigateur pris par le verre peut être dégagé les nuits suivantes, de la même façon, tant que le Creux n'est pas scellé."
+              ]
+            }
+          ],
+          "npcs": [
+            "germaine-lefebvre",
+            "helena-wisniewska",
+            "achille-delattre",
+            "raymond-thiery"
+          ],
+          "ambience": [
+            "village-day",
+            "wind"
+          ],
+          "sfx": [
+            "footsteps",
+            "door-open"
+          ]
+        }
+      ]
+    }
+  ],
+  "npcs": [
+    {
+      "id": "germaine-lefebvre",
+      "name": "Germaine Lefebvre",
+      "role": "Femme d'Augustin, sœur du sauveteur mort",
+      "description": "Quarante-quatre ans, petite, des mains rouges de lessive, le châle noir du deuil.",
+      "personality": "Solide, pieuse, peu bavarde. Elle sait que l'homme qui dort chez elle n'est pas son mari, et elle a peur qu'on la croie folle. Elle veut le vrai, et elle ira jusqu'au bout pour lui.",
+      "characteristics": {
+        "STR": 50,
+        "CON": 60,
+        "SIZ": 50,
+        "DEX": 55,
+        "INT": 60,
+        "POW": 65
+      },
+      "hp": 11,
+      "dodge": 27,
+      "knows": [
+        "La cicatrice bleue qu'Augustin avait au front depuis l'éboulement de 1912 a disparu.",
+        "Il ne mange pas, ne dort pas, ne sent rien. Il pose son couteau toujours au même endroit.",
+        "Samedi soir, elle lui a appris la mort de Gaston ; dimanche et lundi, il en demandait des nouvelles.",
+        "Depuis samedi, elle rêve qu'Augustin l'appelle dans le noir et frappe sept coups : le code des sauveteurs pour « sept vivants ».",
+        "Souvenir pour le fond : sa pigeonne *la Bleue*, rentrée seule d'Orléans en 1929. « Ta Bleue est rentrée. Elle t'attend. »"
+      ]
+    },
+    {
+      "id": "helena-wisniewska",
+      "name": "Helena Wiśniewska",
+      "role": "Femme de Stach, mère de deux enfants",
+      "description": "Vingt-sept ans, un fichu clair, un fort accent. Janek, six ans, et Zosia, trois ans, accrochés à sa jupe.",
+      "personality": "Courageuse et seule. Elle parle polonais, comprend mal le français, et sait qu'une plainte de trop peut la faire renvoyer en Pologne.",
+      "characteristics": {
+        "STR": 45,
+        "CON": 60,
+        "SIZ": 45,
+        "DEX": 60,
+        "INT": 55,
+        "POW": 60
+      },
+      "hp": 10,
+      "dodge": 30,
+      "knows": [
+        "Stach ne mange pas. La nuit, il récite le Notre Père en polonais sans s'arrêter, toujours les mêmes mots.",
+        "Le jour, il ne dit que « ça va, ça va ». Il ne dit plus son prénom à elle.",
+        "Dimanche, à la gendarmerie, on s'est moqué d'elle et on l'a menacée d'expulsion.",
+        "Souvenir pour le fond : elle l'appelle *Stasiu* ; il sifflait en partant au poste la berceuse de Noël qu'elle chante aux enfants."
+      ]
+    },
+    {
+      "id": "achille-delattre",
+      "name": "Achille Delattre",
+      "role": "Lampiste de la fosse 7, père de Lucien",
+      "description": "Quarante-neuf ans, veuf, une blouse grise, des lunettes rafistolées au fil de fer, les doigts noirs de benzine.",
+      "personality": "Méticuleux, doux, déchiré. Il compte les lampes depuis vingt ans et il sait que quatorze ne font pas sept. Mais il a retrouvé son fils, et il ne veut pas le reperdre. S'il apprend que le vrai Lucien est en bas, vivant, rien ne l'empêchera de descendre, et il se battra contre quiconque voudra sceller le Creux avec son fils dedans.",
+      "characteristics": {
+        "STR": 60,
+        "CON": 55,
+        "SIZ": 60,
+        "DEX": 50,
+        "INT": 60,
+        "POW": 50
+      },
+      "hp": 11,
+      "dodge": 25,
+      "attacks": [
+        {
+          "name": "Poings",
+          "skill": 50,
+          "damage": "1D3"
+        }
+      ],
+      "skills": {
+        "mechanical-repair": 60,
+        "accounting": 55,
+        "spot-hidden": 55
+      },
+      "knows": [
+        "Sept lampes sont sorties le mardi 10 au matin, numéros 211 à 217.",
+        "Sept lampes allumées sont rentrées le samedi 14 avec les hommes ; sept lampes écrasées, les mêmes numéros, ont été remontées du fond de la taille le lundi 16.",
+        "Les lampes de samedi n'ont pas de rivet de plomb et ne s'ouvrent pas. Elles se sont éteintes toutes ensemble dimanche matin.",
+        "Lucien ne l'appelle plus « papa ». Il ne dit que : « Quand c'est qu'on redescend ? »",
+        "Souvenir pour le fond : Lucien soigne *Bijou*, le cheval du fond ; son père l'appelle « min p'tit quinquet »."
+      ]
+    },
+    {
+      "id": "desire-wattebled",
+      "name": "Désiré Wattebled",
+      "role": "Porion, chef de l'équipe de sauvetage",
+      "description": "Cinquante-cinq ans, large comme une porte, une moustache grise, les yeux rouges de fatigue. Trente ans de fond.",
+      "personality": "Bourru, honnête, rongé par la mort de Gaston, qui était dans son équipe. Il a compris avant tout le monde que quelque chose n'allait pas, et il s'en veut d'avoir crié « sept » dans le noir.",
+      "characteristics": {
+        "STR": 70,
+        "CON": 70,
+        "SIZ": 65,
+        "DEX": 50,
+        "INT": 60,
+        "POW": 60
+      },
+      "hp": 13,
+      "dodge": 25,
+      "attacks": [
+        {
+          "name": "Poings",
+          "skill": 55,
+          "damage": "1D3+1D4"
+        },
+        {
+          "name": "Rivelaine (pic de mineur)",
+          "skill": 50,
+          "damage": "1D6+1D4"
+        }
+      ],
+      "skills": {
+        "climb": 60,
+        "first-aid": 50,
+        "listen": 60,
+        "mechanical-repair": 55,
+        "operate-heavy-machinery": 50
+      },
+      "knows": [
+        "Le journal de sauvetage, heure par heure : les coups rendus exactement, le deux auquel on ne répond pas, le « sept » crié.",
+        "Les coups venaient d'en dessous, pas du fond de la bowette.",
+        "Fifine, le canari, est morte à la percée sans qu'il y ait de grisou.",
+        "Les sept attendaient debout, propres, lampes allumées : « On vous attendait. »",
+        "L'équipe des pompes entend frapper au 480 la nuit : sept coups, un temps, sept coups.",
+        "Où est la clé du coffre du boutefeu, comment fermer la porte d'aérage, ce que fait le grisou dans une bowette sans air."
+      ]
+    },
+    {
+      "id": "raymond-thiery",
+      "name": "Raymond Thiéry",
+      "role": "Ingénieur divisionnaire, directeur de la fosse 7",
+      "description": "Cinquante et un ans, costume gris, lorgnon, une alliance qu'il tourne sans cesse.",
+      "personality": "Compétent, courtois, aux abois. Ni cynique ni cruel : il a peur des licenciements, peur du Conseil, et peur de s'être trompé. Il cède devant des preuves, pas devant des histoires.",
+      "characteristics": {
+        "STR": 45,
+        "CON": 50,
+        "SIZ": 60,
+        "DEX": 50,
+        "INT": 75,
+        "POW": 55,
+        "EDU": 80
+      },
+      "hp": 11,
+      "dodge": 25,
+      "knows": [
+        "Le télégramme du Conseil du vendredi 13 exige la reprise au plus tard le 19, sinon deux cents licenciements, les étrangers d'abord.",
+        "Il a reçu le relevé de Carpentier dimanche soir et a ordonné de couvrir la fente de planches et de ne rien changer au plan.",
+        "Le vendredi 13, il a parlé d'arrêter le sauvetage.",
+        "Il garde la clé du coffre du boutefeu du 480."
+      ]
+    },
+    {
+      "id": "emile-carpentier",
+      "name": "Émile Carpentier",
+      "role": "Géomètre de la Compagnie",
+      "description": "Vingt-six ans, maigre, des manchettes de lustrine, un crayon derrière l'oreille.",
+      "personality": "Consciencieux et terrifié. Il a obéi à Thiéry et ne dort plus. Il évite les sept, qui le regardent quand il traverse la cour.",
+      "characteristics": {
+        "STR": 40,
+        "CON": 45,
+        "SIZ": 50,
+        "DEX": 60,
+        "INT": 70,
+        "POW": 40,
+        "EDU": 70
+      },
+      "hp": 9,
+      "dodge": 30,
+      "knows": [
+        "Dimanche 15, au bout de la taille : une cassure dans le sol, un vide de 22 mètres là où le plan dit roche pleine.",
+        "La paroi est une roche noire et verte, vitreuse, inconnue dans le bassin.",
+        "Il a collé l'oreille à la fente : des coups, par groupes de sept.",
+        "Thiéry lui a ordonné de ne rien dire avant jeudi."
+      ]
+    },
+    {
+      "id": "soeur-marie-clotilde",
+      "name": "Sœur Marie-Clotilde",
+      "role": "Infirmière du dispensaire de la cité 7",
+      "description": "Cinquante-huit ans, cornette blanche, tablier impeccable, des mains qui ne tremblent jamais.",
+      "personality": "Pratique, sèche, charitable. Elle a vu mourir des centaines de mineurs et n'a jamais vu ça. Elle ne parlera de « surnaturel » qu'au curé.",
+      "characteristics": {
+        "INT": 65,
+        "POW": 70
+      },
+      "hp": 10,
+      "dodge": 25,
+      "skills": {
+        "first-aid": 70,
+        "medicine": 40
+      },
+      "knows": [
+        "Samedi 14 à 20 h : sept fois 34 °C et 40 de pouls, régulier. Aucune déshydratation.",
+        "Ils ont refusé l'eau et le bouillon ; la soupe portée dimanche est revenue intacte.",
+        "La poussière noire sous leurs ongles ne part pas au savon.",
+        "Lucien lui a demandé quand on redescendait."
+      ]
+    },
+    {
+      "id": "abbe-delcourt",
+      "name": "Abbé Gustave Delcourt",
+      "role": "Curé de la paroisse Sainte-Barbe",
+      "description": "Soixante-deux ans, soutane élimée, un fort accent du pays. Si un joueur incarne le curé, Delcourt devient son vicaire, plus jeune et nerveux.",
+      "personality": "Paternel, têtu, plus fin qu'il n'en a l'air. Il croit aux miracles, mais pas à celui-là.",
+      "characteristics": {
+        "INT": 65,
+        "POW": 70
+      },
+      "hp": 10,
+      "dodge": 25,
+      "knows": [
+        "Au Te Deum de dimanche, les sept ont répondu aux prières un instant après tout le monde, mot pour mot.",
+        "Victorine Dhainaut lui a demandé une messe pour Bastien Coquelle, « mort en 1867, et qui va remonter ».",
+        "Le presbytère garde les registres de l'ancienne paroisse Saint-Vaast, dont celui de 1867.",
+        "Il connaît toutes les familles des sept, leurs enfants, leurs fêtes."
+      ]
+    },
+    {
+      "id": "rosalie-dhainaut",
+      "name": "Victorine Dhainaut",
+      "role": "Ancienne trieuse, mémoire de la cité",
+      "description": "Quatre-vingts ans, minuscule, un bonnet noir, une pipe en terre qu'elle n'allume plus. Elle parle patois.",
+      "personality": "Lucide, moqueuse, sans peur. Elle a tout vu une fois déjà, et elle trouve que personne n'écoute les vieux.",
+      "characteristics": {
+        "INT": 60,
+        "POW": 65
+      },
+      "hp": 7,
+      "dodge": 15,
+      "knows": [
+        "En mars 1867, Bastien Coquelle, enfermé trois jours au 210 de l'ancienne fosse du Marais, est remonté propre, répétant la fin de chaque phrase qu'on lui disait, sans ses cicatrices bleues, et ne mangeait plus.",
+        "Les anciens, dont son père, ont fait murer la galerie. Pendant un mois, on a entendu frapper derrière le mur.",
+        "Le soir où le mur a été fini, le Bastien d'en haut s'est défait en sable noir dans son lit. On a enterré un cercueil de sable.",
+        "« Quand la roche te répond, tais-toi. Et bouche le trou. »"
+      ]
+    },
+    {
+      "id": "les-sept",
+      "kind": "creature",
+      "name": "Les sept remontés",
+      "role": "Les copies des sept mineurs",
+      "description": "Sept hommes exactement pareils aux vrais, mais propres, rasés, sans une cicatrice ni un cal. Peau froide, pouls à 40, régulier. Ils portent encore les vêtements de samedi.",
+      "personality": "Calmes, polis, toujours un temps en retard sur tout le monde. Ils ne savent que ce que les vrais savaient le matin du 10 et ce qu'ils ont entendu au fond, et n'apprennent rien de neuf. Ils disent « On est bien, à c't'heure » et « Faut rouvrir, faut redescendre ». Ils répètent ce qu'on leur dit, avec n'importe quelle voix entendue.",
+      "characteristics": {
+        "STR": 65,
+        "CON": 80,
+        "SIZ": 65,
+        "DEX": 45,
+        "INT": 40,
+        "POW": 10
+      },
+      "hp": 12,
+      "dodge": 20,
+      "armor": 0,
+      "attacks": [
+        {
+          "name": "Étreinte froide",
+          "skill": 50,
+          "damage": "1D3",
+          "note": "La victime est saisie et poussée contre la paroi du Creux ; tenue deux rounds, le verre commence à la prendre."
+        }
+      ],
+      "sanLoss": "0/1D4",
+      "special": [
+        "Pas de sang : une blessure laisse couler du sable noir et brillant.",
+        "À 0 point de vie, la copie se défait en sable (SAN 0/1D4 pour qui le voit). Le Creux en refait une dans sa paroi une heure plus tard.",
+        "Répète la fin de ce qu'on lui dit, un temps trop tard. Fredonne la même note que les six autres. Tapote par sept.",
+        "Ne mange, ne boit, ne sue ni ne dort. Ne sent rien. Les animaux la fuient.",
+        "Se défait à l'instant, où qu'elle soit, quand son original est dégagé du verre ou quand le Creux est scellé.",
+        "Ne frappe jamais pour tuer : elle serre, et ramène au Creux."
+      ],
+      "knows": [
+        "Rien de ce qui s'est passé en haut depuis le mardi 10 au matin.",
+        "Ce qu'on a dit au fond : les prières, les plaisanteries, la dernière phrase d'Augustin."
+      ],
+      "skills": {
+        "fighting-brawl": 50
+      }
+    },
+    {
+      "id": "le-repondant",
+      "kind": "creature",
+      "name": "Le Répondant",
+      "role": "Ce qui vit dans le Creux",
+      "description": "Une bulle de pierre vitreuse noire et verte, plus vieille que le charbon, dans la roche de la faille du Midi. Elle n'a ni bouche ni forme : c'est la paroi elle-même qui écoute, répète et prend.",
+      "personality": "Pas de volonté qu'on puisse comprendre : il copie. D'abord ce qu'il entend, puis ce qu'il touche. Plus il a de voix, plus il en veut.",
+      "hp": 0,
+      "sanLoss": "1/1D6",
+      "special": [
+        "Insensible aux armes, au feu, aux coups : il est la roche.",
+        "Répète tout ce qui est dit à voix haute, avec la voix de celui qui parle. Le bruit le réveille (tracker Réveil du Creux), le silence le ralentit.",
+        "Le verre coule sur quiconque reste immobile contre lui, ou sur le sol quand il est éveillé. Ceux qu'il prend dorment debout, vivants, et rêvent ; une copie d'eux remonte.",
+        "Un homme pris se dégage si on lui murmure un souvenir que seul le vrai possède (POU), ou au pic (FOR), bruyamment.",
+        "Scellé (mur ou effondrement), il s'endort, coupé de ses copies, qui se défont toutes. Ceux qui restent dans le verre meurent."
+      ]
+    }
+  ],
+  "handouts": [
+    {
+      "id": "article-vigie",
+      "title": "La Vigie du Nord, dimanche 15 février 1931",
+      "scene": "enterrement",
+      "text": "**LE MIRACLE DE LA FOSSE 7**\n*Les sept emmurés d'Hennequelle rendus au jour après cinq jours*\n\nHENNEQUELLE-LES-MINES, 14 février (par téléphone). Ce soir à 19 h 30, sous les acclamations de deux mille personnes, sept mineurs de la Compagnie des Mines d'Hennequelle sont remontés au jour, sains et saufs, du fond de la fosse 7 « Sainte-Barbe », où un coup de grisou les tenait prisonniers depuis mardi matin.\n\nLes sauveteurs, conduits par le porion Wattebled, ont entendu leurs signaux cette nuit vers 3 heures, et percé la dernière paroi à 17 h 50. « Aucun blessé, pas même une égratignure », nous a déclaré M. Raymond Thiéry, directeur de la fosse.\n\nLes rescapés sont MM. Augustin Lefebvre, Jules Caron, Stanislas Wisniewski, Léon Dubois, Henri Lemaire, Fernand Vasseur et le jeune Lucien Delattre, quinze ans.\n\nOn n'oublie pas, dans la joie, le sauveteur Gaston Pruvost, tué jeudi au front d'éboulement. Ses obsèques auront lieu lundi.\n\nInterrogé sur ce qu'il avait ressenti, M. Lefebvre, chef de taille, a seulement répondu, avec un sourire : « On est bien, à c't'heure. »"
+    },
+    {
+      "id": "avis-reouverture",
+      "title": "Avis de la Compagnie",
+      "scene": "enterrement",
+      "text": "**COMPAGNIE DES MINES D'HENNEQUELLE**\n**FOSSE N° 7 « SAINTE-BARBE »**\n\n**AVIS**\n\nLe quartier Nord de l'étage 480 sera remis en exploitation le **JEUDI 19 FÉVRIER 1931**, poste du matin (descente à 6 heures).\n\nUne prime de reprise de 25 francs sera versée à chaque ouvrier du poste.\n\nUne équipe de raccommodage descendra dans la nuit de mercredi à jeudi, à 22 heures, pour préparer la taille Joséphine. Les volontaires se feront inscrire au bureau du porion.\n\nHennequelle, le 16 février 1931.\nLe Directeur de la fosse,\n*R. Thiéry*"
+    },
+    {
+      "id": "registre-paroissial",
+      "title": "Registre des sépultures, paroisse Saint-Vaast, 1867",
+      "scene": "enterrement",
+      "text": "*Le vingt avril mil huit cent soixante-sept, a été inhumé au cimetière de cette paroisse Sébastien Coquelle, ouvrier mineur, âgé de trente-trois ans, décédé l'avant-veille en son domicile, époux de Clémentine Lenoir.*\n\n*L. Hochart, curé.*\n\nEn marge, d'une autre encre :\n*Le cercueil, trop léger, a été ouvert à la demande de la veuve, en ma présence. Il ne contenait que du sable noir. Refermé et béni. Dieu ait son âme, où qu'elle soit. L. H.*"
+    },
+    {
+      "id": "registre-dispensaire",
+      "title": "Registre du dispensaire, samedi 14 février 1931",
+      "scene": "le-dispensaire",
+      "text": "*DISPENSAIRE DE LA CITÉ 7. Samedi 14 février 1931, 20 h. Examen des sept rescapés de la taille Joséphine. Sr M.-Clotilde.*\n\nLefebvre Augustin, 46 ans. T° 34,4. Pouls 40, régulier. Aucune plaie.\nCaron Jules, 38 ans. T° 34,5. Pouls 40, régulier. Aucune plaie.\nWisniewski Stanislas, 31 ans. T° 34,4. Pouls 40, régulier. Aucune plaie.\nDubois Léon, 52 ans. T° 34,5. Pouls 40, régulier. Aucune plaie.\nLemaire Henri, 24 ans. T° 34,4. Pouls 40, régulier. Aucune plaie.\nVasseur Fernand, 29 ans. T° 34,5. Pouls 40, régulier. Aucune plaie.\nDelattre Lucien, 15 ans. T° 34,4. Pouls 40, régulier. Aucune plaie.\n\n*Observations.* Refusent l'eau et le bouillon. Pas de déshydratation apparente après cinq jours. Aucune crasse. Sous les ongles, une poussière noire, brillante, qui ne part pas au savon. Tous les sept disent la même phrase : « On est bien, à c't'heure. »\n\n*À signaler au docteur : sept fois le même pouls ?*"
+    },
+    {
+      "id": "cahier-lampisterie",
+      "title": "Cahier de la lampisterie, fosse 7",
+      "scene": "le-carreau",
+      "text": "*Poste du matin, mardi 10 février 1931. Sorties.*\n211 Lefebvre A. : 5 h 40\n212 Caron J. : 5 h 40\n213 Wisniewski S. : 5 h 42\n214 Dubois L. : 5 h 42\n215 Lemaire H. : 5 h 43\n216 Vasseur F. : 5 h 43\n217 Delattre L. : 5 h 44\n\n*Rentrées.*\nSamedi 14, 19 h 40 : 211 à 217, rendues par les intéressés. **Allumées.**\nLundi 16, 11 h : 211 à 217, remontées par l'équipe de déblaiement, trouvées au fond de la taille sous les déblais. Écrasées.\n\n*14 lampes pour 7 numéros ???*\n*Celles de samedi n'ont pas de rivet. Impossible de les ouvrir. Éteintes toutes ensemble dimanche, vers 6 h.*\n*A. D.*"
+    },
+    {
+      "id": "journal-sauvetage",
+      "title": "Journal des opérations de sauvetage",
+      "scene": "le-carreau",
+      "text": "*POSTE DE SECOURS, FOSSE 7. Chef d'équipe : D. Wattebled, porion.*\n*Code : 3 coups = « Y a-t-il quelqu'un ? ». Réponse : un coup par homme vivant. 2 coups = « Compris, on arrive » (pas de réponse).*\n\n**Mardi 10.** 10 h 40 : coup de grisou, étage 480, taille Joséphine. Bowette Nord éboulée sur 60 m environ. 7 lampes manquent. 11 h 30 : première équipe au front. Signal toutes les heures. Pas de réponse.\n**Mercredi 11.** Avancement 14 m. Pas de réponse.\n**Jeudi 12.** 15 h 10 : chute de toit au front. Pruvost Gaston, sauveteur, tué. Avancement 11 m.\n**Vendredi 13.** Avancement 16 m. Pas de réponse. M. le Directeur parle d'arrêter.\n**Samedi 14.** 3 h 05 : signal 3 coups. RÉPONSE : 3 coups, nets. 3 h 07 : répété. Réponse : 3 coups. (Trois vivants ?) 3 h 15 : frappé 2 coups. Réponse : 2 coups. *On ne répond pas au 2.* 3 h 20 : j'ai crié : « Vous êtes sept ? » Réponse : 7 coups.\nLes coups viennent d'en dessous, sous nos pieds. Pas du fond de la bowette.\n17 h 50 : percée dans la taille. Pas de grisou à la lampe. Le canari (Fifine) tombe de son perchoir, morte. Les sept sont là, debout, lampes allumées, propres. Lefebvre dit : « On vous attendait. »\n19 h 30 : les sept au jour. Aucun blessé. Ne veulent ni boire ni manger.\n\n*Ils n'avaient pas de noir sur la figure. Après cinq jours. D. W.*"
+    },
+    {
+      "id": "releve-carpentier",
+      "title": "Relevé du géomètre Carpentier",
+      "scene": "les-bureaux",
+      "text": "*Fosse 7, étage 480, veine Joséphine, taille Nord. Relevé du dimanche 15 février 1931. É. Carpentier, géomètre.*\n\n1. Taille dégagée sur 38 m.\n2. Fin de taille : cassure ouverte dans le mur, direction sud-sud-est, largeur 0,60 m à 1,10 m.\n3. Sonde lestée : vide sur 22 m avant d'atteindre le fond. Pas d'eau.\n4. Paroi de la cassure : roche noire verdâtre, vitreuse, à cassure en coquille. Ni schiste ni grès. Inconnue au bassin.\n5. Le plan général (feuille 7-N-480) porte à cet endroit : « massif calcaire, terrains du Midi : roche pleine ».\n6. À l'orifice : légère auréole à la lampe (grisou). Courant d'air tiède ascendant, odeur de pierre mouillée.\n7. L'oreille contre la cassure : des coups, réguliers, par groupes de sept.\n\n*Transmis à M. le Directeur le 15 au soir.*\n*Réponse : planchéier la cassure, ne pas modifier le plan, ne pas en parler avant jeudi.*"
+    },
+    {
+      "id": "registre-1867",
+      "title": "Registre des accidents, année 1867",
+      "scene": "les-bureaux",
+      "text": "*COMPAGNIE DES MINES D'HENNEQUELLE. Registre des accidents. Fosse n° 2, dite du Marais.*\n\n*4 mars 1867.* Étage 210, galerie du Midi. Éboulement. Coquelle Sébastien, abatteur, 33 ans, isolé derrière l'éboulement.\n*7 mars.* Coquelle retrouvé vivant et sans blessure par l'équipe de déblaiement. Les coups entendus venaient du mur.\n*21 mars.* À la demande des ouvriers anciens et par ordre de M. l'Ingénieur, la galerie du Midi est murée sur 4 mètres, maçonnerie pleine. Motif porté : venue d'eau.\n*18 avril.* Mur achevé. Coquelle Sébastien décédé ce jour à son domicile. Mort subite.\n\nEn marge, d'une autre main :\n*On frappe encore derrière le mur. Les coups ont cessé le 2 mai. Ne jamais rouvrir.*"
+    },
+    {
+      "id": "telegramme-conseil",
+      "title": "Télégramme du Conseil",
+      "scene": "les-bureaux",
+      "text": "TÉLÉGRAMME. LILLE 13 FÉV 1931 17 H 20.\nTHIÉRY DIRECTEUR FOSSE 7 HENNEQUELLE.\nCONSEIL EXIGE REPRISE QUARTIER NORD AU PLUS TARD 19 COURANT STOP SINON 200 LICENCIEMENTS FIN DE MOIS PRIORITÉ OUVRIERS ÉTRANGERS STOP\nDIRECTION GÉNÉRALE"
+    }
+  ],
+  "knowledge": [
+    {
+      "need": "Prouver que les sept ne sont pas eux-mêmes",
+      "best": "Médecine (le médecin), ou Germaine sans jet",
+      "backup": "Psychologie, Trouver Objet Caché, le registre du dispensaire"
+    },
+    {
+      "need": "Comprendre que la roche répète",
+      "best": "Le journal de sauvetage (sans jet)",
+      "backup": "Histoire et Victorine, Bibliothèque au presbytère ou aux archives"
+    },
+    {
+      "need": "Lire le plan et la roche",
+      "best": "Sciences (géologie), l'ingénieur",
+      "backup": "Navigation, le relevé de Carpentier"
+    },
+    {
+      "need": "Parler à Helena",
+      "best": "Langue (polonais)",
+      "backup": "Charme ou Psychologie avec un dé de malus"
+    },
+    {
+      "need": "Descendre au fond",
+      "best": "Le délégué mineur (droit de visite), le laissez-passer de Thiéry",
+      "backup": "Wattebled à 21 h 30, Droit ou Baratin face à l'encageur"
+    },
+    {
+      "need": "Dégager un homme du verre",
+      "best": "POU, avec un souvenir de sa famille",
+      "backup": "FOR, au pic (bruyant)"
+    },
+    {
+      "need": "Sceller le Creux au grisou",
+      "best": "L'ingénieur, le délégué ou Wattebled",
+      "backup": "Conduite d'engins lourds, Électricité pour l'exploseur"
+    },
+    {
+      "need": "Garder les rescapés en vie",
+      "best": "Médecine",
+      "backup": "Premiers soins"
+    }
+  ],
+  "trackers": [
+    {
+      "id": "reveil",
+      "label": "Réveil du Creux",
+      "max": 12,
+      "unit": "bruits",
+      "help": "+1 par phrase dite à voix haute dans le Creux, par tentative de dégager un homme au murmure, par round de lutte, et par quart d'heure passé. +2 par coup de pic ou par chute. +3 par coup de feu. À 6 : la paroi parle (SAN 0/1D4, POU ou figé un round). À 9 : le verre coule au sol. À 12 : le Creux se referme (Chance ou pris dans le verre).",
+      "scenes": [
+        "la-descente"
+      ]
+    },
+    {
+      "id": "liberes",
+      "label": "Mineurs dégagés",
+      "max": 7,
+      "unit": "hommes",
+      "help": "Chaque homme dégagé : sa copie se défait en sable noir, où qu'elle soit. Chaque rescapé doit être soigné dans l'heure.",
+      "scenes": [
+        "la-descente"
+      ]
+    },
+    {
+      "id": "grisou",
+      "label": "Grisou dans la bowette",
+      "max": 3,
+      "unit": "quarts d'heure",
+      "timer": true,
+      "help": "Après la fermeture de la porte d'aérage. À 3, il y a assez de grisou pour tirer. Chaque quart d'heure de plus, le gaz gagne vers la recette : le souffle y fera 2D6 au lieu de 1D6.",
+      "scenes": [
+        "la-descente"
+      ]
+    }
+  ]
+}

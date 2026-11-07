@@ -1,0 +1,1244 @@
+{
+  "format": "grimoire-story/1",
+  "meta": {
+    "id": "la-derniere-seance",
+    "title": "La Dernière Séance",
+    "lang": "fr",
+    "summary": "Mars 1926, Montmartre. Le Mirage, petit cinéma de la rue des Trois-Frères, ferme ses portes. Pour sa dernière séance, il projette une dernière fois L'Invitation, un film muet tourné en 1919 et jamais sorti, dont tout le quartier parle à voix basse : on dit qu'à chaque projection, quelqu'un ne ressort pas.",
+    "players": {
+      "min": 4,
+      "max": 5
+    },
+    "duration": "1 à 2 heures",
+    "era": "Samedi 20 mars 1926",
+    "setting": "Le Mirage, petit cinéma de quartier de la rue des Trois-Frères, à Montmartre (Paris)",
+    "system": "d100",
+    "author": "Grimoire",
+    "license": "CC-BY-4.0",
+    "version": "1.0",
+    "tags": [
+      "groupe",
+      "court",
+      "une soirée",
+      "cinéma",
+      "Paris",
+      "huis clos",
+      "enquête"
+    ],
+    "contentWarnings": [
+      "incendie",
+      "enfermement (sortie de secours cadenassée, foule piégée)",
+      "disparitions",
+      "panique de foule"
+    ]
+  },
+  "overview": {
+    "secret": "En 1912, des ouvriers qui consolidaient les anciennes carrières de gypse sous la Butte Montmartre ont trouvé un bloc de cristal limpide qui ne reflétait rien. Ils l'ont appelé **la Prunelle**, parce qu'il semblait regarder. Le cinéaste **Octave Lanzac**, qui méprisait les acteurs et voulait « filmer les gens entiers », l'a acheté en 1917 et en a fait tailler un objectif. Ce que la Prunelle filme, quand on s'offre à elle, elle le garde dans l'image : corps et âme. En 1919, Lanzac tourne *L'Invitation*, qui finit sur un bal masqué : au milieu des danseurs, sept costumes vides sur des portemanteaux, sept masques. Son bal doit avoir sept invités, « pas un de moins ». Dans la nuit du vendredi 31 octobre au 1er novembre 1919, Lanzac se filme lui-même parmi les costumes et disparaît : c'est le premier invité. On le dit mort, le film n'est jamais sorti. Le dimanche 18 octobre 1925, **Prosper Courtade**, propriétaire du Mirage, achète aux Puces de Saint-Ouen une caisse de bobines et le carnet de Lanzac. Il projette le film le dernier samedi de chaque mois. À chaque séance, pendant le bal, une torpeur tombe sur la salle ; le masque vide suivant choisit le spectateur qui regarde le plus fixement, qui se lève, entre dans le faisceau et disparaît dans l'écran. Son visage est désormais sous un masque baissé, son nom s'ajoute au générique, et la bobine 5 grandit d'une seconde. Cinq fois : la pianiste Berthe Lacombe (31 octobre), Anatole Brisset (28 novembre), Suzanne Ferrand (26 décembre), Piotr Volkine (30 janvier), Émile Marchal (27 février). Courtade a reconnu Brisset sur l'écran dès décembre et a continué : les recettes montaient, et il lui faut sa retraite. Ce soir, **samedi 20 mars 1926**, dernière séance avant la fermeture, le septième masque prendra son invité et le film sera achevé. Achevé, il n'aura plus besoin du Mirage : il voudra être vu partout. Or **Fernand Delmas**, distributeur, qui a vu le film en février et en rêve chaque nuit, en a acheté l'unique copie : lundi 22 mars, un laboratoire de Joinville en tirera quarante copies, et chacune sera un nouveau bal à remplir, dans chaque salle de province. Ce soir, le bal ne se contente pas d'attendre : il sort de l'écran et envahit la salle pour aller chercher son dernier invité. Trois issues, toutes dans la cabine : **brûler** la bobine (le nitrate flambe, la salle peut brûler, et les cinq disparus sont perdus avec Lanzac) ; la passer **à rebours** (les cinq reviennent, mais Lanzac reste, et un vivant doit prendre de son plein gré la dernière place) ; ou **la laisser finir** et arrêter Delmas ensuite. Si personne n'intervient : l'élu disparaît, quarante copies partent le 1er avril, et dans six mois on disparaîtra dans les cinémas de Lyon, de Lille et de Liège.",
+    "steps": [
+      "[[devant-le-mirage]] (20 h 30) : la file sous la pluie, Louise et la photo de son frère, la voiture de Delmas, Courtade à la porte.",
+      "[[avant-la-seance]] (20 h 40 – 21 h) : le groupe se partage la cabine (Gaston, le registre, la bobine 5), le bureau (le carnet de Lanzac, le contrat, les objets trouvés) et le foyer (Irène Saulnier, Delmas, la sortie cadenassée).",
+      "[[la-seance]] (21 h – 22 h 20) : le générique et ses invités, l'entracte, le bal, les visages des disparus, et le septième masque qui choisit.",
+      "[[le-bal]] (vers 22 h 20) : la salle devient le bal. Retenir l'élu, atteindre la cabine, et choisir : brûler, passer à rebours, ou laisser finir.",
+      "[[epilogue]] : l'incendie, le retour des invités, ou la voiture de Delmas."
+    ],
+    "mustNotMiss": [
+      "**Le film prend un spectateur à chaque séance** : le registre de Gaston, ouvert sur l'établi (sans jet, [[avant-la-seance]]) ; Louise et la coupure de journal ([[devant-le-mirage]]) ; les objets trouvés du bureau ; les visages sur l'écran ([[la-seance]]).",
+      "**Ce soir, c'est le septième et dernier invité, et le film achevé sera copié** : le générique et sa septième ligne vide (sans jet, [[la-seance]]) ; Gaston et ses sept masques ; le carnet de Lanzac ; le contrat de Delmas ([[avant-la-seance]]).",
+      "**Tout se joue dans la cabine** : le carnet, la lettre d'Irène et Gaston donnent les trois issues (brûler, à rebours, laisser finir). Pendant le bal, le faisceau du projecteur ramène à la cabine ([[le-bal]])."
+    ],
+    "branches": [
+      "Brûler la bobine : le film est détruit, les cinq disparus et Lanzac avec. Si les volets de fer des hublots tombent, le feu reste dans la cabine ; sinon la salle brûle, avec deux cents personnes derrière une sortie cadenassée.",
+      "La passer à rebours : les cinq disparus reviennent, vivants. Lanzac reste, et quelqu'un doit prendre de son plein gré la dernière place : un investigateur, Irène, Courtade, ou Delmas envoûté qu'on laisse faire.",
+      "Laisser finir : l'élu disparaît, le film est achevé. Il faut ensuite reprendre les bobines à Delmas : dans la rue, à son bureau dimanche, ou au laboratoire lundi ([[epilogue]]).",
+      "Chaîne retirée de la sortie de secours avant la séance : si le feu passe dans la salle, tout le monde peut sortir.",
+      "Louise changée de place ou tenue loin de l'écran : le septième masque choisit un investigateur."
+    ],
+    "ifStuck": [
+      "À l'entracte, Gaston descend de la cabine, livide, son registre à la main : « La bobine 5 est chaude. Elle n'a jamais été chaude. »",
+      "Irène donne la dernière lettre de Lanzac à l'entracte, dès qu'on lui parle des disparus.",
+      "Dans le bal, Lanzac désigne le hublot de la cabine et articule deux mots : « À rebours. »",
+      "Le faisceau du projecteur traverse le bal comme une colonne de poussière blanche : le remonter mène à la cabine."
+    ],
+    "keeperTips": [
+      "Rythme : une dizaine de minutes dans la rue, vingt-cinq avant la séance (le groupe se sépare), vingt pour la projection, une demi-heure pour le bal, dix pour l'épilogue.",
+      "À quatre ou cinq, séparez le groupe avant la séance et donnez un rôle à chacun dans le bal : retenir l'élu, la cabine, Delmas, la sortie, Lanzac.",
+      "Le film passe sans musique depuis la disparition de la pianiste : faites entendre le cliquetis du projecteur, la pluie sur le toit, les toux, les rires nerveux. La valse du piano, au bal, n'en sera que plus forte.",
+      "Le surnaturel reste caché jusqu'à la bobine 5 : seuls quelques visages minuscules sur la pellicule, dans la cabine, l'annoncent.",
+      "Courtade n'est pas un monstre : un vieux forain fatigué, qui a eu besoin d'argent et a fermé les yeux. Delmas n'est pas un méchant : il est envoûté, et il ne le sait pas.",
+      "Irène Saulnier est le cœur triste de l'histoire : elle a aimé Lanzac, et elle est venue voir son dernier film.",
+      "Laissez les joueurs compter : sept masques, six visages, une place."
+    ]
+  },
+  "acts": [
+    {
+      "id": "avant",
+      "title": "Avant la séance",
+      "scenes": [
+        {
+          "id": "devant-le-mirage",
+          "title": "Rue des Trois-Frères",
+          "lead": "20 h 30, la file devant le Mirage : la sœur d'un disparu, le distributeur, le propriétaire.",
+          "screen": {
+            "place": "street",
+            "preset": "rain",
+            "time": "night"
+          },
+          "readAloud": [
+            "Une pluie fine fait briller les pavés de la rue des Trois-Frères. Sous une marquise dont la moitié des ampoules sont mortes, une enseigne peinte annonce : LE MIRAGE. La file d'attente déborde déjà sur le trottoir d'en face.",
+            "Sur l'affiche, près de la caisse, une bande de papier rouge barre le programme : DERNIÈRE SÉANCE. Dans la file, quelqu'un dit à voix basse que ce soir encore, quelqu'un ne ressortira pas. Personne ne rit."
+          ],
+          "flow": [
+            {
+              "title": "L'affiche",
+              "text": "Collée près de la caisse vitrée → {{handout:affiche}}.",
+              "extra": "Le film n'a jamais été distribué. Tout le monde croit que Lanzac est mort pendant le tournage."
+            },
+            {
+              "title": "Les accroches",
+              "text": "Chaque investigateur arrive avec sa raison d'être là (voir *Accroches*). Faites-les se croiser dans la file : c'est là que le groupe se forme."
+            },
+            {
+              "title": "Louise Marchal",
+              "text": "{{npc:louise-marchal}} remonte la file, une photographie à la main : un jeune homme en casquette, qui sourit. « Vous l'avez vu ? Émile Marchal. Il est entré ici le 27 février, il n'est jamais rentré. » Elle montre la coupure de journal qu'elle garde dans son sac → {{handout:coupure-echo}}.",
+              "extra": "Pas de jet. Elle compte s'asseoir au premier rang, au milieu, pour voir le film « de près »."
+            },
+            {
+              "title": "Les bruits de la file",
+              "text": "Faire parler les habitués qui attendent sous la pluie.",
+              "roll": {
+                "type": "skill",
+                "options": [
+                  "charm",
+                  "fast-talk"
+                ]
+              },
+              "success": "Une concierge de la rue Ravignan : chaque dernier samedi du mois, quelqu'un manque à la sortie. La pianiste, Mlle Lacombe, en octobre : depuis, plus personne ne veut jouer pour ce film. Le père Brisset, qui s'asseyait toujours au premier rang. Un chauffeur de taxi russe. « Et la police s'en moque. »",
+              "failure": "Des plaisanteries, des paris : « Moi, je m'assieds au fond, près de la porte ! » Un nom revient pourtant : Mlle Lacombe, la pianiste, partie un soir sans son châle."
+            },
+            {
+              "title": "La voiture de Delmas",
+              "text": "Une Hotchkiss noire se gare, chauffeur en livrée. {{npc:fernand-delmas}}, manteau à col de fourrure, serre la main de Courtade sur le trottoir et parle fort : quarante copies, la province, la Belgique, la Suisse. « Le film dont toute la France va parler ! »",
+              "roll": {
+                "type": "skill",
+                "options": [
+                  "psychology"
+                ]
+              },
+              "success": "Il a les yeux cernés d'un homme qui ne dort plus, et il parle du film comme d'une femme dont il serait amoureux.",
+              "failure": "Un homme d'affaires content de lui, qui a flairé la bonne affaire."
+            },
+            {
+              "title": "Prosper Courtade",
+              "text": "{{npc:firmin-courtade}} accueille ses clients à la porte, trop pâle et trop jovial. S'il a engagé un investigateur, il l'attire à l'écart : « Surveillez la salle. Tout le monde. Ce soir, je veux que tout le monde ressorte. » Il a fait cadenasser la sortie de secours, sur l'impasse.",
+              "roll": {
+                "type": "skill",
+                "options": [
+                  "psychology"
+                ]
+              },
+              "success": "Il sait quelque chose qu'il ne dit pas, et il en a honte.",
+              "failure": "Un vieux patron nerveux, un soir de fermeture.",
+              "goto": [
+                "avant-la-seance"
+              ]
+            }
+          ],
+          "notes": [
+            {
+              "title": "Accroches",
+              "items": [
+                "**Engagé par Courtade** : ancien policier, détective privé ou costaud du quartier. Cinquante francs pour « surveiller la salle et voir qui part avant la fin ».",
+                "**Un proche d'un disparu** : cousin ou ami d'Émile Marchal (il vient avec Louise), ancien fiancé de Suzanne Ferrand, collègue de taxi de Piotr Volkine, voisin de palier de Berthe Lacombe.",
+                "**Journaliste** : envoyé par un grand quotidien après l'article de *L'Écho de la Butte*, pour un papier amusant sur les superstitions de Montmartre.",
+                "**Collectionneur ou cinéphile** : Lanzac est une petite légende des ciné-clubs, un film inédit de lui ne se rate pas. Il espère racheter la copie avant Delmas.",
+                "**Ami d'Irène Saulnier** : médecin, neveu, ancien partenaire de scène. Elle tient à voir le dernier film qu'elle a tourné, il l'accompagne.",
+                "**Policier** : un inspecteur à qui l'on a confié la plainte de Louise « pour la forme », venu voir par acquit de conscience.",
+                "**Habitué du quartier** : peintre, étudiant, musicien. Un musicien peut proposer de tenir le piano ce soir : Courtade accepte, soulagé (et le pianiste regarde l'écran de très près…)."
+              ]
+            },
+            {
+              "title": "Ce soir au Mirage",
+              "items": [
+                "Environ deux cents spectateurs, la salle est complète : des curieux attirés par la rumeur, des peintres, des étudiants, des couples, quelques mauvais garçons.",
+                "{{npc:firmin-courtade}} à la porte, {{npc:gaston-ribiere}} dans sa cabine, {{npc:fernand-delmas}} et son chauffeur, {{npc:louise-marchal}} au premier rang.",
+                "{{npc:irene-saulnier}} arrive en taxi à 20 h 45, seule, sous une voilette noire.",
+                "Pas de pianiste : depuis octobre, le film passe sans musique."
+              ]
+            },
+            {
+              "title": "Montmartre en 1926",
+              "items": [
+                "La Butte des cabarets, des escaliers et des moulins. Les peintres sont partis pour Montparnasse, les touristes sont arrivés.",
+                "Sous la colline, d'anciennes carrières de gypse, vides et étayées : on en parle comme d'un autre quartier, sous le premier.",
+                "Au-dessus des toits, le Sacré-Cœur, consacré il y a sept ans à peine."
+              ]
+            }
+          ],
+          "npcs": [
+            "louise-marchal",
+            "fernand-delmas",
+            "firmin-courtade"
+          ],
+          "handouts": [
+            "affiche",
+            "coupure-echo"
+          ],
+          "ambience": [
+            "street",
+            "rain"
+          ],
+          "sfx": [
+            "footsteps",
+            "dog-bark",
+            "door-open"
+          ],
+          "next": [
+            "avant-la-seance"
+          ]
+        },
+        {
+          "id": "avant-la-seance",
+          "title": "Le Mirage, avant la séance",
+          "lead": "20 h 40 – 21 h : trois pistes à se partager : la cabine, le bureau, le foyer.",
+          "screen": {
+            "preset": "bulb",
+            "time": "night"
+          },
+          "readAloud": [
+            "Le foyer sent la laine mouillée, le tabac et le poêle à charbon. Au-dessus de la buvette, une ampoule nue grésille, s'éteint, se rallume. Par la porte battante, on aperçoit la salle : deux cents fauteuils de velours râpé, un piano sous sa housse, et l'écran, immense et blanc, qui attend.",
+            "Au fond du foyer, un escalier de fer monte vers une porte blindée. Derrière, quelque chose cliquette, régulier, comme une horloge qu'on remonte."
+          ],
+          "flow": [
+            {
+              "title": "Se partager",
+              "text": "Vingt minutes avant l'extinction des lumières. Trois endroits : la **cabine** de projection (en haut de l'escalier de fer), le **bureau** de Courtade (derrière la caisse), le **foyer** et la salle (Irène Saulnier, Delmas, Louise, la sortie de secours).",
+              "extra": "Laissez le groupe se séparer : chaque piste donne un morceau. Ce qui n'a pas été trouvé peut l'être à l'entracte ([[la-seance]])."
+            },
+            {
+              "title": "La cabine : Gaston",
+              "text": "{{npc:gaston-ribiere}} prépare les cinq bobines. Le règlement interdit la cabine au public, mais il a peur et il le cache mal. Son registre est ouvert sur l'établi, sans jet → {{handout:registre-cabine}}.",
+              "roll": {
+                "type": "skill",
+                "options": [
+                  "persuade",
+                  "psychology",
+                  "charm"
+                ]
+              },
+              "success": "En janvier, il a regardé une seule fois par le hublot pendant le bal : un homme marchait dans le faisceau, droit vers l'écran, et il est entré dedans. Depuis, il tourne la manivelle de la dernière bobine les yeux fermés, en comptant. « Sept masques. Il en reste un. »",
+              "failure": "« Je passe les films, je ne les regarde pas. » Mais il ne referme pas le registre.",
+              "pushed": "Il les met dehors et verrouille la porte blindée. Il ne rouvrira qu'à l'entracte."
+            },
+            {
+              "title": "La bobine 5",
+              "text": "Dérouler la fin de la bobine 5 devant l'ampoule, à la loupe : la scène du bal, des danseurs, et sept silhouettes masquées alignées.",
+              "roll": {
+                "type": "skill",
+                "options": [
+                  "spot-hidden"
+                ]
+              },
+              "success": "Sur les dernières images, six masques baissés et six visages minuscules, nets comme des photographies : un homme maigre en habit, une femme aux cheveux gris, un vieillard moustachu, une jeune femme, un homme aux pommettes hautes, un jeune homme. Le septième costume porte encore son masque, et entre le masque et le col, il n'y a pas de cou : rien (SAN 0/1).",
+              "failure": "Des images minuscules et sombres, des masques. Gaston reprend la pellicule : « Ne traînez pas sous l'ampoule avec ça. Le nitrate, ça part comme de la poudre. »"
+            },
+            {
+              "title": "Le nitrate",
+              "text": "Gaston montre ses mains couturées de brûlures : un incendie de cabine à Belleville, en 1921. Le nitrate brûle même sous l'eau, une bobine flambe en quelques secondes, et si la pellicule se bloque devant la lampe, elle prend feu. Les deux hublots ont des **volets de fer** qui tombent quand le cordon fusible fond, et un levier pour les fermer à la main. Ils sont rouillés : il l'a dit cent fois au patron.",
+              "extra": "Personne à Paris n'a oublié le Bazar de la Charité (1897) : un projecteur, plus de cent vingt morts."
+            },
+            {
+              "title": "Si on parle de passer le film à l'envers",
+              "text": "Gaston hausse les épaules : les forains le faisaient pour amuser le public, les plongeurs qui ressortent de l'eau. On coupe, on remonte la bobine réceptrice en tête, pellicule retournée, et le film repasse à rebours. Deux minutes, pour qui a la main."
+            },
+            {
+              "title": "Le bureau de Courtade",
+              "text": "Derrière la caisse, un bureau encombré de vieilles affiches. Courtade est à la porte de la salle, le bureau n'est pas fermé. Sous la table, une caisse marquée OBJETS TROUVÉS : un châle de laine, une canne à pommeau d'os, un sac à main perlé, une casquette de chauffeur de taxi, une écharpe grise.",
+              "extra": "Pas de jet. Cinq objets, cinq séances : le registre de Gaston dit où et quand chacun a été trouvé."
+            },
+            {
+              "title": "Fouiller le bureau",
+              "roll": {
+                "type": "skill",
+                "options": [
+                  "spot-hidden",
+                  "library-use"
+                ]
+              },
+              "success": "Dans le tiroir, sous des factures, le **carnet d'Octave Lanzac**, trouvé avec les bobines → {{handout:carnet-lanzac}}. Sur le sous-main, le double du **contrat** signé avant-hier → {{handout:contrat-delmas}}.",
+              "failure": "Le contrat est sur le sous-main, bien en vue → {{handout:contrat-delmas}}. Le carnet est là aussi, mais Courtade revient avant qu'on le trouve : il faudra le lui demander.",
+              "pushed": "Ils trouvent tout, mais Courtade les surprend la main dans le tiroir. Il crie, parle d'appeler les agents, puis s'effondre sur une chaise : passez à l'étape suivante, sans jet."
+            },
+            {
+              "title": "Faire avouer Courtade",
+              "text": "Lui montrer les objets trouvés, le registre, la photo d'Émile.",
+              "roll": {
+                "type": "skill",
+                "options": [
+                  "psychology",
+                  "intimidate",
+                  "persuade"
+                ]
+              },
+              "success": "Il avoue : en décembre, il a reconnu le père Brisset sur l'écran, sous un masque baissé. Il a continué : la salle se remplissait, et Delmas lui offre quinze mille francs, sa retraite. Il donne le carnet de Lanzac. « Ce soir, j'ai fait mettre une chaîne à la sortie. Je veux voir de mes yeux qui s'en va. »",
+              "failure": "« Des gens partent avant la fin, voilà tout ! » Il s'enferme dans son bureau jusqu'à l'extinction des lumières."
+            },
+            {
+              "title": "Le foyer : Irène Saulnier",
+              "text": "Une dame âgée, voilette noire, seule près du poêle : {{npc:irene-saulnier}}. Elle jouait la mère dans *L'Invitation* et n'a jamais vu le film monté. Elle parle volontiers de Lanzac, « un génie qui détestait les acteurs », et du dernier jour de tournage : sept costumes de bal sur des portemanteaux, sept masques. « Il disait que les invités viendraient plus tard. »",
+              "roll": {
+                "type": "skill",
+                "options": [
+                  "charm",
+                  "psychology"
+                ]
+              },
+              "success": "Elle sort de son sac la dernière lettre de Lanzac, reçue la veille de sa disparition, qu'elle n'a jamais comprise → {{handout:lettre-irene}}.",
+              "failure": "Elle parle de lui avec tendresse, sans plus. Elle donnera la lettre à l'entracte, si on lui parle des disparus."
+            },
+            {
+              "title": "Le foyer : Delmas",
+              "text": "{{npc:fernand-delmas}} offre le champagne à la buvette. Il a vu le film le 27 février, le soir où Émile Marchal a disparu. Il montre volontiers son contrat → {{handout:contrat-delmas}} : les bobines partent lundi pour le laboratoire de Joinville.",
+              "roll": {
+                "type": "skill",
+                "options": [
+                  "psychology"
+                ]
+              },
+              "success": "Il rêve du bal toutes les nuits depuis février. Il ne se souvient pas d'avoir ajouté à la main la clause « y compris la scène du bal », et ça le fait rire.",
+              "failure": "Un marchand de films qui a flairé la bonne affaire."
+            },
+            {
+              "title": "La salle et la sortie",
+              "text": "La porte de secours, sur l'impasse, est fermée par une chaîne et un cadenas neuf ; la clé est au trousseau de Courtade. Louise est déjà assise au premier rang, au milieu. Convaincre Courtade d'enlever la chaîne :",
+              "roll": {
+                "type": "skill",
+                "options": [
+                  "persuade",
+                  "credit-rating"
+                ]
+              },
+              "success": "Il grogne, mais enlève la chaîne.",
+              "failure": "« Pas ce soir. Ce soir, personne ne sort avant la fin. »",
+              "extra": "Si le feu prend pendant le bal, cette chaîne fait toute la différence."
+            }
+          ],
+          "notes": [
+            {
+              "title": "Le Mirage",
+              "items": [
+                "Un ancien café-concert, devenu cinéma en 1908. **La rue** : marquise, caisse vitrée, affiches.",
+                "**Le foyer** : buvette, poêle, banquettes ; au fond, l'escalier de fer et la porte blindée de la cabine.",
+                "**Le bureau**, derrière la caisse : affiches, coffre, caisse d'objets trouvés, carnet de Lanzac dans le tiroir.",
+                "**La salle** : deux cents fauteuils en pente douce, un piano sous sa housse devant l'écran, une seule porte vers le foyer, et la sortie de secours sur l'impasse, cadenassée ce soir.",
+                "**La cabine**, au-dessus du foyer : projecteur à manivelle et lampe à arc, deux hublots à volets de fer (cordon fusible et levier), établi de réembobinage, seau de sable, cinq boîtes de fer."
+              ]
+            },
+            {
+              "title": "Les cinq disparus",
+              "items": [
+                "31 octobre 1925 : **Berthe Lacombe**, 52 ans, pianiste du Mirage. Son châle sur le tabouret.",
+                "28 novembre : **Anatole Brisset**, 67 ans, cheminot retraité, toujours au premier rang. Sa canne.",
+                "26 décembre : **Suzanne Ferrand**, 22 ans, cousette, venue avec son fiancé. Son sac perlé, au troisième rang.",
+                "30 janvier 1926 : **Piotr Volkine**, 41 ans, ancien officier russe devenu chauffeur de taxi. Sa casquette, au deuxième rang.",
+                "27 février : **Émile Marchal**, 23 ans, typographe, frère de Louise. Son écharpe grise, au premier rang."
+              ]
+            },
+            {
+              "title": "Chronologie de la soirée",
+              "items": [
+                "20 h 30 : ouverture des portes. 20 h 45 : Irène Saulnier arrive.",
+                "21 h : extinction des lumières, bobines 1 à 3.",
+                "21 h 45 : entracte, dix minutes.",
+                "21 h 55 : bobines 4 et 5. Vers 22 h 15, le bal ; vers 22 h 20, les masques tombent.",
+                "22 h 40 : si le film est allé au bout, Delmas emporte les bobines."
+              ]
+            }
+          ],
+          "npcs": [
+            "gaston-ribiere",
+            "firmin-courtade",
+            "irene-saulnier",
+            "fernand-delmas",
+            "louise-marchal"
+          ],
+          "handouts": [
+            "registre-cabine",
+            "carnet-lanzac",
+            "contrat-delmas",
+            "lettre-irene"
+          ],
+          "ambience": [
+            "crowd-indoor",
+            "rain-window",
+            "clock"
+          ],
+          "sfx": [
+            "door-creak",
+            "latch",
+            "footsteps"
+          ],
+          "next": [
+            "la-seance"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "seance",
+      "title": "La séance",
+      "scenes": [
+        {
+          "id": "la-seance",
+          "title": "L'Invitation",
+          "lead": "21 h – 22 h 20 : le générique, l'entracte, le bal, les visages, et le septième masque qui choisit.",
+          "screen": {
+            "preset": "night",
+            "time": "night"
+          },
+          "readAloud": [
+            "Les lumières baissent. Dans le noir, deux cents personnes se taisent d'un coup. Derrière vous, le projecteur se met à cliqueter, et un faisceau de poussière blanche passe au-dessus des têtes.",
+            "Pas de piano ce soir. Le film commence dans un silence complet, troublé seulement par la pluie sur le toit."
+          ],
+          "flow": [
+            {
+              "title": "Le générique",
+              "text": "Premier carton : le titre, les acteurs, puis une liste qui n'a rien à faire là → {{handout:generique}}. Pas de jet : tout le monde peut lire les noms. Au premier rang, Louise étouffe un cri.",
+              "roll": {
+                "type": "san",
+                "label": "Les noms des disparus",
+                "san": "0/1"
+              }
+            },
+            {
+              "title": "L'invitation",
+              "text": "Lise, l'héroïne, reçoit un carton d'invitation, qui remplit l'écran → {{handout:carton-invitation}}.",
+              "extra": "Le carton dit « vous ». Dans la salle, quelques rires nerveux, vite éteints."
+            },
+            {
+              "title": "Les trois premières bobines",
+              "text": "Une jeune fille, sa mère (Irène Saulnier, qui pleure sans bruit en se voyant sept ans plus jeune), un inconnu qui l'invite à un bal dans une maison sans nom. Certains plans sont d'une netteté impossible pour 1919 : le grain de la peau, la buée des respirations. Les acteurs semblent regarder la salle.",
+              "roll": {
+                "type": "skill",
+                "options": [
+                  "spot-hidden",
+                  "art-craft:photography"
+                ]
+              },
+              "success": "Les plans ordinaires sont flous et rayés, comme tous les films de 1919. Seuls certains plans sont parfaits : ceux tournés à la Prunelle (voir le carnet). Les visages, dans ces plans-là, ne jouent pas : ils regardent.",
+              "failure": "Un beau film, étrange, un peu lent."
+            },
+            {
+              "title": "L'entracte",
+              "text": "21 h 45, dix minutes de lumière. Dernière chance pour monter à la cabine, fouiller le bureau, parler à Irène (elle donne alors {{handout:lettre-irene}}), faire enlever la chaîne, changer Louise de place. Courtade et Delmas trinquent à la buvette.",
+              "extra": "Gaston descend, livide, et cherche les investigateurs : « La bobine 5 est chaude. Elle n'a jamais été chaude. »"
+            },
+            {
+              "title": "Le bal commence",
+              "text": "Vers 22 h 15, bobine 5 : la maison sans nom, une salle de bal immense sous des lustres. Au milieu des danseurs, sept invités masqués, immobiles. Une torpeur douce tombe sur la salle : les têtes s'inclinent, le temps semble court. Chaque investigateur qui regarde l'écran fait un jet de POU.",
+              "roll": {
+                "type": "characteristic",
+                "options": [
+                  "POW"
+                ],
+                "label": "Torpeur (chaque investigateur)"
+              },
+              "success": "L'investigateur garde les yeux ouverts et l'esprit clair.",
+              "failure": "Il est captivé : un dé de malus à tous ses jets jusqu'à ce qu'on le secoue. Il ne voit pas qu'on se lève dans la salle.",
+              "extra": "Détourner les yeux, fermer les yeux ou regarder vers le projecteur protège de la torpeur, sans jet."
+            },
+            {
+              "title": "Les masques tombent",
+              "text": "La caméra glisse devant les sept invités. Un à un, ils baissent leur masque : un homme maigre qui sourit, une femme aux cheveux gris, un vieillard moustachu, une jeune femme, un homme aux pommettes hautes, Émile Marchal. Louise crie son nom. Irène, elle, murmure : « Octave… ». Lanzac n'a jamais joué dans son film.",
+              "roll": {
+                "type": "san",
+                "label": "Les visages du bal",
+                "san": "0/1D4"
+              },
+              "extra": "Avec le registre, les objets trouvés ou le générique, on met un nom sur chaque visage, dans l'ordre."
+            },
+            {
+              "title": "Le septième masque",
+              "text": "Le septième invité ne baisse pas son masque. Il tourne la tête, lentement, vers la salle, et regarde quelqu'un : **Louise**, au premier rang, ou, si elle n'y est plus, l'investigateur qui a le plus mal raté son jet de torpeur. L'élu se lève et marche vers l'écran. Si l'élu est un investigateur, il fait un jet de POU difficile.",
+              "roll": {
+                "type": "characteristic",
+                "options": [
+                  "POW"
+                ],
+                "difficulty": "hard",
+                "label": "Résister au septième masque (l'élu)"
+              },
+              "success": "L'élu s'arrête et se débat. Le masque le regarde toujours. (Louise, elle, rate toujours.)",
+              "failure": "L'élu marche, souriant, les bras ouverts comme pour une danse.",
+              "extra": "Quel que soit le résultat, le faisceau s'élargit et la salle bascule : c'est le dernier invité, et le bal vient le chercher.",
+              "goto": [
+                "le-bal"
+              ]
+            }
+          ],
+          "npcs": [
+            "louise-marchal",
+            "irene-saulnier",
+            "septieme-masque"
+          ],
+          "handouts": [
+            "generique",
+            "carton-invitation",
+            "lettre-irene"
+          ],
+          "ambience": [
+            "clock",
+            "rain-window"
+          ],
+          "sfx": [
+            "footsteps",
+            "door-creak"
+          ],
+          "next": [
+            "le-bal"
+          ]
+        },
+        {
+          "id": "le-bal",
+          "title": "Le bal",
+          "lead": "La salle devient le bal. Huit rounds pour retenir l'élu, atteindre la cabine et choisir : brûler, à rebours, ou laisser finir.",
+          "screen": {
+            "preset": "nightmare",
+            "time": "night"
+          },
+          "readAloud": [
+            "Le faisceau s'ouvre comme une porte. Les fauteuils ont disparu : sous vos pieds, un parquet ciré ; au-dessus, des lustres de cristal où brûlent des bougies qui ne fument pas. Tout est gris et argent, comme sur l'écran. Vos mains aussi.",
+            "Sous sa housse, le piano joue une valse. Autour de vous, les spectateurs dansent les yeux fermés avec des invités masqués. Très haut, au fond, brille un petit rectangle de lumière blanche : le hublot de la cabine."
+          ],
+          "flow": [
+            {
+              "title": "La salle devient le bal",
+              "text": "Lancez le compteur *La valse* (0/8). Il avance d'un cran à la fin de chaque round. À 8, le septième masque tombe sur le visage de l'élu : le film est achevé.",
+              "roll": {
+                "type": "san",
+                "label": "La salle devient le bal",
+                "san": "1/1D6"
+              }
+            },
+            {
+              "title": "Qui fait quoi",
+              "text": "Le groupe n'a pas le temps de tout faire ensemble. Donnez un rôle à chacun : **retenir l'élu**, **trouver la cabine**, **tenir Delmas**, **la sortie et la foule**, **parler à Lanzac**.",
+              "extra": "Les captivés de la séance se réveillent en tombant dans le bal, mais gardent leur dé de malus pour ce premier round."
+            },
+            {
+              "title": "Retenir l'élu",
+              "text": "L'élu marche vers l'écran au milieu des danseurs. Le retenir par la voix (Persuasion), ou de force (FOR, jets rapides de la scène).",
+              "roll": {
+                "type": "skill",
+                "options": [
+                  "persuade"
+                ]
+              },
+              "success": "Ce round, l'élu ne fait pas un pas : *la valse* n'avance pas. Trois fois au plus dans le bal : il finit toujours par gagner du terrain.",
+              "failure": "Il se dégage avec une force de somnambule. Un invité masqué invite celui qui le retenait à danser (jet de POU, jets rapides de la scène)."
+            },
+            {
+              "title": "Trouver la cabine",
+              "text": "Les portes du fond ouvrent sur d'autres salons, d'autres valses ; l'escalier de fer n'est plus là. Remonter le faisceau du projecteur ramène droit à la cabine : pas de jet si un joueur y pense.",
+              "roll": {
+                "type": "skill",
+                "options": [
+                  "navigate",
+                  "spot-hidden"
+                ]
+              },
+              "success": "La porte de fer est là, au bout du faisceau, où était le foyer.",
+              "failure": "Ils tournent en rond dans les salons : un round perdu, et un invité masqué les invite à danser ({{npc:les-invites}} : jet de POU, jets rapides de la scène).",
+              "pushed": "Ils trouvent la porte, mais l'un d'eux danse jusqu'à la fin du bal, les yeux fermés, et ne peut plus rien faire."
+            },
+            {
+              "title": "Delmas",
+              "text": "Envoûté, {{npc:fernand-delmas}} garde la porte de la cabine, sa canne levée : « Laissez-le finir ! C'est le plus beau film du monde ! »",
+              "roll": {
+                "type": "skill",
+                "options": [
+                  "fighting-brawl",
+                  "intimidate",
+                  "persuade"
+                ]
+              },
+              "success": "Il recule, ou il tombe. La voie est libre.",
+              "failure": "Il frappe (canne, 1D6+1D4) et tient la porte un round de plus.",
+              "extra": "Lui montrer le visage d'Émile sur l'écran, ou lui lire la fin du carnet de Lanzac, donne un dé bonus."
+            },
+            {
+              "title": "La sortie et la foule",
+              "text": "Deux cents dormeurs dansent autour d'eux. Si le feu prend, ils seront piégés derrière la sortie cadenassée. {{npc:firmin-courtade}} valse quelque part, les yeux ouverts, heureux, la clé du cadenas dans la poche de son gilet.",
+              "roll": {
+                "type": "skill",
+                "options": [
+                  "spot-hidden"
+                ]
+              },
+              "success": "Ils trouvent Courtade et prennent la clé : la sortie de secours pourra s'ouvrir d'un coup.",
+              "failure": "Courtade est introuvable. Si le feu prend, il faudra forcer la chaîne (FOR, difficile) ou le cadenas (Serrurerie)."
+            },
+            {
+              "title": "Parler à Lanzac",
+              "text": "L'homme maigre du premier masque, c'est {{npc:octave-lanzac}}. Il danse seul, ravi. Irène peut l'appeler par son nom ; un investigateur aussi, s'il a lu le carnet ou la lettre.",
+              "roll": {
+                "type": "skill",
+                "options": [
+                  "persuade",
+                  "charm"
+                ]
+              },
+              "success": "Lanzac s'arrête et regarde, pour la première fois, ce qu'est devenu son bal. Il désigne le hublot et articule deux mots : « À rebours. » *La valse* n'avance pas ce round (une seule fois).",
+              "failure": "Il sourit et tend la main : « Une seule danse ? » ({{npc:les-invites}} : jet de POU, jets rapides de la scène)."
+            },
+            {
+              "title": "La cabine",
+              "text": "{{npc:gaston-ribiere}} est là, les yeux fermés, cramponné à la manivelle qui tourne toute seule et lui entraîne le bras. Le libérer :",
+              "roll": {
+                "type": "characteristic",
+                "options": [
+                  "STR"
+                ]
+              },
+              "success": "Gaston est libre ; la manivelle tourne seule. Il fera ce qu'on lui dit.",
+              "failure": "Gaston reste pris un round de plus et la manivelle lui tord le bras (1D3).",
+              "extra": "Arrêter le moteur, couper le courant, ôter la bobine : le bal continue sans projecteur. Il ne reste que trois issues."
+            },
+            {
+              "title": "Le choix",
+              "text": "Le carnet, la lettre d'Irène et Gaston donnent les trois issues. Les joueurs ont la bobine sous les yeux, et *la valse* tourne."
+            },
+            {
+              "title": "Brûler la bobine",
+              "branch": "Si on brûle la bobine",
+              "text": "Bloquer la manivelle (la pellicule s'arrête devant la lampe et s'enflamme d'un coup), ou une allumette sur les bobines. Pas de jet. Le bal crie. Sur l'écran, les sept visages fondent et brûlent. Les invités s'effacent, les fauteuils reviennent, la salle se réveille dans une fumée âcre.",
+              "roll": {
+                "type": "san",
+                "label": "Les visages qui brûlent",
+                "san": "1/1D6"
+              },
+              "extra": "Les cinq disparus et Lanzac sont perdus pour toujours. Écran d'ambiance : passez sur « blaze ». Suite : « Le feu : … » ci-dessous."
+            },
+            {
+              "title": "À rebours",
+              "branch": "Si on passe la bobine à rebours",
+              "text": "Couper la scène du bal, remonter la bobine réceptrice en tête, pellicule retournée, et relancer. Deux rounds, et *la valse* continue d'avancer. Si Gaston est libre et le fait, pas de jet. Si *la valse* atteint 8 avant que le film reparte, il est achevé (« Laisser finir »).",
+              "roll": {
+                "type": "skill",
+                "options": [
+                  "mechanical-repair",
+                  "operate-heavy-machinery"
+                ]
+              },
+              "success": "Le projecteur repart. Sur l'écran, le bal tourne à l'envers : les masques remontent, les invités reculent et sortent du faisceau un à un, tombant dans les allées. Berthe Lacombe, Anatole Brisset, Suzanne Ferrand, Piotr Volkine, Émile Marchal : vivants, dans leurs vêtements du soir où ils sont partis, un masque à la main. *La valse* s'arrête là. Suite : « À rebours : la place à tenir ».",
+              "failure": "La pellicule se déchire : un round perdu pour la recoller.",
+              "pushed": "La pellicule se coince devant la lampe et prend feu : comme « Brûler la bobine »."
+            },
+            {
+              "title": "Laisser finir",
+              "branch": "Si personne n'arrête le film",
+              "text": "À 8 sur *la valse*, le septième masque tombe : dessous, le visage de l'élu, qui a disparu de la salle. La valse s'arrête. Les lumières reviennent sur un cinéma ordinaire, deux cents personnes qui se frottent les yeux. Sur l'écran, un dernier carton : FIN.",
+              "roll": {
+                "type": "san",
+                "label": "Le septième visage",
+                "san": "1/1D4"
+              },
+              "extra": "Le film est achevé : il ne prendra plus personne au Mirage. Delmas emporte les bobines : [[epilogue]].",
+              "goto": [
+                "epilogue"
+              ]
+            },
+            {
+              "title": "Le feu : les volets de fer",
+              "text": "Le nitrate flambe en quelques secondes, une fumée jaune et toxique remplit la cabine. Les volets des hublots doivent tomber.",
+              "roll": {
+                "type": "luck"
+              },
+              "success": "Le cordon fusible fond, les volets tombent. Le feu reste dans la cabine.",
+              "failure": "Les volets rouillés restent coincés. Un investigateur peut tirer le levier à la main (FOR ou Mécanique, 1D4 de brûlures) ; sinon les flammes passent par les hublots et prennent aux tentures de la salle."
+            },
+            {
+              "title": "Le feu : sortir de la cabine",
+              "roll": {
+                "type": "characteristic",
+                "options": [
+                  "DEX"
+                ]
+              },
+              "success": "Dehors par la porte de fer, devant la fumée.",
+              "failure": "Brûlures et fumée : 1D6 points de vie."
+            },
+            {
+              "title": "Le feu : la salle",
+              "text": "Si les flammes passent dans la salle : lancez le compteur *Le feu* (0/5), qui avance à chaque round. Deux cents personnes réveillées en sursaut, une seule sortie par le foyer, et la sortie de secours, si personne n'a la clé ou n'a enlevé la chaîne.",
+              "roll": {
+                "type": "skill",
+                "options": [
+                  "persuade",
+                  "intimidate",
+                  "fast-talk"
+                ]
+              },
+              "success": "La foule sort en ordre par le foyer et par la sortie de secours, si elle est ouverte. Personne ne meurt.",
+              "failure": "Panique : on tombe, on piétine. Tant que la sortie de secours reste fermée, à 5 sur *le feu*, il reste des gens dans la salle.",
+              "goto": [
+                "epilogue"
+              ]
+            },
+            {
+              "title": "À rebours : la place à tenir",
+              "text": "Le bal se vide, mais Lanzac reste : il n'est pas un invité, il est l'hôte. Le septième masque attend, tendu vers la salle, et le bal tire sur tout le monde. Il faut qu'un vivant le prenne, de son plein gré, avant la fin de la bobine (deux rounds). Qui ?",
+              "extra": "Irène s'avance d'elle-même : « Il m'a attendue assez longtemps. » Courtade le propose aussi, s'il a avoué. Delmas, envoûté, y marche tout seul si on ne le retient pas : le laisser faire est un choix. Si personne n'y va, le bal reprend tout ce qu'il a rendu, l'élu avec : le film est achevé (« Laisser finir »).",
+              "goto": [
+                "epilogue"
+              ]
+            }
+          ],
+          "rolls": [
+            {
+              "type": "characteristic",
+              "label": "Retenir l'élu de force (FOR)",
+              "options": [
+                "STR"
+              ]
+            },
+            {
+              "type": "characteristic",
+              "label": "Refuser une danse (POU)",
+              "options": [
+                "POW"
+              ]
+            },
+            {
+              "type": "damage",
+              "label": "Canne de Delmas",
+              "dice": "1D6+1D4"
+            },
+            {
+              "type": "damage",
+              "label": "Brûlures (nitrate)",
+              "dice": "1D6"
+            }
+          ],
+          "notes": [
+            {
+              "title": "Les règles du bal",
+              "items": [
+                "Les invités masqués ne peuvent pas être blessés : les coups les traversent comme de la lumière.",
+                "Une invitation à danser : jet de POU (jets rapides de la scène). Raté, l'investigateur danse un round, sans rien pouvoir faire.",
+                "Rallumer les lumières de la salle, braquer une lampe sur un invité : il pâlit et recule d'un pas, rien de plus.",
+                "Les autres spectateurs dorment en dansant. Les réveiller de force ne sert à rien tant que dure le bal."
+              ]
+            }
+          ],
+          "npcs": [
+            "octave-lanzac",
+            "les-invites",
+            "septieme-masque",
+            "gaston-ribiere",
+            "fernand-delmas",
+            "firmin-courtade",
+            "irene-saulnier",
+            "louise-marchal"
+          ],
+          "ambience": [
+            "crowd-indoor",
+            "clock",
+            "wind-howling"
+          ],
+          "sfx": [
+            "door-slam",
+            "footsteps",
+            "latch"
+          ],
+          "next": [
+            "epilogue"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "apres",
+      "title": "Après",
+      "scenes": [
+        {
+          "id": "epilogue",
+          "title": "Après la dernière séance",
+          "lead": "Minuit sur la Butte : l'incendie, le retour des invités, ou la voiture de Delmas.",
+          "screen": {
+            "place": "street",
+            "preset": "fog",
+            "time": "night"
+          },
+          "readAloud": [
+            "La pluie a cessé. Rue des Trois-Frères, les spectateurs se dispersent sans se regarder, comme on sort d'un rêve qu'on ne veut pas raconter.",
+            "Au-dessus des toits, la coupole blanche du Sacré-Cœur flotte dans la brume. Derrière vous, la marquise du Mirage. Plus personne n'y entrera pour voir un film."
+          ],
+          "flow": [
+            {
+              "title": "Ce qui s'est passé dans la cabine",
+              "text": "Choisissez la suite selon le choix fait au [[le-bal|bal]]."
+            },
+            {
+              "title": "L'incendie",
+              "branch": "Si le Mirage a brûlé",
+              "text": "Les pompiers arrivent en dix minutes. Gaston jure que c'est un accident de cabine, comme il y en a tant. Courtade regarde brûler sa salle sans pleurer. Un commissaire interroge les témoins.",
+              "roll": {
+                "type": "skill",
+                "options": [
+                  "fast-talk",
+                  "persuade"
+                ]
+              },
+              "success": "Accident de nitrate, affaire classée.",
+              "failure": "Le commissaire a lu la plainte de Louise Marchal. Il convoque les investigateurs lundi : rien ne sera prouvé, mais leurs noms restent dans un dossier.",
+              "extra": "Écran d'ambiance : « blaze » tant que la salle brûle. Si les volets sont tombés, seule la cabine a brûlé et la salle est sauve."
+            },
+            {
+              "title": "Le retour des invités",
+              "branch": "Si les invités sont revenus",
+              "text": "Cinq personnes égarées sur le trottoir, qui croient sortir de la séance de leur soir. Berthe Lacombe cherche son châle, Piotr Volkine son taxi. Pour eux, le bal n'a duré qu'une valse. Émile serre Louise dans ses bras.",
+              "roll": {
+                "type": "skill",
+                "options": [
+                  "psychology",
+                  "persuade"
+                ]
+              },
+              "success": "Ils acceptent l'idée de mois perdus, sans comprendre. Ils ne parleront jamais du bal.",
+              "failure": "Suzanne Ferrand fait une crise de nerfs ; des agents l'emmènent à l'hôpital, et le quartier en parlera des semaines.",
+              "extra": "La bobine à rebours ne montre plus qu'un salon vide, un hôte et un invité masqué : celui qui a pris la place. Gaston la scelle dans sa boîte de fer."
+            },
+            {
+              "title": "La voiture de Delmas",
+              "branch": "Si le film est achevé",
+              "text": "22 h 40 : Delmas charge les cinq boîtes dans le coffre de l'Hotchkiss. Ce soir et dimanche, elles dorment à son bureau, 42, rue du Faubourg-Saint-Denis ; lundi 22 mars à 8 h, son chauffeur les porte au laboratoire de Joinville. Trois occasions de l'arrêter (étapes suivantes).",
+              "extra": "Le convaincre ne marche pas tant qu'il est envoûté (Psychologie le montre). Lui faire lire le générique, avec ses sept noms, donne un dé bonus à toute tentative."
+            },
+            {
+              "title": "Delmas : dans la rue, tout de suite",
+              "roll": {
+                "type": "skill",
+                "options": [
+                  "fast-talk",
+                  "sleight-of-hand",
+                  "drive-auto"
+                ]
+              },
+              "success": "Le chauffeur distrait, le coffre ouvert, un taxi en travers de la rue : les boîtes changent de mains.",
+              "failure": "La voiture démarre. Il reste le bureau et le laboratoire."
+            },
+            {
+              "title": "Delmas : au bureau, dimanche",
+              "roll": {
+                "type": "skill",
+                "options": [
+                  "locksmith",
+                  "stealth"
+                ]
+              },
+              "success": "Dans l'arrière-boutique déserte, les cinq boîtes attendent sur une étagère.",
+              "failure": "Le concierge les surprend : fuite par les toits, ou nuit au poste. Il reste le laboratoire."
+            },
+            {
+              "title": "Delmas : au laboratoire, lundi",
+              "roll": {
+                "type": "skill",
+                "options": [
+                  "persuade",
+                  "credit-rating",
+                  "fast-talk"
+                ]
+              },
+              "success": "Le chef de laboratoire rend les boîtes, ou accepte de « perdre » la commande.",
+              "failure": "Le contretype est tiré. Quarante copies partiront le 1er avril."
+            },
+            {
+              "title": "Ce qu'on fait des bobines",
+              "text": "Les brûler, loin de tout (le nitrate flambe comme une torche), ou les repasser à rebours au Mirage avant sa démolition, avec Gaston : les six invités reviennent, l'élu compris, au même prix (quelqu'un doit rester)."
+            }
+          ],
+          "notes": [
+            {
+              "title": "Épilogue",
+              "items": [
+                "**Film brûlé, salle sauve** (volets tombés, ou tout le monde sorti) : chaque investigateur regagne **1D6 SAN**. Les cinq disparus sont perdus : Louise ne pardonne pas, mais elle sait.",
+                "**Film brûlé, des morts dans l'incendie** : en plus, **1/1D6 SAN**. Les journaux reparlent du Bazar de la Charité ; Courtade est ruiné.",
+                "**À rebours** : chaque investigateur regagne **1D8 SAN**. Si un investigateur a pris la place, il quitte le jeu : on dit qu'il danse. Les autres perdent **0/1D4 SAN**. Brûler la bobine, plus tard, ce serait l'éteindre.",
+                "**Achevé, mais Delmas arrêté et les bobines détruites** : **1D4 SAN** regagnés, mais **1/1D4 SAN** pour l'élu perdu (davantage si c'était un ami).",
+                "**Achevé, et les copies parties** : perte de **1D6 SAN**. À l'automne, des journaux de Lyon, de Lille et de Liège parlent de spectateurs qui ne ressortent pas de leur cinéma."
+              ]
+            }
+          ],
+          "rolls": [
+            {
+              "type": "damage",
+              "label": "Gain de SAN (film détruit)",
+              "dice": "1D6"
+            },
+            {
+              "type": "damage",
+              "label": "Gain de SAN (invités rendus)",
+              "dice": "1D8"
+            },
+            {
+              "type": "damage",
+              "label": "Gain de SAN (Delmas arrêté)",
+              "dice": "1D4"
+            }
+          ],
+          "npcs": [
+            "fernand-delmas",
+            "louise-marchal",
+            "firmin-courtade",
+            "gaston-ribiere"
+          ],
+          "ambience": [
+            "street",
+            "wind"
+          ],
+          "sfx": [
+            "footsteps",
+            "dog-bark"
+          ]
+        }
+      ]
+    }
+  ],
+  "npcs": [
+    {
+      "id": "firmin-courtade",
+      "name": "Prosper Courtade",
+      "role": "Propriétaire du Mirage",
+      "description": "Soixante-trois ans, gros, moustache blanche, gilet à chaîne de montre. Ancien forain qui promenait un cinématographe de foire en foire avant 1908.",
+      "personality": "Jovial en façade, rongé par la honte. Il veut sa retraite et ne veut pas savoir. Ce soir, il a peur, et il le noie dans le bavardage.",
+      "characteristics": {
+        "STR": 45,
+        "CON": 50,
+        "SIZ": 65,
+        "DEX": 40,
+        "APP": 45,
+        "INT": 65,
+        "POW": 45,
+        "EDU": 50
+      },
+      "hp": 11,
+      "dodge": 20,
+      "skills": {
+        "credit-rating": 35,
+        "fast-talk": 60,
+        "persuade": 50
+      },
+      "knows": [
+        "Il a acheté les cinq bobines et le carnet de Lanzac aux Puces de Saint-Ouen, le dimanche 18 octobre 1925, pour trente francs.",
+        "En décembre, il a reconnu le père Brisset, un habitué, sous un masque baissé du bal. Il a continué : les recettes montaient.",
+        "Il a vendu la copie à Delmas pour quinze mille francs (contrat signé le jeudi 18 mars). Le Mirage ferme à la fin du mois : l'immeuble est vendu pour en faire un garage.",
+        "Ce soir, il a fait cadenasser la sortie de secours pour voir de ses yeux qui s'en va. La clé est dans la poche de son gilet."
+      ]
+    },
+    {
+      "id": "gaston-ribiere",
+      "name": "Gaston Ribière",
+      "role": "Projectionniste du Mirage",
+      "description": "Trente-quatre ans, maigre, mains couturées de brûlures, une cigarette éteinte au coin des lèvres (jamais allumée en cabine).",
+      "personality": "Ancien de Verdun, calme, précis, méthodique. Il a peur du film, mais plus encore de laisser sa cabine à quelqu'un d'autre.",
+      "characteristics": {
+        "STR": 60,
+        "CON": 55,
+        "SIZ": 55,
+        "DEX": 65,
+        "INT": 70,
+        "POW": 65,
+        "EDU": 55
+      },
+      "hp": 11,
+      "dodge": 32,
+      "skills": {
+        "mechanical-repair": 70,
+        "electrical-repair": 50,
+        "art-craft:photography": 50,
+        "first-aid": 40,
+        "spot-hidden": 55
+      },
+      "attacks": [
+        {
+          "name": "Coup de poing",
+          "skill": 50,
+          "damage": "1D3"
+        }
+      ],
+      "knows": [
+        "Il tient le registre de cabine : dates, entrées, incidents, longueur de la bobine 5, qui grandit de trente centimètres (une seconde) à chaque séance.",
+        "Le 30 janvier, il a vu par le hublot un homme entrer dans l'écran pendant le bal. Depuis, il tourne la dernière bobine les yeux fermés.",
+        "Le nitrate brûle même sous l'eau ; une pellicule bloquée devant la lampe prend feu. Les volets de fer des hublots sont rouillés.",
+        "Il sait repasser un film à l'envers : un vieux tour de forain."
+      ]
+    },
+    {
+      "id": "fernand-delmas",
+      "name": "Fernand Delmas",
+      "role": "Distributeur de films (Delmas & Cie)",
+      "description": "Quarante-six ans, large, manteau à col de fourrure, canne à pommeau d'argent, chauffeur et Hotchkiss noire.",
+      "personality": "Marchand affable et sûr de lui. Depuis le 27 février, il rêve du bal chaque nuit et ne vit plus que pour ce film. Envoûté, il le défendra avec violence.",
+      "characteristics": {
+        "STR": 60,
+        "CON": 60,
+        "SIZ": 70,
+        "DEX": 50,
+        "APP": 55,
+        "INT": 65,
+        "POW": 40,
+        "EDU": 60
+      },
+      "hp": 13,
+      "dodge": 25,
+      "damageBonus": "+1D4",
+      "skills": {
+        "persuade": 60,
+        "credit-rating": 60,
+        "psychology": 40
+      },
+      "attacks": [
+        {
+          "name": "Canne",
+          "skill": 50,
+          "damage": "1D6+1D4"
+        },
+        {
+          "name": "Coup de poing",
+          "skill": 55,
+          "damage": "1D3+1D4"
+        }
+      ],
+      "knows": [
+        "Il a vu le film le 27 février, attiré par les recettes du Mirage. Il ne se souvient pas d'avoir vu quelqu'un se lever.",
+        "Contrat signé le 18 mars : la copie lui est remise ce soir, après la séance. Lundi 22 mars, contretype et quarante copies au laboratoire Cinéchrome de Joinville-le-Pont.",
+        "Les bobines passeront la nuit et le dimanche à son bureau, 42, rue du Faubourg-Saint-Denis."
+      ]
+    },
+    {
+      "id": "louise-marchal",
+      "name": "Louise Marchal",
+      "role": "Blanchisseuse, sœur d'Émile",
+      "description": "Dix-neuf ans, petite, les mains rougies par la lessive, un manteau trop grand qui était à son frère.",
+      "personality": "Têtue, courageuse, à bout. Personne ne l'a crue : ce soir, elle veut voir. Elle fera n'importe quoi pour Émile.",
+      "characteristics": {
+        "STR": 55,
+        "CON": 60,
+        "SIZ": 45,
+        "DEX": 60,
+        "APP": 55,
+        "INT": 55,
+        "POW": 60,
+        "EDU": 40
+      },
+      "hp": 10,
+      "dodge": 30,
+      "knows": [
+        "Émile Marchal, 23 ans, typographe, est allé voir le film le samedi 27 février et n'est jamais rentré. Il était assis au premier rang.",
+        "Elle a porté plainte au commissariat du quartier : on lui a ri au nez.",
+        "Elle a la coupure de *L'Écho de la Butte* du 13 mars et une photo d'Émile."
+      ]
+    },
+    {
+      "id": "irene-saulnier",
+      "name": "Irène Saulnier",
+      "role": "Ancienne actrice, la mère dans L'Invitation",
+      "description": "Cinquante-huit ans, très droite, voilette noire, gants usés. Une voix de théâtre qu'elle baisse par habitude.",
+      "personality": "Digne, ironique, tendre. Elle a aimé Lanzac et ne s'est jamais consolée de sa disparition. Elle est venue voir son dernier film comme on va sur une tombe.",
+      "characteristics": {
+        "STR": 35,
+        "CON": 45,
+        "SIZ": 50,
+        "DEX": 45,
+        "APP": 60,
+        "INT": 70,
+        "POW": 70,
+        "EDU": 65
+      },
+      "hp": 9,
+      "dodge": 22,
+      "knows": [
+        "Lanzac détestait les acteurs, « qui mentent tous ». Il voulait filmer les gens entiers.",
+        "Il tournait certains plans avec un objectif à part, taillé dans un cristal des carrières de la Butte, qu'il appelait la Prunelle.",
+        "Le dernier jour de tournage, en octobre 1919 : sept costumes de bal vides sur des portemanteaux, sept masques. « Les invités viendront plus tard. »",
+        "Elle a la dernière lettre de Lanzac, datée du jeudi 30 octobre 1919, la veille de sa disparition."
+      ]
+    },
+    {
+      "id": "octave-lanzac",
+      "kind": "creature",
+      "name": "Octave Lanzac",
+      "role": "Le cinéaste, premier invité et hôte du bal",
+      "description": "Un homme maigre d'une quarantaine d'années, en habit, le masque baissé, gris et argent comme l'image. Il a le visage de 1919.",
+      "personality": "Ravi, absent, comme un homme qui a enfin le film qu'il voulait. Au fond, il sait ce que son bal a coûté.",
+      "characteristics": {
+        "POW": 85
+      },
+      "sanLoss": "0/1D3",
+      "special": [
+        "Ne peut pas être blessé.",
+        "Appelé par son nom (par Irène, ou par quelqu'un qui a lu son carnet ou sa lettre), il hésite : une seule fois, *la valse* n'avance pas ce round, et il souffle « à rebours ».",
+        "Il n'est pas un invité mais l'hôte : il ne sort pas quand on passe le film à rebours."
+      ],
+      "knows": [
+        "Tout : la Prunelle, les sept places, ce que deviendra le film achevé, et qu'à rebours le bal rend ses invités contre une place tenue."
+      ]
+    },
+    {
+      "id": "les-invites",
+      "kind": "creature",
+      "name": "Les invités du bal",
+      "role": "Les masqués du film, sortis de l'écran",
+      "description": "Des danseurs gris et argent, en costumes de 1919, masques de velours. Parmi eux, les cinq disparus, masques baissés, qui dansent sans voir personne.",
+      "personality": "Courtois, insistants, muets. Ils invitent à danser et ne lâchent pas la main.",
+      "characteristics": {
+        "POW": 60
+      },
+      "sanLoss": "1/1D6",
+      "attacks": [
+        {
+          "name": "Invitation à danser",
+          "skill": 60,
+          "damage": "0",
+          "note": "Jet de POU de la victime : en cas d'échec, elle danse un round sans rien pouvoir faire."
+        }
+      ],
+      "special": [
+        "Ne peuvent pas être blessés : les coups les traversent comme de la lumière.",
+        "Une lampe braquée sur l'un d'eux le fait pâlir et reculer d'un pas.",
+        "Disparaissent quand la bobine brûle, ou rentrent dans l'écran quand elle passe à rebours (les cinq disparus, eux, en sortent)."
+      ]
+    },
+    {
+      "id": "septieme-masque",
+      "kind": "creature",
+      "name": "Le septième masque",
+      "role": "La place vide du bal",
+      "description": "Un costume de bal gris, debout, coiffé d'un masque de porcelaine blanche sans bouche. Entre le masque et le col, il n'y a rien.",
+      "personality": "Patient. Il regarde l'élu, et seulement lui.",
+      "characteristics": {
+        "POW": 80
+      },
+      "sanLoss": "0/1D4",
+      "special": [
+        "Choisit le spectateur qui regarde l'écran le plus fixement (Louise, ce soir, si rien ne change).",
+        "À 8 sur *la valse*, il baisse son masque : dessous, le visage de l'élu, qui a disparu. Le film est achevé.",
+        "Quand on passe le film à rebours, il reste, tendu vers la salle : quelqu'un doit prendre la place de son plein gré."
+      ]
+    }
+  ],
+  "handouts": [
+    {
+      "id": "affiche",
+      "title": "L'affiche du Mirage",
+      "scene": "devant-le-mirage",
+      "text": "**LE MIRAGE**\n14, rue des Trois-Frères\n\nSamedi 20 mars 1926, 21 heures\n**DERNIÈRE SÉANCE** avant fermeture définitive\n\n**L'INVITATION**\nDrame inédit en cinq parties\nd'Octave Lanzac (1919)\n\n*Le film dont tout Montmartre parle*\n\nPlaces : 2 F 50 et 4 F"
+    },
+    {
+      "id": "coupure-echo",
+      "title": "L'Écho de la Butte, 13 mars 1926",
+      "scene": "devant-le-mirage",
+      "text": "**LE CINÉMA QUI MANGE SON MONDE**\n\nOn connaissait les salles obscures où l'on s'endort ; voici, rue des Trois-Frères, celle où l'on disparaît. À en croire le quartier, chaque dernier samedi du mois, *L'Invitation*, film inédit du regretté Octave Lanzac, avale un spectateur : la pianiste de la maison en octobre, un retraité des chemins de fer en novembre, et ainsi de suite.\n\nUne jeune blanchisseuse de la rue Lepic, Mlle Louise M., jure que son frère Émile, vingt-trois ans, typographe, est entré au Mirage le 27 février et n'en est jamais ressorti. Le commissariat, consulté, sourit : à Montmartre, on ne compte plus les jeunes gens qui découchent.\n\nM. Courtade, propriétaire, n'en a cure : le Mirage fermant ses portes à la fin du mois, il annonce une dernière projection pour le samedi 20 mars. On y fera la queue.\n\n*R. V.*"
+    },
+    {
+      "id": "registre-cabine",
+      "title": "Registre de cabine de Gaston Ribière",
+      "scene": "avant-la-seance",
+      "text": "*Le Mirage. Registre de cabine. G. Ribière.*\n\n*Lundi 19 oct. 1925.* Reçu du patron 5 bobines, *L'Invitation*. Nitrate, bon état. Bob. 5 mesurée : 296,0 m.\n\n*Sam. 31 oct.* Séance spéciale 21 h. Entrées : 74. Mlle Lacombe (piano) partie avant la fin ? Son châle sur le tabouret. Bob. 5 au réembobinage : 296,3 m.\n\n*Sam. 28 nov.* Entrées : 102. Pas de piano. Objet trouvé rang 1 : canne à pommeau d'os (le père Brisset ?). Bob. 5 : 296,6 m.\n\n*Sam. 26 déc.* Entrées : 131. Un jeune homme cherche sa fiancée (Mlle Ferrand) après la séance. Sac perlé rang 3. Bob. 5 : 296,9 m.\n\n*Sam. 30 janv. 1926.* Entrées : 158. Vu par le hublot, pendant le bal, un homme marcher dans le faisceau jusqu'à l'écran. Casquette de taxi rang 2. Bob. 5 : 297,2 m. Je ne regarderai plus la bobine 5.\n\n*Sam. 27 fév.* Entrées : 176. Écharpe grise rang 1. Lundi, une jeune fille est venue demander son frère (M. Marchal). Bob. 5 : 297,5 m.\n\nUne seconde de plus à chaque fois. Sept masques. Il en reste un."
+    },
+    {
+      "id": "carnet-lanzac",
+      "title": "Carnet d'Octave Lanzac (extraits)",
+      "scene": "avant-la-seance",
+      "text": "*12 mars 1918.* Tixier a fini de tailler la Prunelle. Il me l'a rendue sans la regarder : en la polissant, dit-il, il a vu sa femme morte au fond du verre. Je n'y vois que de la lumière. Mais quelle lumière.\n\n*Juin 1919.* Les acteurs jouent. Ils mentent tous. Je ne veux pas des gens qui font semblant : je veux les gens entiers, et que l'image les garde.\n\n*Septembre 1919.* La Prunelle ne prend pas les acteurs, elle les traverse. Elle ne garde que ceux qui se donnent, ou qui regardent assez fort. Mon bal aura sept invités, pas un de moins. J'ai fait coudre sept costumes. Les places attendent.\n\n*29 octobre.* Un film achevé doit être vu. Quand les sept masques seront tombés, le bal n'aura plus besoin de moi ni de personne : il voudra des salles, partout, et dans chaque salle de nouveaux invités.\n\n*30 octobre.* Ce que la Prunelle prend, elle le rend à l'envers : Tixier l'a dit, et il avait peur. Le feu le tuerait, et tous mes invités avec.\n\n*31 octobre.* Il faut un premier invité. Demain, c'est la Toussaint. Ce sera moi."
+    },
+    {
+      "id": "lettre-irene",
+      "title": "Dernière lettre de Lanzac à Irène",
+      "scene": "avant-la-seance",
+      "text": "*Paris, jeudi 30 octobre 1919*\n\nMa chère Irène,\n\nTu m'as demandé pourquoi sept costumes vides au milieu de mon bal. Je te réponds enfin : parce que les vrais invités ne sont pas encore venus. Ils viendront, un à un, et ils ne joueront pas : ils seront là.\n\nSi un jour il fallait défaire mon bal, dis-leur ceci, toi qui te souviens de tout : *à rebours*. Passé à l'envers, le bal rend tout ce qu'il a pris. Mais un bal ne se défait pas sans que quelqu'un reste pour éteindre les lustres. Il faut qu'on y entre de son plein gré, sinon le bal vide se referme sur toute la salle.\n\nNe me cherche pas demain. Je serai occupé.\n\nTon Octave"
+    },
+    {
+      "id": "contrat-delmas",
+      "title": "Contrat de cession",
+      "scene": "avant-la-seance",
+      "text": "**CONTRAT DE CESSION**\n\nEntre M. Prosper Courtade, exploitant du cinéma Le Mirage, 14, rue des Trois-Frères, Paris (18e), et la maison Delmas & Cie, location de films, 42, rue du Faubourg-Saint-Denis, Paris (10e), représentée par M. Fernand Delmas, il est convenu ce qui suit :\n\n1. M. Courtade cède à Delmas & Cie l'unique copie connue du film *L'Invitation* (O. Lanzac, 1919), en cinq bobines, et tous droits d'exploitation, pour la somme de quinze mille francs.\n\n2. La copie sera remise à M. Delmas à l'issue de la séance du samedi 20 mars 1926.\n\n3. Un contretype et quarante (40) copies positives seront tirés au laboratoire Cinéchrome de Joinville-le-Pont dès le lundi 22 mars, pour exploitation en province, en Belgique et en Suisse à compter du 1er avril 1926.\n\n4. *(ajouté à la main, d'une autre encre)* Le film sera projeté dans son intégralité, sans coupure, y compris la scène du bal.\n\nFait à Paris, en double exemplaire, le jeudi 18 mars 1926.\n\n*F. Courtade* · *F. Delmas*"
+    },
+    {
+      "id": "generique",
+      "title": "Le générique de L'Invitation",
+      "scene": "la-seance",
+      "text": "**L'INVITATION**\nDrame en cinq parties\nMise en scène d'Octave Lanzac\n\nLise . . . . . Mlle Jeanne Darnal\nLa mère . . . . . Mme Irène Saulnier\nL'inconnu . . . . . M. Paul Vigan\nL'hôte . . . . . M. Henri Bastide\n\n**LES INVITÉS DU BAL**\nOctave Lanzac\nBerthe Lacombe\nAnatole Brisset\nSuzanne Ferrand\nPiotr Volkine\nÉmile Marchal\n. . . . . . . . . . . . . . ."
+    },
+    {
+      "id": "carton-invitation",
+      "title": "Le carton d'invitation (intertitre)",
+      "scene": "la-seance",
+      "text": "*Madame, Mademoiselle, Monsieur,*\n\n*L'Hôte de la Maison sans nom a l'honneur de vous prier à son bal masqué.*\n\n*Sept invités sont attendus.*\n*Le dernier masque tombera à la fin de la valse.*\n\n*Une place vous est réservée.*"
+    }
+  ],
+  "knowledge": [
+    {
+      "need": "Relier les disparitions au film",
+      "best": "Le registre de Gaston (sans jet)",
+      "backup": "Louise et la coupure, les objets trouvés, Baratin ou Charme dans la file"
+    },
+    {
+      "need": "Mettre un nom sur les visages du bal",
+      "best": "Le générique (sans jet)",
+      "backup": "Trouver Objet Caché sur la bobine 5, le registre, la photo d'Émile"
+    },
+    {
+      "need": "Comprendre la Prunelle et les sept places",
+      "best": "Le carnet de Lanzac",
+      "backup": "Irène Saulnier (Charme, Psychologie), Gaston"
+    },
+    {
+      "need": "Savoir comment arrêter le film",
+      "best": "Le carnet et la lettre d'Irène",
+      "backup": "Gaston (le nitrate, l'envers), Lanzac dans le bal"
+    },
+    {
+      "need": "Atteindre la cabine pendant le bal",
+      "best": "Remonter le faisceau (sans jet)",
+      "backup": "Orientation, Trouver Objet Caché"
+    },
+    {
+      "need": "Passer la bobine à rebours",
+      "best": "Gaston, s'il est libre",
+      "backup": "Mécanique, Machines lourdes"
+    },
+    {
+      "need": "Ouvrir la sortie de secours",
+      "best": "La clé de Courtade",
+      "backup": "Serrurerie, FOR (difficile)"
+    },
+    {
+      "need": "Calmer la foule",
+      "best": "Persuasion",
+      "backup": "Intimidation, Baratin"
+    }
+  ],
+  "trackers": [
+    {
+      "id": "valse",
+      "label": "La valse",
+      "max": 8,
+      "unit": "rounds",
+      "help": "Avance d'un cran à la fin de chaque round du bal, sauf si l'élu a été retenu ou si Lanzac a hésité. À 8, le septième masque tombe sur le visage de l'élu : le film est achevé.",
+      "scenes": [
+        "le-bal"
+      ]
+    },
+    {
+      "id": "feu",
+      "label": "Le feu",
+      "max": 5,
+      "unit": "rounds",
+      "help": "Seulement si les flammes passent dans la salle. Avance d'un cran par round. À 5, la salle est perdue : quiconque y est encore prend 1D6 par round, et si la sortie de secours est restée fermée, des spectateurs y meurent.",
+      "scenes": [
+        "le-bal"
+      ]
+    }
+  ]
+}

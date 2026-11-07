@@ -1,0 +1,1934 @@
+{
+  "format": "grimoire-story/1",
+  "meta": {
+    "id": "les-feux-de-la-margeride",
+    "title": "Les Feux de la Margeride",
+    "lang": "fr",
+    "summary": "Octobre 1928. Émile Courtiade, ethnographe du musée du Trocadéro, parcourt la Margeride pour enregistrer les vieilles chansons sur des cylindres de cire. Depuis trois semaines, il n'écrit plus. Sa dernière lettre parlait d'une chanson que personne ne voulait chanter devant lui, et des grands feux que le hameau de La Sagne-Noire allume pour la Toussaint.",
+    "players": {
+      "min": 4,
+      "max": 5
+    },
+    "duration": "2 séances de 3 à 4 heures",
+    "era": "Fin octobre 1928",
+    "setting": "La Sagne-Noire, hameau isolé du plateau de la Margeride (Lozère), sa forêt de hêtres et de pins, et la vieille draille qui la traverse",
+    "system": "d100",
+    "author": "Grimoire",
+    "license": "CC-BY-4.0",
+    "version": "1.0",
+    "tags": [
+      "groupe",
+      "campagne",
+      "forêt",
+      "folklore",
+      "enquête",
+      "compte à rebours"
+    ],
+    "contentWarnings": [
+      "enlèvement et séquestration",
+      "personne droguée",
+      "attaque d'une créature",
+      "sacrifices humains (passés, évoqués)",
+      "mort d'un vagabond (évoquée)"
+    ]
+  },
+  "overview": {
+    "secret": "**La draille.** La vieille draille qui traverse la forêt au-dessus de La Sagne-Noire est plus ancienne que les Romains. Chaque année, la nuit du 31 octobre, pendant que brûlent les feux du hameau, une partie de la route « se plie » : entre le Plan des Feux et la Pierre-Plantée, elle touche d'autres années. En octobre 1764, au plus fort de la terreur de la Bête du Gévaudan, le prieur **Dom Aurélien Vaissière** a voulu « fermer les chemins à la Bête » en faisant chanter sur la draille un vieux chant de bouviers. Le pli s'est déchiré, et quelque chose est passé, qui vit entre les années : le hameau l'appelle *lo Manja-Temps*, **le Mange-Temps**. Il mange le temps des vivants : de 1764 à 1767, on a rapporté de la draille des bergers devenus vieillards en une nuit, et tout le monde a accusé la Bête. La Bête est tuée en juin 1767 ; à La Sagne, les morts continuent.\n\n**La barre.** Le 31 octobre 1767, Vaissière fait chanter la *cançon de la barra*, la chanson de la barre. Une bergère de dix-huit ans, **Jeanne Bastide**, en chante seule le dernier couplet face à la Pierre-Plantée : « je ferme la draille avec ma voix ». Le Mange-Temps recule, la draille se ferme, et Jeanne ne parle plus jamais : le Mange-Temps a gardé sa voix. C'est elle, une voix de jeune fille, qui répond quand on chante près de la pierre. Vaissière note que la chose reviendra au bord tous les sept ans, la nuit des feux, et qu'il faudra lui donner « une voix ou un corps ». Il croit que la voix de Jeanne la tiendra tant que Jeanne vivra ; les consuls ne veulent pas courir le risque. En 1774, ils changent un mot du dernier couplet (« avec le passant » au lieu de « avec ma voix ») et donnent un colporteur. Depuis, tous les sept ans, La Sagne-Noire accueille un étranger, l'héberge, le drogue les derniers jours et le fait descendre la draille la nuit des feux. Vingt-deux « passants » de 1774 à 1921. Les années ordinaires, les feux et le chant suffisent ; les années de sept, il faut le passant. Un corps ferme la draille pour sept ans ; une voix, tant que vit celui qui l'a donnée.\n\n**1928.** C'est une grande année. **Émile Courtiade**, 34 ans, ethnographe du musée d'ethnographie du Trocadéro, arrive le lundi 17 septembre avec son phonographe enregistreur. Le hameau voit en lui le passant. Mais il veut la chanson des feux, et la règle est stricte : le passant ne doit jamais l'entendre avant la nuit, car un passant qui sait le chant pourrait le chanter lui-même et donner sa voix au lieu de son corps. Le jeudi 4 octobre au crépuscule, il suit en cachette **Rosalie Teissèdre**, la chanteuse, qui monte chanter pour la pierre comme chaque jeudi d'octobre des grandes années. Il enregistre deux cylindres : la chanson, puis la voix de jeune fille qui répond depuis la forêt. Le vendredi 5, effrayé, il écrit sa dernière lettre au musée et confie les deux cylindres à **Toinou**, onze ans, petit-fils de Rosalie. Le samedi 6, invité à souper au Mas-Haut, il est drogué au laudanum par **Marguerite Malafosse** et enfermé dans le fenil de la grange. Le dimanche 7, l'aubergiste **Léontine Chabert** annonce qu'il est parti à l'aube pour Saint-Chély.\n\n**Si personne n'intervient.** Le mercredi 31 octobre, à la tombée de la nuit, le hameau allume sept bûchers sur le Plan des Feux et chante. À 23 heures, **Justin Malafosse**, le bayle des veilleurs, fait descendre Émile à moitié endormi sur la draille ; Rosalie chante devant. À minuit, à la Pierre-Plantée, le Mange-Temps sort du pli et emmène Émile ; Rosalie chante la barre « avec le passant ». La draille est fermée jusqu'en 1935. Au printemps, peut-être, des bûcherons trouveront un corps sec comme une momie, vêtu à la mode de 1928.\n\n**Ce qui peut changer.** Si l'on prive le Mange-Temps de son passant sans finir le chant avec la vraie barre (« avec ma voix »), il passe en 1928, et la Margeride connaît un nouvel hiver de la Bête. Celui qui chante la vraie barre perd sa voix pour toujours. Les armes ne lui font presque rien ; le feu le fait reculer.",
+    "steps": [
+      "[[l-auberge]] (samedi 27, crépuscule) : arrivée sous les premiers flocons, le mensonge de Léontine, la chambre d'Émile, la tête de loup de Fulcran.",
+      "[[l-eglise]] (dimanche 28, matin) : la messe, l'abbé Massebeuf et ses registres : un étranger « parti par la draille » à la Toussaint, tous les sept ans.",
+      "[[le-cimetiere]] (dimanche, crépuscule) : Toinou donne les cylindres et dit où est le Monsieur. La tombe de la Muda, celle de l'inconnu de 1922.",
+      "[[les-cylindres]] (dimanche soir) : le phonographe du presbytère, la chanson, et la voix qui répond.",
+      "[[les-traces]] (lundi 29, matin) : des traces dans la neige qui commencent au milieu d'un champ ; le garde Pradal et ses cartes.",
+      "[[la-draille]] puis [[le-prieure]] (lundi) : la vieille route qui ne mesure jamais la même longueur ; les ruines de Saint-Ferréol, les années gravées, le livre du prieur.",
+      "[[chez-rosalie]] et [[le-mas-haut]] (mardi 30) : la chanteuse avoue ; Émile est retrouvé dans le fenil. Le soir, la neige coupe la route.",
+      "[[les-feux]] puis [[la-draille-de-nuit]] (mercredi 31) : les feux, la procession, le Mange-Temps à la Pierre-Plantée, le choix.",
+      "[[la-toussaint]] (jeudi 1er novembre) : ce que la nuit a coûté."
+    ],
+    "mustNotMiss": [
+      "**Émile est vivant, enfermé au Mas-Haut** : le charretier ne l'a jamais redescendu ([[l-auberge]]) ; l'abbé voit Marguerite porter un plateau à la grange chaque soir, et Malafosse était à la messe le matin où il aurait conduit Émile à la gare ([[l-eglise]]) ; Toinou l'a entendu chanter dans le fenil ([[le-cimetiere]]) ; les traces vont jusqu'au mur du Mas-Haut ([[les-traces]]).",
+      "**Un étranger tous les sept ans** : les registres ([[l-eglise]]), la tombe de l'inconnu de 1922 et le rapport du médecin ([[le-cimetiere]], [[l-auberge]]), les années gravées au prieuré ([[le-prieure]]), Rosalie ([[chez-rosalie]]).",
+      "**Quelque chose vient par la draille la nuit des feux** : la tête de loup ([[l-auberge]]), les cylindres ([[les-cylindres]]), les traces et les cartes ([[les-traces]]), la draille de jour ([[la-draille]]), le livre du prieur ([[le-prieure]]).",
+      "**La vraie barre** (« avec ma voix ») **et son prix** : le livre du prieur ([[le-prieure]]) et Rosalie ([[chez-rosalie]]) ; la réponse du cylindre (« une voix ou un corps ») et la tombe de la Muda le laissent deviner.",
+      "**L'air et les trois premiers couplets** : le cylindre ([[les-cylindres]]), Toinou qui les sait par cœur ([[le-cimetiere]]), Rosalie ([[chez-rosalie]]), le carnet d'Émile ([[le-mas-haut]]).",
+      "**L'heure et le lieu** : la voix du cylindre annonce le 31 octobre ([[les-cylindres]]) ; Toinou connaît le Plan des Feux et la Pierre-Plantée ([[le-cimetiere]]) ; Pradal et la draille montrent le chemin ([[les-traces]], [[la-draille]])."
+    ],
+    "branches": [
+      "Libérer Émile avant la nuit ([[le-mas-haut]]) ne règle rien : le hameau cherche un autre passant. Malafosse choisit l'abbé Massebeuf, ou un investigateur (du laudanum dans la soupe de l'auberge, le mercredi soir).",
+      "Rallier Rosalie ([[chez-rosalie]]) : elle peut refuser de chanter « avec le passant », et même chanter la vraie barre elle-même, au prix de sa voix. Sans elle, le hameau chante mal et le Mange-Temps avance plus vite.",
+      "Convaincre le hameau devant les feux ([[les-feux]]) avec le livre du prieur : la procession descend sans passant, les veilleurs protègent le chanteur.",
+      "À la Pierre-Plantée ([[la-draille-de-nuit]]) : laisser le hameau donner le passant ; libérer le passant et finir le chant avec la vraie barre (quelqu'un perd sa voix) ; ou prendre la place d'Émile.",
+      "Si personne n'est donné et que la barre n'est pas chantée, le Mange-Temps passe en 1928 ([[la-toussaint]])."
+    ],
+    "ifStuck": [
+      "Toinou glisse un billet sous la porte de l'auberge : « Au cimetière, quand sonne l'angélus du soir. Pour le Monsieur à la machine. T. »",
+      "Le garde Pradal passe à l'auberge à l'aube : il a vu des traces « qui ne viennent de nulle part » dans le champ de la Croix.",
+      "L'abbé Massebeuf, inquiet, vient lui-même montrer la page du 1er novembre 1921.",
+      "Fulcran, ivre, lâche devant toute la salle : « Cette année, c'est l'année. Et c'est pas l'un de nous qui descendra. »",
+      "Le mardi, Rosalie fait chercher les investigateurs par Toinou : elle a vu leurs lanternes sur la draille."
+    ],
+    "keeperTips": [
+      "Le hameau n'est pas méchant : il a peur, et il croit protéger la Margeride depuis cent cinquante ans. Malafosse est un père de famille qui fait un sale travail ; Rosalie, une vieille femme usée par huit grandes nuits.",
+      "Avec 4 ou 5 joueurs, partagez l'enquête : la sœur et le folkloriste avec Toinou et Rosalie, le médecin avec l'abbé et la tombe de l'inconnu, le forestier avec Pradal et la draille, l'envoyé du musée avec l'auberge et le Mas-Haut. Les accroches sont dans [[l-auberge]].",
+      "Montrez le Mange-Temps tard : un son (le cylindre), des traces, des pas qui sont les leurs, une battue d'un autre siècle. On ne le voit vraiment qu'à minuit, le 31.",
+      "La voix de jeune fille est votre meilleur outil : fredonnez, ou murmurez, la réponse du cylindre.",
+      "Le vrai choix final n'est pas de vaincre la chose : c'est de décider qui paie. Laissez les joueurs en débattre avant minuit.",
+      "Chaque fait important a plusieurs sources : un jet raté ralentit ou coûte, il ne cache jamais la vérité.",
+      "Séance 1 : de l'arrivée aux ruines du prieuré (fin du lundi). Séance 2 : le mardi et la nuit des feux."
+    ]
+  },
+  "acts": [
+    {
+      "id": "hameau",
+      "title": "La Sagne-Noire",
+      "scenes": [
+        {
+          "id": "l-auberge",
+          "title": "L'auberge Chabert",
+          "lead": "Arrivée le samedi 27 au soir : le mensonge de l'aubergiste, la chambre d'Émile, la tête de loup.",
+          "screen": {
+            "place": "street",
+            "preset": "snow",
+            "time": "dusk"
+          },
+          "readAloud": [
+            "La carriole a quitté Saint-Chély-d'Apcher en début d'après-midi. Depuis, la route n'a fait que monter, entre des blocs de granit gros comme des maisons, des landes de genêts roussis et des bois de pins si noirs qu'ils semblent brûlés. Le vent du plateau passe sous les couvertures.",
+            "La Sagne-Noire apparaît au crépuscule : une dizaine de fermes basses, une église au clocher plat percé de deux cloches, et derrière, la forêt. En contrebas, une tourbière d'eau sombre. Les premiers flocons tombent sans se poser.",
+            "Derrière une grange, une vieille voix chante en patois, et des clochettes de chèvres lui répondent. Elle se tait d'un coup quand les roues passent.",
+            "À l'auberge, la salle sent la fumée, la soupe aux choux et le chien mouillé. Une femme s'essuie les mains à son tablier. « Du monde. En cette saison. »"
+          ],
+          "flow": [
+            {
+              "title": "Présentations",
+              "text": "Chaque investigateur a sa raison d'être là (note **Accroches**). Laissez chacun se présenter à {{npc:leontine}}, l'aubergiste, et aux trois hommes qui boivent près du feu.",
+              "extra": "Le musée fournit {{handout:derniere-lettre}} ; la sœur, {{handout:reponse-aubergiste}} ; le médecin, {{handout:rapport-boissonnade}}."
+            },
+            {
+              "title": "Le charretier",
+              "text": "En déchargeant les bagages, {{npc:augustin}} parle sans qu'on lui demande : « Le Parisien à la machine ? Je l'ai monté en septembre. Redescendu ? Pas avec moi. Et c'est moi qui fais la route. » Si on lui parle de la charrette de Malafosse : « Le chef de gare de Saint-Chély, c'est mon beau-frère. Il me l'aurait dit. »",
+              "extra": "Sans jet : Émile n'est jamais reparti par la route. Augustin redescend le soir même et ne remontera que le vendredi 2 novembre."
+            },
+            {
+              "title": "La version de Léontine",
+              "text": "Léontine répète ce qu'elle a écrit à la sœur : Émile est parti le dimanche 7 octobre au matin, Justin Malafosse l'a descendu en charrette à la gare.",
+              "roll": {
+                "type": "skill",
+                "options": [
+                  "psychology"
+                ]
+              },
+              "success": "Elle récite. Les mêmes mots que dans sa lettre, dans le même ordre. Et en parlant de Malafosse, elle regarde vers le haut du hameau, vers le Mas-Haut.",
+              "failure": "Elle a l'air sincère, et un peu vexée qu'on insiste."
+            },
+            {
+              "title": "La chambre d'Émile",
+              "text": "Léontine la donne volontiers : elle est libre. Tout a été rangé, le lit refait. Sous le lit, sans jet, une caisse de trente-deux cylindres vierges dans leurs étuis de carton : personne ne part en laissant ça.",
+              "roll": {
+                "type": "skill",
+                "options": [
+                  "spot-hidden"
+                ]
+              },
+              "success": "Au dos de la porte de l'armoire, au crayon, la liste de ses enregistrements → {{handout:liste-emile}}.",
+              "failure": "Une chambre propre et vide, qui sent le savon noir.",
+              "pushed": "Ils trouvent la liste, mais Léontine les surprend en train de démonter l'armoire. Désormais, elle ne leur sert plus que de la soupe tiède et prévient Malafosse le soir même."
+            },
+            {
+              "title": "La tête de loup",
+              "text": "Au-dessus de la cheminée, une énorme tête de loup naturalisée. {{npc:firmin}}, le vieux chasseur, en est fier : « Tuée en 21, sur la draille, la nuit de la Toussaint. »",
+              "roll": {
+                "type": "skill",
+                "options": [
+                  "natural-world",
+                  "medicine"
+                ]
+              },
+              "success": "Ce n'est pas un loup d'aujourd'hui : plus grand qu'aucun loup tué en France depuis un siècle, le pelage roux avec une raie noire sur l'échine, les dents usées d'une très vieille bête. Sous l'oreille, une ancienne blessure refermée sur une balle de plomb ronde, de celles des mousquets d'avant la Révolution.",
+              "failure": "Un très gros loup, mal naturalisé, dont les yeux de verre ne regardent pas dans la même direction.",
+              "extra": "Ce loup est venu de l'hiver 1765 par le pli de la draille. Fulcran le sait à moitié, et n'aime pas qu'on touche à la balle."
+            },
+            {
+              "title": "Faire parler Fulcran",
+              "text": "Il faut lui payer à boire.",
+              "roll": {
+                "type": "skill",
+                "options": [
+                  "charm",
+                  "fast-talk"
+                ]
+              },
+              "success": "« Je montais la garde sur la draille, avec les autres. On la monte tous les ans, à la Toussaint. Elle est sortie du brouillard, la bête, comme par une porte. » Il se tait, regarde Léontine, et ajoute plus bas : « Cette année, c'est l'année. »",
+              "failure": "« Un loup, c'est un loup. » Il finit son verre et sort dans la neige.",
+              "pushed": "Il s'emporte et se lève, la main sur son couteau de chasse : toute la salle se tait. Le lendemain, tout le hameau sait que les étrangers posent des questions."
+            },
+            {
+              "title": "La nuit",
+              "text": "Vers minuit, de la fenêtre, on voit une lanterne monter au Mas-Haut, puis redescendre.",
+              "roll": {
+                "type": "skill",
+                "options": [
+                  "listen"
+                ]
+              },
+              "success": "Sous la fenêtre, deux hommes passent en parlant patois : « …encore quatre jours… il mange plus guère… » Pour comprendre : Langue (occitan), ou un investigateur lozérien.",
+              "failure": "Le vent, et un chien qui aboie au loin.",
+              "goto": [
+                "l-eglise"
+              ]
+            }
+          ],
+          "notes": [
+            {
+              "title": "Accroches (une par investigateur)",
+              "items": [
+                "**Le musée** : M. Georges Ravenel, attaché au musée d'ethnographie du Trocadéro, envoie quelqu'un (collègue, ami, enquêteur privé) chercher Émile et son phonographe, qui appartient au musée. Il fournit la dernière lettre → {{handout:derniere-lettre}}.",
+                "**La sœur** : Hélène Courtiade, 29 ans, institutrice à Montrouge. Émile lui écrivait chaque dimanche ; depuis le 30 septembre, rien. Elle a écrit à l'auberge et n'a pas cru la réponse → {{handout:reponse-aubergiste}}. Une joueuse peut l'incarner.",
+                "**Le forestier** : un agent des Eaux et Forêts de Mende, envoyé aider le garde Achille Pradal à la maison forestière de la Fage pour un relevé. Pradal lui a écrit : « Il se passe ici des choses que je ne sais pas mettre sur une carte. »",
+                "**Le médecin** : un médecin de Mende, associé du docteur Boissonnade (mort l'an dernier), a retrouvé dans ses dossiers un rapport de mai 1922 sur un vagabond « mort depuis cent ans » avec un almanach de 1921 en poche, trouvé près de La Sagne-Noire. Il apprend qu'un Parisien a disparu au même endroit → {{handout:rapport-boissonnade}}.",
+                "**Le folkloriste** : un membre de la Société des lettres, sciences et arts de la Lozère, correspondant d'Émile. Le 3 octobre, Émile lui a demandé : « Connaissez-vous, dans les chants de la Margeride, le mot *barra* employé pour une porte qu'on ferme à quelque chose ? » Puis plus rien.",
+                "Les investigateurs se rencontrent dans le train de Saint-Chély ou dans la carriole d'Augustin : ils ont tous le même nom en tête."
+              ]
+            },
+            {
+              "title": "L'auberge et le hameau",
+              "items": [
+                "L'auberge-épicerie Chabert : la salle, quatre chambres à l'étage, le tabac, le sel, le courrier. Léontine est veuve ; son fils Paulin, seize ans, fend le bois et fait partie des veilleurs.",
+                "Le hameau : neuf fermes, l'église Saint-Ferréol et son cimetière, le presbytère, le four commun et la maison de Rosalie contre lui, et tout en haut le **Mas-Haut** des Malafosse, avec sa grande grange.",
+                "Au-dessus du hameau, au bord de la forêt, le **Plan des Feux** : on y entasse déjà des fagots et des souches. La vieille draille entre dans la forêt à cet endroit.",
+                "Le temps : froid sec samedi et dimanche ; neige la nuit du dimanche au lundi ; grosse neige le mardi soir, qui coupe la route de Saint-Chély jusqu'au vendredi."
+              ]
+            }
+          ],
+          "npcs": [
+            "leontine",
+            "augustin",
+            "firmin"
+          ],
+          "handouts": [
+            "derniere-lettre",
+            "reponse-aubergiste",
+            "rapport-boissonnade",
+            "liste-emile"
+          ],
+          "ambience": [
+            "wind",
+            "village-night",
+            "fireplace"
+          ],
+          "sfx": [
+            "door-open",
+            "dog-bark",
+            "footsteps"
+          ],
+          "next": [
+            "l-eglise"
+          ]
+        },
+        {
+          "id": "l-eglise",
+          "title": "L'église Saint-Ferréol",
+          "lead": "Dimanche 28 : la messe, le jeune curé et ses registres. Un étranger « parti par la draille » tous les sept ans.",
+          "screen": {
+            "place": "church",
+            "preset": "fog",
+            "time": "day"
+          },
+          "readAloud": [
+            "La cloche sonne dans un air si froid qu'il en paraît cassant. L'église est petite, basse, en granit gris, avec un clocher plat comme un mur percé de deux arches. Tout le hameau est là, en noir, les hommes d'un côté, les femmes de l'autre.",
+            "Quand vous entrez, les têtes se tournent ensemble, puis se détournent. Au premier rang, une vieille femme ne vous quitte pas des yeux. À côté d'elle, un garçon maigre tient son béret à deux mains.",
+            "Le curé est jeune, presque un séminariste. Il prêche sur la Toussaint et sur l'étranger qu'il faut accueillir. Personne ne lève les yeux. Au moment du cantique, personne ne chante."
+          ],
+          "flow": [
+            {
+              "title": "Observer la messe",
+              "roll": {
+                "type": "skill",
+                "options": [
+                  "psychology",
+                  "spot-hidden"
+                ]
+              },
+              "success": "Quand le curé parle d'accueillir l'étranger, un grand paysan aux mains énormes ({{npc:malafosse}}) serre les mâchoires ; la vieille femme du premier rang ({{npc:rosalie}}) ferme les yeux ; la femme du grand paysan ({{npc:marguerite}}) pleure sans bruit.",
+              "failure": "Une messe de campagne, pressée, sans chants.",
+              "extra": "Le hameau ne chante plus en public en octobre des années de sept. L'abbé l'a remarqué : « L'an dernier, ils chantaient tous. »"
+            },
+            {
+              "title": "Le garçon",
+              "text": "À la sortie, le garçon du premier rang, {{npc:toinou}}, passe tout près d'un investigateur et souffle : « Vous cherchez le Monsieur à la machine ? Au cimetière, à l'angélus du soir. Pas tous. » Sa grand-mère le tire par le bras.",
+              "extra": "Si personne ne l'a remarqué, il glisse un billet sous la porte de l'auberge dans l'après-midi.",
+              "goto": [
+                "le-cimetiere"
+              ]
+            },
+            {
+              "title": "L'abbé Massebeuf",
+              "text": "{{npc:massebeuf}} invite les investigateurs au presbytère, ravi de parler à des gens instruits. Il a connu Émile : « Charmant. Il voulait voir mes registres, pour les noms des anciens chanteurs. Il est parti sans dire au revoir. »",
+              "roll": {
+                "type": "skill",
+                "options": [
+                  "charm",
+                  "persuade"
+                ]
+              },
+              "success": "Il ajoute ce qui le tracasse. Le dimanche 7 octobre, jour où Malafosse aurait conduit Émile à la gare, Malafosse était à la messe, au premier rang, comme toujours. Et depuis trois semaines, chaque soir, Marguerite Malafosse monte à la grange un plateau couvert : « Pour un chien malade, m'a-t-elle dit. Un chien qui mange de la soupe et du pain blanc. »",
+              "failure": "Il parle de sa paroisse difficile, de ses paroissiens fermés comme leurs maisons. Il faudra revenir le voir (il ne refuse jamais une visite)."
+            },
+            {
+              "title": "Les registres",
+              "text": "Si on lui parle des feux ou des étrangers, l'abbé hésite, puis ouvre l'armoire de la sacristie : « Je voulais en parler à quelqu'un qui ne soit pas d'ici. » Il montre les notes en marge, à la page du 1er novembre → {{handout:registres}}.",
+              "roll": {
+                "type": "skill",
+                "options": [
+                  "library-use"
+                ]
+              },
+              "success": "Ils remontent toute la série : une note tous les sept ans, sans faute, depuis 1802 (les registres plus anciens ont brûlé à la Révolution). Les passants logeaient toujours au Mas-Haut ou chez les Chabert. 1928 est une année de sept.",
+              "failure": "Ils ne voient que les notes choisies par l'abbé. Toute la série leur prendra la journée de lundi, que l'abbé leur offre volontiers ; le schéma des sept ans, lui, se voit déjà.",
+              "pushed": "Ils trouvent tout, mais Léontine, venue porter des œufs, les voit penchés sur le registre de 1921. Le soir, le hameau sait."
+            },
+            {
+              "title": "Le cimetière, de jour",
+              "text": "Le cimetière entoure l'église. Ceux qui y passent après la messe peuvent voir, sans jet, la tombe de la Muda et la croix de l'inconnu de 1922 (détails dans [[le-cimetiere]])."
+            }
+          ],
+          "notes": [
+            {
+              "title": "Ce que l'abbé ignore, ce qu'il a",
+              "items": [
+                "Il ne sait rien du Mange-Temps. Il croit à une coutume ancienne et honteuse : il imagine qu'on chasse les étrangers du hameau la nuit des feux, peut-être qu'on les dépouille.",
+                "Il a peur de ce qu'il pourrait découvrir, et d'être muté s'il fait un scandale. Il est d'Ispagnac, près de Mende : pour le hameau, il est presque un étranger.",
+                "Il possède un phonographe à cylindres, cadeau de sa mère, avec lequel il écoute des airs d'opéra : voir [[les-cylindres]]."
+              ]
+            }
+          ],
+          "npcs": [
+            "massebeuf",
+            "toinou",
+            "rosalie",
+            "malafosse",
+            "marguerite"
+          ],
+          "handouts": [
+            "registres"
+          ],
+          "ambience": [
+            "village-day",
+            "wind",
+            "crows"
+          ],
+          "sfx": [
+            "door-creak",
+            "footsteps"
+          ],
+          "next": [
+            "le-cimetiere",
+            "les-cylindres"
+          ]
+        },
+        {
+          "id": "le-cimetiere",
+          "title": "Le cimetière à l'angélus",
+          "lead": "Toinou confie les cylindres et dit où est le Monsieur. La tombe de la Muda, celle de l'inconnu.",
+          "screen": {
+            "place": "graveyard",
+            "preset": "fog",
+            "time": "dusk"
+          },
+          "readAloud": [
+            "Le cimetière entoure l'église, derrière un muret de pierres sèches. Les croix de fer penchent toutes du même côté, celui du vent. La brume monte de la tourbière et noie les tombes jusqu'à mi-hauteur.",
+            "L'angélus sonne trois fois trois coups. Quand le dernier se perd, une petite silhouette se détache de l'ossuaire, une boîte en fer serrée contre la poitrine."
+          ],
+          "flow": [
+            {
+              "title": "Gagner la confiance de Toinou",
+              "text": "Il a onze ans, il a froid, et il a peur d'être vu. Il parle vite, moitié français, moitié patois. S'ils sont plus de deux, il recule.",
+              "roll": {
+                "type": "skill",
+                "options": [
+                  "charm",
+                  "psychology",
+                  "persuade"
+                ]
+              },
+              "success": "Il raconte tout ce qu'il sait (note **Ce que dit Toinou**) et donne la boîte.",
+              "failure": "Il donne la boîte, dit seulement « Il est pas parti, le Monsieur. Il est chez les Malafosse » et s'enfuit en entendant des pas. Il reviendra parler le lendemain, derrière la maison de sa grand-mère.",
+              "pushed": "Il dit tout, mais il pleure fort, et Rosalie, qui le cherchait, l'entend et l'emmène. Elle sait désormais que les investigateurs ont les cylindres."
+            },
+            {
+              "title": "La boîte",
+              "text": "Une boîte à biscuits en fer. Dedans, roulés dans un tricot, deux cylindres de cire brune dans leurs étuis, marqués à l'encre : *41, La Sagne, 4-X-28* et *42, La Sagne, 4-X-28*. Il faut un phonographe : l'abbé en a un.",
+              "extra": "Toinou sait chanter les trois couplets : il les a écoutés vingt fois en cachette sur la machine du Monsieur. Il refuse de les chanter ici : « Pas dehors. Pas ce mois-ci. »",
+              "goto": [
+                "les-cylindres"
+              ]
+            },
+            {
+              "title": "La tombe de la Muda",
+              "text": "Contre le mur de l'église, une dalle très ancienne, que quelqu'un fleurit encore de bruyère → {{handout:tombe-muda}}.",
+              "roll": {
+                "type": "skill",
+                "options": [
+                  "language-other:occitan",
+                  "history"
+                ]
+              },
+              "success": "*La Muda*, c'est « la muette ». *Barrèt la draia, cantèt un còp* : « elle ferma la draille, elle chanta une fois ». Une muette qui a chanté une fois.",
+              "failure": "Le patois leur échappe. Toinou ou l'abbé le traduisent si on leur demande."
+            },
+            {
+              "title": "La croix de l'inconnu",
+              "text": "Dans le coin des pauvres, une croix de bois : *Un inconnu, mort dans la forêt, 1922.* Le médecin reconnaît la date de son rapport. Le registre de 1921 donne un nom à l'homme : Joseph Lafon, de Langogne.",
+              "extra": "J. L. : les initiales du mouchoir du rapport. L'abbé Cayrel, l'ancien curé, l'a enterré sans chercher plus loin."
+            },
+            {
+              "title": "Quelqu'un regarde",
+              "roll": {
+                "type": "skill",
+                "options": [
+                  "listen",
+                  "spot-hidden"
+                ]
+              },
+              "success": "Derrière le muret, une lanterne sourde : Paulin Chabert, le fils de l'aubergiste, épie. Il file vers le Mas-Haut. Rattrapé, il ment mal et a très peur de Malafosse.",
+              "failure": "Ils ne voient personne. Le lendemain, Malafosse sait qu'ils ont parlé à Toinou. Il ne touchera pas à l'enfant (le petit-fils de la chanteuse), mais le hameau se ferme."
+            }
+          ],
+          "notes": [
+            {
+              "title": "Ce que dit Toinou",
+              "items": [
+                "Le Monsieur lui laissait tourner la manivelle et écouter les cylindres. Il lui a appris à dire « cylindre quarante et un » comme lui.",
+                "Le vendredi 5 octobre, le Monsieur lui a donné la boîte : « Garde-les, ne les montre à personne, même pas à ta grand-mère. Je reviendrai les chercher. »",
+                "Le Monsieur n'est pas parti : le samedi 20 octobre, en passant avec les chèvres derrière la grange du Mas-Haut, Toinou l'a entendu à travers les planches du fenil chanter tout bas la chanson des feux. Il est sûr de la voix.",
+                "Sa grand-mère, Rosalie, « chante pour les feux ». Cette chanson, on ne la chante jamais devant un étranger, et jamais en octobre, sauf pour la pierre, le jeudi soir. C'est la *cançon de la barra*.",
+                "Mercredi, c'est la nuit des feux. On les allume au Plan des Feux, et vers minuit les hommes descendent la draille jusqu'à la Pierre-Plantée. Les enfants restent à la maison, volets fermés.",
+                "Il ne sait pas ce qui arrive aux passants. On lui a dit qu'on les « renvoie chez eux par la draille ». Il a peur quand même."
+              ]
+            }
+          ],
+          "npcs": [
+            "toinou"
+          ],
+          "handouts": [
+            "tombe-muda"
+          ],
+          "ambience": [
+            "wind",
+            "crows"
+          ],
+          "sfx": [
+            "owl",
+            "footsteps",
+            "latch"
+          ],
+          "next": [
+            "les-cylindres"
+          ]
+        },
+        {
+          "id": "les-cylindres",
+          "title": "Les cylindres",
+          "lead": "Le phonographe du presbytère : la chanson de Rosalie, puis la voix qui lui répond.",
+          "screen": {
+            "place": "library",
+            "preset": "candle",
+            "time": "night"
+          },
+          "readAloud": [
+            "L'abbé a posé le phonographe sur la table de son bureau, entre deux piles de bréviaires. Le pavillon de fer-blanc, peint de fleurs, ressemble à un liseron géant. La lampe fait monter les ombres jusqu'au plafond.",
+            "Le cylindre tourne. D'abord un grésillement, comme une pluie très lointaine. Puis une voix d'homme, nette et appliquée : « Cylindre quarante et un. La Sagne-Noire, le quatre octobre mil neuf cent vingt-huit. »"
+          ],
+          "flow": [
+            {
+              "title": "Cylindre 41 : la chanson",
+              "text": "Derrière la voix d'Émile, du vent dans des arbres. Puis une voix de vieille femme, cassée mais juste, chante trois couplets en patois sur un air lent → {{handout:cylindres}}. La sœur reconnaît son frère ; ceux qui ont entendu Rosalie à l'arrivée reconnaissent sa voix.",
+              "roll": {
+                "type": "skill",
+                "options": [
+                  "language-other:occitan"
+                ]
+              },
+              "success": "Ils comprennent les trois couplets (la traduction est dans le document).",
+              "failure": "L'abbé traduit en hésitant, et se signe à « il marche à rebours et il sait mon nom ».",
+              "extra": "Sans l'abbé ni Toinou, et sans Langue (occitan) : seulement l'air et quelques mots (draia, lop, nuèch)."
+            },
+            {
+              "title": "Retenir l'air",
+              "text": "Pour chanter le chant le 31, il faut l'air et les mots des trois couplets.",
+              "roll": {
+                "type": "characteristic",
+                "options": [
+                  "INT"
+                ]
+              },
+              "success": "Après trois écoutes, l'investigateur sait l'air et les paroles.",
+              "failure": "Il faudra réécouter le cylindre, ou se faire chanter le chant par Toinou."
+            },
+            {
+              "title": "Cylindre 42 : la réponse",
+              "text": "Rosalie reprend le troisième couplet, puis s'arrête net. Silence. Et, de plus loin, du côté de la forêt, une voix de jeune fille, claire, très douce, chante le même air avec d'autres paroles. Elle est sur la cire comme le reste.",
+              "roll": {
+                "type": "san",
+                "label": "La voix de jeune fille",
+                "san": "0/1D3"
+              }
+            },
+            {
+              "title": "Comprendre la réponse",
+              "roll": {
+                "type": "skill",
+                "options": [
+                  "language-other:occitan"
+                ]
+              },
+              "success": "« Ma draille est à vous, votre temps est à moi. Donnez-moi une voix, ou donnez-moi un corps. »",
+              "failure": "L'abbé, livide, ne traduit que la fin : « …una votz o un còrs… Une voix, ou un corps. »"
+            },
+            {
+              "title": "Les derniers mots",
+              "text": "Le chant s'arrête. Grésillement. Puis la voix de jeune fille dit, en français, exactement sur le ton appliqué d'Émile : « Cylindre quarante-trois. La Sagne-Noire, le trente et un octobre. » Il n'y a pas de cylindre quarante-trois.",
+              "roll": {
+                "type": "san",
+                "label": "Cylindre quarante-trois",
+                "san": "1/1D4"
+              },
+              "extra": "Le 31 octobre, c'est mercredi : la nuit des feux."
+            },
+            {
+              "title": "L'abbé",
+              "text": "Massebeuf croit d'abord à une farce, une fille cachée dans les bois. Si les investigateurs lui parlent des registres, il comprend : « Ils vont le donner à quelque chose. » Désormais, il les aide de son mieux, mais il ne fera rien en public sans eux.",
+              "extra": "Il prête le phonographe et propose de cacher les investigateurs au presbytère si le hameau se retourne contre eux."
+            },
+            {
+              "title": "Cette nuit-là",
+              "roll": {
+                "type": "skill",
+                "options": [
+                  "listen"
+                ]
+              },
+              "success": "Vers trois heures, sous la fenêtre, quelqu'un fredonne l'air du cylindre, très bas, avec une voix de jeune fille. Il n'y a personne dehors, et la neige qui commence ne porte aucune trace (SAN 0/1).",
+              "failure": "Ils dorment mal. Au matin, il a neigé.",
+              "goto": [
+                "les-traces"
+              ]
+            }
+          ],
+          "npcs": [
+            "massebeuf",
+            "toinou"
+          ],
+          "handouts": [
+            "cylindres"
+          ],
+          "ambience": [
+            "clock",
+            "wind"
+          ],
+          "sfx": [
+            "footsteps"
+          ],
+          "next": [
+            "les-traces"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "draille",
+      "title": "La vieille draille",
+      "scenes": [
+        {
+          "id": "les-traces",
+          "title": "Les traces dans le champ de la Croix",
+          "lead": "Lundi 29 à l'aube : des traces dans la neige qui commencent au milieu d'un champ. Le garde Pradal et ses cartes.",
+          "screen": {
+            "place": "forest",
+            "preset": "snow",
+            "time": "day"
+          },
+          "readAloud": [
+            "La neige est tombée toute la nuit, une neige fine et sèche qui crisse sous les pas. Le plateau est blanc jusqu'aux bois, et le ciel a la couleur du granit.",
+            "Au milieu du champ qui monte vers le Mas-Haut, une file de traces commence d'un coup, dans la neige vierge, sans rien autour. Elles traversent le champ en ligne droite, s'arrêtent au mur de pierres sèches, tournent, et reviennent mourir à l'endroit exact où elles sont nées."
+          ],
+          "flow": [
+            {
+              "title": "Qui les montre",
+              "text": "Le garde {{npc:pradal}}, en tournée à l'aube, vient chercher les investigateurs à l'auberge (surtout s'il y a un forestier parmi eux) : « Venez voir ça avant qu'ils l'effacent. » Sinon, Toinou les a vues en sortant les chèvres et court les prévenir.",
+              "extra": "Une heure après, Malafosse et deux veilleurs viennent piétiner le champ en traînant des fagots, sans un mot."
+            },
+            {
+              "title": "Lire les traces",
+              "roll": {
+                "type": "skill",
+                "options": [
+                  "track",
+                  "natural-world"
+                ]
+              },
+              "success": "Des empreintes larges comme une assiette, fendues comme un sabot, mais longues, avec derrière la marque d'une articulation : la chose marchait sur quatre membres. Et les pointes regardent dans le mauvais sens, vers l'endroit d'où elle vient, comme si ses jambes pliaient à rebours. Au fond de chaque trace, la neige est gelée en verre.",
+              "failure": "Des traces énormes, qu'aucune bête du pays ne laisse.",
+              "pushed": "À force de suivre et de mesurer, ils sont encore dans le champ quand Malafosse arrive avec ses hommes : « Ça, c'est chez moi. Allez-vous-en. »"
+            },
+            {
+              "title": "La neige vierge",
+              "text": "Là où les traces commencent et finissent, rien : pas d'arbre, pas de rocher, pas d'autre empreinte. La chose est sortie du milieu du champ et y est rentrée.",
+              "roll": {
+                "type": "san",
+                "label": "Des traces qui viennent de nulle part",
+                "san": "0/1D2"
+              }
+            },
+            {
+              "title": "Jusqu'au mur",
+              "text": "Les traces s'arrêtent net au mur de pierres sèches qui ferme le champ. Sur la pierre d'angle, une croix gravée, très ancienne. De l'autre côté du mur, à trente pas : la grande grange du Mas-Haut. La neige est tassée en rond devant le mur : la chose s'est tenue là longtemps, face à la grange.",
+              "extra": "Elle est venue regarder son passant, jusqu'à la limite des terres du hameau. Une croix marque chacune de ces limites."
+            },
+            {
+              "title": "D'où elles viennent",
+              "text": "Pradal sort de sa sacoche ses calques et ses notes → {{handout:cartes-pradal}}.",
+              "roll": {
+                "type": "skill",
+                "options": [
+                  "navigate",
+                  "library-use"
+                ]
+              },
+              "success": "Sur le cadastre de 1834, avant le défrichement, la vieille draille traversait le champ exactement là où naissent les traces. La chose a marché sur une route qui n'existe plus.",
+              "failure": "Pradal finit par le leur montrer lui-même, après une heure de mesures dans le froid : la draille passait là."
+            },
+            {
+              "title": "Pradal",
+              "text": "Mis en confiance (un forestier parmi eux, ou ces traces), il raconte ses mesures et ses montres (note **Ce que sait Pradal**) et propose de les guider sur la draille, jusqu'aux ruines du prieuré. « Chaque 31 octobre, Malafosse vient me dire de ne pas sortir de la nuit. Poliment. Avec son fusil. »",
+              "goto": [
+                "la-draille",
+                "le-prieure"
+              ]
+            }
+          ],
+          "notes": [
+            {
+              "title": "Ce que sait Pradal",
+              "items": [
+                "La vieille draille ne figure plus sur les cartes des Eaux et Forêts depuis la route forestière de 1912, qui la double à trois cents mètres. Personne ne l'entretient, et pourtant elle reste nette : pas une ronce, pas un arbre tombé en travers.",
+                "En juin 1925, il l'a arpentée à la chaîne, de la Pierre-Plantée au prieuré : jamais deux fois la même longueur.",
+                "Sa montre retarde chaque fois qu'il revient de la draille : de vingt minutes, une fois de près de deux heures.",
+                "Chaque 31 octobre, il reste chez lui. Il a entendu chanter, de loin, toute la nuit. En 1921, vers minuit, un coup de fusil.",
+                "En 1925, il a trouvé la dalle de l'autel du prieuré déplacée par un éboulis, et a pensé « au trésor des moines ». Il n'a pas osé la soulever seul (voir [[le-prieure]])."
+              ]
+            }
+          ],
+          "npcs": [
+            "pradal",
+            "malafosse",
+            "toinou"
+          ],
+          "handouts": [
+            "cartes-pradal"
+          ],
+          "ambience": [
+            "wind",
+            "crows",
+            "nature-day"
+          ],
+          "sfx": [
+            "dog-bark",
+            "footsteps"
+          ],
+          "next": [
+            "la-draille"
+          ]
+        },
+        {
+          "id": "la-draille",
+          "title": "La vieille draille",
+          "lead": "La route des troupeaux dans la forêt, de jour : la Pierre-Plantée, des pas qui sont les leurs, une battue d'un autre siècle.",
+          "screen": {
+            "place": "forest",
+            "preset": "fog",
+            "time": "day"
+          },
+          "readAloud": [
+            "Au Plan des Feux, les fagots sont déjà en tas, hauts comme des hommes. Derrière eux, la draille entre dans la forêt : un chemin creux, large de trois charrettes, bordé de deux murets moussus, si droit qu'on n'en voit pas la fin.",
+            "Sous les hêtres, la neige n'est presque pas tombée. Il fait plus sombre qu'il ne devrait à cette heure. Au loin, des sonnailles tintent, comme celles d'un grand troupeau qui monte vers l'estive. Il n'est plus passé de troupeau sur cette draille depuis cinquante ans."
+          ],
+          "flow": [
+            {
+              "title": "Les sonnailles",
+              "roll": {
+                "type": "skill",
+                "options": [
+                  "listen"
+                ]
+              },
+              "success": "Le troupeau passe tout près : des bêlements, le souffle des chiens, un berger qui siffle un air qu'ils connaissent peut-être (celui du cylindre). Rien ne bouge sur la draille. Puis plus rien.",
+              "failure": "Les sonnailles s'éloignent et se taisent.",
+              "extra": "À trois jours des feux, la draille est déjà mince : on y entend d'autres années."
+            },
+            {
+              "title": "La Pierre-Plantée",
+              "text": "À mi-chemin, dans une clairière où un ruisseau coupe la draille sur des dalles, se dresse un menhir de granit plus haut qu'un homme. À son pied : des moignons de torches brûlées, des brins de laine noire noués autour de la pierre. Au sommet, quelqu'un a posé un caillou blanc, rond comme un œuf.",
+              "roll": {
+                "type": "skill",
+                "options": [
+                  "spot-hidden"
+                ]
+              },
+              "success": "Dans la mousse, au pied du menhir, un bouton de cuivre frappé d'une fleur de lys : un bouton d'uniforme de dragon du roi, comme ceux des soldats qui chassaient la Bête en 1765. Il est presque neuf.",
+              "failure": "Des restes de torches et de laine : le lieu a beaucoup servi.",
+              "extra": "C'est ici que le passant est remis au Mange-Temps, à minuit. Le hameau appelle la clairière le Pas du Mange-Temps."
+            },
+            {
+              "title": "Des pas devant eux",
+              "text": "Après la pierre, sur une plaque de neige entre les arbres, des empreintes fraîches viennent vers eux : souliers de ville, brodequins, bottes. Celui qui les examine reconnaît les semelles : ce sont les leurs, venant en sens inverse, dans une neige où ils ne sont jamais passés.",
+              "roll": {
+                "type": "san",
+                "label": "Leurs propres pas",
+                "san": "0/1D3"
+              },
+              "extra": "Ce sont leurs traces de la nuit de mercredi. S'ils comptent les paires, ne dites rien : laissez-les compter."
+            },
+            {
+              "title": "La battue",
+              "text": "Le brouillard monte du ruisseau.",
+              "roll": {
+                "type": "group",
+                "options": [
+                  "spot-hidden"
+                ]
+              },
+              "success": "Une ligne d'hommes traverse la draille à cinquante pas : des paysans en bonnet, armés de fourches et de faux, deux cavaliers en habit bleu, des torches en plein jour. Ils ne voient personne. Ils disparaissent entre les arbres sans un bruit de pas (SAN 0/1 pour ceux qui les ont vus).",
+              "failure": "Une odeur de poudre noire et de cheval, et pas de cheval.",
+              "extra": "Une battue de l'hiver 1765."
+            },
+            {
+              "title": "Mesurer la draille",
+              "text": "Avec Pradal, ou un investigateur qui compte ses pas : la Pierre-Plantée est à vingt minutes du Plan des Feux à l'aller, à une heure au retour. Les montres ne sont plus d'accord entre elles.",
+              "roll": {
+                "type": "skill",
+                "options": [
+                  "navigate"
+                ]
+              },
+              "success": "Ils sortent de la forêt en bas, sous les ruines du prieuré, à l'heure prévue.",
+              "failure": "Ils sortent sous le prieuré au crépuscule, alors qu'ils se croyaient en début d'après-midi. Il faudra visiter les ruines à la lanterne, ou revenir demain.",
+              "pushed": "Ils tournent en rond. Quand ils sortent enfin, c'est la nuit, à la lisière du Plan des Feux, et une lanterne brûle, posée sur les fagots. Personne en vue (SAN 0/1).",
+              "goto": [
+                "le-prieure"
+              ]
+            }
+          ],
+          "notes": [
+            {
+              "title": "La draille de jour, à l'approche des feux",
+              "items": [
+                "Du Plan des Feux à la Pierre-Plantée : environ un kilomètre (« vingt minutes », plus ou moins). De la Pierre-Plantée au prieuré : encore un kilomètre, en descente.",
+                "Plus on approche du 31, plus le pli s'entend : sonnailles, voix, odeurs d'autrefois. De jour, rien ne peut toucher les investigateurs, et ils ne peuvent rien toucher.",
+                "Hors de la draille, la forêt est ordinaire : hêtres, pins sylvestres, chaos de granit."
+              ]
+            }
+          ],
+          "npcs": [
+            "pradal"
+          ],
+          "ambience": [
+            "wind",
+            "crows"
+          ],
+          "sfx": [
+            "footsteps",
+            "owl"
+          ],
+          "next": [
+            "le-prieure"
+          ]
+        },
+        {
+          "id": "le-prieure",
+          "title": "Les ruines de Saint-Ferréol",
+          "lead": "Le prieuré fortifié sur son rocher : les années gravées, le livre du prieur sous la dalle d'autel.",
+          "screen": {
+            "place": "castle",
+            "preset": "snow",
+            "time": "dusk"
+          },
+          "readAloud": [
+            "Le prieuré se dresse sur un éperon de granit au-dessus de la draille : une tour carrée sans toit, des pans de murailles, l'abside d'une chapelle ouverte au ciel. Des sapins ont poussé dans la nef. La neige recommence, en flocons lourds qui tombent droit.",
+            "Dans l'abside, la pierre est couverte d'inscriptions grattées au couteau. Des croix et des dates, en colonne, comme sur un mur de prison."
+          ],
+          "flow": [
+            {
+              "title": "Les années gravées",
+              "text": "Sans jet : vingt-deux croix, chacune avec une année. 1774, 1781, 1788… jusqu'à 1921. Tous les sept ans, sans manquer. Sous 1921, la pierre a été aplanie au ciseau, toute neuve, pour une vingt-troisième date.",
+              "extra": "Le bayle des veilleurs (aujourd'hui Malafosse) monte graver l'année le jour de la Toussaint. Les dates sont celles des registres."
+            },
+            {
+              "title": "La dalle d'autel",
+              "text": "Au fond de l'abside, la dalle de l'autel est de travers, déplacée par l'éboulis de 1925. Frappée, elle sonne creux.",
+              "roll": {
+                "type": "characteristic",
+                "options": [
+                  "STR"
+                ]
+              },
+              "success": "À plusieurs, ils la font basculer. Dessous, dans une cavité, un coffret doublé de plomb. Dedans, roulé dans une toile cirée, un registre relié de cuir : le livre du prieur → {{handout:livre-prieur}}.",
+              "failure": "Elle ne bouge pas. Avec un levier (une branche de sapin, la pioche de Pradal), elle finit par céder, mais la nuit tombe.",
+              "pushed": "Elle bascule et écrase une main (1D3), mais le coffret est là."
+            },
+            {
+              "title": "Lire le livre",
+              "text": "Un français du siècle dernier, serré, mêlé de comptes de seigle et de cire.",
+              "roll": {
+                "type": "skill",
+                "options": [
+                  "library-use",
+                  "history"
+                ]
+              },
+              "success": "Ils trouvent tout de suite les passages du document.",
+              "failure": "Il faudra une soirée entière à la lampe pour les trouver : ils les ont le lendemain matin."
+            },
+            {
+              "title": "La vraie barre",
+              "text": "Le prieur a recopié le dernier couplet tel que Jeanne l'a chanté : *Barri la draia amb ma votz, que ma votz demòre de l'autre costat.* « Je ferme la draille avec ma voix, que ma voix reste de l'autre côté. » Le hameau, lui, chante *amb lo passant* : « avec le passant ».",
+              "extra": "C'est la clé du choix final : la vraie barre ferme la draille sans passant, tant que vit le chanteur, mais celui qui la chante perd sa voix."
+            },
+            {
+              "title": "Ce que cela coûte",
+              "text": "Les bergers de quinze ans devenus vieillards, la voix de Jeanne, vingt-deux passants.",
+              "roll": {
+                "type": "san",
+                "label": "Le livre du prieur",
+                "san": "1/1D6"
+              }
+            },
+            {
+              "title": "Le retour",
+              "text": "S'ils redescendent la draille de nuit, quelque chose descend la draille derrière eux, sans bruit, toujours à la limite de la lumière. Ils ne le voient pas, mais dans les clairières, la neige fraîche porte derrière eux de grandes traces tournées à rebours.",
+              "roll": {
+                "type": "san",
+                "label": "Ce qui les suit",
+                "san": "0/1D2"
+              },
+              "goto": [
+                "chez-rosalie",
+                "le-mas-haut"
+              ]
+            }
+          ],
+          "notes": [
+            {
+              "title": "Le prieuré",
+              "items": [
+                "Prieuré de Saint-Ferréol : fondé au XIIe siècle pour accueillir les bouviers de la draille, fortifié pendant les guerres de Religion, vendu comme bien national en 1791 et démonté pour sa pierre.",
+                "Dom Aurélien Vaissière, prieur de 1758 à sa mort en 1779, a caché son livre sous l'autel. Il est enterré dans la nef, sous une dalle sans nom.",
+                "La tour : un escalier à vis jusqu'à mi-hauteur. De là, on voit le Plan des Feux, le hameau et toute la draille, une saignée droite dans la forêt."
+              ]
+            }
+          ],
+          "npcs": [
+            "pradal"
+          ],
+          "handouts": [
+            "livre-prieur"
+          ],
+          "ambience": [
+            "wind-howling",
+            "crows"
+          ],
+          "sfx": [
+            "latch",
+            "footsteps"
+          ],
+          "next": [
+            "chez-rosalie",
+            "le-mas-haut"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "veille",
+      "title": "Ceux qui chantent",
+      "scenes": [
+        {
+          "id": "chez-rosalie",
+          "title": "Rosalie",
+          "lead": "La chanteuse des feux, face à ce que savent les investigateurs. Elle seule connaît tout le chant.",
+          "screen": {
+            "preset": "hearth",
+            "time": "dusk"
+          },
+          "readAloud": [
+            "La maison de Rosalie est collée au four commun, si basse qu'il faut se pencher pour entrer. Une seule pièce, une cheminée immense où pend une marmite, un lit clos, et des chèvres qu'on entend remuer derrière la cloison.",
+            "La vieille femme ne se lève pas. Elle tricote près du feu, et ses doigts noueux vont très vite. « Je sais pourquoi vous venez. Toinou, va voir aux chèvres. »"
+          ],
+          "flow": [
+            {
+              "title": "La faire parler",
+              "text": "{{npc:rosalie}} nie tout tant qu'on n'a pas de preuve. Elle cède devant l'une de ces choses : sa propre voix sur le cylindre, le livre du prieur, la tombe de la Muda, les registres, ou l'idée que Toinou portera un jour une torche sur la draille. Avec une preuve en main : un dé bonus.",
+              "roll": {
+                "type": "skill",
+                "options": [
+                  "persuade",
+                  "psychology",
+                  "charm"
+                ]
+              },
+              "success": "Elle pose son tricot et raconte (note **Ce que dit Rosalie**).",
+              "failure": "« Vous êtes des passants. Repartez tant que la route est ouverte. » Le lendemain matin, elle les fait chercher par Toinou : la preuve qu'ils ont laissée derrière eux l'a empêchée de dormir.",
+              "pushed": "Elle parle, mais d'une traite, en patois, et finit en criant. Malafosse l'apprend dans l'heure."
+            },
+            {
+              "title": "Les deux barres",
+              "text": "Si on lui montre le livre du prieur, ou si on lui demande pourquoi la Muda était muette : « Il y a deux façons de finir le chant. Avec le passant, ou avec sa voix. La Jeanne a donné la sienne. Depuis, on donne des passants. » Elle chante tout bas, pour la première fois, les deux versions du dernier couplet."
+            },
+            {
+              "title": "Que fera-t-elle mercredi ?",
+              "text": "Si les investigateurs disent qu'ils ne laisseront pas faire, elle comprend que quelque chose finit. Ce qu'elle décide dépend de la façon dont on lui parle."
+            },
+            {
+              "title": "Elle chantera la vraie barre",
+              "branch": "Si Rosalie accepte de donner sa voix",
+              "text": "Il faut qu'on lui parle de Jeanne, de Toinou, des huit passants, avec respect.",
+              "success": "Elle mènera les couplets aux feux, puis chantera la vraie barre à la Pierre-Plantée. Elle demande une chose : qu'on emmène Toinou loin du hameau après. Elle sait qu'elle a soixante-dix-huit ans, et que la draille ne restera fermée que tant qu'elle vivra."
+            },
+            {
+              "title": "Elle apprendra la barre à quelqu'un",
+              "branch": "Si un investigateur veut la chanter",
+              "text": "Elle lui apprend l'air et les mots, à voix basse, la nuit, volets clos. Elle le prévient : « Après, tu ne parleras plus. Jamais. Et la nuit des feux, tu t'entendras chanter dans la forêt. »",
+              "roll": {
+                "type": "characteristic",
+                "options": [
+                  "INT"
+                ]
+              },
+              "success": "Il sait le chant entier et la vraie barre.",
+              "failure": "Il lui faudra une seconde nuit (le mardi soir), ou le livre du prieur sous les yeux à la Pierre-Plantée."
+            },
+            {
+              "title": "Elle chantera comme toujours",
+              "branch": "Si on la menace ou si on la méprise",
+              "text": "Elle chantera la barre avec le passant, comme depuis 1872. Mais le doute est là : à la Pierre-Plantée, un jet de Persuasion difficile peut encore la retourner ([[la-draille-de-nuit]])."
+            },
+            {
+              "title": "Ce qu'elle exige",
+              "text": "« Ne lui prenez pas son passant si vous n'avez personne pour la vraie barre. Il passera, et ce ne sera pas un loup qu'on tue avec un fusil. »",
+              "goto": [
+                "le-mas-haut",
+                "les-feux"
+              ]
+            }
+          ],
+          "notes": [
+            {
+              "title": "Ce que dit Rosalie",
+              "items": [
+                "Elle est née Bastide, en 1850, de la famille de la Muda. Le chant passe aux filles Bastide. Sa mère le lui a donné en 1872 ; depuis, elle a chanté huit grandes nuits et vu partir huit passants.",
+                "On ne chante jamais la barre devant le passant : un passant qui sait le chant pourrait le chanter lui-même et donner sa voix au lieu de son corps. C'est pour ça que personne n'a voulu chanter devant le Monsieur, et qu'on l'a enfermé si tôt quand on a su qu'il avait la chanson dans sa machine.",
+                "Ce qui vient : *lo Manja-Temps*, le Mange-Temps. Elle l'a vu huit fois, de loin, à la lueur des torches. « Grand comme un arbre mort, sur quatre pattes qui plient à rebours. Il n'a pas d'yeux. Il a des visages. »",
+                "Il mange le temps : ceux qu'il prend, on ne les revoit pas, ou on les retrouve vieux comme la terre. Elle a su pour le chemineau de 1922.",
+                "La voix qui répond, c'est celle de Jeanne. « Il l'a gardée. Il chante avec. Toutes les Bastide le savent. »",
+                "On dit chez les Bastide que la draille serait restée fermée tant que Jeanne vivait (elle est morte en 1819). Personne n'a jamais voulu essayer.",
+                "Elle a honte. Elle n'a jamais osé donner sa voix. Elle a peur du silence."
+              ]
+            }
+          ],
+          "npcs": [
+            "rosalie",
+            "toinou"
+          ],
+          "ambience": [
+            "fireplace",
+            "clock",
+            "wind"
+          ],
+          "sfx": [
+            "knocking",
+            "door-open"
+          ],
+          "next": [
+            "le-mas-haut",
+            "les-feux"
+          ]
+        },
+        {
+          "id": "le-mas-haut",
+          "title": "Le Mas-Haut",
+          "lead": "La ferme des Malafosse : le fenil cadenassé, Émile drogué, et ce que fera le hameau s'il perd son passant.",
+          "screen": {
+            "place": "manor",
+            "preset": "night",
+            "time": "night"
+          },
+          "readAloud": [
+            "Le Mas-Haut domine le hameau : une longue ferme de granit au toit de lauzes, et contre elle la grange, si grande qu'une charrette chargée monte par une rampe de terre jusqu'au fenil. Une lampe brûle à la fenêtre de la cuisine.",
+            "Un chien aboie une fois, puis se tait. Par les planches disjointes du fenil, une voix d'homme très faible fredonne un air lent."
+          ],
+          "flow": [
+            {
+              "title": "Approcher",
+              "roll": {
+                "type": "skill",
+                "options": [
+                  "stealth"
+                ]
+              },
+              "success": "Ils atteignent la rampe de la grange sans être vus. Le chien, Mouret, gronde sans aboyer ; un morceau de viande le fait taire.",
+              "failure": "Mouret aboie à pleine gorge. {{npc:malafosse}} sort sur le seuil, le fusil à la main : « Qui va là ? »",
+              "pushed": "Le chien mord un investigateur (1D4) et tout le Mas-Haut se réveille."
+            },
+            {
+              "title": "Le fenil",
+              "text": "En haut de la rampe, une porte de planches fermée par un cadenas neuf.",
+              "roll": {
+                "type": "skill",
+                "options": [
+                  "locksmith",
+                  "mechanical-repair"
+                ]
+              },
+              "success": "Le cadenas s'ouvre sans bruit.",
+              "failure": "Il faut forcer la porte : ça prend du temps et fait du bruit (le chien, puis Malafosse)."
+            },
+            {
+              "title": "Émile",
+              "text": "Sur un lit de paille, sous trois couvertures : {{npc:emile}}, barbe de trois semaines, yeux vitreux, pupilles en tête d'épingle. Une cuvette, un pot de chambre, un bol de soupe à moitié plein, une fiole brune. Son phonographe est sous une bâche, dans un coin.",
+              "roll": {
+                "type": "skill",
+                "options": [
+                  "medicine",
+                  "first-aid"
+                ]
+              },
+              "success": "Laudanum à forte dose, depuis des semaines. Avec du café, de la marche et du froid, il retrouve ses esprits en quelques heures. Il pourra marcher, lentement, et parler.",
+              "failure": "Il ne reconnaît personne (sauf sa sœur) et marmonne la chanson. Il faudra le porter, et il ne sera lucide qu'au matin.",
+              "extra": "Ce qu'il sait : note **Ce que dit Émile**. Son carnet est dans sa veste."
+            },
+            {
+              "title": "Malafosse",
+              "text": "S'il les surprend, Malafosse ne veut pas tuer : il veut son passant. Il parle avant de tirer : « Vous ne savez pas ce que vous faites. Vous croyez qu'on aime ça ? Si personne ne descend mercredi, c'est toute la Margeride qui y passe. »",
+              "roll": {
+                "type": "skill",
+                "options": [
+                  "persuade"
+                ],
+                "difficulty": "hard"
+              },
+              "success": "Il hésite. Si on lui montre la vraie barre (le livre du prieur) et que Rosalie est d'accord, il laisse partir Émile, à condition que le chant soit fini mercredi. Sinon, il les laisse partir, mais le hameau cherchera un autre passant.",
+              "failure": "Il appelle les veilleurs (Fulcran et Paulin arrivent en trois rounds). Combat, ou fuite dans la neige avec Émile sur le dos."
+            },
+            {
+              "title": "Que faire d'Émile ?",
+              "text": "Le libérer tout de suite, ou attendre la nuit des feux."
+            },
+            {
+              "title": "Le laisser au fenil",
+              "branch": "Si les investigateurs le laissent",
+              "text": "Pour ne pas alerter le hameau, ou parce qu'ils comptent agir mercredi. On le fera descendre la draille le 31 à 23 heures ([[les-feux]])."
+            },
+            {
+              "title": "L'emmener",
+              "branch": "Si les investigateurs l'emmènent",
+              "text": "Au matin, Marguerite trouve le fenil vide. La neige tombe dru le mardi soir : la route de Saint-Chély est coupée, personne ne sort du plateau avant vendredi. Le hameau cherche un autre passant (note **Si le hameau perd son passant**). Le presbytère est la seule cachette sûre, et pas pour longtemps."
+            },
+            {
+              "title": "Marguerite",
+              "text": "De jour, prise seule au lavoir ou à l'église, {{npc:marguerite}} craque vite. Elle avoue le laudanum, acheté à la pharmacie de Saint-Chély « pour mes douleurs », et dit qu'elle prie chaque soir pour le Monsieur.",
+              "roll": {
+                "type": "skill",
+                "options": [
+                  "psychology",
+                  "persuade"
+                ]
+              },
+              "success": "Elle aidera : elle laissera le cadenas ouvert la nuit de mardi, ou elle donnera à Émile de l'eau au lieu du laudanum le mercredi, pour qu'il soit lucide sur la draille.",
+              "failure": "Elle se signe et ferme sa porte. Elle ne dira rien à son mari, ni pour, ni contre.",
+              "goto": [
+                "les-feux"
+              ]
+            }
+          ],
+          "notes": [
+            {
+              "title": "Ce que dit Émile",
+              "items": [
+                "Le jeudi 4 octobre au crépuscule, il a suivi Rosalie jusqu'à la Pierre-Plantée, le phonographe dans un sac, et a enregistré caché derrière un bloc, à vingt pas.",
+                "La voix de jeune fille venait « de la draille, mais de plus loin que la draille, comme du fond d'un puits couché ». Rosalie s'est enfuie. Lui a vu quelque chose de très grand bouger dans le brouillard, de l'autre côté de la pierre.",
+                "Le lendemain, Léontine a fouillé sa chambre. Il a confié les cylindres à Toinou et écrit au musée.",
+                "Le samedi 6, souper au Mas-Haut, un vin chaud très sucré. Il s'est réveillé dans le fenil.",
+                "Il entend les Malafosse parler sous le plancher : « mercredi », « la Pierre », « le passant ».",
+                "Son carnet contient les paroles des trois couplets, transcrites et traduites, et l'air noté.",
+                "Il sait l'air par cœur : il l'a fredonné trois semaines pour ne pas devenir fou. S'il apprend ce que coûte la vraie barre, il peut proposer de la chanter lui-même : « Je suis venu prendre leurs voix. Je peux bien leur laisser la mienne. »"
+              ]
+            },
+            {
+              "title": "Si le hameau perd son passant",
+              "items": [
+                "Malafosse réunit les veilleurs le mardi soir chez Chabert. Il faut un étranger : l'abbé Massebeuf (« il n'est pas d'ici ») ou l'un des investigateurs.",
+                "Le mercredi au souper, Léontine verse du laudanum dans la soupe des investigateurs. Trouver Objet Caché ou Médecine pour remarquer le goût amer ; sinon, jet de CON pour ne pas sombrer avant 22 heures.",
+                "Si rien ne marche, les veilleurs prennent l'abbé de force au presbytère, à 22 heures.",
+                "Si le hameau apprend que les investigateurs ont la vraie barre et un chanteur, Malafosse peut se rallier (voir [[les-feux]])."
+              ]
+            }
+          ],
+          "npcs": [
+            "emile",
+            "malafosse",
+            "marguerite",
+            "firmin",
+            "veilleurs"
+          ],
+          "ambience": [
+            "village-night",
+            "wind"
+          ],
+          "sfx": [
+            "dog-bark",
+            "latch",
+            "door-creak",
+            "footsteps"
+          ],
+          "next": [
+            "les-feux"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "feux",
+      "title": "La nuit des feux",
+      "scenes": [
+        {
+          "id": "les-feux",
+          "title": "Les feux du Plan",
+          "lead": "Mercredi 31 : le hameau allume les feux et chante. À 23 heures, la procession descend la draille.",
+          "screen": {
+            "place": "forest",
+            "preset": "ritual",
+            "time": "night"
+          },
+          "readAloud": [
+            "À la tombée de la nuit, le Plan des Feux s'embrase d'un coup : sept bûchers en demi-cercle devant la forêt, si hauts que leurs flammes couchent les ombres jusqu'au hameau. Autour d'eux, la neige fond en pluie tiède.",
+            "Tout le hameau est là, sauf les enfants. Les hommes portent des torches de résine et des fusils. Les femmes se tiennent par le bras. Personne ne parle.",
+            "Une voix de vieille femme s'élève, cassée et juste, et tous reprennent le premier couplet. Derrière les bûchers, la draille est un tunnel noir. Tout au fond, une autre voix, claire, une voix de jeune fille, chante avec eux."
+          ],
+          "flow": [
+            {
+              "title": "Où est le passant ?",
+              "text": "Selon ce qui s'est passé : Émile, drogué, assis sur un banc entre Malafosse et Fulcran ; ou l'abbé Massebeuf, ou un investigateur drogué, à sa place ; ou personne, si le hameau a été rallié.",
+              "extra": "Si les investigateurs ont libéré Émile et se cachent, les veilleurs fouillent le hameau jusqu'à 22 heures, puis prennent l'abbé."
+            },
+            {
+              "title": "Le chant",
+              "text": "Le hameau chante les trois couplets en boucle, pendant des heures, autour des feux. Un investigateur qui connaît l'air peut se mêler aux chanteurs sans être remarqué. À chaque fin de couplet, la voix de jeune fille répond, plus proche.",
+              "roll": {
+                "type": "san",
+                "label": "La voix qui répond",
+                "san": "0/1D2"
+              }
+            },
+            {
+              "title": "La procession",
+              "text": "À 23 heures, la procession part : Rosalie devant, puis le passant entre deux veilleurs, puis les hommes aux torches. Les femmes restent au Plan et chantent. C'est le dernier moment pour choisir."
+            },
+            {
+              "title": "Enlever le passant",
+              "branch": "Si les investigateurs prennent le passant de force",
+              "roll": {
+                "type": "skill",
+                "options": [
+                  "stealth"
+                ]
+              },
+              "success": "Dans le noir de la draille, ils le tirent derrière le muret. Le hameau ne s'en aperçoit qu'à la Pierre-Plantée.",
+              "failure": "Les veilleurs les voient : combat contre Malafosse, Fulcran et les veilleurs. Les fusils claquent sous les arbres.",
+              "extra": "Sans passant à minuit et sans la vraie barre, le Mange-Temps passe ([[la-draille-de-nuit]])."
+            },
+            {
+              "title": "Parler au hameau",
+              "branch": "Si les investigateurs montrent à tous le livre du prieur",
+              "text": "Devant les feux, lire la page de Jeanne et celle de 1774. Un dé bonus si Rosalie se tient à côté d'eux ; réussite automatique si elle annonce elle-même qu'elle chantera la vraie barre.",
+              "roll": {
+                "type": "skill",
+                "options": [
+                  "persuade"
+                ],
+                "difficulty": "hard"
+              },
+              "success": "Le hameau se tait. Malafosse regarde Rosalie, longtemps. « Alors chante, et que Dieu nous garde. » La procession descend sans passant, et les veilleurs entourent le chanteur.",
+              "failure": "Malafosse fait saisir les investigateurs par les veilleurs, sans les blesser s'ils ne résistent pas. On les garde au Plan pendant que la procession descend, sauf s'ils s'échappent (Discrétion ou DEX)."
+            },
+            {
+              "title": "Prendre sa place",
+              "branch": "Si un investigateur se propose comme passant",
+              "text": "Malafosse accepte : un passant est un passant. L'investigateur descend la draille entre deux veilleurs. À la Pierre-Plantée, s'il connaît la vraie barre, il peut encore la chanter et donner sa voix au lieu de son corps : c'est exactement ce que le hameau redoute depuis 1774."
+            },
+            {
+              "title": "Laisser faire",
+              "branch": "Si les investigateurs ne font rien",
+              "text": "La procession descend. Ils peuvent la suivre de loin (Discrétion), ou rester au Plan avec les femmes : à minuit, de là-haut, on voit toutes les torches de la draille s'éteindre ensemble.",
+              "goto": [
+                "la-draille-de-nuit"
+              ]
+            }
+          ],
+          "notes": [
+            {
+              "title": "Le Plan des Feux, cette nuit",
+              "items": [
+                "17 h 30 : les feux s'allument. 23 h : départ de la procession. Il faut vingt minutes pour descendre à la Pierre-Plantée (plus ou moins). Minuit : le pli s'ouvre.",
+                "Les veilleurs : Malafosse (le bayle), Fulcran, Paulin Chabert et trois autres hommes, avec fusils de chasse et torches.",
+                "Tant que les feux brûlent, le Mange-Temps ne sort pas de la draille. S'il passe en 1928, il ne craint que le feu.",
+                "Sans Rosalie, le hameau chante faux : à la Pierre-Plantée, les jets de chant se font avec un dé de pénalité, sauf si un investigateur qui sait l'air mène le chant."
+              ]
+            }
+          ],
+          "npcs": [
+            "rosalie",
+            "malafosse",
+            "firmin",
+            "veilleurs",
+            "emile",
+            "massebeuf",
+            "leontine"
+          ],
+          "ambience": [
+            "fireplace",
+            "wind"
+          ],
+          "sfx": [
+            "footsteps",
+            "owl"
+          ],
+          "next": [
+            "la-draille-de-nuit"
+          ]
+        },
+        {
+          "id": "la-draille-de-nuit",
+          "title": "Minuit à la Pierre-Plantée",
+          "lead": "Le pli s'ouvre, le Mange-Temps vient chercher son dû : une voix ou un corps.",
+          "screen": {
+            "place": "forest",
+            "preset": "fog",
+            "time": "night"
+          },
+          "readAloud": [
+            "La draille descend entre ses murets, et les torches n'éclairent pas à plus de dix pas. Le brouillard est monté du ruisseau ; il ne bouge pas, même quand le vent souffle dans les cimes.",
+            "La clairière de la Pierre-Plantée. Le menhir luit d'humidité. De l'autre côté, la draille continue, mais ce n'est plus la même : une neige d'un autre hiver, des ornières de charrettes fraîches, et très loin, des lueurs de torches qui ne sont pas les vôtres.",
+            "Quelque chose remonte cette route-là. On l'entend avant de le voir : un pas lourd, à quatre temps, et le craquement du givre. Puis la voix de jeune fille, tout près maintenant, qui attend la fin du chant."
+          ],
+          "flow": [
+            {
+              "title": "Le Mange-Temps",
+              "text": "Il sort du brouillard de l'autre côté de la pierre : plus haut que trois hommes, gris comme un arbre mort couvert de givre, sur quatre pattes dont les articulations plient à rebours. Pas d'yeux. Sous sa peau, des visages passent, jeunes puis vieux : les passants. {{npc:mange-temps}}.",
+              "roll": {
+                "type": "san",
+                "label": "Le Mange-Temps",
+                "san": "1D3/1D10"
+              }
+            },
+            {
+              "title": "Le pas du Mange-Temps",
+              "text": "À partir de minuit, lancez le compteur **Le pas du Mange-Temps** : chaque round, la chose avance d'un pas vers la pierre. Au 6e pas, elle franchit le pli et entre en 1928. Un couplet juste l'empêche d'avancer ce round-là. Une torche jetée à sa face la fait reculer d'un pas (une fois par torche).",
+              "extra": "Les veilleurs ne passent jamais la pierre. Un investigateur qui la franchit entre dans le pli : il ne revient que sur un jet de POU réussi ; sinon, le Mange-Temps le prend comme passant."
+            },
+            {
+              "title": "Chanter un couplet",
+              "text": "Un chanteur par round (Rosalie si elle est là, sinon quelqu'un qui sait l'air). Un dé bonus si Rosalie mène et que le hameau chante avec elle ; un dé de pénalité si le hameau chante sans elle ; impossible sans personne qui sache l'air. Un chanteur sans talent de chant peut lancer POU à la place (jets rapides de la scène).",
+              "roll": {
+                "type": "skill",
+                "options": [
+                  "art-craft:singing"
+                ]
+              },
+              "success": "Le couplet est juste : le Mange-Temps ne bouge pas ce round. Ajoutez un **couplet juste**.",
+              "failure": "La voix se brise : il avance d'un pas.",
+              "extra": "Si Rosalie a été menacée ([[chez-rosalie]]) et chante encore « avec le passant », c'est maintenant qu'un jet de Persuasion difficile peut la retourner."
+            },
+            {
+              "title": "Le feu et les armes",
+              "text": "Les balles et les coups le traversent à moitié : dégâts divisés par deux. Réduit à 0 PV avant d'avoir franchi la pierre, il est repoussé dans le pli pour cette nuit, mais la draille reste ouverte : il reviendra la nuit suivante, et chacune des suivantes, jusqu'à ce qu'on finisse le chant. Une victime de son toucher vieillit sur place.",
+              "roll": {
+                "type": "damage",
+                "label": "Le toucher des années",
+                "dice": "1D8"
+              }
+            },
+            {
+              "title": "Finir le chant",
+              "text": "Quand trois couplets justes ont été chantés, ou quand le Mange-Temps est au bord de la pierre, il faut chanter la barre. C'est le moment du choix."
+            },
+            {
+              "title": "Le passant est donné",
+              "branch": "Si le passant est remis au Mange-Temps",
+              "text": "Les veilleurs poussent le passant de l'autre côté de la pierre. Le Mange-Temps le prend contre lui, doucement, comme on ramasse un enfant endormi, et recule dans le brouillard. Rosalie chante la barre « avec le passant ». Le pli se ferme.",
+              "roll": {
+                "type": "san",
+                "label": "Le passant emmené",
+                "san": "1D4/1D8"
+              },
+              "extra": "Si c'est un investigateur, il est perdu (voir [[la-toussaint]])."
+            },
+            {
+              "title": "La vraie barre",
+              "branch": "Si quelqu'un chante la vraie barre",
+              "text": "Le chanteur (Rosalie, Émile ou un investigateur) s'avance seul jusqu'à la pierre, face au Mange-Temps, et chante : *Barri la draia amb ma votz…* La voix de jeune fille se tait. Le Mange-Temps ouvre une bouche qui n'était pas là, et le chanteur sent sa voix sortir de lui comme un souffle. Le pli se ferme d'un coup : il n'y a plus que la draille, la neige et le ruisseau.",
+              "roll": {
+                "type": "san",
+                "label": "Donner sa voix",
+                "san": "1D6/1D10"
+              },
+              "extra": "Il faut les mots exacts (livre du prieur ou Rosalie) et l'air (cylindre, Toinou, Rosalie ou Émile). Le chanteur ne parlera plus jamais : ni cri, ni murmure. Aucun jet ne l'évite."
+            },
+            {
+              "title": "Personne n'est donné",
+              "branch": "Si personne n'est donné et que la barre n'est pas chantée",
+              "text": "Au 6e pas, le Mange-Temps franchit la pierre. Le froid tombe d'un coup, les torches charbonnent. Il frappe une fois le plus proche (Le toucher des années), puis s'en va dans la forêt, vers la Margeride endormie. Les feux du Plan le font contourner le hameau.",
+              "extra": "La victime vieillit de 2D10 ans en un instant : cheveux blancs, mains tachées, dents qui bougent. Voir [[la-toussaint]].",
+              "goto": [
+                "la-toussaint"
+              ]
+            }
+          ],
+          "notes": [
+            {
+              "title": "La clairière, à minuit",
+              "items": [
+                "Le menhir marque le bord. De ce côté, 1928. De l'autre, la draille de toutes les années à la fois : la neige de 1764, des ornières, les torches d'une autre battue, et le Mange-Temps.",
+                "Quand le pli se ferme, tout s'arrête net : le brouillard retombe, les torches reprennent, la voix se tait.",
+                "Si les veilleurs ont été écartés ou combattus, ils peuvent revenir en pleine scène : Malafosse ne tirera pas sur quelqu'un qui chante."
+              ]
+            }
+          ],
+          "rolls": [
+            {
+              "type": "characteristic",
+              "label": "Chanter un couplet (POU)",
+              "options": [
+                "POW"
+              ]
+            },
+            {
+              "type": "characteristic",
+              "label": "Revenir du pli (POU)",
+              "options": [
+                "POW"
+              ]
+            },
+            {
+              "type": "san",
+              "label": "Le Mange-Temps",
+              "san": "1D3/1D10"
+            },
+            {
+              "type": "damage",
+              "label": "Vieillissement (années)",
+              "dice": "2D10"
+            }
+          ],
+          "npcs": [
+            "mange-temps",
+            "rosalie",
+            "malafosse",
+            "emile",
+            "firmin",
+            "veilleurs"
+          ],
+          "ambience": [
+            "wind-howling",
+            "wind"
+          ],
+          "sfx": [
+            "footsteps",
+            "wolf-howl",
+            "owl"
+          ],
+          "next": [
+            "la-toussaint"
+          ]
+        },
+        {
+          "id": "la-toussaint",
+          "title": "La Toussaint",
+          "lead": "Jeudi 1er novembre : le hameau au cimetière, et ce que la nuit a coûté.",
+          "screen": {
+            "place": "graveyard",
+            "preset": "snow",
+            "time": "day"
+          },
+          "readAloud": [
+            "Le matin de la Toussaint est d'un blanc parfait. Sur le Plan des Feux, sept ronds noirs fument encore dans la neige.",
+            "Au cimetière, les gens du hameau posent des chrysanthèmes et des bougies sur les tombes. La route de Saint-Chély est toujours fermée. Ici, personne ne peut partir, et personne ne parle."
+          ],
+          "flow": [
+            {
+              "title": "La pierre du prieuré",
+              "text": "Dans la journée, Malafosse monte au prieuré. Selon la fin : il grave une croix et 1928 ; ou, pour la première fois depuis 1767, un nom au lieu d'une date (celui du chanteur) ; ou il ne grave rien, et descend à Saint-Chély dès que la route rouvre, pour lire les journaux."
+            },
+            {
+              "title": "Les gendarmes",
+              "text": "La route rouvre le vendredi 2. Si les investigateurs portent plainte, les gendarmes de Saint-Chély montent le samedi. Séquestration et laudanum peuvent être prouvés (Émile, la fiole, Marguerite) ; le reste, personne ne l'écrira dans un procès-verbal.",
+              "extra": "Émile peut refuser de témoigner, pour Toinou et pour Rosalie."
+            },
+            {
+              "title": "Récompenses",
+              "text": "Voir la note **Épilogue** pour chaque fin.",
+              "roll": {
+                "type": "damage",
+                "label": "Gain de SAN",
+                "dice": "1D8"
+              }
+            }
+          ],
+          "notes": [
+            {
+              "title": "Épilogue",
+              "items": [
+                "**La vraie barre chantée, personne n'est donné** : chaque investigateur regagne **1D8 SAN**. Le chanteur ne parlera plus jamais. La draille reste fermée tant qu'il vit ; le Mange-Temps reviendra à la grande nuit qui suivra sa mort. Si c'est Rosalie, à soixante-dix-huit ans, ce sera dans peu d'années, et Toinou le sait. Les nuits des feux, on entendra dans la forêt chanter la voix du chanteur.",
+                "**Émile sauvé** : il rentre à Paris et ne publiera jamais les cylindres 41 et 42 ; il les confie au musée sous scellés, ou à sa sœur. S'il a chanté la barre lui-même, il ne collectera plus jamais une chanson.",
+                "**Le passant donné** (Émile, l'abbé ou un investigateur) : en plus de la perte déjà subie, **1D6 SAN** pour ceux qui ont laissé faire en sachant. La draille est fermée jusqu'en 1935. Au printemps, des bûcherons trouveront peut-être un corps sec comme une momie, vêtu à la mode de 1928. Malafosse laisse partir les investigateurs s'ils jurent de se taire : il ne menace pas, il demande.",
+                "**Un investigateur a pris la place** sans chanter la vraie barre : il est perdu. Si vous le souhaitez, son joueur tente un dernier jet de POU ; sur une réussite extrême, on le retrouve à l'aube au pied du menhir, vivant, muet, les cheveux tout blancs, et la draille est fermée comme par la vraie barre.",
+                "**Le Mange-Temps est passé** : au matin, on trouve sur la route de Saint-Alban un charretier et son cheval, vieux comme la terre. Chaque investigateur perd **1D10 SAN**. Pendant l'hiver 1928-1929, les journaux de la Lozère reparlent de la Bête. On peut encore le renvoyer : finir le chant avec la vraie barre, une nuit où il revient sur la draille (une autre histoire).",
+                "**Le hameau** : si le pacte est rompu sans malheur, le hameau chante en public pour la première fois depuis 1774, à la messe de la Toussaint. L'abbé Massebeuf pleure en chaire."
+              ]
+            }
+          ],
+          "rolls": [
+            {
+              "type": "damage",
+              "label": "Gain de SAN (vraie barre)",
+              "dice": "1D8"
+            },
+            {
+              "type": "damage",
+              "label": "Perte de SAN (le Mange-Temps est passé)",
+              "dice": "1D10"
+            }
+          ],
+          "npcs": [
+            "rosalie",
+            "toinou",
+            "malafosse",
+            "massebeuf",
+            "emile"
+          ],
+          "ambience": [
+            "village-day",
+            "crows"
+          ],
+          "sfx": [
+            "footsteps"
+          ]
+        }
+      ]
+    }
+  ],
+  "npcs": [
+    {
+      "id": "emile",
+      "name": "Émile Courtiade",
+      "role": "Ethnographe du musée du Trocadéro, prisonnier du Mas-Haut",
+      "description": "Trente-quatre ans, mince, lunettes rondes, une voix de chanteur de chorale. Après trois semaines de laudanum : barbe, maigreur, pupilles minuscules.",
+      "personality": "Curieux, doux, un peu vaniteux de ses trouvailles. Il a honte d'avoir épié Rosalie. Une fois lucide, il veut comprendre, puis réparer.",
+      "characteristics": {
+        "STR": 50,
+        "CON": 55,
+        "SIZ": 60,
+        "DEX": 55,
+        "APP": 60,
+        "INT": 75,
+        "POW": 60,
+        "EDU": 80
+      },
+      "hp": 11,
+      "dodge": 27,
+      "skills": {
+        "anthropology": 65,
+        "language-other:occitan": 50,
+        "listen": 70,
+        "art-craft:singing": 55,
+        "history": 45
+      },
+      "knows": [
+        "Il a enregistré Rosalie à la Pierre-Plantée le jeudi 4 octobre, et la voix de jeune fille qui lui a répondu.",
+        "Il a vu quelque chose de très grand dans le brouillard, de l'autre côté de la pierre.",
+        "Il a été drogué au Mas-Haut le samedi 6 octobre.",
+        "Son carnet contient les trois couplets, transcrits, traduits, et l'air noté.",
+        "Il entend les Malafosse parler de « mercredi », de « la Pierre » et du « passant »."
+      ],
+      "special": [
+        "Drogué : un dé de pénalité à tous ses jets tant qu'on ne l'a pas soigné (Médecine) ou qu'une nuit n'a pas passé."
+      ]
+    },
+    {
+      "id": "rosalie",
+      "name": "Rosalie Teissèdre, née Bastide",
+      "role": "La chanteuse des feux",
+      "description": "Soixante-dix-huit ans, petite, voûtée, un fichu noir, des mains déformées qui tricotent sans arrêt. Une voix cassée qui reste juste.",
+      "personality": "Dure, pieuse, épuisée. Elle a chanté huit grandes nuits et vu partir huit passants. Elle aime Toinou plus que tout et a honte de n'avoir jamais osé donner sa voix.",
+      "characteristics": {
+        "STR": 30,
+        "CON": 45,
+        "SIZ": 40,
+        "DEX": 50,
+        "INT": 65,
+        "POW": 80,
+        "EDU": 30
+      },
+      "hp": 8,
+      "dodge": 20,
+      "skills": {
+        "art-craft:singing": 85,
+        "natural-world": 60,
+        "psychology": 50
+      },
+      "knows": [
+        "Tout le chant, et les deux versions de la barre : « avec le passant » et « avec ma voix ».",
+        "On ne chante jamais la barre devant le passant : il pourrait donner sa voix au lieu de son corps.",
+        "Le Mange-Temps mange le temps ; la voix qui répond est celle de Jeanne Bastide, la Muda.",
+        "Chez les Bastide, on dit que la draille serait restée fermée tant que Jeanne vivait.",
+        "Les huit passants qu'elle a vus partir, de 1872 à 1921."
+      ]
+    },
+    {
+      "id": "toinou",
+      "name": "Toinou Teissèdre",
+      "role": "Petit-fils de Rosalie, onze ans",
+      "description": "Maigre, les genoux écorchés, un béret trop grand. Il garde les chèvres de sa grand-mère. Son père est mort à la guerre ; sa mère est placée comme bonne à Mende.",
+      "personality": "Vif, curieux, terrifié de désobéir. Émile lui a montré la machine ; c'est le premier adulte qui lui ait parlé comme à un homme.",
+      "knows": [
+        "Émile lui a confié les deux cylindres le vendredi 5 octobre.",
+        "Il a entendu Émile chanter dans le fenil du Mas-Haut le samedi 20 octobre.",
+        "Il sait chanter les trois couplets par cœur.",
+        "La nuit des feux : le Plan des Feux, la procession vers minuit, la Pierre-Plantée.",
+        "Il croit qu'on « renvoie les passants chez eux par la draille »."
+      ]
+    },
+    {
+      "id": "malafosse",
+      "name": "Justin Malafosse",
+      "role": "Fermier du Mas-Haut, bayle des veilleurs",
+      "description": "Cinquante-huit ans, très grand, des mains comme des battoirs, une moustache grise. Conseiller municipal, le plus riche du hameau.",
+      "personality": "Grave, droit à sa façon, écrasé par une charge que son père lui a laissée. Il ne prend aucun plaisir à ce qu'il fait ; il est sûr de sauver le pays. Il ne tirera pas le premier.",
+      "characteristics": {
+        "STR": 75,
+        "CON": 70,
+        "SIZ": 75,
+        "DEX": 50,
+        "INT": 60,
+        "POW": 65
+      },
+      "hp": 14,
+      "dodge": 25,
+      "damageBonus": "+1D4",
+      "attacks": [
+        {
+          "name": "Fusil de chasse (calibre 12)",
+          "skill": 55,
+          "damage": "4D6",
+          "note": "À bout portant ; 2D6 jusqu'à 10 m, 1D6 au-delà. Deux coups, puis recharger."
+        },
+        {
+          "name": "Poings",
+          "skill": 60,
+          "damage": "1D3+1D4"
+        }
+      ],
+      "skills": {
+        "intimidate": 50,
+        "natural-world": 55,
+        "track": 40
+      },
+      "knows": [
+        "Tout le pacte : les passants, la draille, la barre « avec le passant ». Il a mené la procession de 1921.",
+        "Émile est dans son fenil, nourri par sa femme.",
+        "Il a entendu parler de la vraie barre par Rosalie, sans y croire : « Une voix, ça ne suffit pas. »"
+      ]
+    },
+    {
+      "id": "marguerite",
+      "name": "Marguerite Malafosse",
+      "role": "Femme de Justin",
+      "description": "Cinquante-deux ans, ronde, les yeux rouges. Elle a chanté une berceuse à Émile pour son phonographe.",
+      "personality": "Obéissante, pieuse, rongée. Elle drogue le Monsieur chaque soir et prie pour lui chaque nuit.",
+      "characteristics": {
+        "INT": 55,
+        "POW": 45
+      },
+      "hp": 10,
+      "dodge": 25,
+      "knows": [
+        "Elle a versé le laudanum dans le vin chaud du samedi 6 octobre, et en verse chaque soir dans la soupe.",
+        "Le laudanum vient de la pharmacie de Saint-Chély.",
+        "Le cadenas du fenil : la clé est pendue derrière la porte de la cuisine."
+      ]
+    },
+    {
+      "id": "leontine",
+      "name": "Léontine Chabert",
+      "role": "Aubergiste-épicière, veuve",
+      "description": "Quarante-six ans, sèche, un tablier toujours propre. Elle tient le courrier, le tabac et les ragots.",
+      "personality": "Méfiante, commerçante, loyale au hameau avant tout. Elle ment bien, mais toujours avec les mêmes mots.",
+      "hp": 10,
+      "dodge": 30,
+      "skills": {
+        "fast-talk": 55,
+        "psychology": 45
+      },
+      "knows": [
+        "Elle a écrit à la sœur qu'Émile était parti le dimanche 7 octobre au matin.",
+        "Elle a fouillé la chambre d'Émile le vendredi 5 et vidé ses affaires après son enlèvement.",
+        "Les passants de 1851 et de 1907 logeaient chez les Chabert."
+      ]
+    },
+    {
+      "id": "firmin",
+      "name": "Fulcran Aldebert",
+      "role": "Vieux chasseur, ancien louvetier, veilleur",
+      "description": "Soixante-six ans, sec et noueux, une veste de velours râpée, l'haleine qui sent l'eau-de-vie.",
+      "personality": "Bavard quand il boit, sauvage quand il a peur. Fier de son loup, honteux de la nuit où il l'a tué.",
+      "characteristics": {
+        "STR": 60,
+        "CON": 60,
+        "SIZ": 65,
+        "DEX": 55,
+        "INT": 50,
+        "POW": 50
+      },
+      "hp": 12,
+      "dodge": 27,
+      "attacks": [
+        {
+          "name": "Carabine de chasse",
+          "skill": 65,
+          "damage": "2D6+4"
+        },
+        {
+          "name": "Couteau de chasse",
+          "skill": 50,
+          "damage": "1D4+2"
+        }
+      ],
+      "skills": {
+        "track": 65,
+        "natural-world": 60,
+        "stealth": 50
+      },
+      "knows": [
+        "Il a tué le loup en 1921, sur la draille, la nuit des feux : « sorti du brouillard comme par une porte ».",
+        "Les veilleurs gardent la draille tous les ans à la Toussaint.",
+        "« Cette année, c'est l'année. »"
+      ]
+    },
+    {
+      "id": "veilleurs",
+      "name": "Les veilleurs",
+      "role": "Paulin Chabert et trois hommes du hameau",
+      "description": "Des paysans en blouse et en sabots, une torche de résine à la main, un fusil de chasse à l'épaule. Paulin, seize ans, a plus peur que les autres.",
+      "personality": "Ils obéissent au bayle. Ils ne veulent blesser personne, et reculent devant quelqu'un qui chante.",
+      "characteristics": {
+        "STR": 60,
+        "CON": 60,
+        "SIZ": 60,
+        "DEX": 50,
+        "POW": 45
+      },
+      "hp": 12,
+      "dodge": 25,
+      "attacks": [
+        {
+          "name": "Fusil de chasse",
+          "skill": 45,
+          "damage": "4D6",
+          "note": "À bout portant ; 2D6 jusqu'à 10 m, 1D6 au-delà."
+        },
+        {
+          "name": "Torche ou bâton",
+          "skill": 50,
+          "damage": "1D6"
+        }
+      ],
+      "knows": [
+        "Le passant descend la draille à 23 heures ; on le laisse à la Pierre-Plantée à minuit.",
+        "Personne ne passe la pierre."
+      ]
+    },
+    {
+      "id": "massebeuf",
+      "name": "Abbé Joseph Massebeuf",
+      "role": "Curé de La Sagne-Noire depuis 1926",
+      "description": "Trente et un ans, maigre, des lunettes cerclées de fer, une soutane trop grande. Il vient d'Ispagnac, près de Mende.",
+      "personality": "Lettré, scrupuleux, seul. Il soupçonne une chose honteuse et a peur de la regarder en face. Avec des alliés, il trouve son courage.",
+      "characteristics": {
+        "STR": 45,
+        "CON": 50,
+        "SIZ": 55,
+        "DEX": 55,
+        "INT": 75,
+        "POW": 60,
+        "EDU": 80
+      },
+      "hp": 10,
+      "dodge": 30,
+      "skills": {
+        "language-other:latin": 70,
+        "language-other:occitan": 45,
+        "history": 50,
+        "library-use": 60,
+        "psychology": 45
+      },
+      "knows": [
+        "Les notes en marge des registres, tous les sept ans, à la page du 1er novembre.",
+        "Malafosse était à la messe le dimanche 7 octobre au matin.",
+        "Marguerite monte chaque soir un plateau à la grange du Mas-Haut.",
+        "Il possède un phonographe à cylindres."
+      ]
+    },
+    {
+      "id": "pradal",
+      "name": "Achille Pradal",
+      "role": "Garde forestier de la maison forestière de la Fage",
+      "description": "Quarante-cinq ans, uniforme vert, moustache en brosse, une sacoche de cuir pleine de calques. Ancien sapeur de la guerre.",
+      "personality": "Méthodique, têtu, rationnel jusqu'à l'obstination. Ce qu'il ne peut pas mesurer l'empêche de dormir.",
+      "characteristics": {
+        "STR": 65,
+        "CON": 65,
+        "SIZ": 60,
+        "DEX": 60,
+        "INT": 60,
+        "POW": 55
+      },
+      "hp": 12,
+      "dodge": 30,
+      "attacks": [
+        {
+          "name": "Carabine de service",
+          "skill": 55,
+          "damage": "2D6+4"
+        }
+      ],
+      "skills": {
+        "navigate": 70,
+        "natural-world": 65,
+        "track": 60,
+        "survival": 55
+      },
+      "knows": [
+        "La draille sur la carte de Cassini et le cadastre de 1834, absente du levé de 1912.",
+        "Ses mesures de juin 1925 : jamais deux fois la même longueur. Ses montres qui retardent.",
+        "Malafosse lui demande chaque 31 octobre de rester chez lui.",
+        "La dalle d'autel déplacée au prieuré."
+      ]
+    },
+    {
+      "id": "augustin",
+      "name": "Augustin Brun",
+      "role": "Charretier de Saint-Chély",
+      "description": "Cinquante ans, une pèlerine, une pipe éteinte, un cheval qui s'appelle Bijou.",
+      "personality": "Bavard, sans malice, content d'avoir du monde à qui parler.",
+      "knows": [
+        "Il a monté Émile en septembre et ne l'a jamais redescendu.",
+        "Il est le seul à faire la route ; le chef de gare est son beau-frère et n'a pas vu Émile.",
+        "Il monte le courrier le samedi et le redescend le jour même."
+      ]
+    },
+    {
+      "id": "mange-temps",
+      "kind": "creature",
+      "name": "Le Mange-Temps (lo Manja-Temps)",
+      "role": "Ce qui vit entre les années",
+      "description": "Plus haut que trois hommes, gris comme un arbre mort couvert de givre, sur quatre membres longs dont les articulations plient à rebours. Une tête longue comme un crâne de cheval, sans yeux. Sous sa peau passent des visages, jeunes puis vieux : ceux des passants. Il sent la tourbe froide et la laine mouillée. Ses traces sont tournées à rebours.",
+      "personality": "Patient, affamé, sans colère. Il répond au chant avec la voix de Jeanne Bastide, qu'il a gardée en 1767.",
+      "characteristics": {
+        "STR": 140,
+        "CON": 100,
+        "SIZ": 150,
+        "DEX": 60,
+        "POW": 90
+      },
+      "hp": 30,
+      "armor": 0,
+      "dodge": 0,
+      "attacksPerRound": 1,
+      "attacks": [
+        {
+          "name": "Le toucher des années",
+          "skill": 60,
+          "damage": "1D8",
+          "note": "La victime vieillit de 2D10 ans en un instant. À 0 PV, on ne trouve qu'un corps sec comme une momie."
+        },
+        {
+          "name": "Étreinte",
+          "skill": 50,
+          "damage": "1D6",
+          "note": "La victime est tirée d'un pas vers le pli à chaque round ; FOR opposée pour se dégager. Passée la pierre, elle est perdue."
+        }
+      ],
+      "sanLoss": "1D3/1D10",
+      "special": [
+        "À moitié hors du temps : toutes les armes ne lui font que la moitié des dégâts.",
+        "Le feu le fait reculer : une torche dans la face, il recule d'un pas (une fois par torche) et subit 1D6.",
+        "Réduit à 0 PV, il n'est pas tué : il est repoussé dans le pli jusqu'à la nuit suivante.",
+        "Avant la nuit des feux, il ne peut que longer, sans rien toucher, le tracé de la vieille draille (même là où elle a disparu, comme dans le champ de la Croix), et s'arrête aux croix des limites. La nuit des feux, tant qu'il n'a pas franchi la Pierre-Plantée, il reste dans le pli.",
+        "Un couplet juste l'empêche d'avancer ce round. La barre le renvoie : avec un corps pour sept ans, avec une voix tant que vit le chanteur."
+      ]
+    }
+  ],
+  "handouts": [
+    {
+      "id": "derniere-lettre",
+      "title": "Dernière lettre d'Émile au musée",
+      "scene": "l-auberge",
+      "text": "*La Sagne-Noire, par Saint-Chély-d'Apcher (Lozère), le vendredi 5 octobre 1928*\n\nCher Monsieur Ravenel,\n\nJ'ai confié au charretier la caisse n° 3 : vingt-huit cylindres, bourrées, complaintes, deux berceuses très anciennes, et une chanson du loup que je crois inédite. Les fiches suivent.\n\nJe reste encore quelques semaines. Il y a ici une chanson que personne ne veut chanter devant moi. Ils l'appellent la chanson de la barre, ou des feux : le hameau allume de grands feux à la Toussaint, au bord de la forêt, et la chante toute la nuit. Quand j'en parle, on change de sujet, ou l'on rit trop fort. Une vieille femme m'a dit que je l'entendrais « bien assez tôt ».\n\nHier soir, je l'ai enfin enregistrée, d'une manière dont je ne suis pas fier. Il y a sur le cylindre quelque chose que je ne m'explique pas. Je dois le réécouter à tête reposée avant de vous en parler. J'ai mis les deux cylindres à l'abri.\n\nPardonnez cette lettre décousue. Il fait déjà froid, et je dors mal.\n\nVotre dévoué,\n\n**É. Courtiade**"
+    },
+    {
+      "id": "reponse-aubergiste",
+      "title": "Lettre de l'aubergiste à Hélène Courtiade",
+      "scene": "l-auberge",
+      "text": "*La Sagne-Noire, le 15 octobre 1928*\n\nMademoiselle,\n\nJe réponds à votre lettre. Monsieur votre frère a quitté La Sagne le dimanche 7 octobre au matin, avec sa machine et ses affaires. Monsieur Malafosse l'a descendu en charrette jusqu'à la gare de Saint-Chély. Il a réglé sa chambre jusqu'au 7. Il a dit qu'il allait du côté de l'Aubrac, pour d'autres chansons.\n\nIl était bien poli et nous le regrettons.\n\nVeuillez agréer, Mademoiselle, mes salutations.\n\n**Veuve Chabert**, aubergiste"
+    },
+    {
+      "id": "rapport-boissonnade",
+      "title": "Rapport du docteur Boissonnade (mai 1922)",
+      "scene": "l-auberge",
+      "text": "*Rapport du docteur L. Boissonnade, médecin à Mende, requis par la gendarmerie de Saint-Chély. Le 16 mai 1922.*\n\nLe vendredi 12 mai, des bûcherons ont découvert dans la tourbière de la Sagne, à la lisière de la forêt domaniale, le corps d'un homme couché sur le dos. Le corps est entièrement desséché, la peau tannée et collée aux os, à la manière des corps retrouvés dans les marais anciens. Sur ce seul examen, j'estimerais la mort à plusieurs dizaines d'années, sinon davantage.\n\nOr le défunt porte des vêtements de confection récente (veste de velours, brodequins cloutés à peine usés) et, dans sa poche, un almanach de l'année 1921 et un mouchoir brodé **J. L.**\n\nJe ne puis concilier ces constatations. Je conclus, faute de mieux, à la mort par le froid d'un vagabond inconnu, survenue l'hiver dernier, suivie d'une dessiccation d'une rapidité que je n'ai jamais observée.\n\n**Dr L. Boissonnade**"
+    },
+    {
+      "id": "liste-emile",
+      "title": "La liste au dos de l'armoire",
+      "scene": "l-auberge",
+      "text": "*Au crayon, au dos de la porte de l'armoire, d'une écriture fine et penchée :*\n\nLa Sagne — enregistrements\n17-24 sept. : bourrées (Fulcran A., voix et harmonica) — complainte de la fille du meunier (Vve Chabert) — berceuse (Marguerite M., qui pleure en chantant ?)\n25 sept.-2 oct. : chanson du loup (Fulcran A.) — prières en patois (Rosalie T. refuse de chanter)\n*Chanson des feux* : REFUS de tous. Rosalie T. la chante (dixit Toinou). Le mot : *barra*. Une porte ? une barrière ? → écrire à la Société des lettres.\nLes jeudis d'octobre, au crépuscule, R. monte à la forêt. Pourquoi ?"
+    },
+    {
+      "id": "registres",
+      "title": "Registres de la paroisse : notes en marge",
+      "scene": "l-eglise",
+      "text": "*Registres de catholicité de la paroisse de La Sagne-Noire. Notes en marge, à la page du 1er novembre (choix de l'abbé Massebeuf).*\n\n**1802** — Le colporteur de toiles logé chez Malafosse est parti par la draille la nuit des feux. *(abbé Bonnal)*\n**1851** — Un rémouleur piémontais, logé chez Chabert depuis la Saint-Michel, est parti par la draille. *(abbé Rieu)*\n**1879** — Le soldat libéré qui rentrait à pied vers le Cantal, logé au Mas-Haut, est parti par la draille. *(abbé Cayrel)*\n**1907** — Ernest Maury, photographe ambulant, de Rodez, logé chez Chabert, est parti par la draille. Prions pour lui. *(Cayrel)*\n**1914** — Le jeune homme qui se cachait de la guerre, logé au Mas-Haut, est parti par la draille. Que Dieu me pardonne de n'avoir rien dit. *(Cayrel)*\n**1921** — Joseph Lafon, chemineau, de Langogne, hébergé au Mas-Haut depuis la Saint-Michel, est parti par la draille. *(Cayrel)*\n\n*D'une autre main, au crayon, récente :* tous les sept ans ? → 1928 ! (J. M.)"
+    },
+    {
+      "id": "tombe-muda",
+      "title": "La tombe de la Muda",
+      "scene": "le-cimetiere",
+      "text": "*Dalle de granit contre le mur de l'église, lettres usées, un bouquet de bruyère sèche :*\n\nCI GÎT\nJEANNE BASTIDE\nDITE LA MUDA\n1749 — 1819\nBARRÈT LA DRAIA\nCANTÈT UN CÒP"
+    },
+    {
+      "id": "cylindres",
+      "title": "Les cylindres 41 et 42",
+      "scene": "les-cylindres",
+      "text": "*Ce que l'on entend sur les deux cylindres. La traduction du patois est entre crochets.*\n\n**Cylindre 41.** Voix d'homme : « Cylindre quarante et un. La Sagne-Noire, le quatre octobre mil neuf cent vingt-huit. » Le vent. Puis une vieille femme chante, lentement :\n\n*Fuòc sus la draia, fuòc sus lo puèg,*\n*qual es aquel que passa a mièjanuèch ?*\n[Feu sur la draille, feu sur le puech, / qui est celui qui passe à minuit ?]\n\n*Es pas un pastre, es pas un lop,*\n*camina a rebors e sap mon nom.*\n[Ce n'est pas un berger, ce n'est pas un loup, / il marche à rebours et il sait mon nom.]\n\n*Tòrna a ton ostal, tòrna a ton temps,*\n*la draia es nòstra, la nuèch es nòstra.*\n[Retourne en ta maison, retourne en ton temps, / la draille est à nous, la nuit est à nous.]\n\n**Cylindre 42.** La vieille femme reprend le troisième couplet et s'arrête net. Silence. Puis, de plus loin, une voix de jeune fille, claire et douce :\n\n*Ma draia es vòstra, vòstre temps es meu.*\n*Balhatz-me una votz, o balhatz-me un còrs.*\n[Ma draille est à vous, votre temps est à moi. / Donnez-moi une voix, ou donnez-moi un corps.]\n\nGrésillement. Puis la même voix de jeune fille, sur le ton exact de l'homme du début : « Cylindre quarante-trois. La Sagne-Noire, le trente et un octobre. »"
+    },
+    {
+      "id": "cartes-pradal",
+      "title": "Les calques du garde Pradal",
+      "scene": "les-traces",
+      "text": "*Notes et calques du garde Pradal, sacoche de service.*\n\n**Carte de Cassini (feuille levée vers 1770), copie** : la « Grande Draille » traverse la forêt de la Sagne en ligne droite, passe au « Prieuré S. Ferréol » et à un signe de pierre levée. Le hameau s'appelle « La Sagne ».\n\n**Cadastre de 1834, section B** : la draille passe *à travers* la parcelle 212, « champ de la Croix » (alors lande), et entre en forêt au lieu-dit « Plan des Fuòcs ».\n\n**Levé des Eaux et Forêts, 1912** : la draille n'y figure plus. Route forestière n° 3, à 300 m à l'est.\n\n**Mesures du garde, Pierre-Plantée → prieuré, à la chaîne (juin 1925)** :\nmercredi 10 : 1 140 m\njeudi 11 : 2 980 m\nvendredi 12 : 1 395 m\nsamedi 13 : 615 m (recommencé : 1 860 m)\n\n*En marge, au crayon :* « Montre : −20 min. Le 13 : −1 h 50. Ne pas en parler à l'Inspection. »"
+    },
+    {
+      "id": "livre-prieur",
+      "title": "Le livre du prieur Vaissière (extraits)",
+      "scene": "le-prieure",
+      "text": "*Livre de raison et de comptes du prieuré de Saint-Ferréol, tenu par Dom Aurélien Vaissière, prieur. Extraits, 1764-1774.*\n\n**Novembre 1764.** Payé quarante sols de cierges et de fagots pour les feux de la Toussaint. J'ai voulu fermer la draille à la Bête avec le vieux chant des bouviers. Je l'ai ouverte à pire que la Bête.\n\n**Février 1765.** On a rapporté de la draille Pierre Rouvière, berger, quinze ans, vieux comme un homme de cent ans, les dents tombées, les yeux blancs. Ce n'est point la Bête. Les gens d'ici l'appellent *lo Manja-Temps*, le Mange-Temps, parce qu'il mange les années des vivants et qu'il vient de l'autre côté du temps.\n\n**Juillet 1767.** On dit que la Bête a été tuée du côté de Saugues. Ici, rien n'a cessé. Neuf morts depuis l'hiver de 64.\n\n**31 octobre 1767.** Jeanne Bastide, fille de Jean, bergère, dix-huit ans, a chanté seule le dernier couplet à la Pierre-Plantée. Je le note ici tel qu'elle l'a chanté :\n*Barri la draia amb ma votz,*\n*que ma votz demòre de l'autre costat.*\n(*Claudo viam voce mea, ut vox mea maneat ex altera parte.*)\nLa draille s'est fermée. Jeanne ne parle plus. Payé à son père six livres, et je lui dois tout le reste.\n\n**Novembre 1767.** Il reviendra au bord tous les sept ans, la nuit des feux. Il faudra lui donner une voix, ou un corps. Je crois que la voix de Jeanne le tiendra tant qu'elle vivra. Les consuls ne veulent pas en courir le risque.\n\n**31 octobre 1774.** Ils ont donné le colporteur. Ils ont changé un mot du chant : *amb lo passant* au lieu de *amb ma votz*. Je n'ai rien dit, et je n'ai pas chanté. Je ne tiendrai plus ce livre."
+    }
+  ],
+  "knowledge": [
+    {
+      "need": "Comprendre le patois (le chant, les villageois)",
+      "best": "Langue (occitan)",
+      "backup": "Toinou, l'abbé Massebeuf, Pradal, un investigateur lozérien"
+    },
+    {
+      "need": "Faire parler le hameau",
+      "best": "Psychologie",
+      "backup": "Charme, Persuasion ; une preuve en main donne un dé bonus"
+    },
+    {
+      "need": "Lire les traces dans la neige",
+      "best": "Pister",
+      "backup": "Nature, Trouver Objet Caché"
+    },
+    {
+      "need": "Comprendre les cartes de Pradal",
+      "best": "Navigation",
+      "backup": "Bibliothèque, ou Pradal lui-même (plus lent)"
+    },
+    {
+      "need": "Reconnaître ce qu'a de faux la tête de loup",
+      "best": "Nature",
+      "backup": "Médecine, Histoire (la balle de mousquet)"
+    },
+    {
+      "need": "Soigner Émile (laudanum)",
+      "best": "Médecine",
+      "backup": "Premiers soins (il ne sera lucide qu'au matin)"
+    },
+    {
+      "need": "Retenir l'air et les paroles",
+      "best": "INT",
+      "backup": "Réécouter le cylindre, Toinou, le carnet d'Émile"
+    },
+    {
+      "need": "Chanter juste devant le Mange-Temps",
+      "best": "Art (chant)",
+      "backup": "POU"
+    },
+    {
+      "need": "Lire le livre du prieur",
+      "best": "Bibliothèque",
+      "backup": "Histoire, ou une soirée à la lampe"
+    },
+    {
+      "need": "Repousser le Mange-Temps",
+      "best": "Une torche dans la face",
+      "backup": "Le chant ; les armes ne font que la moitié des dégâts"
+    }
+  ],
+  "trackers": [
+    {
+      "id": "jours",
+      "label": "Jours passés au hameau",
+      "max": 4,
+      "unit": "jours",
+      "help": "Dimanche 28 = 1, lundi = 2, mardi = 3, mercredi 31 = 4 : les feux s'allument à la tombée de la nuit. Le mardi soir, la neige coupe la route de Saint-Chély jusqu'au vendredi.",
+      "scenes": [
+        "l-auberge",
+        "l-eglise",
+        "le-cimetiere",
+        "les-cylindres",
+        "les-traces",
+        "la-draille",
+        "le-prieure",
+        "chez-rosalie",
+        "le-mas-haut"
+      ],
+      "addLabel": "+1 jour",
+      "fullMessage": "Mercredi 31 octobre : la nuit des feux."
+    },
+    {
+      "id": "pas-du-mange-temps",
+      "label": "Le pas du Mange-Temps",
+      "max": 6,
+      "unit": "pas",
+      "help": "Un pas par round à partir de minuit. Un couplet juste l'empêche d'avancer ce round ; une torche dans sa face le fait reculer d'un pas (une fois par torche). Au 6e pas, il franchit la Pierre-Plantée et entre en 1928.",
+      "scenes": [
+        "la-draille-de-nuit"
+      ],
+      "addLabel": "+1 pas",
+      "subLabel": "Torche : −1 pas",
+      "fullMessage": "Le Mange-Temps franchit la Pierre-Plantée."
+    },
+    {
+      "id": "couplets",
+      "label": "Couplets justes",
+      "max": 3,
+      "unit": "couplets",
+      "help": "Après trois couplets justes, on peut chanter la barre : avec le passant, ou avec sa voix.",
+      "scenes": [
+        "la-draille-de-nuit"
+      ],
+      "addLabel": "+1 couplet",
+      "fullMessage": "Le chant est prêt : il faut chanter la barre."
+    }
+  ]
+}

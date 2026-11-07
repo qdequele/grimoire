@@ -15,7 +15,7 @@
     "system": "d100",
     "author": "Grimoire",
     "license": "CC-BY-4.0",
-    "version": "1.0",
+    "version": "1.1",
     "tags": [
       "solo",
       "côtier",
@@ -473,13 +473,12 @@
             },
             {
               "title": "Le pressentiment",
-              "text": "Pendant la lecture, la bougie s'allume seule. Une odeur de varech envahit la chapelle. Dehors, on entend la mer monter.",
+              "text": "Pendant la lecture, la bougie s'allume seule. Une odeur de varech envahit la chapelle. Dehors, on entend la mer monter. Occultisme ou Psychologie, sinon INT (jets rapides de la scène).",
               "roll": {
                 "type": "skill",
                 "options": [
                   "occult",
-                  "psychology",
-                  "INT"
+                  "psychology"
                 ]
               },
               "success": "Elle comprend ce que veut Clémence : pas une vengeance, seulement ses lettres. Il faut les lui rendre, là où elle les attendait : à la crique.",
@@ -491,6 +490,15 @@
               "goto": [
                 "la-crique"
               ]
+            }
+          ],
+          "rolls": [
+            {
+              "type": "characteristic",
+              "options": [
+                "INT"
+              ],
+              "label": "Le pressentiment (INT)"
             }
           ],
           "npcs": [
@@ -574,16 +582,14 @@
             },
             {
               "title": "Si elle n'a pas les lettres",
-              "text": "Clémence lui prend la main et l'entraîne doucement vers l'eau, sans violence, avec une tristesse infinie.",
+              "text": "Clémence lui prend la main et l'entraîne doucement vers l'eau, sans violence, avec une tristesse infinie. Pour se dégager : POU contre les 70 de POU de Clémence, donc un jet Difficile.",
               "roll": {
-                "type": "opposed",
+                "type": "characteristic",
                 "options": [
                   "POW"
                 ],
-                "against": {
-                  "npc": "clemence",
-                  "skill": "POW"
-                }
+                "difficulty": "hard",
+                "label": "Se dégager (POU)"
               },
               "success": "Elle se dégage et parle à Clémence d'Étienne et des lettres cachées. Le fantôme s'arrête, attend. Elle a jusqu'à l'aube pour aller chercher les lettres à la chapelle et revenir.",
               "failure": "L'eau glacée monte à la taille (1D3, froid). {{npc:marthe}} surgit avec une lanterne et la tire en arrière en criant le nom de Clémence. Elle s'en sort, mais Clémence reviendra l'année prochaine."
