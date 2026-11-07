@@ -100,6 +100,16 @@ The heart of a scene: what happens, in order, with the rolls and their outcomes.
 
 Only `title` is required. Write steps in **play order**; one step = one decision or one roll.
 
+**Choices.** When the players can go several ways at one point, write the step that sets up the choice, then one step per choice with `branch` naming it: the app shows them as lettered options (A, B, C) under that step.
+
+```json
+{ "title": "Clémence", "text": "She stands in the water and asks for her letters." },
+{ "title": "The letters", "branch": "If she gives back the letters", "success": "…" },
+{ "title": "Into the sea", "branch": "If she has no letters", "roll": { "type": "characteristic", "options": ["POW"] } }
+```
+
+A step whose title starts with "If …" (or "Si …" in French) counts as a choice too.
+
 Instead of a structured `roll`, a step may carry `test`: the roll in plain words (`"Charme ou Persuasion"`, `"Bibliothèque (pour retrouver la date)"`, `"SAN 0/1D6"`). The app turns it into roll buttons; text in brackets is a hint and is dropped.
 
 ### 4.2 Rolls

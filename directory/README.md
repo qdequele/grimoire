@@ -100,7 +100,7 @@ Portail : https://claude.ai/directory/manage → **Submit new** → **MCP connec
 | Étape | À remplir |
 |---|---|
 | Connection | Server URL `https://www.legrimoire.quest/mcp`, Universal URL |
-| Tools | Le portail lit les outils : les 6 ont un titre et leurs annotations |
+| Tools | Le portail lit les outils : les 7 ont un titre et leurs annotations |
 | Listing → Server name | `Grimoire` |
 | Listing → One-liner (200 max) | `Create and revise original investigation and horror tabletop stories, saved in your Grimoire library and ready to play.` |
 | Listing → Description (2 000 max) | Le texte ci-dessous |

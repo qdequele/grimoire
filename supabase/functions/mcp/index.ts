@@ -13,7 +13,8 @@
 //
 // Env: MCP_PUBLIC_URL (this endpoint as clients see it; default: the function's URL),
 // MCP_AUTH_SERVER (default SUPABASE_URL/auth/v1), APP_URL (story links, default the production
-// site), MCP_STORIES_MONTHLY_LIMIT (default 30 new stories), MCP_EDITS_DAILY_LIMIT (default 500).
+// site), MCP_STORIES_MONTHLY_LIMIT (default 30 new stories), MCP_EDITS_DAILY_LIMIT (default 500),
+// MCP_IMAGES_DAILY_LIMIT (default 100 SVG pictures stored or replaced; each save_image call is also an edit).
 
 import { Server } from 'npm:@modelcontextprotocol/sdk@1.32.2/server/index.js'
 import { WebStandardStreamableHTTPServerTransport } from 'npm:@modelcontextprotocol/sdk@1.32.2/server/webStandardStreamableHttp.js'
@@ -36,20 +37,26 @@ import {
 } from '../_shared/story-create.ts'
 import {
   applyEdits,
+  attachImage,
+  detachImage,
   forbiddenNamesIn,
   GUIDE_TOPICS,
   guideText,
+  imageUses,
   MCP_LIMITS,
   normalizeDraft,
+  parseImageRequest,
   SERVER_INSTRUCTIONS,
   STORY_PARTS,
   storyPart,
   ToolError,
   toolDefinitions,
+  usesImage,
   type GuideTopic,
   type StoryPart,
 } from '../_shared/story-mcp.ts'
 import { existingStory, saveStory, writePackJson } from '../_shared/story-save.ts'
+import { sanitizeSvg, SvgError } from '../_shared/svg-safe.ts'
 
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!
 const PUBLIC_URL = Deno.env.get('MCP_PUBLIC_URL') ?? `${SUPABASE_URL}/functions/v1/mcp`
@@ -57,6 +64,8 @@ const AUTH_SERVER = Deno.env.get('MCP_AUTH_SERVER') ?? `${SUPABASE_URL}/auth/v1`
 const APP_URL = (Deno.env.get('APP_URL') ?? 'https://www.legrimoire.quest').replace(/\/$/, '')
 const STORIES_MONTHLY_LIMIT = Number(Deno.env.get('MCP_STORIES_MONTHLY_LIMIT') ?? 30)
 const EDITS_DAILY_LIMIT = Number(Deno.env.get('MCP_EDITS_DAILY_LIMIT') ?? 500)
+const IMAGES_DAILY_LIMIT = Number(Deno.env.get('MCP_IMAGES_DAILY_LIMIT') ?? 100)
+const PACK_BUCKET = 'story-packs'
 /** Scene ids suggested for the next write_scenes call. */
 const NEXT_BATCH = 3
 
@@ -245,7 +254,7 @@ async function loadOwnStory(ctx: Ctx, storyId: unknown) {
   if (!id) throw new ToolError('bad_request', 'storyId is required.')
   const { data } = await ctx.db
     .from('stories')
-    .select('id, content, updated_at')
+    .select('id, content, updated_at, pack_files')
     .eq('id', id)
     .eq('owner_id', ctx.userId)
     .eq('visibility', 'private')
@@ -271,36 +280,62 @@ async function getStory(ctx: Ctx, args: Record<string, unknown>) {
     url: storyUrl(story.id),
     ...(writing ? { beingWrittenBy: writing } : {}),
     ...storyPart(story.content, part, sceneIds),
+    // Pictures in the pack (save_image) and where the story uses them.
+    images: imageUses(story.content, story.pack_files),
   }
 }
 
-async function editStory(ctx: Ctx, args: Record<string, unknown>) {
+/**
+ * Edits (edit_story and save_image calls) per day, counted in ai_usage as 'mcp-edit'. A save_image
+ * call that stores an SVG records its size in input_tokens, so pictures are counted apart too
+ * (the ai_usage kinds are a DB constraint; no new kind needed).
+ */
+async function checkEditQuota(ctx: Ctx, image: boolean) {
+  if (await isAdmin(ctx)) return
+  const today = () =>
+    ctx.admin.from('ai_usage').select('id', { count: 'exact', head: true }).eq('owner_id', ctx.userId).eq('kind', 'mcp-edit').gte('created_at', since('day'))
+  const { count, error } = await today()
+  if (error) throw error
+  if ((count ?? 0) >= EDITS_DAILY_LIMIT) throw new ToolError('quota_exceeded', `Daily limit reached (${EDITS_DAILY_LIMIT} edits).`)
+  if (!image) return
+  const { count: images, error: imageError } = await today().gt('input_tokens', 0)
+  if (imageError) throw imageError
+  if ((images ?? 0) >= IMAGES_DAILY_LIMIT) throw new ToolError('quota_exceeded', `Daily limit reached (${IMAGES_DAILY_LIMIT} pictures).`)
+}
+
+const CONFLICT = 'The story changed since you read it. Call get_story again and redo the edit on the new version.'
+
+/** The keeper's story, at the version the model read, and not being written by a creation. */
+async function storyToEdit(ctx: Ctx, args: Record<string, unknown>) {
   const version = str(args.version)
   if (!version) throw new ToolError('bad_request', 'version is required (from get_story).')
-  if (!(await isAdmin(ctx))) {
-    const { count, error } = await ctx.admin
-      .from('ai_usage')
-      .select('id', { count: 'exact', head: true })
-      .eq('owner_id', ctx.userId)
-      .eq('kind', 'mcp-edit')
-      .gte('created_at', since('day'))
-    if (error) throw error
-    if ((count ?? 0) >= EDITS_DAILY_LIMIT) throw new ToolError('quota_exceeded', `Daily limit reached (${EDITS_DAILY_LIMIT} edits).`)
-  }
   const current = await loadOwnStory(ctx, args.storyId)
-  if (current.updated_at !== version) throw new ToolError('conflict', 'The story changed since you read it. Call get_story again and redo the edit on the new version.')
+  if (current.updated_at !== version) throw new ToolError('conflict', CONFLICT)
   const writing = await creationWriting(ctx, current.id)
   if (writing) throw new ToolError('busy', `A creation is still writing this story (${writing}). Finish it with write_scenes first.`)
+  return { current, version }
+}
+
+/** The edited story must not have more schema errors than before (it may already have some). */
+function refuseNewSchemaErrors(before: unknown, story: unknown) {
+  const was = schemaErrors(before)
+  const validationErrors = schemaErrors(story)
+  if (validationErrors.length > was.length) {
+    throw new ToolError('invalid_story', `The edit doesn't fit the story format (nothing was changed):\n${validationErrors.filter((e) => !was.includes(e)).join('\n')}`)
+  }
+  return validationErrors
+}
+
+async function editStory(ctx: Ctx, args: Record<string, unknown>) {
+  if (!str(args.version)) throw new ToolError('bad_request', 'version is required (from get_story).')
+  await checkEditQuota(ctx, false)
+  const { current, version } = await storyToEdit(ctx, args)
 
   const story = applyEdits(current.content, args.ops)
   // Private stories converted from books the keeper owns may already carry such names: only new ones are refused.
   refuseForbidden(story, forbiddenNamesIn(current.content))
   refuseTooBig(story)
-  const was = schemaErrors(current.content)
-  const validationErrors = schemaErrors(story)
-  if (validationErrors.length > was.length) {
-    throw new ToolError('invalid_story', `The edit doesn't fit the story format (nothing was changed):\n${validationErrors.filter((e) => !was.includes(e)).join('\n')}`)
-  }
+  const validationErrors = refuseNewSchemaErrors(current.content, story)
 
   const { data, error } = await ctx.db
     .from('stories')
@@ -310,10 +345,82 @@ async function editStory(ctx: Ctx, args: Record<string, unknown>) {
     .eq('updated_at', version)
     .select('updated_at')
   if (error) throw error
-  if (!data?.length) throw new ToolError('conflict', 'The story changed since you read it. Call get_story again and redo the edit on the new version.')
+  if (!data?.length) throw new ToolError('conflict', CONFLICT)
   await writePackJson(ctx.db, ctx.userId, current.id, story)
   await ctx.admin.from('ai_usage').insert({ owner_id: ctx.userId, kind: 'mcp-edit', input_tokens: 0, output_tokens: 0 })
   return { storyId: current.id, version: data[0].updated_at, url: storyUrl(current.id), validationErrors }
+}
+
+/**
+ * Store, replace, attach or remove an SVG picture of a story's pack. The file, stories.pack_files,
+ * stories.content and the pack's story.json change together: the row update is conditional on the
+ * version, and a file uploaded for a refused update is removed again (a replaced file can't be
+ * restored, but the story still points at a valid picture under the same name).
+ */
+async function saveImage(ctx: Ctx, args: Record<string, unknown>) {
+  if (!str(args.version)) throw new ToolError('bad_request', 'version is required (from get_story).')
+  const req = parseImageRequest(args)
+  let safe: ReturnType<typeof sanitizeSvg> | null = null
+  if (req.svg !== undefined) {
+    try {
+      safe = sanitizeSvg(req.svg)
+    } catch (e) {
+      if (e instanceof SvgError) throw new ToolError('unsafe_svg', `${e.message} Nothing was saved: fix the SVG and send it again.`)
+      throw e
+    }
+  }
+  await checkEditQuota(ctx, !!safe)
+  const { current, version } = await storyToEdit(ctx, args)
+
+  const files = current.pack_files
+  const stored = files.includes(req.path)
+  if (safe && !stored && files.filter((f) => f.startsWith('images/')).length >= MCP_LIMITS.imagesPerStory) {
+    throw new ToolError('too_many_images', `This story already has ${MCP_LIMITS.imagesPerStory} pictures: remove one (remove: true) or replace one (same name).`)
+  }
+  if (!safe && !req.remove && !stored) throw new ToolError('not_found', `No picture ${req.path} in this story: send svg to create it.`)
+  if (req.remove && !stored && !usesImage(current.content, req.path)) throw new ToolError('not_found', `No picture ${req.path} in this story.`)
+
+  const story = req.remove ? detachImage(current.content, req.path) : req.attach ? attachImage(current.content, req.path, req.attach) : (current.content as Record<string, unknown>)
+  const changed = JSON.stringify(story) !== JSON.stringify(current.content)
+  if (changed) {
+    refuseTooBig(story)
+    refuseNewSchemaErrors(current.content, story)
+  }
+  const packFiles = req.remove ? files.filter((f) => f !== req.path) : stored ? files : [...files, req.path]
+  const objectPath = `${ctx.userId}/${current.id}/${req.path}`
+  const bucket = ctx.db.storage.from(PACK_BUCKET)
+
+  if (safe) {
+    const { error } = await bucket.upload(objectPath, new Blob([safe.svg], { type: 'image/svg+xml' }), { upsert: true, contentType: 'image/svg+xml' })
+    if (error) throw error
+  }
+  const { data, error } = await ctx.db
+    .from('stories')
+    .update({ content: story as Json, pack_files: packFiles })
+    .eq('id', current.id)
+    .eq('owner_id', ctx.userId)
+    .eq('updated_at', version)
+    .select('updated_at')
+  if (error || !data?.length) {
+    if (safe && !stored) await bucket.remove([objectPath])
+    if (error) throw error
+    throw new ToolError('conflict', CONFLICT)
+  }
+  if (req.remove && stored) {
+    const { error: removeError } = await bucket.remove([objectPath])
+    if (removeError) console.error('pack picture remove failed', removeError)
+  }
+  if (changed) await writePackJson(ctx.db, ctx.userId, current.id, story)
+  await ctx.admin.from('ai_usage').insert({ owner_id: ctx.userId, kind: 'mcp-edit', input_tokens: safe?.bytes ?? 0, output_tokens: 0 })
+  return {
+    storyId: current.id,
+    version: data[0].updated_at,
+    url: storyUrl(current.id),
+    path: req.path,
+    ...(req.remove ? { removed: true } : { attachedTo: req.attach ?? null }),
+    ...(safe ? { bytes: safe.bytes, replaced: stored } : {}),
+    images: imageUses(story, packFiles),
+  }
 }
 
 async function callTool(ctx: Ctx, name: string, args: Record<string, unknown>): Promise<unknown> {
@@ -332,6 +439,8 @@ async function callTool(ctx: Ctx, name: string, args: Record<string, unknown>): 
       return await getStory(ctx, args)
     case 'edit_story':
       return await editStory(ctx, args)
+    case 'save_image':
+      return await saveImage(ctx, args)
     default:
       throw new ToolError('bad_request', `Unknown tool ${name}.`)
   }

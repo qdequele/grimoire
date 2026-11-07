@@ -454,6 +454,10 @@
         "title": {
           "type": "string"
         },
+        "branch": {
+          "type": "string",
+          "description": "When this step is one of several choices the players can make: the choice, e.g. 'If she burns the letters'. Consecutive branch steps are shown as lettered options (A, B, C) under the step before them. A step whose title starts with 'If …' / 'Si …' counts as a branch too."
+        },
         "text": {
           "$ref": "#/$defs/text",
           "description": "What happens / what to describe."

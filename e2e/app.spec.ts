@@ -96,6 +96,8 @@ test('keeper creates an investigator, then plays a marketplace story', async ({ 
   // Marketplace story → start a game with that investigator
   await page.getByRole('link', { name: 'Histoires', exact: true }).click()
   await expect(page.getByRole('link', { name: 'Bibliothèque' })).toHaveAttribute('aria-current', 'page')
+  // The library shows French stories first (the app's language); The Silent Light is in English.
+  await page.getByLabel("Langue de l'histoire").selectOption('en')
   const card = page.getByRole('link', { name: 'The Silent Light' })
   await expect(card).toBeVisible()
   await card.click()
@@ -136,6 +138,10 @@ test('creation draft survives a reload, and editing reopens the wizard', async (
   await page.getByLabel('Occupation').selectOption({ label: 'Journaliste' })
   await createJournalist(page, 'Edith Vale')
   await page.getByRole('link', { name: 'Edith Vale' }).click()
+  // The presentation sheet, then the wizard to edit it.
+  await expect(page.getByRole('heading', { name: 'Edith Vale', level: 1 })).toBeVisible()
+  await expect(page.getByText('Curieuse, têtue')).toBeVisible()
+  await page.getByRole('button', { name: 'Modifier' }).click()
   await expect(page.getByRole('heading', { name: 'Modifier un investigateur' })).toBeVisible()
   await expect(page.getByLabel('Nom', { exact: true })).toHaveValue('Edith Vale')
   await expect(page.getByRole('combobox', { name: 'Joueur' }).locator('option:checked')).toHaveText('Camille')
@@ -146,7 +152,7 @@ test('game screen: the original engine runs a story, rolls, saves to the account
   await signUp(page)
   await page.goto('/characters/new')
   await createJournalist(page, 'Vera Holt')
-  await page.goto('/stories')
+  await page.goto('/stories?lang=en') // The Silent Light is in English, the library shows the app's language first
   await page.getByRole('link', { name: 'The Silent Light' }).click()
   await page.getByLabel(/Vera Holt/).check()
   await page.getByRole('button', { name: 'Lancer la partie' }).click()
@@ -269,7 +275,7 @@ test('game screen: the original engine runs a story, rolls, saves to the account
   await expect(page.getByRole('link', { name: /Reprendre la partie/ })).toBeVisible()
 
   // …and found again when the same investigator starts another game.
-  await page.goto('/stories')
+  await page.goto('/stories?lang=en') // The Silent Light is in English, the library shows the app's language first
   await page.getByRole('link', { name: 'The Silent Light' }).click()
   await page.getByLabel(/Vera Holt/).check()
   await page.getByRole('button', { name: 'Lancer la partie' }).click()
@@ -282,12 +288,69 @@ test('game screen: the original engine runs a story, rolls, saves to the account
   expect(history).toContain('Survived the lighthouse')
 })
 
+test('game screen: documents, choices, the ambiance preview, a toolbar on top and investigator sheets', async ({ page }) => {
+  test.setTimeout(90_000)
+  await signUp(page)
+  await page.goto('/characters/new')
+  await createJournalist(page, 'Vera Holt')
+  // The library's first French story has documents, a scene with choices and ambiance screens.
+  await page.goto('/stories')
+  await page.locator('[data-slot="card"] a[href^="/stories/"]').first().click()
+  await page.getByLabel(/Vera Holt/).check()
+  await page.getByRole('button', { name: 'Lancer la partie' }).click()
+  const game = page.frameLocator('iframe[title="Partie"]')
+  await expect(game.locator('#scene h2')).toBeVisible()
+
+  // The toolbar has no story title, and stays on top when the page scrolls (below 1181 px wide).
+  await expect(game.locator('header.top .ctx-title')).toBeHidden()
+  await page.setViewportSize({ width: 1000, height: 700 })
+  const engine = page.frames().find((f) => f.url().includes('/play.html'))!
+  const top = await engine.evaluate(() => {
+    scrollTo(0, 1500)
+    return document.querySelector('header.top')!.getBoundingClientRect().top
+  })
+  expect(Math.round(top)).toBe(0)
+  await engine.evaluate(() => scrollTo(0, 0))
+
+  // The ambiance screen's preview for this scene, beside its sounds.
+  await expect(game.locator('.scr-prev iframe')).toHaveAttribute('src', /^\/screen-preview\?preset=/)
+  await expect(game.locator('.scr-prev .scr-lbl')).toContainText('Écran :')
+
+  // A document opens on paper and goes to the ambiance screen.
+  await game.locator('.hdc').first().click()
+  await expect(game.locator('#hdDlg')).toBeVisible()
+  await expect(game.locator('#hdDlg .hd-txt')).not.toBeEmpty()
+  await game.locator('#hdShow').click()
+  await expect(game.locator('#toast')).toContainText("Document montré sur l'écran d'ambiance.")
+  await page.keyboard.press('Escape')
+  await expect(game.locator('#hdDlg')).toBeHidden()
+  // …and the scene flow links to it.
+  await game.locator('a.hdlink').first().click()
+  await expect(game.locator('#hdDlg')).toBeVisible()
+  await game.locator('#hdClose').click()
+
+  // The last scene's choices, lettered under the step that sets them up.
+  await game.locator('nav.acts button[data-s]').last().click()
+  const choices = game.locator('.flw .flb > li')
+  expect(await choices.count()).toBeGreaterThanOrEqual(2)
+  await expect(choices.first()).toHaveAttribute('data-l', 'A')
+  await expect(choices.nth(1)).toHaveAttribute('data-l', 'B')
+
+  // An investigator's name opens their full sheet above the game.
+  await game.locator('[data-sheet]').first().click()
+  const sheet = page.getByRole('dialog')
+  await expect(sheet.getByRole('heading', { name: 'Vera Holt' })).toBeVisible()
+  await expect(sheet.getByText('Curieuse, têtue')).toBeVisible()
+  await sheet.getByRole('button', { name: 'Fermer' }).click()
+  await expect(sheet).toBeHidden()
+})
+
 test('ambiance screen: follows the scene, shows the handouts the keeper pushes, link revocable', async ({ page, context }) => {
   test.setTimeout(120_000)
   await signUp(page)
   await page.goto('/characters/new')
   await createJournalist(page, 'Vera Holt')
-  await page.goto('/stories')
+  await page.goto('/stories?lang=en') // The Silent Light is in English, the library shows the app's language first
   await page.getByRole('link', { name: 'The Silent Light' }).click()
   await page.getByLabel(/Vera Holt/).check()
   await page.getByRole('button', { name: 'Lancer la partie' }).click()
@@ -406,7 +469,7 @@ test('story packs: import a .zip with its files, download it back, re-import upd
 
 test('keeper copies a marketplace story into their own stories', async ({ page }) => {
   await signUp(page)
-  await page.goto('/stories')
+  await page.goto('/stories?lang=en') // The Silent Light is in English, the library shows the app's language first
   await page.getByRole('link', { name: 'The Silent Light' }).click()
   await page.getByRole('button', { name: 'Copier dans mes histoires' }).click()
   await expect(page.getByText('Mon histoire')).toBeVisible()
@@ -576,7 +639,7 @@ test.describe('AI features (fake Claude API)', () => {
     await signUp(page)
     await page.goto('/characters/new')
     await createJournalist(page, 'Nora Quill')
-    await page.goto('/stories')
+    await page.goto('/stories?lang=en') // The Silent Light is in English, the library shows the app's language first
     await page.getByRole('link', { name: 'The Silent Light' }).click()
     await page.getByLabel(/Nora Quill/).check()
     await page.getByRole('button', { name: 'Lancer la partie' }).click()

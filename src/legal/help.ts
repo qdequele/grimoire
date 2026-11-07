@@ -59,6 +59,7 @@ export const HELP: Bilingual = {
             '**write_scenes** : écrit les scènes du plan quelques-unes à la fois ; l’histoire est enregistrée après chaque appel.',
             '**list_my_stories** et **get_story** : lisent tes histoires privées (lecture seule).',
             '**edit_story** : modifie une de tes histoires privées (ajouter, remplacer ou retirer une scène, un acte, un PNJ, une aide de jeu). Tout ou rien, et refusé si l’histoire a changé entre-temps.',
+            '**save_image** : enregistre une image que ChatGPT ou Claude dessine (au format SVG) dans une de tes histoires privées, comme fond d’une scène sur l’écran d’ambiance ou comme image d’une aide de jeu (lettre, carte, plan) ; la remplace ou la retire. L’image est vérifiée strictement : rien d’actif, aucun lien vers l’extérieur.',
           ],
           'Le connecteur n’accède qu’à tes histoires privées : ni aux histoires de la bibliothèque commune, ni à tes parties, investigateurs ou joueurs. Il ne supprime jamais une histoire entière. Il refuse les noms tirés d’œuvres protégées : les histoires créées doivent être originales.',
         ],
@@ -68,8 +69,8 @@ export const HELP: Bilingual = {
         blocks: [
           [
             '30 nouvelles histoires par mois et par compte avec le connecteur.',
-            '500 modifications par jour.',
-            'Une histoire peut peser jusqu’à 2 Mo, et une modification compter jusqu’à 20 opérations.',
+            '500 modifications par jour (chaque image enregistrée compte aussi comme une modification), dont 100 images.',
+            'Une histoire peut peser jusqu’à 2 Mo, une modification compter jusqu’à 20 opérations, une image peser 300 Ko et une histoire garder 40 images.',
           ],
           'Le connecteur n’appelle aucune IA de son côté : c’est ChatGPT ou Claude qui écrit, selon ton abonnement chez eux.',
         ],
@@ -153,6 +154,7 @@ export const HELP: Bilingual = {
             '**write_scenes**: writes the outline’s scenes a few at a time; the story is saved after every call.',
             '**list_my_stories** and **get_story**: read your private stories (read-only).',
             '**edit_story**: changes one of your private stories (add, replace or remove a scene, an act, an NPC, a handout). All or nothing, and refused if the story changed in the meantime.',
+            '**save_image**: stores a picture ChatGPT or Claude draws (as SVG) in one of your private stories, as a scene’s background on the ambiance screen or as a handout’s picture (letter, map, floor plan); replaces or removes it. The picture is strictly checked: nothing active, no link to the outside.',
           ],
           'The connector only reaches your private stories: not the shared library, nor your games, investigators or players. It never deletes a whole story. It refuses names taken from protected works: created stories must be original.',
         ],
@@ -162,8 +164,8 @@ export const HELP: Bilingual = {
         blocks: [
           [
             '30 new stories per month per account through the connector.',
-            '500 edits per day.',
-            'A story can be up to 2 MB, and one edit can hold up to 20 operations.',
+            '500 edits per day (each picture saved also counts as an edit), 100 of them pictures.',
+            'A story can be up to 2 MB, one edit can hold up to 20 operations, a picture can be up to 300 KB and a story can hold 40 pictures.',
           ],
           'The connector calls no AI on its side: ChatGPT or Claude does the writing, under your plan with them.',
         ],

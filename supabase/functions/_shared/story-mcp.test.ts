@@ -5,11 +5,15 @@ import { draftToStory, SCREEN_PLACES, SCREEN_PRESETS, SCREEN_TIMES } from './imp
 import { SAMPLE_STORY, STORY_SCHEMA } from './spec-bundle'
 import {
   applyEdits,
+  attachImage,
+  detachImage,
   EDIT_OPS,
   forbiddenNamesIn,
   GUIDE_TOPICS,
   guideText,
+  imageUses,
   normalizeDraft,
+  parseImageRequest,
   relax,
   sceneCount,
   SERVER_INSTRUCTIONS,
@@ -18,7 +22,9 @@ import {
   storySummary,
   ToolError,
   toolDefinitions,
+  usesImage,
 } from './story-mcp'
+import { sanitizeSvg } from './svg-safe'
 
 const validate = new Ajv2020({ allErrors: true, strict: false }).compile(STORY_SCHEMA)
 const sample = () => structuredClone(SAMPLE_STORY) as Record<string, any> // eslint-disable-line @typescript-eslint/no-explicit-any
@@ -206,6 +212,17 @@ describe('applyEdits', () => {
     expect(validate(applyEdits(s, [{ op: 'set_screen', id, screen: { place: 'moon' } }]))).toBe(false)
   })
 
+  it('set_screen keeps a picture and a fire unless they are named', () => {
+    const s = sample()
+    const id = firstScene(s).id
+    firstScene(s).screen = { image: 'images/mill.svg', fire: { x: 0.5, y: 0.8, width: 0.2 }, preset: 'fog' }
+    const out = applyEdits(s, [{ op: 'set_screen', id, screen: { place: 'manor' } }]) as Record<string, any> // eslint-disable-line @typescript-eslint/no-explicit-any
+    expect(firstScene(out).screen).toEqual({ image: 'images/mill.svg', fire: { x: 0.5, y: 0.8, width: 0.2 }, place: 'manor' })
+    const off = applyEdits(out, [{ op: 'set_screen', id, screen: { image: '' } }]) as Record<string, any> // eslint-disable-line @typescript-eslint/no-explicit-any
+    expect(firstScene(off).screen).toEqual({ fire: { x: 0.5, y: 0.8, width: 0.2 } })
+    expect(validate(off), JSON.stringify(validate.errors)).toBe(true)
+  })
+
   it('refuses bad operations, naming the one at fault, and applies none', () => {
     const s = sample()
     const bad: unknown[] = [
@@ -225,6 +242,79 @@ describe('applyEdits', () => {
   })
 })
 
+describe('pictures (save_image)', () => {
+  it('checks the arguments: a safe file name and one target', () => {
+    expect(parseImageRequest({ name: 'harbour-night.svg', svg: '<svg/>', attach: { scene: 'docks' } })).toEqual({
+      name: 'harbour-night.svg', path: 'images/harbour-night.svg', svg: '<svg/>', attach: { scene: 'docks' }, remove: false,
+    })
+    expect(parseImageRequest({ name: 'images/map.svg', attach: { handout: 'map' } })).toMatchObject({ path: 'images/map.svg', attach: { handout: 'map' } })
+    expect(parseImageRequest({ name: 'map.svg', remove: true })).toMatchObject({ remove: true, attach: null })
+    expect(parseImageRequest({ name: 'map.svg', svg: '<svg/>' }).attach).toBeNull()
+    const bad: Array<Record<string, unknown>> = [
+      { name: '../../other/story.json', svg: '<svg/>' },
+      { name: 'images/../x.svg', svg: '<svg/>' },
+      { name: 'Map.svg', svg: '<svg/>' },
+      { name: 'map.png', svg: '<svg/>' },
+      { name: 'map.svg.html', svg: '<svg/>' },
+      { name: '-map.svg', svg: '<svg/>' },
+      { name: `${'a'.repeat(61)}.svg`, svg: '<svg/>' },
+      { name: 'map.svg' },
+      { name: 'map.svg', svg: 42 },
+      { name: 'map.svg', attach: { scene: 'a', handout: 'b' } },
+      { name: 'map.svg', attach: { npc: 'a' } },
+      { name: 'map.svg', attach: 'docks' },
+      { name: 'map.svg', remove: true, svg: '<svg/>' },
+      { name: 'map.svg', remove: true, attach: { scene: 'a' } },
+    ]
+    for (const args of bad) expect(() => parseImageRequest(args), JSON.stringify(args)).toThrow(ToolError)
+  })
+
+  it('attaches a picture to a scene background or a handout, and the story stays valid', () => {
+    const s = sample()
+    s.handouts = [{ id: 'letter', title: 'A letter', text: 'Come at once.' }]
+    const id = firstScene(s).id
+    firstScene(s).screen = { place: 'harbour' }
+    let out = attachImage(s, 'images/docks.svg', { scene: id }) as Record<string, any> // eslint-disable-line @typescript-eslint/no-explicit-any
+    expect(firstScene(out).screen).toEqual({ place: 'harbour', image: 'images/docks.svg' })
+    out = attachImage(out, 'images/letter.svg', { handout: 'letter' }) as Record<string, any> // eslint-disable-line @typescript-eslint/no-explicit-any
+    expect(out.handouts[0]).toEqual({ id: 'letter', title: 'A letter', text: 'Come at once.', image: 'images/letter.svg' })
+    expect(validate(out), JSON.stringify(validate.errors)).toBe(true)
+    expect(s.handouts[0].image).toBeUndefined()
+    expect(() => attachImage(s, 'images/x.svg', { scene: 'nowhere' })).toThrow(/not_found|does not exist/)
+    expect(() => attachImage(s, 'images/x.svg', { handout: 'nothing' })).toThrow(/put_handout/)
+    expect(imageUses(out, ['story.json', 'images/docks.svg', 'images/letter.svg', 'sounds/x.mp3'])).toEqual([
+      { path: 'images/docks.svg', scenes: [id], handouts: [] },
+      { path: 'images/letter.svg', scenes: [], handouts: ['letter'] },
+    ])
+  })
+
+  it('detaches a picture everywhere it is used', () => {
+    const s = sample()
+    const [a, b] = s.acts.flatMap((x: { scenes: unknown[] }) => x.scenes)
+    a.screen = { image: 'images/p.svg' }
+    b.screen = { image: 'images/p.svg', preset: 'rain' }
+    b.images = [{ src: 'images/p.svg' }, { src: 'images/q.jpg' }]
+    s.handouts = [{ id: 'h1', title: 'H1', image: 'p.svg' }, { id: 'h2', title: 'H2', image: 'images/p.svg', text: 'x' }]
+    expect(usesImage(s, 'images/p.svg')).toBe(true)
+    const out = detachImage(s, 'images/p.svg') as Record<string, any> // eslint-disable-line @typescript-eslint/no-explicit-any
+    const [a2, b2] = out.acts.flatMap((x: { scenes: unknown[] }) => x.scenes)
+    expect(a2.screen).toBeUndefined()
+    expect(b2.screen).toEqual({ preset: 'rain' })
+    expect(b2.images).toEqual([{ src: 'images/q.jpg' }])
+    expect(out.handouts).toEqual([{ id: 'h1', title: 'H1' }, { id: 'h2', title: 'H2', text: 'x' }])
+    expect(usesImage(out, 'images/p.svg')).toBe(false)
+    expect(validate(out), JSON.stringify(validate.errors)).toBe(true)
+  })
+
+  it('serves an images guide whose rules match the sanitizer', () => {
+    const g = guideText('images')
+    for (const word of ['save_image', '0 0 1600 900', 'set_screen', 'put_handout', 'cursive', 'floor plan', 'remove: true']) expect(g).toContain(word)
+    expect(guideText('workflow')).toContain('save_image')
+    // The guide's own examples are accepted.
+    expect(() => sanitizeSvg('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 900"><rect width="1600" height="900" fill="#0b1020"/></svg>')).not.toThrow()
+  })
+})
+
 describe('guide and tools', () => {
   it('serves the creator prompt\'s own rules', () => {
     const prompt = createSystemPrompt()
@@ -240,7 +330,7 @@ describe('guide and tools', () => {
   it('names every tool the guide mentions, with valid JSON Schemas and annotations', () => {
     const tools = toolDefinitions()
     const names = tools.map((t) => t.name)
-    expect(names).toEqual(['grimoire_guide', 'save_outline', 'write_scenes', 'list_my_stories', 'get_story', 'edit_story'])
+    expect(names).toEqual(['grimoire_guide', 'save_outline', 'write_scenes', 'list_my_stories', 'get_story', 'edit_story', 'save_image'])
     for (const name of names) expect(guideText('workflow') + SERVER_INSTRUCTIONS).toContain(name)
     const ajv = new Ajv2020({ strict: false })
     for (const t of tools) {
@@ -253,7 +343,7 @@ describe('guide and tools', () => {
       expect(t.name.length).toBeLessThanOrEqual(64)
       expect(t.annotations, t.name).toEqual({
         readOnlyHint: expect.any(Boolean),
-        destructiveHint: t.name === 'edit_story',
+        destructiveHint: t.name === 'edit_story' || t.name === 'save_image',
         openWorldHint: false,
       })
     }

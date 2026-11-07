@@ -22,6 +22,8 @@ export interface EngineGlobals {
   WHO_NOTE: string
   RITUAL: unknown
   NPC_WORDS: string[]
+  /** The story's documents, by id (see LegacyHandout). */
+  HANDOUTS: Record<string, unknown>
   // Rules content (private when available, neutral fallbacks otherwise)
   I18N: { ui: Record<string, string>; pat: Array<[string, string]>; sk: Record<string, string>; data: Record<string, unknown> }
   RULES: unknown[]
@@ -74,6 +76,14 @@ export interface PlayHost {
   openTable?: () => void
   /** Open the ambiance screen dialog (link for the TV, handouts to push). */
   openScreen?: () => void
+  /** What the ambiance screen shows for a scene: a page drawing it (/screen-preview…) and its description. */
+  screenPreview?: (sceneId: string) => Promise<{ src: string; label: string } | null>
+  /** A signed URL of a document's picture, if it has one in the story pack. */
+  handoutImage?: (handoutId: string) => Promise<string | null>
+  /** Show a document on the ambiance screen; false if the story has nothing to show for it. */
+  showHandout?: (handoutId: string) => boolean
+  /** Open an account investigator's full sheet above the game; false if the id isn't one. */
+  openSheet?: (characterId: string) => boolean
   /** The narrator's text generation (what claude.use("sample") gave in claude.ai). */
   sample?: (messages: SampleMessage[], opts?: SampleOptions) => Promise<{ text: string }>
 }

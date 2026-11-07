@@ -173,15 +173,15 @@ function ftParse(t){t=String(t).trim().replace(/\s+(?:or|vs\.?)\s+/g," ou ").rep
   t=t.replace(/Langues \(Latin\)/g,"Latin").replace(/\([^)]*\)/g,"").replace(/\s+contre\s+.*$/,"");
   return t.split(/,\s*puis\s+|,\s*|\s+ou\s+/).map(x=>x.trim()).filter(x=>x&&!(GRIMOIRE_DATA.NPC_WORDS||[]).some(w=>x.includes(w))).map(x=>["test",((()=>{try{return SK_EN2FR[x.toLowerCase()]}catch(e){return undefined}})())||x,""]);}
 function ftHTML(t){const ps=ftParse(t);return `<div class="ft"><span class="ft-i"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2.5 21 8v8l-9 5.5L3 16V8z"/><path d="M3 8l9 5.5L21 8M12 13.5v8"/><circle cx="12" cy="8" r="1.2" class="pip"/><circle cx="7.5" cy="14" r="1.1" class="pip"/><circle cx="16.5" cy="14" r="1.1" class="pip"/></svg></span>${ps.map(([k,l,v])=>`<button class="chip ftc ${k}" data-kind="${k}" data-label="${esc(l)}" data-val="${esc(v)}" title="Lancer pour un investigateur">${k==="san"?`SAN ${esc(v)}${l&&l!=="Santé mentale"?` · ${esc(l)}`:""}`:esc(l)}</button>`).join('<span class="ft-o">ou</span>')}</div>`;}
-function flowHTML(fl){if(!fl||!fl.length)return "";return `<div class="sec flow"><ol class="flw">${fl.map(s=>`<li><div class="fh">${s.h}</div>${s.txt?`<p>${s.txt}</p>`:""}${s.test?ftHTML(s.test):""}${s.ok?`<div class="fb ok"><span class="lab">Réussi</span> ${s.ok}</div>`:""}${s.ko?`<div class="fb ko"><span class="lab">Raté</span> ${s.ko}</div>`:""}${s.fail?`<div class="fb fx">${s.fail}</div>`:""}${s.extra?`<p class="fe">${s.extra}</p>`:""}</li>`).join("")}</ol></div>`;}
+function flowHTML0(fl){if(!fl||!fl.length)return "";return `<div class="sec flow"><ol class="flw">${fl.map(s=>`<li><div class="fh">${s.h}</div>${s.txt?`<p>${s.txt}</p>`:""}${s.test?ftHTML(s.test):""}${s.ok?`<div class="fb ok"><span class="lab">Réussi</span> ${s.ok}</div>`:""}${s.ko?`<div class="fb ko"><span class="lab">Raté</span> ${s.ko}</div>`:""}${s.fail?`<div class="fb fx">${s.fail}</div>`:""}${s.extra?`<p class="fe">${s.extra}</p>`:""}</li>`).join("")}</ol></div>`;}
 function secHTML(list){return (list||[]).map(x=>`<div class="sec"><h4>${x.h}</h4><ul>${x.ul.map(u=>`<li>${u}</li>`).join("")}</ul></div>`).join("");}
 function renderScene(){
   const sc=scenesOf(SC()),i=Math.max(0,sc.findIndex(s=>s.id===ST().scene)),s=sc[i];
   let h=`<div class="scene-head"><h2>${s.t}</h2>${s.p?`<span class="page">Livret ${s.p}</span>`:""}</div><p class="lead">${s.lead||""}</p>`;
   if(typeof AMB_FOR!=="undefined"&&(AMB_FOR[s.id]||SFX_FOR[s.id])){const fx=(SFX_FOR[s.id]||[]).map(id=>REC_FX[id]?{id,n:REC_FX[id].n,attr:`data-sfxplay="${id}"`}:(()=>{const o=slotOf2(id);return o?{id,n:SLOTS.find(x=>x[0]===id)[1],attr:`data-myplay="${o.id}"`}:null;})()).filter(Boolean);
-    h+=`<div class="chips scene-snd">${AMB_FOR[s.id]?`<button class="chip amb" data-ambset="${AMB_FOR[s.id].join(",")}">♪ Ambiance : ${AMB_FOR[s.id].map(i=>REC_AMB[i].n).join(" + ")}</button>`:""}${fx.map(f=>`<button class="chip sfx" ${f.attr} title="Jouer le son">◗ ${esc(f.n)}</button>`).join("")}</div>`;}
+    h+=`<div class="chips scene-snd">${scrPrevHTML(s)}${AMB_FOR[s.id]?`<button class="chip amb" data-ambset="${AMB_FOR[s.id].join(",")}">♪ Ambiance : ${AMB_FOR[s.id].map(i=>REC_AMB[i].n).join(" + ")}</button>`:""}${fx.map(f=>`<button class="chip sfx" ${f.attr} title="Jouer le son">◗ ${esc(f.n)}</button>`).join("")}</div>`;}else if(scrPrevHTML(s))h+=`<div class="chips scene-snd">${scrPrevHTML(s)}</div>`;
   if(s.chips&&s.chips.length&&(!s.flow||s.chips.some(c=>c[0]!=="test")))h+=`<div class="chips">${s.chips.filter(c=>!s.flow||c[0]!=="test").map(c=>`<button class="chip ${c[0]}" data-kind="${c[0]}" data-label="${esc(c[1])}" data-val="${esc(c[2])}">${c[0]==="san"?"SAN ":c[0]==="dmg"?"":"Test "}${esc(c[1])}${c[2]?` · ${esc(c[2])}`:""}</button>`).join("")}</div>`;
-  if(s.secsFirst)h+=secHTML(s.secs);
+  h+=hdRowHTML(s);if(s.secsFirst)h+=secHTML(s.secs);
   if(s.read)h+=`<div class="read"><div class="lbl"><span>À lire ou paraphraser</span></div>${s.read.map(p=>`<p>${p}</p>`).join("")}</div>`;
   if(!s.secsFirst)h+=secHTML(s.secs);
   h+=flowHTML(s.flow);h+=secHTML(s.after);
@@ -286,7 +286,7 @@ function renderInv(){setTimeout(renderCtx,0);
     const g=(ST().groups||[]).find(x=>x.id===s.grp)||{col:0};const open=openInv.has(s.cid);
     const low=s.pv<=Math.ceil(b.pv/2),lowS=s.san<=Math.ceil(b.san*0.6);
     return `<div class="inv ${s.state==="mort"?"dead":""} ${open?"open":""}">
-      <div class="irow">${head(s,g)}<span class="who"><span class="nm">${esc(b.n)}</span>
+      <div class="irow">${head(s,g)}<span class="who"><button type="button" class="nm nm-sheet" data-sheet="${esc(s.cid)}" title="Fiche de présentation">${esc(b.n)}</button>
         <span class="player ro">${esc(s.player)||"sans joueur"}</span></span>
         <span class="mini"><b class="${low?"lo":""}">${s.pv}</b><small>PV</small> <b class="${lowS?"lo":""}">${s.san}</b><small>SAN</small></span>
         ${s.state!=="ok"?pill(s.state):""}
@@ -1580,7 +1580,7 @@ route();
  Object.entries(tips).forEach(([id,k])=>{const b=$("#"+id);if(b&&!b.title)b.title="Raccourci : "+k;});
  [["journal","J"],["notes","N"]].forEach(([k,l])=>{const b=document.querySelector(`[data-ptog="${k}"]`);if(b)b.title="Raccourci : "+l;});
  const togglePanel=k=>{S.ui["c_"+k]=!S.ui["c_"+k];save();applyPanels();if(!S.ui["c_"+k]){const p=k==="journal"?$("#jPanel"):document.querySelector(".panel.notes");if(p){p.scrollIntoView({block:"nearest",behavior:"smooth"});if(k==="notes"){const t=p.querySelector("textarea");if(t)setTimeout(()=>t.focus(),50);}}}};
- const openOver=()=>["#npcDlg","#pick","#saveDlg","#gmMenu"].some(s=>{const el=$(s);return el&&!el.hidden;});
+ const openOver=()=>["#npcDlg","#pick","#saveDlg","#gmMenu","#hdDlg"].some(s=>{const el=$(s);return el&&!el.hidden;});
  document.addEventListener("keydown",e=>{
   if(e.ctrlKey||e.metaKey||e.altKey||e.repeat)return;
   const t=e.target;if(t&&(t.isContentEditable||/^(INPUT|TEXTAREA|SELECT)$/.test(t.tagName))){if(e.key==="Escape"&&t.closest(".panel"))t.blur();return;}
@@ -1742,4 +1742,67 @@ window.GRIMOIRE_ENGINE={
     try{keepFocus(()=>{renderNav();renderInv();});}catch(e){}},
   logRoll(txt,k){jlog(String(txt).slice(0,300),k==="san"||k==="test"?k:"de");},
 };
+/* Grimoire UI (scripts/engine-ui.mjs): scene flow with choices, the scene's documents, the ambiance
+   screen's preview, investigator sheets, a toolbar that stays on top. Plain engine code (sloppy
+   script, same globals as the rest of engine.js), inserted just before the first route(). */
+
+/* ---------- Scene flow: a step's choices ----------
+   A step with `br` (the story's step.branch, or a title starting with "Si …"/"If …") is one of the
+   choices of the step before it: shown under that step as lettered options (A, B, C), so the
+   keeper sees at a glance what happens for each choice the players make.
+   The engine renders a first time before this code runs: functions only here (hoisted), state in
+   `var`s (no temporal dead zone). */
+function flowHTML(fl){if(!fl||!fl.length)return "";
+  const body=s=>`${s.txt?`<p>${s.txt}</p>`:""}${s.test?ftHTML(s.test):""}${s.ok?`<div class="fb ok"><span class="lab">Réussi</span> ${s.ok}</div>`:""}${s.ko?`<div class="fb ko"><span class="lab">Raté</span> ${s.ko}</div>`:""}${s.fail?`<div class="fb fx">${s.fail}</div>`:""}${s.extra?`<p class="fe">${s.extra}</p>`:""}`;
+  const groups=[];fl.forEach(s=>{if(s.br&&groups.length)groups[groups.length-1].br.push(s);else groups.push({s,br:[]});});
+  const choice=(b,j)=>`<li data-l="${String.fromCharCode(65+j%26)}"><div class="fh"><span class="br-if">${b.br}</span></div>${b.h&&b.h!==b.br?`<div class="br-t">${b.h}</div>`:""}${body(b)}</li>`;
+  return `<div class="sec flow"><ol class="flw">${groups.map(({s,br})=>`<li${br.length?' class="has-br"':""}><div class="fh">${s.h||s.br||""}</div>${body(s)}${br.length?`<div class="flb-l">Selon le choix des joueurs</div><ol class="flb">${br.map(choice).join("")}</ol>`:""}</li>`).join("")}</ol></div>`;}
+
+/* ---------- The ambiance screen's background for this scene ----------
+   A small live preview (the TV's own drawing, /screen-preview in an iframe) next to the scene's
+   sounds; a click opens the ambiance screen dialog. The host says what to show
+   (GRIMOIRE_HOST.screenPreview(sceneId) → {src,label}). */
+function scrPrevHTML(s){return window.GRIMOIRE_HOST&&GRIMOIRE_HOST.screenPreview?`<button type="button" class="scr-prev" data-scrprev="${esc(s.id)}" title="Écran d'ambiance"><span class="scr-frame"></span><span class="scr-lbl">Écran d'ambiance</span></button>`:"";}
+var SCRP={id:null,src:"",lbl:""};
+function fillScrPrev(){const b=document.querySelector("#scene [data-scrprev]");if(!b)return;const id=b.dataset.scrprev;
+  const put=el=>{const f=el.querySelector(".scr-frame");if(!f||!SCRP.src)return;
+    if(!f.firstChild){const fr=document.createElement("iframe");fr.src=SCRP.src;fr.tabIndex=-1;fr.title="";fr.setAttribute("aria-hidden","true");f.appendChild(fr);}
+    el.querySelector(".scr-lbl").textContent=SCRP.lbl;el.title=SCRP.lbl;};
+  if(SCRP.id===id){put(b);return;}
+  SCRP={id,src:"",lbl:""};
+  Promise.resolve(GRIMOIRE_HOST.screenPreview(id)).then(p=>{if(SCRP.id!==id||!p||!p.src)return;SCRP.src=String(p.src);SCRP.lbl=String(p.label||"");
+    const cur=document.querySelector("#scene [data-scrprev]");if(cur&&cur.dataset.scrprev===id)put(cur);}).catch(e=>console.error(e));}
+{const _rsU=renderScene;renderScene=function(){_rsU();fillScrPrev();};}
+$("#scene").addEventListener("click",e=>{if(e.target.closest("[data-scrprev]")&&GRIMOIRE_HOST.openScreen)GRIMOIRE_HOST.openScreen();});
+
+/* ---------- The scene's documents (letters, diaries, maps…) ----------
+   Listed under the sounds, and linked where the scene flow mentions them: a click opens the
+   document on paper, from where the keeper can show it on the ambiance screen. */
+function hdIcon(){return '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 3h9l4 4v14H6z"/><path d="M15 3v4h4M9 11h7M9 14.5h7M9 18h4"/></svg>';}
+function hdRowHTML(s){const H=GRIMOIRE_DATA.HANDOUTS||{};const ids=(s.hd||[]).filter(id=>H[id]);if(!ids.length)return "";
+  return `<div class="hd-row"><span class="hd-lbl">Documents</span>${ids.map(id=>`<button type="button" class="hdc" data-hd="${esc(id)}">${hdIcon()}<span>${esc(H[id].t)}</span></button>`).join("")}</div>`;}
+document.body.insertAdjacentHTML("beforeend",`<div class="pickdlg" id="hdDlg" hidden role="dialog" aria-modal="true" aria-labelledby="hdTitle"><div class="pick-box hd-box"><div class="pk-head"><span class="gm-eyebrow">Document</span><h3 id="hdTitle"></h3></div><div class="hd-paper"><div class="hd-img" hidden></div><div class="hd-txt"></div></div><div class="addrow"><button class="btn prim" id="hdShow">Montrer sur l'écran</button><button class="btn" id="hdClose">Fermer</button></div></div></div>`);
+var HD=null,hdBack=null;
+function openHd(id){const h=(GRIMOIRE_DATA.HANDOUTS||{})[id];if(!h)return;HD=id;hdBack=document.activeElement;
+  $("#hdTitle").textContent=h.t;const tx=$("#hdDlg .hd-txt");tx.innerHTML=h.txt||"";tx.hidden=!h.txt;
+  const im=$("#hdDlg .hd-img");im.innerHTML="";im.hidden=true;
+  if(h.img&&GRIMOIRE_HOST.handoutImage)Promise.resolve(GRIMOIRE_HOST.handoutImage(id)).then(u=>{if(HD!==id||!u)return;const i=new Image();i.src=String(u);i.alt=h.t;im.appendChild(i);im.hidden=false;}).catch(e=>console.error(e));
+  $("#hdShow").hidden=!GRIMOIRE_HOST.showHandout;$("#hdDlg").hidden=false;$("#hdClose").focus();}
+function closeHd(){$("#hdDlg").hidden=true;HD=null;if(hdBack&&hdBack.focus)try{hdBack.focus();}catch{}hdBack=null;}
+$("#scene").addEventListener("click",e=>{const b=e.target.closest("[data-hd]");if(!b)return;e.preventDefault();openHd(b.dataset.hd);});
+$("#hdDlg").addEventListener("click",e=>{if(e.target.id==="hdDlg"||e.target.id==="hdClose"){closeHd();return;}
+  if(e.target.id==="hdShow"&&HD){const ok=GRIMOIRE_HOST.showHandout(HD);if(ok!==false)toast("Document montré sur l'écran d'ambiance.");}});
+document.addEventListener("keydown",e=>{if(e.key==="Escape"&&!$("#hdDlg").hidden){closeHd();e.stopImmediatePropagation();}},true);
+
+/* ---------- Investigator sheets ----------
+   The name on an investigator card opens the account investigator's full presentation sheet
+   (GRIMOIRE_HOST.openSheet, a dialog above the game); others just unfold their card. */
+$("#invView").addEventListener("click",e=>{const b=e.target.closest("[data-sheet]");if(!b)return;const id=b.dataset.sheet;
+  const ok=GRIMOIRE_HOST.openSheet&&GRIMOIRE_HOST.openSheet(id);
+  if(!ok){openInv.has(id)?openInv.delete(id):openInv.add(id);renderInv();}});
+
+/* ---------- Toolbar always on top ----------
+   Its height, for what sticks below it (combat bar, dice pool) when the page scrolls. */
+{const top=$("header.top");if(top&&window.ResizeObserver)new ResizeObserver(()=>document.documentElement.style.setProperty("--top-h",top.offsetHeight+"px")).observe(top);}
+
 try{route()}catch(e){}
