@@ -2,13 +2,14 @@ import { Copy, Link2Off, Plus, QrCode, RefreshCw, X } from 'lucide-react'
 import { QRCodeSVG } from 'qrcode.react'
 import { useState } from 'react'
 import { toast } from 'sonner'
+import { Avatar } from '@/characters/Avatar'
 import { Button } from '@/components/ui/button'
 import { Dialog, DialogClose, DialogContent, DialogDescription, DialogTitle } from '@/components/ui/dialog'
 import { Skeleton } from '@/components/ui/skeleton'
 import { useT } from '@/i18n/t'
 import { linkUrl, useCreateLink, useGameLinks, useRevokeLink, type TableLink } from './links'
 
-export interface TableMember { id: string; name: string; player?: string }
+export interface TableMember { id: string; name: string; player?: string; photo?: string | null }
 
 /** QR code on a light ground (phones read dark-on-light best), with the link under it. */
 function LinkQr({ link }: { link: TableLink }) {
@@ -59,6 +60,7 @@ function MemberRow({ gameId, member, link }: { gameId: string; member: TableMemb
   return (
     <li className="flex flex-col gap-3 border-t border-border py-2.5 first:border-t-0">
       <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
+        <Avatar name={member.name} photo={member.photo} className="size-7 text-[0.625rem]" />
         <span className="font-heading text-base">{member.name}</span>
         {member.player && <span className="text-sm text-muted-foreground">{member.player}</span>}
         <span className="ml-auto flex gap-1">

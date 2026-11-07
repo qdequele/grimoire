@@ -68,7 +68,7 @@ async function renderAll(target: Page | import('@playwright/test').Frame) {
     }
     click('#qaSnd')
     out['sounds'] = html('#sndBody')
-    click('#qaRules')
+    click('#gmRules')
     out['rules'] = html('#rulesSheetBody')
     return out
   })

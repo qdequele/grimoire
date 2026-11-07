@@ -56,6 +56,8 @@ export interface EngineApi {
   addMember(c: unknown, player: string, progress?: Record<string, unknown>): void
   /** Notebooks shown on the investigator cards, by character id. */
   setNotebooks(n: Record<string, NotebookEntry[]>): void
+  /** Photos (data URLs, by character id) shown in the investigators' round heads instead of their initials. Not saved in the state. Re-renders. */
+  setPhotos(p: Record<string, string>): void
   /** A roll made on a phone, as a Journal line (plain text, escaped by the engine) under Dés, Tests or Santé mentale. Saves. */
   logRoll(text: string, kind: 'de' | 'test' | 'san'): void
 }

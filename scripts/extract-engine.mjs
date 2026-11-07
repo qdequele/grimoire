@@ -315,10 +315,21 @@ patch('<b>${esc(r.n)}</b> ${r.txt}</li>', '<b>${esc(r.n)}</b> ${esc(r.txt)}</li>
 // "Modifier la partie": the warnings name the players, and a phone chooses its player's first name.
 patch('<span class="mut">${iss.join(" · ")}</span>', '<span class="mut">${esc(iss.join(" · "))}</span>', 'escape the game setup warnings (player names)')
 
+// Investigators' photos (the player companion's "Photo"): in the round heads instead of the initials.
+// The app pushes them with GRIMOIRE_ENGINE.setPhotos; they never enter S (not saved with the game).
+// Only base64 image data URLs pass photoOf, so the value is safe in the style attribute.
+patch(
+  'function head(p,g){const c=charById(p.cid);if(!c)return"";return `<span class="head ${p.state==="mort"?"dead":""}" style="--gc:${GCOL[g.col%4]}" title="${esc(c.n)}${p.player?" · "+esc(p.player):""}">${initials(c.n)}</span>`;}',
+  'var PHOTOS={};\n' +
+  'const photoOf=cid=>{const v=PHOTOS[cid];return typeof v==="string"&&v.length<=60000&&/^data:image\\/(jpeg|png|webp);base64,[A-Za-z0-9+\\/]+=*$/.test(v)?v:"";};\n' +
+  'function head(p,g){const c=charById(p.cid);if(!c)return"";const ph=photoOf(p.cid);return `<span class="head ${p.state==="mort"?"dead":""}${ph?" ph":""}" style="--gc:${GCOL[g.col%4]}${ph?";background-image:url("+ph+")":""}" title="${esc(c.n)}${p.player?" · "+esc(p.player):""}">${ph?"":esc(initials(c.n))}</span>`;}',
+  'investigators\' photos in the round heads (and escaped initials)',
+)
+
 // ------------------------------------------------------------------ player companion
 // Players' phones change points, write notebooks and roll dice; the app pushes them through GRIMOIRE_ENGINE.
-// Nothing changes until setNotebooks/setPoints/addMember/logRoll are called (logRoll: a phone's roll,
-// as a Journal line under Dés, Tests or Santé mentale).
+// Nothing changes until setNotebooks/setPoints/addMember/logRoll/setPhotos are called (logRoll: a phone's
+// roll, as a Journal line under Dés, Tests or Santé mentale; setPhotos: the round heads, see head()).
 patch(
   'try{route()}catch(e){}',
   `/* Grimoire: API for the app (player companion). Types: EngineApi in src/play/host.ts. */
@@ -356,10 +367,12 @@ window.GRIMOIRE_ENGINE={
     const sl=mkSlot(c);sl.player=name;if(pl)sl.pid=pl.id;ensureGroups();sl.grp=ST().active;
     ST().party.push(sl);save();keepFocus(()=>renderPlay());},
   setNotebooks(n){NOTEBOOKS=n||{};fillCarnets();},
+  setPhotos(p){p=p&&typeof p==="object"?p:{};if(JSON.stringify(p)===JSON.stringify(PHOTOS))return;PHOTOS=p;
+    try{keepFocus(()=>{renderNav();renderInv();});}catch(e){}},
   logRoll(txt,k){jlog(String(txt).slice(0,300),k==="san"||k==="test"?k:"de");},
 };
 try{route()}catch(e){}`,
-  'API exposed to the app: live points (and their changes in the Journal), new party members, notebooks, phone rolls in the Journal',
+  'API exposed to the app: live points (and their changes in the Journal), new party members, notebooks, phone rolls in the Journal, photos',
 )
 // Notebook section on the investigator cards (folded, newest first).
 patch(
@@ -387,6 +400,15 @@ patch(
   '$("#qaTable").onclick=()=>{GRIMOIRE_HOST.openTable&&GRIMOIRE_HOST.openTable();};$("#qaScreen").onclick=()=>{GRIMOIRE_HOST.openScreen&&GRIMOIRE_HOST.openScreen();};',
   'toolbar button opens the ambiance screen dialog',
 )
+// Toolbar: no "Règles" and "Combat" buttons (removed from the markup below). Rules stay in the game
+// menu (#gmRules) and on R; combat in the scene NPCs panel, the NPC dialog and on C.
+patch('$("#qaCombat").onclick=()=>openCombat();', '', 'no combat toolbar button')
+patch(
+  'renderCombat();$("#qaCombat").setAttribute("aria-pressed","true");}',
+  'renderCombat();}',
+  'no combat toolbar button to press',
+)
+patch('$("#qaRules").onclick=()=>openRulesSheet();', '', 'no rules toolbar button')
 // Game menu: grouped into sub-menus (markup below). Escape in a sub-menu goes back to the main list.
 patch(
   'if(!$("#gMenu").hidden){closeMenu();return;}',
@@ -447,6 +469,8 @@ markup = patchText(markup,
   '<button class="btn ico" id="qaSnd"',
   `<button class="btn ico" id="qaScreen" aria-label="Écran d'ambiance" title="Écran d'ambiance" aria-pressed="false">${SCREEN_ICON}</button>\n    <button class="btn ico" id="qaSnd"`,
   'ambiance screen toolbar button')
+markup = patchText(markup, '\n    <button class="btn" id="qaRules">Règles</button>', '', 'no rules toolbar button')
+markup = patchText(markup, '\n    <button class="btn" id="qaCombat">⚔ Combat</button>', '', 'no combat toolbar button')
 const narrPanel = markup.match(/\n\s*<section class="panel narr" id="narrPanel"[^\n]*<\/section>/)
 if (!narrPanel) throw new Error('narrator panel markup not found')
 markup = markup.replace(narrPanel[0], '')
@@ -528,6 +552,9 @@ css += `
 .npcp h3 .ptog,#invPanel h3 .ptog{margin-right:auto}
 #invPanel h3{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
 .panel.collapsed .tabs{display:none}
+/* Grimoire: toolbar without Règles / Combat, the first group only holds "PNJ et monstres" */
+.qa-g:not(:has(> .btn:not([hidden]))){display:none}
+.qa-g:not(:has(> .btn:not([hidden]))) + .qa-tools{padding-left:0;border-left:0}
 /* Grimoire: game menu sub-menus */
 .gm-box{display:grid;grid-template-columns:minmax(0,1fr);align-content:center;gap:18px}
 .gm-box > .gm-list{grid-row:2;grid-column:1;align-self:start}
@@ -539,6 +566,9 @@ css += `
 .gm-back:hover,.gm-back:focus-visible{color:var(--bone);outline:none}
 .gm-back .gm-k{position:static;order:1;margin-left:auto;letter-spacing:0;text-transform:none}
 html[data-skin="deco"] .gm-back{letter-spacing:.35em}
+/* Grimoire: investigators' photos in the round heads */
+.head.ph{background-color:var(--ink);background-size:cover;background-position:center}
+.head.ph.dead{filter:grayscale(1)}
 `
 
 // Ritual panel texts → placeholders filled by boot.ts from the story's tracker.
