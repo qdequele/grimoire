@@ -49,6 +49,18 @@ function ridge(base: number, amp: number, seed: number, step = 20): string {
   return `${d} L${W + 40} ${H} Z`
 }
 
+/** Tufts of grass along y: thin leaning blades (seeded), for the nearest ground. */
+function grass(y: number, seed: number, x1 = -40, x2 = W + 40, hMax = 26): string {
+  const r = rng(seed)
+  let d = ''
+  for (let x = x1; x < x2; x += 3 + r() * 7) {
+    const h = hMax * (0.3 + r() * 0.7)
+    const lean = (r() - 0.5) * h * 0.7
+    d += `M${f(x)} ${y + 2} L${f(x + 1.5 + lean)} ${f(y - h)} L${f(x + 3.5)} ${y + 2} Z `
+  }
+  return d
+}
+
 /** A fir tree: stacked tiers on a short trunk. */
 function pine(x: number, base: number, h: number, w: number): string {
   const tiers = 5
@@ -166,8 +178,14 @@ function windowGrid(x: number, y: number, cols: number, rows: number, w: number,
 const Moon = ({ x, y, r, id }: { x: number; y: number; r: number; id: string }) => (
   <>
     <g className="scr-moon">
-      <circle cx={x} cy={y} r={r * 4} fill={`url(#${id}-moon)`} />
+      <circle cx={x} cy={y} r={r * 6} fill={`url(#${id}-moon)`} />
       <circle cx={x} cy={y} r={r} />
+      {/* faint seas on its face */}
+      <path
+        d={`M${f(x - r * 0.62)} ${f(y - r * 0.1)} q${f(r * 0.1)} ${f(-r * 0.42)} ${f(r * 0.5)} ${f(-r * 0.36)} q${f(r * 0.34)} ${f(r * 0.08)} ${f(r * 0.22)} ${f(r * 0.4)} q${f(r * 0.2)} ${f(r * 0.3)} ${f(r * 0.46)} ${f(r * 0.38)} q${f(r * 0.1)} ${f(r * 0.32)} ${f(-r * 0.3)} ${f(r * 0.36)} q${f(-r * 0.4)} ${f(-r * 0.02)} ${f(-r * 0.5)} ${f(-r * 0.36)} q${f(-r * 0.3)} ${f(-r * 0.06)} ${f(-r * 0.38)} ${f(-r * 0.42)} Z`}
+        fill="var(--sil-far)"
+        opacity={0.06}
+      />
     </g>
     <g className="scr-sun">
       <circle cx={x} cy={y} r={r * 7} fill={`url(#${id}-sun)`} />
@@ -187,10 +205,21 @@ function Defs({ id }: { id: string }) {
           <stop offset="1" stopColor="var(--lit)" stopOpacity="0" />
         </radialGradient>
         <radialGradient id={`${id}-moon`}>
-          <stop offset="0" stopColor="var(--moon)" stopOpacity="0.35" />
-          <stop offset="0.3" stopColor="var(--moon)" stopOpacity="0.08" />
+          <stop offset="0" stopColor="var(--moon)" stopOpacity="0.4" />
+          <stop offset="0.17" stopColor="var(--moon)" stopOpacity="0.16" />
+          <stop offset="0.45" stopColor="var(--moon)" stopOpacity="0.05" />
           <stop offset="1" stopColor="var(--moon)" stopOpacity="0" />
         </radialGradient>
+        {/* lit glass: brighter low down, where the lamps are */}
+        <linearGradient id={`${id}-glass`} x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" stopColor="var(--lit)" stopOpacity="0.55" />
+          <stop offset="1" stopColor="var(--lit)" stopOpacity="0.95" />
+        </linearGradient>
+        {/* light thrown on the ground from a door or a window, fading away from it */}
+        <linearGradient id={`${id}-ray`} x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" stopColor="var(--lit)" stopOpacity="0.38" />
+          <stop offset="1" stopColor="var(--lit)" stopOpacity="0" />
+        </linearGradient>
         <radialGradient id={`${id}-sun`}>
           <stop offset="0" stopColor="var(--sun)" stopOpacity="0.6" />
           <stop offset="0.25" stopColor="var(--sun)" stopOpacity="0.18" />
@@ -214,31 +243,87 @@ function Defs({ id }: { id: string }) {
 type Draw = (id: string) => ReactNode
 
 const church: Draw = (id) => {
-  const nave = [760, 860, 960, 1060].map((x) => gothic(x, 650, 44, 120)).join(' ')
+  // A gothic parish church seen from the side: west tower and spire, a tall nave with its clerestory
+  // above a lower aisle, buttresses rising into pinnacles, a round apse at the east end.
+  const piers = [700, 796, 892, 988, 1084, 1180]
+  const bays = piers.slice(0, -1).map((x) => x + 48)
+  const clerestory = bays.map((c) => gothic(c - 15, 548, 30, 92)).join(' ')
+  const aisle = bays.map((c) => gothic(c - 17, 764, 34, 66)).join(' ')
+  const apse = `${gothic(1214, 680, 18, 110)} ${gothic(1252, 680, 18, 110)}`
+  const belfry = `${gothic(584, 404, 18, 52)} ${gothic(618, 404, 18, 52)}`
+  // Mullions and transoms over the lit glass.
+  const tracery = [
+    ...bays.map((c) => `M${c} 530 V640 M${c - 15} 596 H${c + 15}`),
+    ...bays.map((c) => `M${c} 750 V830`),
+    'M1223 666 V790 M1261 666 V790',
+  ].join(' ')
+  const rose = Array.from({ length: 8 }, (_, i) => {
+    const a = (i * Math.PI) / 4
+    return `M${f(620 + Math.cos(a) * 10)} ${f(530 + Math.sin(a) * 10)} L${f(620 + Math.cos(a) * 30)} ${f(530 + Math.sin(a) * 30)}`
+  }).join(' ')
+  const pinnacle = (x: number, y: number, w: number, h: number) => `M${x - w / 2} ${y} L${x} ${y - h} L${x + w / 2} ${y} Z`
   return (
     <>
       <Layer depth="far">
         <Moon x={1250} y={190} r={46} id={id} />
-        <path d={ridge(650, 55, 11)} />
+        <path d={ridge(640, 46, 15, 30)} fill="var(--sil-haze)" />
+        <path d={ridge(700, 50, 11)} />
+        {/* a hamlet on the far hill, one window still awake */}
+        <path d={`${pine(120, 690, 70, 34)} ${pine(160, 694, 52, 28)} ${pine(1500, 668, 80, 36)} ${pine(1540, 672, 60, 30)} M300 700 V668 L322 650 L344 668 V700 Z M352 700 V676 H392 V700 Z M372 676 v-12 h6 v12 Z`} />
+        <path d="M312 680 h7 v9 h-7 Z" fill="var(--lit)" className="scr-glow" opacity={0.7} />
       </Layer>
       <Layer depth="mid">
-        {/* tower and spire */}
-        <path d={`M560 860 V380 H700 V860 Z M548 384 L630 112 L712 384 Z ${cross(630, 120, 64)}`} />
-        <path d={`M548 384 h164 v-14 h-164 Z`} />
-        {/* nave, its roof, buttresses and the apse */}
-        <path d="M700 860 V560 H1180 V860 Z M688 566 L940 420 L1192 566 Z" />
-        <path d="M735 860 v-250 h16 v250 Z M835 860 v-250 h16 v250 Z M935 860 v-250 h16 v250 Z M1035 860 v-250 h16 v250 Z M1135 860 v-250 h16 v250 Z" />
-        <path d="M1180 860 V620 Q1290 620 1290 740 V860 Z" />
-        <path d={ridge(866, 8, 12)} />
+        {/* the clerestory wall, set back behind the aisle */}
+        <path d="M692 870 V474 H1180 V870 Z" fill="var(--sil-back)" />
+        {/* nave roof */}
+        <path d="M684 478 L712 384 H1156 L1188 478 Z" />
+        {/* aisle: wall and lean-to roof */}
+        <path d="M692 870 V724 H1180 V870 Z M688 728 L700 664 H1176 L1184 728 Z" />
+        {/* buttresses: stepped piers rising into pinnacles above the aisle roof */}
+        <path d={piers.map((x) => `M${x - 14} 870 V780 l4 -10 V622 h20 V770 l4 10 V870 Z ${pinnacle(x, 624, 18, 60)}`).join(' ')} />
+        {/* the apse and its conical roof */}
+        <path d="M1176 870 V650 H1294 V870 Z M1170 654 Q1196 600 1235 568 Q1274 600 1300 654 Z" />
+        {/* tower: stages, string courses, corner buttresses, parapet and pinnacles */}
+        <path d="M548 870 V364 H692 V870 Z M542 604 h156 v10 h-156 Z M542 472 h156 v10 h-156 Z M538 364 h164 v-16 h-164 Z" />
+        <path d={`M520 870 V760 l10 -14 V604 h18 V870 Z ${pinnacle(546, 350, 16, 54)} ${pinnacle(694, 350, 16, 54)} ${merlons(560, 680, 348, 12)}`} />
+        {/* the spire and its cross */}
+        <path d={`M566 352 L620 104 L674 352 Z ${cross(620, 108, 58)}`} />
+        {/* belfry louvres: dark slats in the openings */}
+        <path d={belfry} fill="var(--sil-near)" />
+        <path d={[0, 1, 2, 3, 4].map((i) => `M584 ${412 + i * 9} h18 v3 h-18 Z M618 ${412 + i * 9} h18 v3 h-18 Z`).join(' ')} fill="var(--sil-back)" />
+        {/* the buttresses' faces turned from the moon, in shadow */}
+        <path d={piers.map((x) => `M${x - 14} 870 V780 l4 -10 V622 h7 V870 Z`).join(' ')} fill="var(--sil-near)" opacity={0.55} />
+        {/* moonlight on the edges facing the moon */}
+        <g className="scr-rim" strokeWidth={2}>
+          <path d="M620 108 L674 352 M1156 384 L1188 478 M712 384 H1156 M1235 568 Q1274 600 1300 654 M700 664 H1176 M538 348 H702" />
+          <path d={piers.map((x) => `M${x} 564 L${x + 9} 624 V664`).join(' ')} />
+        </g>
+        <path d={ridge(872, 8, 12)} />
       </Layer>
       <Layer depth="lit">
-        <Halo id={`${id}-halo`} x={630} y={800} r={160} o={0.7} />
-        <path d={`${nave} ${gothic(608, 470, 44, 50)} ${arched(603, 760, 54, 100)}`} opacity={0.85} />
+        <Halo id={`${id}-halo`} x={620} y={830} r={170} o={0.75} />
+        <Halo id={`${id}-halo`} x={940} y={600} r={330} o={0.25} />
+        <g fill={`url(#${id}-glass)`}>
+          <path d={`${clerestory} ${aisle} ${apse}`} />
+          <circle cx={620} cy={530} r={30} />
+          {/* the west door, open */}
+          <path d={gothic(596, 796, 48, 74)} />
+        </g>
+        <g stroke="var(--sil-mid)" strokeWidth={3} fill="none">
+          <path d={tracery} />
+          <path d={rose} />
+          <circle cx={620} cy={530} r={10} />
+          <circle cx={620} cy={530} r={30} strokeWidth={4} />
+        </g>
+        {/* light spilling from the door and the aisle windows onto the ground */}
+        <path d="M596 870 H644 L720 900 H520 Z" fill={`url(#${id}-ray)`} />
+        <path d={bays.map((c) => `M${c - 17} 872 h34 l14 28 h-62 Z`).join(' ')} fill={`url(#${id}-ray)`} opacity={0.6} />
       </Layer>
       <Layer depth="near">
-        <path d={`${stone(120, 900, 60, 120)} ${cross(230, 900, 150)} ${stone(330, 900, 46, 80)} ${stone(1290, 900, 54, 100)} ${cross(1190, 900, 110)}`} />
-        <BareTree x={1440} base={900} h={620} seed={13} lean={-0.08} />
-        <path d={ridge(890, 10, 14)} />
+        <path d={`${stone(110, 904, 62, 126)} ${cross(220, 904, 160)} ${stone(325, 904, 44, 78)} ${stone(400, 904, 30, 52)} ${stone(1250, 904, 52, 96)} ${cross(1160, 904, 112)} ${stone(1340, 904, 36, 60)}`} />
+        <BareTree x={1450} base={904} h={640} seed={13} lean={-0.08} />
+        <path d={ridge(892, 8, 14)} />
+        <path d={grass(892, 16)} />
       </Layer>
     </>
   )

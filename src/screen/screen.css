@@ -162,9 +162,23 @@
   --sil-near: color-mix(in srgb, var(--c0) 80%, #000);
   --sil-water: color-mix(in srgb, var(--c1) 70%, var(--c0));
   --book: color-mix(in srgb, var(--c1) 80%, var(--c2));
+  /* the farthest hills, almost the sky; planes set back inside a silhouette (a wall behind an aisle) */
+  --sil-haze: color-mix(in srgb, var(--c1) 82%, var(--c2));
+  --sil-back: color-mix(in srgb, var(--sil-mid) 55%, var(--sil-far));
+  --rim: color-mix(in srgb, var(--moon) 50%, var(--c2));
   --lit: #f2b866;
   --moon: #ece6d2;
 }
+/* Moonlight (or sunlight) catching the edges that face it: strokes, nothing to fill. */
+.scr-rim {
+  fill: none;
+  stroke: var(--rim);
+  stroke-linecap: round;
+  opacity: 0.4;
+}
+.scr-layer[data-sky='overcast'] .scr-rim { opacity: 0.14; }
+/* A light inside a silhouette layer (a far window, a ship's lantern): off by day like the lit layer. */
+.scr-layer[data-time='day'] .scr-glow { opacity: 0.06; }
 .scr-par {
   position: absolute;
   top: 0;
@@ -199,6 +213,7 @@
   --sil-near: color-mix(in srgb, var(--c0) 18%, #0b0e11);
   --sil-water: color-mix(in srgb, var(--c1) 75%, var(--c0));
   --book: color-mix(in srgb, var(--c1) 45%, #5a4632);
+  --rim: color-mix(in srgb, var(--sun) 40%, var(--c2));
 }
 .scr-layer[data-time='day'] .scr-par-lit {
   opacity: 0.08;
