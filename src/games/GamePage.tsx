@@ -21,6 +21,8 @@ import { showRollToast } from './RollToast'
 import { rollJournal } from '@/companion/rolls'
 import { parseScreen } from '@/screen/state'
 import { useT } from '@/i18n/t'
+import { CharacterSheetDialog } from '@/characters/CharacterSheetDialog'
+import { PLACE_LABEL, PRESET_LABEL, TIME_LABEL } from '@/screen/ambiance'
 
 const SAVE_DELAY = 800
 /** How often to look for the engine API in the iframe until its script has run. */
@@ -100,6 +102,13 @@ export function GamePage() {
   const [members, setMembers] = useState<TableMember[]>([])
   const [screenOpen, setScreenOpen] = useState(false)
   const [screen, setScreen] = useState<ScreenControl | null>(null)
+  // An account investigator's sheet, opened from their name on the game screen.
+  const [sheetOf, setSheetOf] = useState<string | null>(null)
+  // The current translation, for the host functions (the game doesn't restart when the language changes).
+  const tRef = useRef(t)
+  useEffect(() => {
+    tRef.current = t
+  }, [t])
   const iframe = useRef<HTMLIFrameElement>(null)
   const live = useRef<Live | null>(null)
   // Investigators' names for the roll toasts (phones can add investigators during the game).
@@ -419,6 +428,21 @@ export function GamePage() {
         },
         openTable: () => setTableOpen(true),
         openScreen: () => setScreenOpen(true),
+        screenPreview: async (sceneId) => {
+          const p = await screenControl.preview(sceneId)
+          if (!p) return null
+          // The language of now, not of when the game started. Named t: the i18n test reads t calls.
+          const t = tRef.current
+          const what = [p.scene.image ? t('Image de la scène') : p.scene.place && t(PLACE_LABEL[p.scene.place]), t(PRESET_LABEL[p.scene.preset]), p.scene.time && t(TIME_LABEL[p.scene.time])]
+          return { src: p.src, label: t('Écran : {what}', { what: what.filter(Boolean).join(' · ') }) }
+        },
+        handoutImage: (handoutId) => screenControl.handoutImage(handoutId),
+        showHandout: (handoutId) => screenControl.showHandout(handoutId),
+        openSheet: (characterId) => {
+          if (!names.current.has(characterId)) return false
+          setSheetOf(characterId)
+          return true
+        },
         sample,
       }
       live.current = {
@@ -518,6 +542,7 @@ export function GamePage() {
     <>
       <iframe ref={iframe} src="/play.html" title={t('Partie')} className="fixed inset-0 h-svh w-full border-0" />
       <TableLinksDialog gameId={id} party={members} open={tableOpen} onOpenChange={setTableOpen} />
+      <CharacterSheetDialog characterId={sheetOf} onOpenChange={(open) => !open && setSheetOf(null)} />
       {screen && start?.game.story && (
         <ScreenDialog gameId={id} control={screen} story={screenStory(start.game.story)} open={screenOpen} onOpenChange={setScreenOpen} />
       )}

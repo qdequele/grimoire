@@ -10,6 +10,7 @@ import { CRAFT_RULES, EXAMPLE_INTRO, FORBIDDEN_NAMES, ORIGINALITY_RULES, SOUND_R
 import { DIFFICULTIES, importDraftSchema, ROLL_TYPES, SCREEN_PLACES, SCREEN_PRESETS, SCREEN_TIMES, STAT_KEYS, type DraftNpc, type DraftRoll, type DraftScene, type ImportDraft } from './import-draft.ts'
 import { SAMPLE_STORY, SOUNDS, STORY_FORMAT_MD } from './spec-bundle.ts'
 import { BRIEF_LIMITS, LENGTHS, outlineSchema, THREATS, TONES } from './story-create.ts'
+import { SVG_ELEMENTS, SVG_LIMITS } from './svg-safe.ts'
 
 type Json = Record<string, unknown>
 
@@ -22,6 +23,8 @@ export const MCP_LIMITS = {
   story: 2 * 1024 * 1024,
   /** Operations in one edit_story call. */
   opsPerCall: 20,
+  /** Pictures (files under images/) a story may hold before save_image refuses a new one. */
+  imagesPerStory: 40,
 } as const
 
 /** A failure the tool reports back to the model as is: a code and what to do about it. */
@@ -81,6 +84,7 @@ function scene(v: Json, sounds: typeof SOUND_IDS): DraftScene | null {
     readAloud: texts(v.readAloud, 12),
     flow: objs(v.flow, 40).map((st) => ({
       title: text(st.title, 160),
+      branch: text(st.branch, 160),
       text: text(st.text),
       roll: objs(st.roll, 1).map(roll),
       success: text(st.success),
@@ -321,12 +325,16 @@ export function applyEdits(content: unknown, ops: unknown): Json {
         break
       }
       case 'set_screen': {
-        // Only the ambiance screen of a scene, without sending the whole scene back. {} removes it.
+        // Only the ambiance screen of a scene, without sending the whole scene back. {} removes place,
+        // preset and time; the picture (save_image) and the fire stay unless named ("" removes them).
         const target = needId(op.id, 'id', n)
         const sc = s.acts.flatMap((a) => a.scenes).find((x) => x.id === target)
         if (!sc) throw new ToolError('not_found', `ops[${n}]: scene "${target}" does not exist.`)
         if (!isObj(op.screen)) throw new ToolError('bad_request', `ops[${n}]: screen must be an object.`)
-        const screen = Object.fromEntries(Object.entries(op.screen).filter(([, v]) => v !== '' && v !== null && v !== undefined))
+        const given = op.screen
+        const before = isObj(sc.screen) ? sc.screen : {}
+        const kept = Object.entries(before).filter(([k]) => (k === 'image' || k === 'fire') && !(k in given))
+        const screen = Object.fromEntries([...kept, ...Object.entries(given)].filter(([, v]) => v !== '' && v !== null && v !== undefined))
         if (Object.keys(screen).length) sc.screen = screen
         else delete sc.screen
         break
@@ -391,10 +399,160 @@ export function applyEdits(content: unknown, ops: unknown): Json {
   return s as Json
 }
 
+// ------------------------------------------------------------------ pictures (save_image)
+
+/** A picture's file name: lowercase words joined by hyphens, ending in .svg. Stored at images/<name>. */
+export const IMAGE_NAME = /^[a-z0-9]+(?:-[a-z0-9]+)*\.svg$/
+export const IMAGE_NAME_MAX = 64
+/** Path of a picture inside the story pack, as story.json and stories.pack_files write it. */
+export const imagePath = (name: string) => `images/${name}`
+
+export type ImageTarget = { scene: string } | { handout: string }
+export interface ImageRequest {
+  name: string
+  path: string
+  /** The SVG source to store (still to sanitize), or undefined to use a picture already stored. */
+  svg?: string
+  attach: ImageTarget | null
+  remove: boolean
+}
+
+/** Check save_image's arguments (not the SVG itself: sanitizeSvg does that). */
+export function parseImageRequest(args: Json): ImageRequest {
+  const name = typeof args.name === 'string' ? args.name.trim().replace(/^images\//, '') : ''
+  if (!name || name.length > IMAGE_NAME_MAX || !IMAGE_NAME.test(name)) {
+    throw new ToolError('bad_request', `name must be lowercase letters, digits and hyphens, ending in .svg (at most ${IMAGE_NAME_MAX} characters), e.g. "harbour-night.svg".`)
+  }
+  const remove = args.remove === true
+  const svg = args.svg === undefined || args.svg === null || args.svg === '' ? undefined : args.svg
+  if (svg !== undefined && typeof svg !== 'string') throw new ToolError('bad_request', 'svg must be the SVG source, as text.')
+  let attach: ImageTarget | null = null
+  if (args.attach !== undefined && args.attach !== null) {
+    const a = args.attach
+    const scene = isObj(a) && typeof a.scene === 'string' ? a.scene.trim() : ''
+    const handout = isObj(a) && typeof a.handout === 'string' ? a.handout.trim() : ''
+    if (!isObj(a) || Object.keys(a).some((k) => k !== 'scene' && k !== 'handout') || !!scene === !!handout) {
+      throw new ToolError('bad_request', 'attach must be { "scene": "<scene id>" } or { "handout": "<handout id>" }.')
+    }
+    attach = scene ? { scene } : { handout }
+  }
+  if (remove && (svg !== undefined || attach)) throw new ToolError('bad_request', 'remove: true takes only storyId, version and name.')
+  if (!remove && svg === undefined && !attach) {
+    throw new ToolError('bad_request', 'Send svg (to store or replace the picture), attach (to use a picture already stored), or remove: true.')
+  }
+  return { name, path: imagePath(name), ...(svg !== undefined ? { svg: svg as string } : {}), attach, remove }
+}
+
+const scenesOf = (s: StoryLike) => s.acts.flatMap((a) => a.scenes)
+/** Handouts may write a picture with or without images/ (the spec says "relative path in images/"). */
+const samePicture = (value: unknown, path: string) => value === path || value === path.replace(/^images\//, '')
+
+/** Point a scene's ambiance screen, or a handout, at a picture. Throws not_found for an unknown id. */
+export function attachImage(content: unknown, path: string, target: ImageTarget): Json {
+  const s = structuredClone(asStory(content))
+  if ('scene' in target) {
+    const sc = scenesOf(s).find((x) => x.id === target.scene)
+    if (!sc) throw new ToolError('not_found', `Scene "${target.scene}" does not exist. Scenes: ${scenesOf(s).map((x) => x.id).join(', ')}.`)
+    sc.screen = { ...(isObj(sc.screen) ? sc.screen : {}), image: path }
+  } else {
+    const h = (s.handouts ?? []).find((x) => x.id === target.handout)
+    if (!h) {
+      const known = (s.handouts ?? []).map((x) => x.id)
+      throw new ToolError('not_found', `Handout "${target.handout}" does not exist${known.length ? ` (handouts: ${known.join(', ')})` : ''}. Create it first with edit_story put_handout { id, title, text }.`)
+    }
+    h.image = path
+  }
+  return s as Json
+}
+
+/** Remove every reference to a picture: scene screens, scene images and handouts. */
+export function detachImage(content: unknown, path: string): Json {
+  const s = structuredClone(asStory(content))
+  for (const sc of scenesOf(s)) {
+    if (isObj(sc.screen) && sc.screen.image === path) {
+      const rest = Object.fromEntries(Object.entries(sc.screen).filter(([k]) => k !== 'image'))
+      if (Object.keys(rest).length) sc.screen = rest
+      else delete sc.screen
+    }
+    if (Array.isArray(sc.images)) {
+      const images = sc.images.filter((im) => !(isObj(im) && im.src === path))
+      if (images.length) sc.images = images
+      else delete sc.images
+    }
+  }
+  for (const h of s.handouts ?? []) if (samePicture(h.image, path)) delete h.image
+  return s as Json
+}
+
+/** The story's pictures and where each is used, for get_story. */
+export function imageUses(content: unknown, files: readonly string[]) {
+  const s = asStory(content)
+  return files
+    .filter((f) => f.startsWith('images/'))
+    .map((path) => ({
+      path,
+      scenes: scenesOf(s).filter((sc) => isObj(sc.screen) && sc.screen.image === path).map((sc) => sc.id),
+      handouts: (s.handouts ?? []).filter((h) => samePicture(h.image, path)).map((h) => h.id),
+    }))
+}
+
+/** Whether the story points at a picture anywhere. */
+export const usesImage = (content: unknown, path: string) => JSON.stringify(detachImage(content, path)) !== JSON.stringify(asStory(content))
+
 // ------------------------------------------------------------------ the guide
 
-export const GUIDE_TOPICS = ['workflow', 'rules', 'format', 'sounds', 'example'] as const
+export const GUIDE_TOPICS = ['workflow', 'rules', 'format', 'sounds', 'images', 'example'] as const
 export type GuideTopic = (typeof GUIDE_TOPICS)[number]
+
+const IMAGE_ELEMENTS = [...SVG_ELEMENTS].filter((e) => !e.startsWith('fe')).join(', ')
+
+export const IMAGES_GUIDE = `# Pictures for a story (save_image)
+
+You can't output raster images, but you can draw in SVG. Grimoire stores your SVG in the story's pack; at the table, the keeper shows it on the ambiance screen (a TV or tablet the players look at).
+
+Two uses:
+- A scene background: the full-screen picture behind a scene (attach { "scene": "<scene id>" }, sets the scene's screen.image).
+- A handout picture: a paper the investigators find, a letter, a newspaper clipping, a map, a floor plan (attach { "handout": "<handout id>" }, sets the handout's image). The handout must exist: create it with edit_story put_handout { id, title, text } first.
+
+When to draw: once the scenes are written, offer a few pictures; don't draw unasked, and don't draw every scene. Two or three backgrounds for the key scenes and the handouts that are documents are plenty.
+Before drawing a background, check the built-in décors (topic "sounds"): if the scene takes place in a church, graveyard, crypt, castle, manor, library, police station, forest, harbour or street, set its screen.place with edit_story set_screen instead. The built-in décors are animated and go with every atmosphere and time of day; a picture replaces the décor.
+
+## Scene backgrounds
+
+- viewBox="0 0 1600 900" (16:9). Start with a rectangle covering the whole frame; no width or height needed.
+- Dark and atmospheric: night, dusk or fog; deep blues, greens and greys, a few warm lights (a lit window, a lantern, the moon). The screen adds living layers on top (fog, rain, candlelight, grain, vignette) and slowly pans and zooms: keep the subject near the middle and nothing important within 100 units of the edges.
+- Depth through layers of silhouettes: a far layer (sky, hills, a skyline) lighter and hazier, a middle layer, a near layer almost black. Gradients for skies and glows (linearGradient, radialGradient), a soft blur filter for mist and halos.
+- No text, no detailed faces, no spoilers: the players see it. A scene's mood matters more than its details.
+- Draw shapes with paths of whole-number coordinates; reuse repeated shapes (windows, trees, gravestones) with <symbol> and <use>.
+
+## Handouts (papers)
+
+- A sheet of paper: portrait viewBox="0 0 800 1100" for a letter or a diary page, "0 0 1000 700" for a telegram or a card, "0 0 700 1000" for a newspaper clipping.
+- Aged paper: an off-white or ochre sheet with a radial gradient darkening towards the edges, a few stains (semi-transparent ellipses, blurred), a fold or two (thin lighter and darker lines), torn or worn edges (a jagged path), maybe a wax seal or a stamp.
+- The words in <text> and <tspan>, in the story's language, with generic font families only: "cursive" for handwriting, "serif" for print, "monospace" for typewriters and telegrams, "fantasy" for odd lettering. No web fonts. Ink in dark brown or blue-black; for handwriting, tilt lines slightly (rotate) and vary their start.
+- Keep the handout's text field too: it holds the same words for the keeper and when no picture is shown.
+
+## Maps and floor plans
+
+- Seen from above, ink on paper. Rooms as rectangles with thick walls, doors as gaps with a quarter-circle swing, windows as double lines, stairs as hatching; a label in each room, a compass rose, a scale bar and a small legend box.
+- Draw only what the investigators would know: no secret passage on a map they're given until they've found it (draw a second map if needed).
+- Outdoor maps: roads, a river, woods as clusters of small circles, buildings as small blocks, labelled places.
+
+## What an SVG may hold
+
+Anything else is refused with the reason, and nothing is saved.
+- One root <svg> with a viewBox, at most ${SVG_LIMITS.bytes / 1024} KB and ${SVG_LIMITS.elements} elements.
+- Elements: ${IMAGE_ELEMENTS}, and the filter primitives (feGaussianBlur, feTurbulence, feDisplacementMap, feColorMatrix, feComposite, feMerge, feOffset, feFlood…) except feImage.
+- Not allowed: scripts, event attributes (onload…), foreignObject, <image> and feImage, links (<a>), animation (animate, set…), DOCTYPE and entities, editor namespaces (inkscape, sodipodi), external URLs. href only as "#id" (use, textPath, gradients, patterns), url() only as url(#id). In <style> and style="": plain CSS, no @import, no @font-face, no backslashes.
+
+## Calling save_image
+
+- storyId and version: from get_story, or from the previous save_image or edit_story answer (each returns the new version).
+- name: lowercase letters, digits and hyphens, ending in .svg ("harbour-night.svg", "letter-from-the-doctor.svg"). The file is stored at images/<name>; sending the same name again replaces the picture.
+- svg: the SVG source. With attach, it is also set as that scene's background or that handout's picture; without attach, it is only stored.
+- attach without svg: use a picture already stored (one map for two handouts, say).
+- remove: true deletes the picture and every reference to it. To take a background off a scene but keep the file, use edit_story set_screen with image "".
+- Each call counts as an edit (daily limit), and pictures have a daily limit of their own.`
 
 const presets = () =>
   [
@@ -417,18 +575,20 @@ You write the story; Grimoire checks it, saves it as a private story in the keep
 4. Call save_outline with the brief and the approved outline. It returns a creationId and the scene ids to write, in order. You may call save_outline again with the same creationId to replace the outline, but only before the first scene is written.
 5. Call write_scenes with 2 or 3 scenes at a time (${MCP_LIMITS.scenesPerCall} at most), in the order given by "next", until "remaining" is 0. Each call carries a draft: the acts holding these scenes (same act and scene ids as the outline), the full entry of every NPC who appears in them and is not detailed yet (personality, knows, stats, skills, attacks), and their handouts. Leave out what you have nothing for. The story is saved after every call, so the keeper can already open it.
 6. If a call returns validationErrors, fix those scenes by sending them again with the same ids in the next call. When "remaining" is 0, give the keeper the story's link.
+7. Then offer pictures: a background for the ambiance screen in two or three key scenes (when no built-in décor fits them) and a picture for the handouts that are papers, letters or maps. Draw only the ones the keeper wants, in SVG, with save_image (grimoire_guide topic "images").
 
 # Revising one of the keeper's stories
 
 1. list_my_stories, then get_story (part "summary" first: ids of every act, scene, NPC and handout; then the scenes or NPCs you need).
 2. edit_story with the "version" get_story returned and a list of operations. Scenes, NPCs and handouts are sent whole, in the story.json format of get_story (topic "format"): put_scene replaces the scene with the same id (or adds it to actId), put_npc and put_handout the same. remove_* also removes links to what is gone. set_screen changes only a scene's ambiance screen (décor, atmosphere and time of day, topic "sounds"). All operations apply or none do; the result must pass the format's schema.
 3. On "conflict", the story changed since you read it: call get_story again and redo the edit on the new version.
+4. Pictures: save_image stores an SVG you draw as a scene's background or a handout's picture, replaces it, or removes it (topic "images"). get_story lists the story's pictures and where they are used. save_image and edit_story both return the new version: use it for the next call.
 
 Stories being written by a creation can't be edited until their last scene is written. Marketplace stories can't be edited.`
 
 export const SERVER_INSTRUCTIONS = `Grimoire is a keeper's companion app for d100 investigation and horror tabletop games. These tools let you write ORIGINAL stories into the keeper's Grimoire library and revise their private stories.
 
-You do the writing; Grimoire checks and saves it. Before writing or editing, call grimoire_guide with topic "workflow", then topic "rules". Agree on the outline with the keeper before writing any scene. Never use names from published games or fiction: stories that do are refused.`
+You do the writing; Grimoire checks and saves it. Before writing or editing, call grimoire_guide with topic "workflow", then topic "rules". Agree on the outline with the keeper before writing any scene. Never use names from published games or fiction: stories that do are refused. You can also draw pictures for a story in SVG (save_image, guide topic "images").`
 
 /** Text of one guide topic. Built from the same sections as Grimoire's own creator prompt. */
 export function guideText(topic: GuideTopic): string {
@@ -448,6 +608,8 @@ export function guideText(topic: GuideTopic): string {
       ].join('\n')
     case 'sounds':
       return SOUND_RULES
+    case 'images':
+      return IMAGES_GUIDE
     case 'example':
       return `${EXAMPLE_INTRO}\n\n${JSON.stringify(SAMPLE_STORY, null, 1)}`
   }
@@ -510,7 +672,7 @@ export function toolDefinitions(): ToolDef[] {
       name: 'grimoire_guide',
       title: 'Grimoire guide',
       description:
-        'How to write a Grimoire story: "workflow" (the steps and tools, read it first), "rules" (originality and what makes a good story, plus the brief presets), "format" (story.json), "sounds" (allowed sound ids, and the ambiance screen\'s décors and atmospheres), "example" (a complete story).',
+        'How to write a Grimoire story: "workflow" (the steps and tools, read it first), "rules" (originality and what makes a good story, plus the brief presets), "format" (story.json), "sounds" (allowed sound ids, and the ambiance screen\'s décors and atmospheres), "images" (drawing SVG pictures for scene backgrounds and handouts with save_image), "example" (a complete story).',
       inputSchema: { type: 'object', properties: { topic: { enum: [...GUIDE_TOPICS] } }, required: ['topic'], additionalProperties: false },
       annotations: { readOnlyHint: true, destructiveHint: false, openWorldHint: false },
     },
@@ -570,7 +732,7 @@ export function toolDefinitions(): ToolDef[] {
     {
       name: 'edit_story',
       title: 'Edit a story',
-      description: `Change one of the keeper's private stories (story.json format, see grimoire_guide "format"). Operations, applied in order, all or none: put_scene {scene, actId?, after?} adds or replaces a whole scene; remove_scene {id}; set_screen {id, screen: {place?, preset?, time?}} sets a scene's ambiance screen ({} removes it); put_act {act: {id, title}, after?}; remove_act {id} (empty acts only); put_npc {npc, after?}; remove_npc {id}; put_handout {handout, after?}; remove_handout {id}; set_overview {overview}; set_info {info: ${INFO_FIELDS.join(', ')}}. Needs the version from get_story.`,
+      description: `Change one of the keeper's private stories (story.json format, see grimoire_guide "format"). Operations, applied in order, all or none: put_scene {scene, actId?, after?} adds or replaces a whole scene; remove_scene {id}; set_screen {id, screen: {place?, preset?, time?, image?}} sets a scene's ambiance screen ({} removes place, preset and time; a picture stays unless image is ""); put_act {act: {id, title}, after?}; remove_act {id} (empty acts only); put_npc {npc, after?}; remove_npc {id}; put_handout {handout, after?}; remove_handout {id}; set_overview {overview}; set_info {info: ${INFO_FIELDS.join(', ')}}. Needs the version from get_story.`,
       inputSchema: {
         type: 'object',
         properties: {
@@ -587,8 +749,13 @@ export function toolDefinitions(): ToolDef[] {
                 id: { type: 'string', description: 'For remove_* operations, and the scene id for set_screen.' },
                 screen: {
                   type: 'object',
-                  description: 'set_screen: the scene\'s ambiance screen (see grimoire_guide "sounds"). {} removes it.',
-                  properties: { place: { enum: [...SCREEN_PLACES] }, preset: { enum: [...SCREEN_PRESETS] }, time: { enum: [...SCREEN_TIMES] } },
+                  description: 'set_screen: the scene\'s ambiance screen (see grimoire_guide "sounds"). {} removes place, preset and time; the picture stays unless image is "" (save_image sets pictures).',
+                  properties: {
+                    place: { enum: [...SCREEN_PLACES] },
+                    preset: { enum: [...SCREEN_PRESETS] },
+                    time: { enum: [...SCREEN_TIMES] },
+                    image: { type: 'string', description: 'A picture already stored ("images/<name>.svg"), or "" to take it off the scene.' },
+                  },
                 },
                 actId: { type: 'string', description: 'put_scene: the act to put the scene in (default: where it is now).' },
                 after: { type: 'string', description: 'put_*: id of the item to insert after (default: at the end). Ignored when replacing.' },
@@ -605,6 +772,31 @@ export function toolDefinitions(): ToolDef[] {
           },
         },
         required: ['storyId', 'version', 'ops'],
+        additionalProperties: false,
+      },
+      annotations: { readOnlyHint: false, destructiveHint: true, openWorldHint: false },
+    },
+    {
+      name: 'save_image',
+      title: 'Save a picture',
+      description:
+        'Store an SVG picture you drew in one of the keeper\'s private stories, as a scene\'s ambiance-screen background (attach {scene}) or a handout\'s picture (attach {handout}), or just store it. The same name replaces the picture; attach without svg uses a stored picture; remove: true deletes it and every reference to it. The SVG is checked strictly (no scripts, external links or raster images; see grimoire_guide "images"). Needs the version from get_story and returns the new one.',
+      inputSchema: {
+        type: 'object',
+        properties: {
+          storyId: { type: 'string' },
+          version: { type: 'string', description: 'The version get_story (or the previous save_image or edit_story) returned.' },
+          name: { type: 'string', pattern: IMAGE_NAME.source, maxLength: IMAGE_NAME_MAX, description: 'File name, e.g. "harbour-night.svg". Stored at images/<name>.' },
+          svg: { type: 'string', maxLength: SVG_LIMITS.bytes, description: 'The SVG source: one root <svg> with a viewBox (0 0 1600 900 for a scene background).' },
+          attach: {
+            type: 'object',
+            description: 'Where to show it: { "scene": "<scene id>" } or { "handout": "<handout id>" }. Leave out to only store it.',
+            properties: { scene: { type: 'string' }, handout: { type: 'string' } },
+            additionalProperties: false,
+          },
+          remove: { type: 'boolean', description: 'true deletes the picture and every reference to it (with storyId, version and name only).' },
+        },
+        required: ['storyId', 'version', 'name'],
         additionalProperties: false,
       },
       annotations: { readOnlyHint: false, destructiveHint: true, openWorldHint: false },

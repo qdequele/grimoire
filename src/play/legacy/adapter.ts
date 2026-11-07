@@ -3,17 +3,17 @@
 // any other story pack (sample story, AI imports), filling the gaps the legacy shapes need.
 import { LIBRARY_TO_AMB, LIBRARY_TO_SFX } from './sounds.ts'
 import type {
-  LegacyBeast, LegacyChip, LegacyPregen, LegacyRitual, LegacyScenario, LegacyScene, LegacySec, LegacyStep,
+  LegacyBeast, LegacyChip, LegacyHandout, LegacyPregen, LegacyRitual, LegacyScenario, LegacyScene, LegacySec, LegacyStep,
 } from './types.ts'
 
 // Loose view of story.json: the engine only needs these fields.
 interface Roll { type: string; options?: string[]; san?: string; dice?: string; label?: string }
-interface Step { title: string; text?: string; test?: string; roll?: Roll; success?: string; failure?: string; pushed?: string; extra?: string }
+interface Step { title: string; branch?: string; text?: string; test?: string; roll?: Roll; success?: string; failure?: string; pushed?: string; extra?: string }
 interface Note { title: string; items: string[] }
 interface Scene {
   id: string; title: string; ref?: string; lead?: string; readAloud?: string[]; notes?: Note[]; notesFirst?: boolean
   flow?: Step[]; notesAfter?: Note[]; callout?: string; npcTable?: boolean; npcs?: string[]; rolls?: Roll[]
-  ambience?: string[]; sfx?: string[]
+  ambience?: string[]; sfx?: string[]; handouts?: string[]
 }
 interface Npc {
   id: string; name: string; kind?: string; role?: string; description?: string; personality?: string
@@ -29,6 +29,7 @@ export interface StoryForEngine {
   meta: { id: string; title: string; lang: string; summary?: string; players?: { min?: number; max?: number }; playersText?: string; duration?: string }
   acts: Array<{ id: string; title: string; scenes: Scene[] }>
   npcs?: Npc[]
+  handouts?: Array<{ id: string; title: string; text?: string; image?: string; scene?: string }>
   npcTable?: { ref?: string; note?: string; rows: string[][] }
   pregens?: Pregen[]
   defaultParty?: string[]
@@ -57,6 +58,8 @@ export interface EngineData {
   WHO_NOTE: string
   /** Opponent first names: test lines like "Dodge of <name>" don't become roll buttons. */
   NPC_WORDS: string[]
+  /** The story's documents (new-app addition): title (plain text), text (engine HTML), has a picture. */
+  HANDOUTS: Record<string, LegacyHandout>
 }
 
 const CODE_TO_CHAR_FR: Record<string, string> = {
@@ -65,13 +68,22 @@ const CODE_TO_CHAR_FR: Record<string, string> = {
 
 // ------------------------------------------------------------------ rich text
 
+const escapeHtml = (s: string) => s.replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]!)
+
+/** A step that is one of the choices of the step before it: its `branch`, else a title starting with "Si …" / "If …". */
+export const branchOf = (st: { title: string; branch?: string }): string | undefined =>
+  st.branch?.trim() || (/^(si|if)\s/i.test(st.title.trim()) ? st.title.trim() : undefined)
+
 /** Story rich text → the legacy engine's HTML. Inverse of toRichText() in convert.ts. */
-export function toHtml(text: string, sceneTitles: Record<string, string> = {}, npcNames: Record<string, string> = {}): string {
+export function toHtml(
+  text: string, sceneTitles: Record<string, string> = {}, npcNames: Record<string, string> = {}, handoutTitles: Record<string, string> = {},
+): string {
   return text
     .replace(/\[\[([a-z0-9-]+)\|(.*?)\]\]/g, '<a class="golink" data-go="$1">$2</a>')
     .replace(/\[\[([a-z0-9-]+)\]\]/g, (_m, id: string) => `<a class="golink" data-go="${id}">${sceneTitles[id] ?? id}</a>`)
     .replace(/\{\{npc:([a-z0-9-]+)\}\}/g, (_m, id: string) => `<b>${npcNames[id] ?? id}</b>`)
-    .replace(/\{\{handout:([a-z0-9-]+)\}\}/g, '<b>$1</b>')
+    .replace(/\{\{handout:([a-z0-9-]+)\}\}/g, (_m, id: string) =>
+      handoutTitles[id] ? `<a class="golink hdlink" data-hd="${id}">${escapeHtml(handoutTitles[id])}</a>` : `<b>${id}</b>`)
     .replace(/\*\*(.+?)\*\*/g, '<b>$1</b>')
     .replace(/\*(.+?)\*/g, '<i>$1</i>')
     .replace(/\n/g, '<br>')
@@ -108,7 +120,9 @@ export function storyToEngine(story: StoryForEngine, skillLabel: SkillLabel): En
   const en = story.meta.lang === 'en'
   const sceneTitles = Object.fromEntries(story.acts.flatMap((a) => a.scenes.map((s) => [s.id, s.title])))
   const npcNames = Object.fromEntries((story.npcs ?? []).map((n) => [n.id, n.name]))
-  const html = (t: string | undefined) => (t === undefined ? undefined : toHtml(t, sceneTitles, npcNames))
+  const handouts = story.handouts ?? []
+  const handoutTitles = Object.fromEntries(handouts.map((h) => [h.id, h.title]))
+  const html = (t: string | undefined) => (t === undefined ? undefined : toHtml(t, sceneTitles, npcNames, handoutTitles))
   const secs = (n: Note[] | undefined): LegacySec[] => (n ?? []).map((x) => ({ h: x.title, ul: x.items.map((i) => html(i)!) }))
 
   const AMB_FOR: Record<string, string[]> = {}
@@ -123,8 +137,10 @@ export function storyToEngine(story: StoryForEngine, skillLabel: SkillLabel): En
     const flow = (s.flow ?? []).map((st): LegacyStep => {
       // Damage rolls inside a step have no test line in the legacy engine: offer them as chips.
       if (st.roll?.type === 'damage') chips.push(rollToChip(st.roll, skillLabel))
+      const br = branchOf(st)
       return clean({
         h: st.title,
+        br: br === undefined ? undefined : html(br),
         txt: html(st.text),
         test: st.test ?? (st.roll ? rollToTest(st.roll, skillLabel) : undefined),
         ok: html(st.success),
@@ -147,6 +163,8 @@ export function storyToEngine(story: StoryForEngine, skillLabel: SkillLabel): En
       table: s.npcTable || undefined,
       secsFirst: s.notesFirst || undefined,
       lang: en ? 'en' : undefined,
+      // The scene's documents: listed by the scene, or naming it as theirs.
+      hd: [...new Set([...(s.handouts ?? []), ...handouts.filter((h) => h.scene === s.id).map((h) => h.id)])].filter((id) => handoutTitles[id] !== undefined),
     })
   }
 
@@ -210,6 +228,7 @@ export function storyToEngine(story: StoryForEngine, skillLabel: SkillLabel): En
     RITUAL: ritual(story.trackers?.find((t) => t.id === 'ritual'), html),
     WHO_NOTE: html(story.knowledgeNote) ?? '',
     NPC_WORDS: fighters.map((n) => n.name.split(/[\s,(]/)[0]).filter((w) => w.length > 2),
+    HANDOUTS: Object.fromEntries(handouts.map((h) => [h.id, clean({ t: h.title, txt: html(h.text), img: h.image ? true : undefined })])),
   }
 }
 

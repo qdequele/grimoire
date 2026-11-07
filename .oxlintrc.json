@@ -16,6 +16,7 @@
   },
   "ignorePatterns": [
     "public/play/**",
+    "scripts/engine-ui/*.engine.js",
     "dist/**"
   ]
 }

@@ -30,7 +30,7 @@ function DeleteAction({ id }: { id: string }) {
   )
 }
 
-/** `/characters/new` and `/characters/:id`: the keeper's wizard. */
+/** `/characters/new` and `/characters/:id/edit`: the keeper's wizard. */
 export function CharacterWizardPage() {
   const t = useT()
   const { id } = useParams()
@@ -59,7 +59,7 @@ export function CharacterWizardPage() {
       await save.mutateAsync({ id: editing ? id : undefined, data: { ...toCharacterData(draft), ...(progress ? { progress } : {}) }, playerId: draft.playerId || null })
       if (!editing) saveLocalDraft(draftKey, null)
       toast.success(t('{name} est enregistré.', { name: draft.name.trim() }))
-      navigate(forPlayer ? '/characters/joueurs' : '/characters')
+      navigate(forPlayer ? '/characters/joueurs' : editing ? `/characters/${id}` : '/characters')
     } catch (e) {
       toast.error(t((e as Error).message))
     }

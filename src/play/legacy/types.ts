@@ -10,6 +10,8 @@ export interface LegacySec {
 
 export interface LegacyStep {
   h: string
+  /** New-app: one of the choices of the step before (its condition, engine HTML). */
+  br?: string
   txt?: string
   test?: string
   ok?: string
@@ -33,6 +35,18 @@ export interface LegacyScene {
   lang?: string
   /** New-app flag: show secs before the read-aloud (the legacy app hard-coded one scene id). */
   secsFirst?: boolean
+  /** New-app: ids of the scene's documents (GRIMOIRE_DATA.HANDOUTS). */
+  hd?: string[]
+}
+
+/** New-app: a story document as the game screen shows it. */
+export interface LegacyHandout {
+  /** Title, plain text. */
+  t: string
+  /** Text, engine HTML. */
+  txt?: string
+  /** Has a picture (asked from the host: GRIMOIRE_HOST.handoutImage). */
+  img?: boolean
 }
 
 export interface LegacyAct {
