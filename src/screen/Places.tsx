@@ -202,6 +202,11 @@ function Defs({ id }: { id: string }) {
           <stop offset="1" stopColor="var(--lit)" stopOpacity="0.95" />
         </linearGradient>
         {/* light thrown on the ground from a door or a window, fading away from it */}
+        {/* a wet road holding the sky's light, brightest far away */}
+        <linearGradient id={`${id}-sheen`} x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" stopColor="var(--sil-far)" stopOpacity="0.9" />
+          <stop offset="1" stopColor="var(--sil-far)" stopOpacity="0" />
+        </linearGradient>
         <linearGradient id={`${id}-ray`} x1="0" y1="0" x2="0" y2="1">
           <stop offset="0" stopColor="var(--lit)" stopOpacity="0.38" />
           <stop offset="1" stopColor="var(--lit)" stopOpacity="0" />
@@ -1158,6 +1163,7 @@ const street: Draw = (id) => {
         {/* the street: cobbles, pavements, then the buildings */}
         <path d={`M${f(X(-1, 1.3))} ${f(Y(1.3, 0))} H${f(X(1, 1.3))} L${f(X(1, 0.13))} ${f(Y(0.13, 0))} H${f(X(-1, 0.13))} Z`} />
         <path d={`${quad(-1, 1.3, 0.13, 0, 0)} M${f(X(-1, 1.3))} ${f(Y(1.3, 0))} L${f(X(-1, 0.13))} ${f(Y(0.13, 0))} L${f(X(-1, 0.13, 690))} ${f(Y(0.13, 0))} L${f(X(-1, 1.3, 690))} ${f(Y(1.3, 0))} Z M${f(X(1, 1.3))} ${f(Y(1.3, 0))} L${f(X(1, 0.13))} ${f(Y(0.13, 0))} L${f(X(1, 0.13, 690))} ${f(Y(0.13, 0))} L${f(X(1, 1.3, 690))} ${f(Y(1.3, 0))} Z`} fill="var(--sil-back)" opacity={0.6} />
+        <path d={`M${f(X(-1, 0.13, 690))} ${f(Y(0.13, 0))} H${f(X(1, 0.13, 690))} L${f(X(1, 1, 500))} ${f(Y(1, 0))} H${f(X(-1, 1, 500))} Z`} fill={`url(#${id}-sheen)`} />
         <path d={cobbles} fill="var(--sil-near)" opacity={0.5} />
         {/* tram rails running down the middle of the street */}
         <path d={[-118, -96, 96, 118].map((g) => `M${f(VX + g * 1.3)} ${f(Y(1.3, 0))} L${f(VX + g * 0.13)} ${f(Y(0.13, 0))}`).join(' ')} stroke="var(--sil-back)" strokeWidth={3} fill="none" opacity={0.8} />
