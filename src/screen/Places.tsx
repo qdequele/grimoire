@@ -885,29 +885,100 @@ const police: Draw = (id) => {
   )
 }
 
-const forest: Draw = () => {
+/** A ragged fir: drooping tiers with uneven tips, a little lopsided, on a short trunk. */
+function ragPine(x: number, base: number, h: number, w: number, r: () => number): string {
+  const tiers = 7 + Math.floor(r() * 4)
+  const top = base - h
+  const right: string[] = []
+  const left: string[] = []
+  const skew = (r() - 0.5) * 0.3
+  for (let i = 1; i <= tiers; i++) {
+    const t = i / tiers
+    const y = top + h * 0.9 * t
+    const half = (w / 2) * (0.12 + 0.88 * t) * (0.8 + r() * 0.4)
+    const droop = h * 0.035 * (0.5 + r())
+    right.push(`${f(x + half * (1 + skew))} ${f(y + droop)}`, `${f(x + half * 0.3)} ${f(y + h * 0.02)}`)
+    left.unshift(`${f(x - half * 0.3)} ${f(y + h * 0.02)}`, `${f(x - half * (1 - skew) * (0.85 + r() * 0.3))} ${f(y + droop * (0.6 + r()))}`)
+  }
+  const tr = Math.max(2, w * 0.05)
+  return `M${f(x)} ${f(top)} L${right.join(' L')} L${f(x + tr)} ${f(top + h * 0.92)} L${f(x + tr)} ${base} L${f(x - tr)} ${base} L${f(x - tr)} ${f(top + h * 0.92)} L${left.join(' L')} Z`
+}
+
+const forest: Draw = (id) => {
+  // Deep woods at night: rows of trunks and ragged firs fading into the mist, a path running into a
+  // clearing where the moonlight falls and something small glows; great trunks with roots in front.
   const r = rng(71)
+  const haze: string[] = []
+  for (let x = -30; x < W + 30; x += 14 + r() * 22) haze.push(ragPine(x, 690 + r() * 20, 90 + r() * 80, 40 + r() * 20, r))
   const far: string[] = []
-  for (let x = -20; x < W + 20; x += 22 + r() * 18) far.push(pine(x, 660 + r() * 30, 120 + r() * 90, 46 + r() * 20))
+  for (let x = -20; x < W + 20; x += 34 + r() * 50) {
+    if (x > 860 && x < 1000) continue
+    if (r() < 0.45) far.push(ragPine(x, 760 + r() * 20, 220 + r() * 130, 80 + r() * 40, r))
+    else {
+      const tw = 5 + r() * 6
+      far.push(`M${f(x - tw)} 790 L${f(x - tw * 0.6)} -10 h${f(tw * 1.2)} L${f(x + tw)} 790 Z`)
+    }
+  }
   const mid: string[] = []
-  for (let x = -20; x < W + 40; x += 70 + r() * 60) mid.push(pine(x, 810 + r() * 30, 280 + r() * 200, 110 + r() * 50))
+  for (let x = -40; x < W + 40; x += 90 + r() * 90) {
+    if (x > 760 && x < 1080) continue
+    mid.push(ragPine(x, 850 + r() * 20, 380 + r() * 220, 150 + r() * 70, r))
+  }
+  // Ferns: arching fronds along the ground in front.
+  const fern = (x: number, y: number, s: number, dir: number) => {
+    let d = ''
+    for (let k = 0; k < 5; k++) {
+      const a = -Math.PI / 2 + dir * (0.25 + k * 0.28)
+      const len = s * (1 - k * 0.12)
+      const ex = x + Math.cos(a) * len
+      const ey = y + Math.sin(a) * len * 0.8
+      d += `M${f(x)} ${y} Q${f(x + Math.cos(a) * len * 0.5 - dir * 6)} ${f(y + Math.sin(a) * len * 0.9)} ${f(ex)} ${f(ey)} Q${f(x + Math.cos(a) * len * 0.5 + dir * 4)} ${f(y + Math.sin(a) * len * 0.6)} ${f(x + 3)} ${y} Z `
+    }
+    return d
+  }
   return (
     <>
       <Layer depth="far">
-        <path d={ridge(680, 30, 72)} />
+        <Moon x={930} y={150} r={36} id={id} />
+        <path d={haze.join(' ')} fill="var(--sil-haze)" />
+        <path d={ridge(760, 14, 72)} />
         <path d={far.join(' ')} />
       </Layer>
+      <Layer depth="lit">
+        {/* the moonlight (or the sun) falling into the clearing */}
+        <g className="scr-moon">
+          <path d="M830 -10 H1020 L1110 860 H800 Z" fill={`url(#${id}-shaft)`} opacity={0.22} />
+          <path d="M870 -10 H985 L1050 860 H860 Z" fill={`url(#${id}-shaft)`} opacity={0.3} />
+          <ellipse cx={950} cy={850} rx={170} ry={26} fill="var(--moon)" opacity={0.08} />
+        </g>
+        <g className="scr-sun">
+          <path d="M840 -10 H1010 L1090 860 H820 Z" fill="var(--sun)" opacity={0.08} />
+        </g>
+      </Layer>
       <Layer depth="mid">
-        <path d={ridge(830, 16, 73)} />
+        <path d={ridge(846, 14, 73)} />
+        {/* the path, paler, winding into the clearing */}
+        <path d="M640 904 Q700 870 800 862 Q900 856 930 846 Q960 840 990 846 Q940 860 880 876 Q800 896 820 904 Z" fill="var(--sil-back)" opacity={0.8} />
         <path d={mid.join(' ')} />
       </Layer>
+      <Layer depth="pulse">
+        {/* something small glowing deep in the clearing */}
+        <g className="scr-glow">
+          <Halo id={`${id}-halo`} x={968} y={800} r={60} o={0.8} />
+          <circle cx={968} cy={800} r={3.5} />
+        </g>
+      </Layer>
       <Layer depth="near">
-        <path d={ridge(880, 22, 74)} />
-        {/* two great trunks framing the view, a low branch, undergrowth */}
-        <path d="M40 900 C70 600 60 300 90 -10 H210 C190 300 200 620 250 900 Z" />
-        <path d="M1420 900 C1460 640 1440 300 1470 -10 H1580 C1570 300 1590 640 1640 900 Z" />
-        <BareTree x={1470} base={260} h={260} seed={75} lean={-1.1} />
-        <path d={Array.from({ length: 9 }, (_, i) => `M${260 + i * 130} 905 a${50 + (i % 3) * 20} ${30 + (i % 2) * 15} 0 0 1 ${120} 0 Z`).join(' ')} />
+        <path d={ridge(884, 18, 74)} />
+        {/* two great trunks framing the view, their roots, a low branch */}
+        <path d="M30 904 Q60 880 70 840 C88 560 70 300 96 -10 H216 C200 300 210 600 226 840 Q238 884 290 904 Z" />
+        <path d="M1394 904 Q1430 880 1440 836 C1462 600 1450 300 1474 -10 H1584 C1574 300 1590 620 1606 840 Q1620 884 1650 904 Z" />
+        <BareTree x={1462} base={330} h={330} seed={75} lean={-1.2} />
+        <path d="M110 -10 v900 M150 -10 v900 M190 -10 v900 M1500 -10 v900 M1540 -10 v900" stroke="#000" strokeOpacity={0.18} strokeWidth={3} fill="none" />
+        {/* a fallen log, ferns */}
+        <path d="M300 904 L330 858 Q340 846 360 848 L620 872 Q640 876 638 892 L636 904 Z M354 850 a14 22 0 1 0 1 0 Z" />
+        <path d={`${fern(280, 900, 120, -1)} ${fern(280, 900, 110, 1)} ${fern(1350, 902, 130, -1)} ${fern(1350, 902, 110, 1)} ${fern(700, 904, 70, 1)}`} />
+        <path d={grass(888, 75)} />
       </Layer>
     </>
   )
