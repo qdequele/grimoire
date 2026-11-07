@@ -255,6 +255,16 @@ test('game screen: the original engine runs a story, rolls, saves to the account
   // The game menu's quit goes back to the app, where the game can be resumed
   const again = page.frameLocator('iframe[title="Partie"]')
   await again.locator('#menuBtn').click()
+  // (its less frequent entries are in sub-menus; Escape goes back to the main list)
+  await expect(again.locator('#gmEdit')).toBeHidden()
+  await again.locator('[data-gm-go="partie"]').click()
+  await expect(again.locator('#gmEdit')).toBeVisible()
+  await expect(again.locator('#gmQuit')).toBeHidden()
+  await again.locator('#gmEdit').press('Escape')
+  await expect(again.locator('[data-gm-go="partie"]')).toBeFocused()
+  await again.locator('[data-gm-go="affichage"]').click()
+  await again.locator('[data-gm-back]:visible').click()
+  await expect(again.locator('#gmLang')).toBeHidden()
   await again.locator('#gmQuit').click()
   await expect(page.getByRole('link', { name: /Reprendre la partie/ })).toBeVisible()
 

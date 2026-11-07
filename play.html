@@ -131,20 +131,33 @@
 <div class="gmenu" id="gMenu" hidden role="dialog" aria-modal="true" aria-labelledby="gmTitle">
   <div class="gm-box">
     <div class="gm-head"><span class="gm-eyebrow">Menu de la partie</span><h2 id="gmTitle">—</h2><p class="gm-sub" id="gmSub"></p></div>
-    <div class="gm-list">
+    <div class="gm-list gm-main">
       <button class="gm-item prim" id="gmResume"><span class="gm-k">Échap</span>Reprendre la partie</button>
+      <div class="gm-item-wrap"><button class="gm-item gm-go" data-gm-go="partie">Partie</button><span class="gm-meta">joueurs, chrono, fin du scénario</span></div>
+      <div class="gm-item-wrap"><button class="gm-item gm-go" data-gm-go="sauvegardes">Sauvegardes</button><span class="gm-meta" id="saveHint"></span></div>
+      <button class="gm-item" id="gmRules">Règles du jeu</button>
+      <div class="gm-item-wrap"><button class="gm-item gm-go" data-gm-go="affichage">Affichage</button><span class="gm-meta">thème et langue</span></div>
+      <div class="gm-sep"></div>
+      <button class="gm-item" data-nav="menu" id="gmQuit">Quitter vers le menu principal</button>
+    </div>
+    <div class="gm-list" data-gm-panel="partie" hidden>
+      <button class="gm-back" data-gm-back><span class="gm-k">Échap</span>Partie</button>
       <div class="gm-item-wrap"><button class="gm-item" id="gmEdit">Modifier la partie</button><span class="gm-meta">joueurs et personnages</span></div>
       <div class="gm-item-wrap"><button class="gm-item" id="btnClock">Démarrer la séance</button><span class="gm-meta" id="gmClock"></span></div>
-      <div class="gm-item-wrap"><span id="saveZone"><button class="gm-item" id="btnSave">Sauvegarder la partie</button></span><span class="gm-meta" id="saveHint"></span></div>
-      <div class="gm-item-wrap"><button class="gm-item" id="gmLoad">Charger une sauvegarde</button></div>
-      <div id="gmSaves" class="gm-saves" hidden></div>
       <div class="gm-item-wrap"><span id="finZone"><button class="gm-item" id="btnFin">Terminer le scénario</button></span></div>
       <div class="gm-sep"></div>
-      <button class="gm-item" id="gmRules">Règles du jeu</button>
+      <div class="gm-item-wrap"><span id="resetZone"><button class="gm-item danger" id="btnReset">Réinitialiser ce scénario</button></span></div>
+    </div>
+    <div class="gm-list" data-gm-panel="sauvegardes" hidden>
+      <button class="gm-back" data-gm-back><span class="gm-k">Échap</span>Sauvegardes</button>
+      <div class="gm-item-wrap"><span id="saveZone"><button class="gm-item" id="btnSave">Sauvegarder la partie</button></span></div>
+      <div class="gm-item-wrap"><button class="gm-item" id="gmLoad">Charger une sauvegarde</button></div>
+      <div id="gmSaves" class="gm-saves" hidden></div>
+    </div>
+    <div class="gm-list" data-gm-panel="affichage" hidden>
+      <button class="gm-back" data-gm-back><span class="gm-k">Échap</span>Affichage</button>
       <div class="gm-item-wrap"><button class="gm-item" id="gmSkin">Thème : Art déco</button><span class="gm-meta">touche T</span></div>
       <div class="gm-item-wrap"><button class="gm-item" id="gmLang">Langue : Français</button><span class="gm-meta">touche L</span></div>
-      <button class="gm-item" data-nav="menu" id="gmQuit">Quitter vers le menu principal</button>
-      <div class="gm-item-wrap"><span id="resetZone"><button class="gm-item danger" id="btnReset">Réinitialiser ce scénario</button></span></div>
     </div>
   </div>
 </div>
