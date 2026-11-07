@@ -184,7 +184,7 @@ const Moon = ({ x, y, r, id }: { x: number; y: number; r: number; id: string }) 
       <path
         d={`M${f(x - r * 0.62)} ${f(y - r * 0.1)} q${f(r * 0.1)} ${f(-r * 0.42)} ${f(r * 0.5)} ${f(-r * 0.36)} q${f(r * 0.34)} ${f(r * 0.08)} ${f(r * 0.22)} ${f(r * 0.4)} q${f(r * 0.2)} ${f(r * 0.3)} ${f(r * 0.46)} ${f(r * 0.38)} q${f(r * 0.1)} ${f(r * 0.32)} ${f(-r * 0.3)} ${f(r * 0.36)} q${f(-r * 0.4)} ${f(-r * 0.02)} ${f(-r * 0.5)} ${f(-r * 0.36)} q${f(-r * 0.3)} ${f(-r * 0.06)} ${f(-r * 0.38)} ${f(-r * 0.42)} Z`}
         fill="var(--sil-far)"
-        opacity={0.06}
+        opacity={0.04}
       />
     </g>
     <g className="scr-sun">
@@ -329,39 +329,89 @@ const church: Draw = (id) => {
   )
 }
 
+/** A crow perched at x, y (its feet), facing right, or left when `flip`. */
+const crow = (x: number, y: number, s: number, flip = false) => {
+  const k = flip ? -s : s
+  return `M${f(x - 14 * k)} ${f(y - 6 * s)} L${f(x - 26 * k)} ${f(y - 2 * s)} L${f(x - 12 * k)} ${f(y - 10 * s)} Q${f(x - 4 * k)} ${f(y - 20 * s)} ${f(x + 8 * k)} ${f(y - 19 * s)} Q${f(x + 12 * k)} ${f(y - 27 * s)} ${f(x + 17 * k)} ${f(y - 24 * s)} L${f(x + 25 * k)} ${f(y - 22 * s)} L${f(x + 17 * k)} ${f(y - 19 * s)} Q${f(x + 14 * k)} ${f(y - 9 * s)} ${f(x + 2 * k)} ${f(y - 4 * s)} L${f(x + 3 * k)} ${y} L${f(x + 1 * k)} ${y} L${f(x - 1 * k)} ${f(y - 4 * s)} Z`
+}
+
 const graveyard: Draw = (id) => {
+  // An old churchyard: rows of stones running back up the hill, a gravel path from the gate to a small
+  // mausoleum, a mourning statue, the chapel far up on the hill.
   const r = rng(21)
-  const stones: ReactNode[] = []
-  for (let i = 0; i < 26; i++) {
-    const x = 60 + i * 60 + (r() - 0.5) * 30
-    if (x > 980 && x < 1180) continue
-    const y = 770 + r() * 30
-    const h = 50 + r() * 50
-    const tilt = (r() - 0.5) * 14
-    const d = r() < 0.3 ? cross(x, y, h * 1.4) : stone(x, y, h * 0.6, h)
-    stones.push(<path key={i} d={d} transform={`rotate(${f(tilt)} ${f(x)} ${f(y)})`} />)
+  const path = (y: number) => {
+    // The path's half-width and centre at a height: narrow at the mausoleum, wide at the gate.
+    const t = (y - 790) / 110
+    return { c: 1080, w: 80 + t * 70 }
   }
+  const row = (y0: number, n: number, scale: number, skipStatue: boolean) => {
+    const out: ReactNode[] = []
+    for (let i = 0; i < n; i++) {
+      const x = -20 + (i + r()) * (1640 / n)
+      const y = y0 + r() * 10
+      const p = path(y)
+      if (Math.abs(x - p.c) < p.w + 40 * scale) continue
+      if (skipStatue && (Math.abs(x - 560) < 50 || Math.abs(x - 685) < 60 || Math.abs(x - 1330) < 55)) continue
+      const h = (44 + r() * 46) * scale
+      const tilt = (r() - 0.5) * 12
+      const kind = r()
+      const d = kind < 0.28 ? cross(x, y, h * 1.4) : kind < 0.36 ? `M${f(x - h * 0.16)} ${f(y)} L${f(x - h * 0.1)} ${f(y - h * 1.3)} L${f(x)} ${f(y - h * 1.45)} L${f(x + h * 0.1)} ${f(y - h * 1.3)} L${f(x + h * 0.16)} ${f(y)} Z` : stone(x, y, h * 0.62, h)
+      out.push(<path key={i} d={d} transform={`rotate(${f(tilt)} ${f(x)} ${f(y)})`} />)
+    }
+    return out
+  }
+  const farStones = row(726, 34, 0.42, false)
+  const midStones = row(792, 20, 0.9, true)
   return (
     <>
       <Layer depth="far">
-        <Moon x={1150} y={170} r={52} id={id} />
-        <path d={ridge(620, 45, 22)} />
-        {/* a chapel on the hill */}
-        <path d={`M300 900 V540 H380 V900 Z M292 544 L340 506 L388 544 Z M332 506 V470 h16 v36 Z ${cross(340, 474, 30)}`} />
-        <BareTree x={520} base={700} h={200} seed={23} />
-        <BareTree x={1420} base={700} h={230} seed={24} />
+        <Moon x={1250} y={168} r={50} id={id} />
+        <path d={ridge(610, 40, 27, 30)} fill="var(--sil-haze)" />
+        <path d={ridge(700, 42, 22)} />
+        {/* the chapel up on the hill: a small nave and its bell tower, a lantern at the door */}
+        <path d={`M296 704 V652 H366 V704 Z M290 656 L331 626 L372 656 Z M268 704 V622 H296 V704 Z M264 624 L282 572 L300 624 Z ${cross(282, 576, 22)}`} />
+        <path d="M325 684 h10 v14 h-10 Z" fill="var(--lit)" className="scr-glow" opacity={0.8} />
+        {farStones}
+        <BareTree x={540} base={712} h={200} seed={23} />
+        <BareTree x={1480} base={700} h={230} seed={24} />
       </Layer>
       <Layer depth="mid">
-        <path d={ridge(790, 14, 25)} />
-        {stones}
-        {/* the mausoleum */}
-        <path d="M1000 800 V630 H1160 V800 Z M985 636 L1080 570 L1175 636 Z M990 640 h180 v-10 h-180 Z" />
-        <path d="M1015 800 v-160 h14 v160 Z M1131 800 v-160 h14 v160 Z" />
+        <path d={ridge(796, 12, 25)} />
+        {/* the gravel path, paler than the grass, from the gate up to the mausoleum */}
+        <path d="M1010 800 H1150 L1240 904 H920 Z" fill="var(--sil-back)" opacity={0.75} />
+        {midStones}
+        {/* the mausoleum: steps, walls, pilasters, pediment, urns, a dark door */}
+        <path d="M980 800 V788 H1180 V800 Z M992 788 V776 H1168 V788 Z M1004 776 V764 H1156 V776 Z" />
+        <path d="M1014 766 V610 H1146 V766 Z M1000 612 H1160 V588 H1000 Z M994 590 L1080 532 L1166 590 Z" />
+        <path d="M1072 534 a8 8 0 1 1 16 0 l4 10 h-24 Z M994 588 a6 6 0 1 1 12 0 l3 8 h-18 Z M1154 588 a6 6 0 1 1 12 0 l3 8 h-18 Z" />
+        <path d="M1054 766 V698 A26 26 0 0 1 1106 698 V766 Z" fill="var(--sil-near)" />
+        <path d="M1014 766 V612 h10 V766 Z M1136 766 V612 h10 V766 Z" fill="var(--sil-near)" opacity={0.5} />
+        {/* a hooded mourner on a plinth, head bowed; two chest tombs */}
+        <path d="M526 808 V772 H594 V808 Z M534 772 V760 H586 V772 Z M540 760 Q542 712 550 690 Q552 664 566 656 Q584 652 588 672 Q586 684 578 690 Q586 716 584 760 Z" />
+        <path d="M640 812 V786 H730 V812 Z M634 788 H736 v-8 H634 Z M1290 812 V790 H1370 V812 Z M1284 792 H1376 v-8 H1284 Z" />
+        <g className="scr-rim" strokeWidth={2}>
+          <path d="M1080 532 L1166 590 M1146 612 V766 M1156 764 H1168 M1168 788 H1180 M588 672 Q586 684 578 690 Q586 716 584 760 M736 780 H634 M1376 784 H1284" />
+        </g>
+      </Layer>
+      <Layer depth="lit">
+        {/* a thread of light under the mausoleum door: something inside is awake */}
+        <path d="M1056 762 h48 v3 h-48 Z M1079 676 v86 h2 v-86 Z" opacity={0.75} />
+        <Halo id={`${id}-halo`} x={1080} y={764} r={70} o={0.5} />
       </Layer>
       <Layer depth="near">
-        <BareTree x={220} base={900} h={720} seed={26} lean={0.1} />
-        <path d={`${stone(1380, 905, 90, 170)} ${cross(1500, 905, 200)}`} />
-        <Fence y={900} h={130} gateFrom={700} gateTo={900} />
+        <BareTree x={200} base={904} h={740} seed={26} lean={0.1} />
+        <path d={`${stone(1400, 908, 96, 176)} ${cross(1520, 908, 210)} ${stone(60, 910, 70, 120)} ${crow(1520, 908 - 210, 1.3, true)}`} />
+        <Fence y={904} h={96} gateFrom={980} gateTo={1180} />
+        <path d={crow(973, 904 - 96 - 56, 1.1)} />
+        {/* a lantern on a bracket, on the right gate pillar */}
+        <path d="M1202 780 h26 v3 h-26 Z M1219 783 h6 v4 h-6 Z M1214 792 h16 l-3 -6 h-10 Z M1214 816 h16 v5 h-16 Z M1215 792 h2 v24 h-2 Z M1227 792 h2 v24 h-2 Z" />
+        <path d={grass(904, 28)} />
+      </Layer>
+      <Layer depth="pulse">
+        <g className="scr-glow">
+          <Halo id={`${id}-halo`} x={1222} y={804} r={150} />
+          <path d="M1217 792 h10 v24 h-10 Z" />
+        </g>
       </Layer>
     </>
   )
