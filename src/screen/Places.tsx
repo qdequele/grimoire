@@ -160,20 +160,6 @@ const Halo = ({ id, x, y, r, o = 1 }: { id: string; x: number; y: number; r: num
   <circle cx={x} cy={y} r={r} fill={`url(#${id})`} opacity={o} />
 )
 
-/** Windows on a grid, some lit (seeded): `lit` gets the lit ones, `dark` the rest. */
-function windowGrid(x: number, y: number, cols: number, rows: number, w: number, h: number, gx: number, gy: number, seed: number, chance: number) {
-  const r = rng(seed)
-  const lit: string[] = []
-  const dark: string[] = []
-  for (let j = 0; j < rows; j++) {
-    for (let i = 0; i < cols; i++) {
-      const d = `M${x + i * gx} ${y + j * gy} h${w} v${h} h${-w} Z`
-      ;(r() < chance ? lit : dark).push(d)
-    }
-  }
-  return { lit: lit.join(' '), dark: dark.join(' ') }
-}
-
 /** The moon at night and dusk, the sun by day (screen.css shows one, or neither under a grey sky). */
 const Moon = ({ x, y, r, id }: { x: number; y: number; r: number; id: string }) => (
   <>
@@ -797,53 +783,103 @@ const library: Draw = (id) => {
   )
 }
 
+/** A 1920s motor car facing right, wheels on y: an upright cabin, a long bonnet, fenders over the wheels. */
+const motorCar = (x: number, y: number) =>
+  // body: boot, cabin with its roof, bonnet down to the radiator
+  `M${x + 10} ${y - 40} V${y - 86} Q${x + 12} ${y - 98} ${x + 30} ${y - 98} H${x + 92} V${y - 168} Q${x + 92} ${y - 180} ${x + 106} ${y - 180} H${x + 252} Q${x + 266} ${y - 180} ${x + 266} ${y - 168} V${y - 104} L${x + 400} ${y - 98} Q${x + 414} ${y - 96} ${x + 414} ${y - 84} V${y - 40} Z ` +
+  // rear and front fenders, the running board between them, the radiator, the spare wheel
+  `M${x + 30} ${y - 30} Q${x + 36} ${y - 84} ${x + 90} ${y - 84} Q${x + 142} ${y - 82} ${x + 152} ${y - 30} Z M${x + 300} ${y - 30} Q${x + 308} ${y - 86} ${x + 362} ${y - 86} Q${x + 418} ${y - 84} ${x + 440} ${y - 42} V${y - 30} Z ` +
+  `M${x + 146} ${y - 36} H${x + 306} v-8 H${x + 146} Z M${x + 410} ${y - 104} h12 v62 h-12 Z M${x - 20} ${y - 66} a26 26 0 1 0 52 0 a26 26 0 1 0 -52 0 Z`
+
 const police: Draw = (id) => {
+  // A 1920s police station on a wet street: rusticated ground floor, a portico on four columns under the
+  // lit sign, a clock in the attic, a flag hanging in the rain, the city's stepped towers behind.
   const r = rng(61)
   let sky = ''
   let skyLit = ''
   for (let x = -40; x < W + 40; ) {
     const w = 70 + r() * 110
-    const h = 260 + r() * 300
+    const h = 220 + r() * 260
     sky += `M${f(x)} ${H} V${f(H - h)} H${f(x + w)} V${H} Z `
-    for (let k = 0; k < 4; k++) if (r() < 0.6) skyLit += `M${f(x + 12 + r() * (w - 30))} ${f(H - h + 20 + r() * (h - 120))} h6 v9 h-6 Z `
+    if (r() < 0.35) {
+      // a water tank on legs
+      const tx = x + 14 + r() * (w - 50)
+      const ty = H - h
+      sky += `M${f(tx)} ${f(ty)} v-16 h4 v16 Z M${f(tx + 24)} ${f(ty)} v-16 h4 v16 Z M${f(tx - 2)} ${f(ty - 16)} v-34 h32 v34 Z M${f(tx - 4)} ${f(ty - 50)} L${f(tx + 14)} ${f(ty - 64)} L${f(tx + 32)} ${f(ty - 50)} Z `
+    }
+    for (let k = 0; k < 5; k++) if (r() < 0.55) skyLit += `M${f(x + 12 + r() * (w - 30))} ${f(H - h + 20 + r() * (h - 120))} h6 v9 h-6 Z `
     x += w + 4
   }
-  const win = windowGrid(470, 420, 6, 2, 50, 76, 112, 120, 62, 0.45)
+  // Two stepped towers far behind.
+  const stepped = (x: number, w: number, top: number) =>
+    `M${x} 900 V${top + 120} H${x + w * 0.12} V${top + 60} H${x + w * 0.24} V${top} H${x + w * 0.76} V${top + 60} H${x + w * 0.88} V${top + 120} H${x + w} V900 Z M${x + w * 0.36} ${top} V${top - 50} H${x + w * 0.64} V${top} Z M${x + w * 0.46} ${top - 50} L${x + w * 0.5} ${top - 140} L${x + w * 0.54} ${top - 50} Z`
+  const bays = [452, 532, 612, 948, 1028, 1108]
+  const up1 = [...bays, 712, 780, 848].map((x) => `M${x} 404 h40 v70 h-40 Z`)
+  const up2 = bays.map((x) => `M${x} 512 h40 v72 h-40 Z`)
+  const down = bays.map((x) => arched(x, 700, 40, 96))
+  const lit = new Set([0, 2, 3, 5, 7, 8, 10, 13, 15, 16, 19])
+  const all = [...up1, ...up2, ...down]
   return (
     <>
       <Layer depth="far">
+        <path d={`${stepped(1110, 200, 160)} ${stepped(150, 150, 260)}`} fill="var(--sil-haze)" />
         <path d={sky} />
-        <path d={skyLit} fill="var(--lit)" opacity={0.3} />
+        <path d={skyLit} fill="var(--lit)" className="scr-glow" opacity={0.35} />
       </Layer>
       <Layer depth="mid">
-        {/* the station: cornice, parapet, steps */}
-        <path d="M420 860 V330 H1180 V860 Z M400 336 H1200 V306 H400 Z M440 306 V284 H1160 V306 Z" />
-        <path d="M600 880 V860 H1000 V880 Z M620 860 V842 H980 V860 Z M640 842 V824 H960 V842 Z" />
-        <path d={win.dark} fill="var(--sil-near)" opacity={0.6} />
-        <path d="M690 880 v-180 h8 v180 Z M902 880 v-180 h8 v180 Z" />
+        {/* the station: rusticated ground floor, upper floors, cornice with dentils, attic and clock */}
+        <path d="M396 862 V640 H1204 V862 Z M416 640 V360 H1184 V640 Z M386 364 H1214 V334 H386 Z M408 334 V304 H1192 V334 Z M690 304 V236 H910 V304 Z M680 240 H920 v-14 H680 Z" />
+        <path d={Array.from({ length: 58 }, (_, i) => `M${394 + i * 14.3} 364 h7 v9 h-7 Z`).join(' ')} />
+        <path d={`${Array.from({ length: 7 }, (_, i) => `M396 ${672 + i * 30} H1204 v3 H396 Z`).join(' ')} M436 360 h12 v280 h-12 Z M672 360 h12 v280 h-12 Z M916 360 h12 v280 h-12 Z M1152 360 h12 v280 h-12 Z`} fill="var(--sil-back)" opacity={0.6} />
+        {/* the flag on its pole, hanging limp */}
+        <path d="M600 304 V170 h5 V304 Z M605 176 h50 q-6 30 4 62 h-54 Z" />
+        {/* the portico: steps, four columns, entablature carrying the sign */}
+        <path d="M640 872 V862 H960 V872 Z M656 862 V852 H944 V862 Z M672 852 V842 H928 V852 Z" />
+        <path d="M672 842 V660 H928 V842 Z" fill="var(--sil-near)" opacity={0.75} />
+        <path d="M684 842 V660 h22 V842 Z M744 842 V660 h22 V842 Z M834 842 V660 h22 V842 Z M894 842 V660 h22 V842 Z M672 660 H928 V600 H672 Z M662 604 H938 v-12 H662 Z" />
+        <path d="M680 842 h30 v-8 h-30 Z M740 842 h30 v-8 h-30 Z M830 842 h30 v-8 h-30 Z M890 842 h30 v-8 h-30 Z M680 666 h30 v-8 h-30 Z M740 666 h30 v-8 h-30 Z M830 666 h30 v-8 h-30 Z M890 666 h30 v-8 h-30 Z" />
+        {/* the lamp posts at the foot of the steps */}
+        <path d="M620 872 V760 h8 V872 Z M972 872 V760 h8 V872 Z M612 872 h24 v-10 h-24 Z M964 872 h24 v-10 h-24 Z" />
+        <path d={all.filter((_, i) => !lit.has(i)).join(' ')} fill="var(--sil-near)" opacity={0.6} />
+        <g className="scr-rim" strokeWidth={2}>
+          <path d="M386 334 H1214 M680 226 H920 M662 592 H938" />
+        </g>
       </Layer>
       <Layer depth="lit">
-        <path d={win.lit} opacity={0.75} />
-        <path d="M740 824 V690 H860 V824 Z" opacity={0.7} />
-        <text x="800" y="664" textAnchor="middle" fontSize="40" letterSpacing="10" fontFamily="'Josefin Sans', 'IBM Plex Sans Condensed', sans-serif" fontWeight="700">POLICE</text>
-        <Halo id={`${id}-halo`} x={694} y={690} r={110} />
-        <Halo id={`${id}-halo`} x={906} y={690} r={110} />
-        <circle cx={694} cy={690} r={16} />
-        <circle cx={906} cy={690} r={16} />
+        <path d={all.filter((_, i) => lit.has(i)).join(' ')} fill={`url(#${id}-glass)`} />
+        {/* the doors and their transom, the clock face */}
+        <path d="M770 842 V720 H830 V842 Z M770 712 H830 V688 H770 Z" fill={`url(#${id}-glass)`} />
+        <path d="M799 720 v122 h2 V720 Z" fill="var(--sil-mid)" />
+        <circle cx={800} cy={270} r={22} opacity={0.7} />
+        <path d="M799 270 V254 h2 V270 Z M800 269 h12 v2 h-12 Z" fill="var(--sil-mid)" />
+        <text x="800" y="640" textAnchor="middle" fontSize="34" letterSpacing="12" fontFamily="'Josefin Sans', 'IBM Plex Sans Condensed', sans-serif" fontWeight="700">POLICE</text>
+        {/* the lamps and their light on the wet street */}
+        {[624, 976].map((x) => (
+          <g key={x}>
+            <Halo id={`${id}-halo`} x={x} y={748} r={100} />
+            <circle cx={x} cy={748} r={14} />
+            <ellipse cx={x} cy={888} rx={14} ry={22} fill={`url(#${id}-halo)`} />
+          </g>
+        ))}
+        <path d="M770 872 h60 l20 28 h-100 Z" fill={`url(#${id}-ray)`} />
         <Halo id={`${id}-halo`} x={1352} y={548} r={220} />
         <path d="M1336 540 h32 l-6 22 h-20 Z" />
+        <ellipse cx={1352} cy={892} rx={26} ry={60} fill={`url(#${id}-halo)`} />
       </Layer>
       <Layer depth="near">
-        {/* the curb, a street lamp, an old car */}
+        {/* the curb and the street, a street lamp, a motor car at the curb */}
         <path d="M-40 900 V872 H1640 V900 Z" />
         <path d="M1344 900 V560 h16 V900 Z M1330 900 l14 -30 h16 l14 30 Z M1330 540 h44 l-8 -14 h-28 Z M1350 526 v-12 h4 v12 Z" />
-        <path
-          fillRule="evenodd"
-          d="M96 866 V822 Q100 796 134 792 L226 788 L256 716 Q262 706 276 706 H412 Q424 706 430 716 L462 788 H530 Q556 792 560 822 V866 Z M276 780 L296 724 H340 V780 Z M352 780 V724 H408 L428 780 Z"
-        />
-        <path d="M120 820 H170 V804 H120 Z M548 800 h14 v20 h-14 Z" opacity={0.5} />
-        <circle cx="196" cy="866" r="38" />
-        <circle cx="468" cy="866" r="38" />
+        <path d={motorCar(60, 896)} />
+        {/* its windows catch the street light; chrome on the roof, the bonnet and the lamp */}
+        <path d="M162 728 h70 v48 h-70 Z M244 728 h70 v48 h-70 Z" fill="var(--sil-back)" opacity={0.7} />
+        <circle cx={150} cy={870} r={32} />
+        <circle cx={422} cy={870} r={32} />
+        <path d="M150 870 m-10 0 a10 10 0 1 0 20 0 a10 10 0 1 0 -20 0 M422 870 m-10 0 a10 10 0 1 0 20 0 a10 10 0 1 0 -20 0" fill="var(--sil-back)" />
+        <circle cx={480} cy={800} r={11} fill="var(--sil-back)" />
+        <g className="scr-rim scr-rim-lamp" strokeWidth={2.5}>
+          <path d="M166 716 H312 Q326 716 326 728 M326 792 L460 798 Q474 800 474 812 M360 810 Q418 812 440 854 M90 812 Q142 814 152 850" />
+        </g>
       </Layer>
     </>
   )

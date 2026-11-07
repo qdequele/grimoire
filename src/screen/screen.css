@@ -186,6 +186,10 @@
   opacity: 0.4;
 }
 .scr-layer[data-sky='overcast'] .scr-rim { opacity: 0.14; }
+/* lit by a lamp, not by the sky: as bright under a grey sky, off by day */
+.scr-rim-lamp,
+.scr-layer[data-sky='overcast'] .scr-rim-lamp { stroke: var(--lit); opacity: 0.35; }
+.scr-layer[data-time='day'] .scr-rim-lamp { opacity: 0; }
 /* A light inside a silhouette layer (a far window, a ship's lantern): off by day like the lit layer. */
 .scr-layer[data-time='day'] .scr-glow { opacity: 0.06; }
 .scr-par {
