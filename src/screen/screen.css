@@ -263,6 +263,9 @@
   --book: color-mix(in srgb, var(--c1) 45%, #5a4632);
   --rim: color-mix(in srgb, var(--sun) 40%, var(--c2));
 }
+/* The library's back layer is a wall indoors, not distant scenery: by day it keeps a room's tone instead of
+   paling like a far hill (it turned as pale as the sky in the window). */
+.scr-layer[data-time='day'] .scr-place[data-place='library'] .scr-par-far { color: var(--sil-mid); }
 .scr-layer[data-time='day'] .scr-par-lit {
   opacity: 0.08;
   animation: scr-par-mid 70s ease-in-out infinite alternate;

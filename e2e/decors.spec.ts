@@ -7,21 +7,34 @@
 //    drifts with it, or another light that does (a flame on its candle on its stand).
 // 2. Nothing floats. Every solid piece of a silhouette layer touches another shape of its layer or of
 //    the layer behind it (a spar on its mast, a chimney in its roof, a stone in the ground).
+// 3. No light edge runs along a shape that drifts differently. A moonlight shaft drawn from a window
+//    (back layer) but drifting with the mid layer slides past the window's frame: the window looks
+//    wider than its arch. Any light with a hard edge (all but round, fading halos) fails when, where it
+//    shows, its outline runs along an upright or sloped edge of a shape in a differently drifting layer
+//    for more than EDGE units, or shares a corner with one. (The drift is sideways: a shared horizontal
+//    edge stays lined up.)
+// 4. No accidental holes. A path holding several shapes fills their overlaps only when they wind the
+//    same way: under the default nonzero rule, a desk top drawn anticlockwise over its clockwise body
+//    leaves the band where they overlap empty, and the books behind show through. (Paths with
+//    fill-rule evenodd cut their holes on purpose: skipped.)
 //
 // "Touches" = within TOUCH user units (the 1600×900 frame). Pieces meant to hang in the sky (the moon
-// and sun, stars, birds) carry `data-free`; glows (halos, beams, reflections, gradients) are skipped.
+// and sun, stars, birds) carry `data-free`. Round halos fade to nothing, they have no edge: skipped.
+// Glows with a hard edge (shafts, rays, beams) are checked by rule 3 only.
 import { expect, test } from '@playwright/test'
 
 const PLACES = ['church', 'graveyard', 'crypt', 'castle', 'manor', 'library', 'police', 'forest', 'harbour', 'street']
 const TOUCH = 3
+// A shared edge shorter than this is a coincidence nobody sees (a faint shaft parallel to a far fir for a few units).
+const EDGE = 96
 
-interface Problem { layer: string; piece: string; rule: 'light' | 'floating' }
+interface Problem { layer: string; piece: string; rule: 'light' | 'floating' | 'edge' | 'hole' }
 
 for (const place of PLACES) {
-  test(`décor ${place}: lights on their own depth, nothing floating`, async ({ page }) => {
+  test(`décor ${place}: lights on their own depth, nothing floating, no edge across depths, no holes`, async ({ page }) => {
     await page.goto(`/dev/places?place=${place}&time=night`)
     await page.locator('.scr-place svg.scr-par').first().waitFor()
-    const problems: Problem[] = await page.evaluate((touch) => {
+    const problems: Problem[] = await page.evaluate(([touch, edge]) => {
       const depthOf = (svg: SVGSVGElement) => [...svg.classList].find((c) => c.startsWith('scr-par-'))!.slice(8)
       const layers = [...document.querySelectorAll<SVGSVGElement>('.scr-place svg.scr-par')]
       const harbour = document.querySelector('.scr-place')?.getAttribute('data-place') === 'harbour'
@@ -30,18 +43,24 @@ for (const place of PLACES) {
       const order = ['far', 'mid', 'near']
       const isLight = (d: string) => d.startsWith('lit') || d.startsWith('pulse')
 
-      type Piece = { el: SVGGeometryElement; local: SVGGeometryElement; layer: string; label: string; box: DOMRect; ctm: DOMMatrix }
-      const glow = /halo|beam|ray|shaft|sheen|moon|sun/
+      type Piece = { el: SVGGeometryElement; local: SVGGeometryElement; layer: string; label: string; box: DOMRect; ctm: DOMMatrix; glow?: boolean; outline?: boolean }
+      const halo = /halo|moon|sun/
+      const glow = /beam|ray|shaft|sheen/
       const pieces: Piece[] = []
+      // Every outline, fills and strokes alike (a transom drawn as a stroke is an edge too), for rule 3.
+      const outlines: Piece[] = []
       for (const svg of layers) {
         const layer = depthOf(svg)
         if (layer === 'water') continue
         for (const el of svg.querySelectorAll<SVGGeometryElement>('path, circle, ellipse, rect, polygon')) {
-          if (el.closest('[data-free], .scr-moon, .scr-sun')) continue
+          // The moon and sun discs float; a moonlight shaft in their group is checked like any light.
+          if (el.closest('[data-free]') || (el.closest('.scr-moon, .scr-sun') && !glow.test(el.getAttribute('fill') ?? ''))) continue
           const fill = el.getAttribute('fill') ?? ''
-          if (glow.test(fill) || fill === 'none') continue
+          if (halo.test(fill)) continue
           const cs = getComputedStyle(el)
-          if (cs.display === 'none' || cs.fill === 'none') continue
+          if (cs.display === 'none') continue
+          const stroked = fill === 'none' || cs.fill === 'none'
+          const glowing = glow.test(fill)
           // Each subpath of a path is a piece of its own (a path often holds many windows or stones).
           const subs = el.tagName === 'path' ? (el.getAttribute('d') ?? '').split(/(?=M)/).map((s) => s.trim()).filter(Boolean) : [null]
           // The element's user space → the frame's (both layers share the 1600×900 viewBox).
@@ -56,13 +75,15 @@ for (const place of PLACES) {
               el.parentNode!.insertBefore(local, el)
             }
             const b = local.getBBox()
-            if (b.width * b.height < 1) return
+            if (b.width + b.height < 2) return
             const p1 = new DOMPoint(b.x, b.y).matrixTransform(ctm)
             const p2 = new DOMPoint(b.x + b.width, b.y + b.height).matrixTransform(ctm)
             const box = new DOMRect(Math.min(p1.x, p2.x), Math.min(p1.y, p2.y), Math.abs(p2.x - p1.x), Math.abs(p2.y - p1.y))
             // Off the frame entirely (drawn wider than the screen): nothing to see.
             if (box.right < -60 || box.left > 1660 || box.bottom < -20 || box.top > 920) return
-            pieces.push({ el, local, layer, label: `${el.tagName}${d ? ` "${d.slice(0, 48)}"` : ''}${subs.length > 1 ? ` (#${k})` : ''}`, box, ctm })
+            const piece: Piece = { el, local, layer, label: `${el.tagName}${d ? ` "${d.slice(0, 48)}"` : ''}${subs.length > 1 ? ` (#${k})` : ''}`, box, ctm, glow: glowing, outline: stroked }
+            outlines.push(piece)
+            if (!stroked && !glowing) pieces.push(piece)
           })
         }
       }
@@ -104,7 +125,7 @@ for (const place of PLACES) {
         return false
       }
 
-      const out: Array<{ layer: string; piece: string; rule: 'light' | 'floating' }> = []
+      const out: Array<{ layer: string; piece: string; rule: 'light' | 'floating' | 'edge' | 'hole' }> = []
       // Rule 1: lights, propagated (a light touching a held light is held too).
       const lights = pieces.filter((p) => isLight(p.layer))
       const held = new Set<Piece>()
@@ -130,9 +151,74 @@ for (const place of PLACES) {
         const ok = pieces.some((q) => q !== p && (isLight(q.layer) ? held.has(q) && motion[q.layer] === p.layer : order.indexOf(q.layer) <= lvl && order.indexOf(q.layer) >= lvl - 1) && touches(p, q))
         if (!ok) out.push({ layer: p.layer, piece: p.label, rule: 'floating' })
       }
-      for (const p of pieces) if (p.local !== p.el) p.local.remove()
+      // Rule 3: a light's hard edge must not line up with a shape that drifts differently. The drift is
+      // sideways, so a shared horizontal edge stays lined up; what breaks is a shared upright or sloped
+      // edge (a shaft's side down a window's jamb) or a shared corner (a spill's corner on a sill's).
+      const width = (q: Piece) => (q.outline ? parseFloat(getComputedStyle(q.el).strokeWidth) || 1 : 0) + 2 * touch
+      // An outline as frame points every ~2 units, with the corners (turns sharper than 30°) marked.
+      const trace = (a: Piece) => {
+        const len = a.local.getTotalLength()
+        const n = Math.max(2, Math.ceil(len / 2))
+        const pts = Array.from({ length: n + 1 }, (_, i) => a.local.getPointAtLength((len * i) / n).matrixTransform(a.ctm))
+        const corners: DOMPoint[] = []
+        for (let i = 1; i < n; i++) {
+          const a1 = Math.atan2(pts[i].y - pts[i - 1].y, pts[i].x - pts[i - 1].x)
+          const a2 = Math.atan2(pts[i + 1].y - pts[i].y, pts[i + 1].x - pts[i].x)
+          let turn = Math.abs(a2 - a1)
+          if (turn > Math.PI) turn = 2 * Math.PI - turn
+          if (turn > Math.PI / 6) corners.push(pts[i])
+        }
+        return { pts, corners, step: len / n }
+      }
+      const traces = new Map<Piece, ReturnType<typeof trace>>()
+      const traced = (a: Piece) => traces.get(a) ?? traces.set(a, trace(a)).get(a)!
+      const visible = (l: Piece, p: DOMPoint) => {
+        // Off the frame (not on screen), or hidden: inside a shape that drifts with the light or is in front of it.
+        if (p.y >= 897 || p.y <= 3 || p.x <= 3 || p.x >= 1597) return false
+        const lvl = order.indexOf(motion[l.layer])
+        return !pieces.some((c) => !isLight(c.layer) && order.indexOf(c.layer) >= lvl && [[0, 0], [touch, 0], [-touch, 0], [0, touch], [0, -touch]].every(([dx, dy]) => inside(c, p.x + dx, p.y + dy)))
+      }
+      for (const l of outlines) {
+        if (!isLight(l.layer) || l.outline) continue
+        const lt = traced(l)
+        if (lt.pts.length < 3) continue
+        const shown = lt.pts.map((p) => visible(l, p))
+        for (const q of outlines) {
+          if (isLight(q.layer) || q.layer === 'water' || q.layer === motion[l.layer]) continue
+          if (l.box.right < q.box.left - touch || q.box.right < l.box.left - touch || l.box.bottom < q.box.top - touch || q.box.bottom < l.box.top - touch) continue
+          const w = q.local.style.strokeWidth
+          q.local.style.strokeWidth = `${width(q)}px`
+          let run = 0
+          let best = 0
+          for (let i = 1; i < lt.pts.length; i++) {
+            const p = lt.pts[i]
+            const dx = Math.abs(p.x - lt.pts[i - 1].x)
+            const dy = Math.abs(p.y - lt.pts[i - 1].y)
+            const along = shown[i] && dy > 0.3 * dx && q.local.isPointInStroke(p.matrixTransform(q.ctm.inverse()))
+            run = along ? run + lt.step : 0
+            best = Math.max(best, run)
+          }
+          q.local.style.strokeWidth = w
+          // Corners of tiny shapes (a grass blade) are coincidences too.
+          const qc = q.box.width > 12 && q.box.height > 12 ? traced(q).corners : []
+          const shared = lt.corners.filter((c) => visible(l, c) && qc.some((k) => Math.hypot(k.x - c.x, k.y - c.y) <= touch))
+          if (best > edge || shared.length > 0) {
+            const why = best > edge ? `runs ${Math.round(best)} units along` : `shares the corner (${Math.round(shared[0].x)}, ${Math.round(shared[0].y)}) of`
+            out.push({ layer: l.layer, piece: `${l.label} ${why} ${q.layer}: ${q.label}`, rule: 'edge' })
+            break
+          }
+        }
+      }
+      // Rule 4: a point inside one shape of a path must be filled by the whole path.
+      for (const p of outlines) {
+        if (p.local === p.el || p.outline || (p.el.getAttribute('fill-rule') ?? getComputedStyle(p.el).fillRule) === 'evenodd') continue
+        const wholeCtm = p.ctm
+        const holes = pointsOf(p).filter(([x, y]) => !p.el.isPointInFill(new DOMPoint(x, y).matrixTransform(wholeCtm.inverse())))
+        if (holes.length > 0) out.push({ layer: p.layer, piece: `${p.label}: unfilled at (${Math.round(holes[0][0])}, ${Math.round(holes[0][1])}), a shape overlapping it winds the other way`, rule: 'hole' })
+      }
+      for (const p of outlines) if (p.local !== p.el) p.local.remove()
       return out
-    }, TOUCH)
+    }, [TOUCH, EDGE])
     expect(problems, problems.map((p) => `${p.rule} in ${p.layer}: ${p.piece}`).join('\n')).toEqual([])
   })
 }
