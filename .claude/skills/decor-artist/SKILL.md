@@ -55,6 +55,12 @@ enough.** Every mistake below was found by the keeper after a scene was called d
 - Nothing floats: walls go below the ground line, trees and stones are planted on the ridge
   (`ridgeAt`), chimneys, vents and finials start *inside* the roof or dome, a spar starts *on* its
   mast, a rope ends on what holds it.
+- Grass follows the ground: `grass(ridgeAt(…), seed)` with the same arguments as the ridge under it,
+  never a fixed height over a wavy ridge. Mark grass `data-ground="each"` and buildings standing on
+  the ground `data-ground` (the check tests their feet).
+- A foot rests on the ground in its own layer or in front, never on the scenery behind: look for a
+  thin pale strip under walls (a church stopping at 870 over ground dipping to 880, a station 10 units
+  above its curb).
 - Nothing is only partly supported: a tower's foot past the edge of its headland, a ladder leaning
   past the end of the shelves, a hook ending inside a roof. (The automatic check doesn't see these:
   your eyes must.)
@@ -98,9 +104,10 @@ enough.** Every mistake below was found by the keeper after a scene was called d
 
 ## The automatic check (`e2e/decors.spec.ts`)
 
-It runs four rules on every place, measured on the SVG geometry: lights touch a shape that drifts
-with them; no piece floats; no hard light edge lines up with a shape at another depth; no accidental
-holes from winding. It catches the gross mistakes and the regressions. It does **not** judge partial
+It runs five rules on every place, measured on screen at rest and at both ends of the drift: lights
+touch a shape that drifts with them; no piece floats; no hard light edge lines up with a shape at
+another depth (at rest); no accidental holes from winding (at rest); grounded shapes (`data-ground`)
+rest their foot on their layer or the one in front. It catches the gross mistakes and the regressions. It does **not** judge partial
 support, matching widths, readability or taste: those are the loop's job. When it flags something
 that is truly meant (a new floating creature), mark it `data-free` and say why in a comment. Never
 loosen a rule to make a scene pass.

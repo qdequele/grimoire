@@ -34,7 +34,10 @@ function Layer({ depth, children }: { depth: Depth; children: ReactNode }) {
  * Paths that cut holes on purpose (fill-rule evenodd), or whose look depends on being one element (a
  * gradient spanning all its shapes, transparency), are drawn as they are.
  */
-function P({ d, ...rest }: SVGProps<SVGPathElement>) {
+function P({ d, 'data-ground': ground, ...rest }: SVGProps<SVGPathElement> & { 'data-ground'?: boolean | 'each' }) {
+  // `data-ground`: this shape stands on the ground (its lowest edge must rest on something: the décor
+  // check, rule 5); `'each'`: every piece does (grass blades). Set on a group around the pieces.
+  if (ground !== undefined) return <g data-ground={ground === 'each' ? 'each' : ''}><P d={d} {...rest} /></g>
   const fill = typeof rest.fill === 'string' ? rest.fill : ''
   const whole = !d || rest.fillRule === 'evenodd' || rest.opacity !== undefined || fill.includes('url(') || fill === 'none'
   const shapes = whole ? [] : d.split(/(?=M)/).map((x) => x.trim()).filter(Boolean)
@@ -67,25 +70,42 @@ function rng(seed: number): () => number {
 const f = (n: number) => n.toFixed(1)
 
 /** Rolling ground or hills: a filled ridge line around `base`. */
-function ridge(base: number, amp: number, seed: number, step = 20): string {
+/** The height at x of the ridge drawn by `ridge` (same arguments): to plant grass, trees and stones on it. */
+function ridgeAt(base: number, amp: number, seed: number, step = 20): (x: number) => number {
   const r = rng(seed)
   const p = [r() * 6, r() * 6, r() * 6]
-  let d = `M-40 ${H} L-40 ${base}`
-  for (let x = -40; x <= W + 40; x += step) {
-    const y = base - amp * (0.5 * Math.sin(x / 260 + p[0]) + 0.3 * Math.sin(x / 97 + p[1]) + 0.2 * Math.sin(x / 41 + p[2]))
-    d += ` L${x} ${f(y)}`
+  const curve = (x: number) => base - amp * (0.5 * Math.sin(x / 260 + p[0]) + 0.3 * Math.sin(x / 97 + p[1]) + 0.2 * Math.sin(x / 41 + p[2]))
+  // The drawn ridge is a polyline through the curve every `step` units: follow the polyline, not the curve.
+  return (x) => {
+    const x0 = Math.floor((x + 40) / step) * step - 40
+    const t = (x - x0) / step
+    return curve(x0) * (1 - t) + curve(x0 + step) * t
   }
+}
+
+function ridge(base: number, amp: number, seed: number, step = 20): string {
+  const y = ridgeAt(base, amp, seed, step)
+  let d = `M-40 ${H} L-40 ${base}`
+  for (let x = -40; x <= W + 40; x += step) d += ` L${x} ${f(y(x))}`
   return `${d} L${W + 40} ${H} Z`
 }
 
 /** Tufts of grass along y: thin leaning blades (seeded), for the nearest ground. */
-function grass(y: number, seed: number, x1 = -40, x2 = W + 40, hMax = 26): string {
+/**
+ * Tufts of grass along the ground: `ground` is its height (a number for flat ground, or a ridge's
+ * `ridgeAt` for rolling ground). Each blade's foot is sunk a few units into the ground: planted on a
+ * straight line over a wavy ridge, blades stood on air wherever the ridge dipped. Draw with `data-ground`
+ * (e2e/decors.spec.ts checks that every blade's foot rests on something).
+ */
+function grass(ground: number | ((x: number) => number), seed: number, x1 = -40, x2 = W + 40, hMax = 26): string {
   const r = rng(seed)
+  const at = typeof ground === 'number' ? () => ground : ground
   let d = ''
   for (let x = x1; x < x2; x += 3 + r() * 7) {
     const h = hMax * (0.3 + r() * 0.7)
     const lean = (r() - 0.5) * h * 0.7
-    d += `M${f(x)} ${y + 2} L${f(x + 1.5 + lean)} ${f(y - h)} L${f(x + 3.5)} ${y + 2} Z `
+    const y = Math.min(H + 2, at(x + 1.75) + 4)
+    d += `M${f(x)} ${f(y)} L${f(x + 1.5 + lean)} ${f(y - 4 - h)} L${f(x + 3.5)} ${f(y)} Z `
   }
   return d
 }
@@ -297,19 +317,21 @@ const church: Draw = (id) => {
         <P d="M312 680 h7 v9 h-7 Z" fill="var(--lit)" className="scr-glow" opacity={0.7} />
       </Layer>
       <Layer depth="mid">
+        {/* walls go down below the ground line (it dips to ~880: stopping at 870 left a strip of the far
+            hills under the church) */}
         {/* the clerestory wall, set back behind the aisle */}
-        <P d="M692 870 V474 H1180 V870 Z" fill="var(--sil-back)" />
+        <P d="M692 900 V474 H1180 V900 Z" fill="var(--sil-back)" />
         {/* nave roof */}
         <P d="M684 478 L712 384 H1156 L1188 478 Z" />
         {/* aisle: wall and lean-to roof */}
-        <P d="M692 870 V724 H1180 V870 Z M688 728 L700 664 H1176 L1184 728 Z" />
+        <P data-ground d="M692 900 V724 H1180 V900 Z M688 728 L700 664 H1176 L1184 728 Z" />
         {/* buttresses: stepped piers rising into pinnacles above the aisle roof */}
-        <P d={piers.map((x) => `M${x - 14} 870 V780 l4 -10 V622 h20 V770 l4 10 V870 Z ${pinnacle(x, 624, 18, 60)}`).join(' ')} />
+        <P d={piers.map((x) => `M${x - 14} 900 V780 l4 -10 V622 h20 V770 l4 10 V900 Z ${pinnacle(x, 624, 18, 60)}`).join(' ')} />
         {/* the apse and its conical roof */}
-        <P d="M1176 870 V650 H1294 V870 Z M1170 654 Q1196 600 1235 568 Q1274 600 1300 654 Z" />
+        <P data-ground d="M1176 900 V650 H1294 V900 Z M1170 654 Q1196 600 1235 568 Q1274 600 1300 654 Z" />
         {/* tower: stages, string courses, corner buttresses, parapet and pinnacles */}
-        <P d="M548 870 V364 H692 V870 Z M542 604 h156 v10 h-156 Z M542 472 h156 v10 h-156 Z M538 364 h164 v-16 h-164 Z" />
-        <P d={`M520 870 V760 l10 -14 V604 h18 V870 Z ${pinnacle(546, 350, 16, 54)} ${pinnacle(694, 350, 16, 54)} M555 348 h10 v-12 h-10 Z M675 348 h10 v-12 h-10 Z`} />
+        <P data-ground d="M548 900 V364 H692 V900 Z M542 604 h156 v10 h-156 Z M542 472 h156 v10 h-156 Z M538 364 h164 v-16 h-164 Z" />
+        <P d={`M520 900 V760 l10 -14 V604 h18 V900 Z ${pinnacle(546, 350, 16, 54)} ${pinnacle(694, 350, 16, 54)} M555 348 h10 v-12 h-10 Z M675 348 h10 v-12 h-10 Z`} />
         {/* one merlon in each gap between a corner pinnacle and the spire: spaced from the parapet's end, a lone one stuck out on the left only */}
         {/* the spire and its cross */}
         <P d={`M566 352 L620 104 L674 352 Z ${cross(620, 108, 58)}`} />
@@ -318,7 +340,7 @@ const church: Draw = (id) => {
         <P d={[0, 1, 2, 3, 4].map((i) => `M584 ${412 + i * 9} h18 v3 h-18 Z M618 ${412 + i * 9} h18 v3 h-18 Z`).join(' ')} fill="var(--sil-back)" />
         {/* the buttresses' and pinnacles' faces turned from the moon, in shadow (without them the pinnacles,
             as dark as the wall behind, showed only as their moonlit edge: a stroke floating on the wall) */}
-        <P d={piers.map((x) => `M${x - 14} 870 V780 l4 -10 V622 h7 V870 Z M${x - 9} 624 L${x} 564 L${x} 624 Z`).join(' ')} fill="var(--sil-near)" opacity={0.55} />
+        <P d={piers.map((x) => `M${x - 14} 900 V780 l4 -10 V622 h7 V900 Z M${x - 9} 624 L${x} 564 L${x} 624 Z`).join(' ')} fill="var(--sil-near)" opacity={0.55} />
         {/* moonlight on the edges facing the moon */}
         <g className="scr-rim" strokeWidth={2}>
           <path d="M620 108 L673.1 348 M1156 384 L1188 478 M712 384 H1156 M1235 568 Q1274 600 1300 654 M700 664 H1176 M538 348 H702" />
@@ -342,14 +364,14 @@ const church: Draw = (id) => {
           <circle cx={620} cy={530} r={30} strokeWidth={4} />
         </g>
         {/* light spilling from the door and the aisle windows onto the ground */}
-        <P d="M596 870 H644 L720 900 H520 Z" fill={`url(#${id}-ray)`} />
+        <P d="M596 900 H644 L720 900 H520 Z" fill={`url(#${id}-ray)`} />
         <P d={bays.map((c) => `M${c - 17} 872 h34 l14 28 h-62 Z`).join(' ')} fill={`url(#${id}-ray)`} opacity={0.6} />
       </Layer>
       <Layer depth="near">
         <P d={`${stone(110, 904, 62, 126)} ${cross(220, 904, 160)} ${stone(325, 904, 44, 78)} ${stone(400, 904, 30, 52)} ${stone(1250, 904, 52, 96)} ${cross(1160, 904, 112)} ${stone(1340, 904, 36, 60)}`} />
         <BareTree x={1450} base={904} h={640} seed={13} lean={-0.08} />
         <P d={ridge(892, 8, 14)} />
-        <P d={grass(892, 16)} />
+        <P d={grass(ridgeAt(892, 8, 14), 16)} data-ground="each" />
       </Layer>
     </>
   )
@@ -407,7 +429,7 @@ const graveyard: Draw = (id) => {
         <P d="M1010 800 H1150 L1240 904 H920 Z" fill="var(--sil-back)" opacity={0.75} />
         {midStones}
         {/* the mausoleum: steps, walls, pilasters, pediment, urns, a dark door */}
-        <P d="M980 800 V788 H1180 V800 Z M992 788 V776 H1168 V788 Z M1004 776 V764 H1156 V776 Z" />
+        <P data-ground d="M980 800 V788 H1180 V800 Z M992 788 V776 H1168 V788 Z M1004 776 V764 H1156 V776 Z" />
         <P d="M1014 766 V610 H1146 V766 Z M1000 612 H1160 V588 H1000 Z M994 590 L1080 532 L1166 590 Z" />
         <P d="M1072 534 a8 8 0 1 1 16 0 l4 10 h-24 Z M994 588 a6 6 0 1 1 12 0 l3 8 h-18 Z M1154 588 a6 6 0 1 1 12 0 l3 8 h-18 Z" />
         <P d="M1054 766 V698 A26 26 0 0 1 1106 698 V766 Z" fill="var(--sil-near)" />
@@ -432,7 +454,7 @@ const graveyard: Draw = (id) => {
         <P d={crow(973, 904 - 96 - 56, 1.1)} />
         {/* a lantern on a bracket, on the right gate pillar */}
         <P d="M1202 780 h26 v3 h-26 Z M1219 783 h6 v4 h-6 Z M1214 792 h16 l-3 -6 h-10 Z M1214 816 h16 v5 h-16 Z M1215 792 h2 v24 h-2 Z M1227 792 h2 v24 h-2 Z" />
-        <P d={grass(904, 28)} />
+        <P d={grass(904, 28)} data-ground="each" />
       </Layer>
       <Layer depth="pulse">
         <g className="scr-glow">
@@ -639,7 +661,7 @@ const castle: Draw = (id) => {
       </Layer>
       <Layer depth="near">
         <P d={ridge(884, 22, 32)} />
-        <P d={grass(884, 35)} />
+        <P d={grass(ridgeAt(884, 22, 32), 35)} data-ground="each" />
         <BareTree x={150} base={904} h={560} seed={33} lean={0.15} />
         <BareTree x={1500} base={904} h={380} seed={34} lean={-0.2} />
       </Layer>
@@ -682,9 +704,9 @@ const manor: Draw = (id) => {
       <Layer depth="mid">
         <P d={ridge(830, 10, 43)} />
         {/* the gabled wing and its bay window */}
-        <P d="M370 836 V640 H530 V836 Z M358 644 L450 560 L542 644 Z M404 836 V712 L416 700 H484 L496 712 V836 Z M400 712 L420 690 H480 L500 712 Z" />
+        <P data-ground d="M370 836 V640 H530 V836 Z M358 644 L450 560 L542 644 Z M404 836 V712 L416 700 H484 L496 712 V836 Z M400 712 L420 690 H480 L500 712 Z" />
         {/* main block and mansard roof with its dormers and cresting */}
-        <P d={`M520 836 V566 H1180 V836 Z M508 570 L530 478 H1170 L1192 570 Z ${cresting(530, 1170, 478)}`} />
+        <P data-ground d={`M520 836 V566 H1180 V836 Z M508 570 L530 478 H1170 L1192 570 Z ${cresting(530, 1170, 478)}`} />
         <P d={dormers.map((x) => `M${x} 544 V500 L${x + 15} 482 L${x + 30} 500 V544 Z`).join(' ')} />
         {/* chimneys */}
         <P d="M590 482 V404 h46 v78 Z M584 408 h58 v-10 h-58 Z M596 398 v-10 h10 v10 Z M618 398 v-14 h10 v14 Z M1076 482 V396 h46 v86 Z M1070 400 h58 v-10 h-58 Z M1082 390 v-12 h10 v12 Z M1104 390 v-10 h10 v10 Z" />
@@ -726,7 +748,7 @@ const manor: Draw = (id) => {
         <P d={`${Array.from({ length: 9 }, (_, i) => `M${-40 + i * 80} 900 a${44 + (i % 3) * 8} ${34 + (i % 2) * 10} 0 0 1 ${96} 0 Z`).join(' ')} ${Array.from({ length: 8 }, (_, i) => `M${980 + i * 80} 900 a${44 + (i % 3) * 8} ${34 + (i % 2) * 10} 0 0 1 ${96} 0 Z`).join(' ')}`} />
         <BareTree x={1420} base={904} h={640} seed={44} lean={-0.12} />
         <Fence y={904} h={84} gateFrom={760} gateTo={920} />
-        <P d={grass(904, 47)} />
+        <P d={grass(904, 47)} data-ground="each" />
       </Layer>
       <Layer depth="pulse-mid">
         {/* the lantern by the door, on the wall: it drifts with the wall (mid), flickering */}
@@ -904,9 +926,10 @@ const police: Draw = (id) => {
         <P d={skyLit} fill="var(--lit)" className="scr-glow" opacity={0.35} />
       </Layer>
       <Layer depth="mid">
-        {/* the station: rusticated ground floor (its stone courses stop at the portico: they showed through
+        {/* the station, down behind the curb (it stopped 10 units above it, the city showing through the gap):
+            rusticated ground floor (its stone courses stop at the portico: they showed through
             its dark recess, behind the columns), upper floors, cornice with dentils, attic and clock */}
-        <P d="M396 862 V640 H1204 V862 Z M416 640 V360 H1184 V640 Z M386 364 H1214 V334 H386 Z M408 334 V304 H1192 V334 Z M690 304 V236 H910 V304 Z M680 240 H920 v-14 H680 Z" />
+        <P data-ground d="M396 876 V640 H1204 V876 Z M416 640 V360 H1184 V640 Z M386 364 H1214 V334 H386 Z M408 334 V304 H1192 V334 Z M690 304 V236 H910 V304 Z M680 240 H920 v-14 H680 Z" />
         <P d={Array.from({ length: 58 }, (_, i) => `M${394 + i * 14.3} 364 h7 v9 h-7 Z`).join(' ')} />
         <P d={`${courses} M436 360 h12 v280 h-12 Z M672 360 h12 v280 h-12 Z M916 360 h12 v280 h-12 Z M1152 360 h12 v280 h-12 Z`} fill="var(--sil-back)" opacity={0.6} />
         {/* the flag on its pole, hanging limp */}
@@ -1062,7 +1085,7 @@ const forest: Draw = (id) => {
         {/* a fallen log, ferns */}
         <P d="M300 904 L330 858 Q340 846 360 848 L620 872 Q640 876 638 892 L636 904 Z M354 850 a14 22 0 1 0 1 0 Z" />
         <P d={`${fern(280, 900, 120, -1)} ${fern(280, 900, 110, 1)} ${fern(1350, 902, 130, -1)} ${fern(1350, 902, 110, 1)} ${fern(700, 904, 70, 1)}`} />
-        <P d={grass(888, 75)} />
+        <P d={grass(ridgeAt(884, 18, 74), 75)} data-ground="each" />
       </Layer>
     </>
   )
@@ -1132,7 +1155,7 @@ const harbour: Draw = (id) => {
         {/* the stone quay the warehouses stand on, down into the water (they stood on the sea) */}
         <P d="M-40 900 V786 H534 V900 Z" />
         {/* warehouses: a tall one with loading doors, a broad one, a low shed */}
-        <P d="M-40 790 V420 L50 360 L140 420 V790 Z M150 790 V430 L280 350 L410 430 V790 Z M340 400 V350 h20 v50 Z M400 790 V560 L470 520 L540 560 V790 Z" />
+        <P data-ground d="M-40 790 V420 L50 360 L140 420 V790 Z M150 790 V430 L280 350 L410 430 V790 Z M340 400 V350 h20 v50 Z M400 790 V560 L470 520 L540 560 V790 Z" />
         {/* a vent housing on the ridge, its foot inside the roof */}
         <P d="M38 378 V350 L50 341 L62 350 V378 Z" />
         <P d="M22 460 h56 v70 h-56 Z M22 570 h56 v70 h-56 Z M22 680 h56 v90 h-56 Z M430 680 h80 v110 h-80 Z" fill="var(--sil-near)" opacity={0.6} />

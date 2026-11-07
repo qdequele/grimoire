@@ -229,6 +229,10 @@
   width: 106%;
   height: 100%;
   will-change: transform;
+  /* The near layers' drift also zooms 2%: anchored at the bottom, like the layers themselves, so the ground
+     stays where it is (zooming about the centre pushed the near ground ~9 units down, opening a gap under
+     the buildings and grass standing on it). */
+  transform-origin: 50% 100%;
   animation: scr-par-mid 70s ease-in-out infinite alternate;
 }
 .scr-par-far { color: var(--sil-far); animation-name: scr-par-far; animation-duration: 90s; }

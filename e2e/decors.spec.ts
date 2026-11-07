@@ -13,6 +13,17 @@
 //    shows, its outline runs along an upright or sloped edge of a shape in a differently drifting layer
 //    for more than EDGE units, or shares a corner with one. (The drift is sideways: a shared horizontal
 //    edge stays lined up.)
+// 5. Feet on the ground. A shape marked `data-ground` (buildings, grass) rests its lowest edge on a
+//    shape of its own layer or of the layer in front (the ground covering its foot), or on the frame's
+//    bottom: never on the scenery behind. A police station stopped 10 units above the curb, the city
+//    showing under it; grass planted on a straight line over a wavy ridge stood on air.
+//
+// Measured in screen space (a 1600×900 viewport), in three states: the layers at rest, and at the start
+// and end of their drift (their slide and the near layers' zoom). Rules 1, 2 and 5 run in all three
+// (measured at rest only, the check missed a near ground pushed 9 units down by the zoom). Rules 3 and
+// 4 run at rest: they are about what was drawn to line up, not about edges crossing for a moment as
+// the layers slide past each other.
+//
 // 4. No accidental holes. A path holding several shapes fills their overlaps only when they wind the
 //    same way: under the default nonzero rule, a desk top drawn anticlockwise over its clockwise body
 //    leaves the band where they overlap empty, and the books behind show through. (Paths with
@@ -28,13 +39,34 @@ const TOUCH = 3
 // A shared edge shorter than this is a coincidence nobody sees (a faint shaft parallel to a far fir for a few units).
 const EDGE = 96
 
-interface Problem { layer: string; piece: string; rule: 'light' | 'floating' | 'edge' | 'hole' }
+interface Problem { layer: string; piece: string; rule: 'light' | 'floating' | 'edge' | 'hole' | 'ground' }
 
 for (const place of PLACES) {
-  test(`décor ${place}: lights on their own depth, nothing floating, no edge across depths, no holes`, async ({ page }) => {
+  test(`décor ${place}: lights on their own depth, nothing floating, no edge across depths, no holes, feet on the ground`, async ({ page }) => {
+    await page.setViewportSize({ width: 1600, height: 900 })
     await page.goto(`/dev/places?place=${place}&time=night`)
     await page.locator('.scr-place svg.scr-par').first().waitFor()
-    const problems: Problem[] = await page.evaluate(([touch, edge]) => {
+    const all: Problem[] = []
+    for (const state of ['rest', 'drift start', 'drift end'] as const) {
+    // At rest: no drift at all. At a drift end: loops paused there. One-off animations (the fade-in) finished.
+    await page.evaluate((st) => {
+      document.getElementById('decor-rest')?.remove()
+      if (st === 'rest') {
+        const style = document.createElement('style')
+        style.id = 'decor-rest'
+        style.textContent = '.scr-par { animation: none !important; }'
+        document.head.append(style)
+      }
+      for (const a of document.getAnimations()) {
+        const timing = a.effect!.getTiming()
+        if (timing.iterations !== Infinity) a.finish()
+        else {
+          a.pause()
+          if (((a as CSSAnimation).animationName ?? '').startsWith('scr-par')) a.currentTime = st === 'drift end' ? Number(timing.duration) - 1 : 0
+        }
+      }
+    }, state)
+    const problems: Problem[] = await page.evaluate(([touch, edge, atRest]) => {
       const depthOf = (svg: SVGSVGElement) => [...svg.classList].find((c) => c.startsWith('scr-par-'))!.slice(8)
       const layers = [...document.querySelectorAll<SVGSVGElement>('.scr-place svg.scr-par')]
       const harbour = document.querySelector('.scr-place')?.getAttribute('data-place') === 'harbour'
@@ -65,9 +97,8 @@ for (const place of PLACES) {
           const glowing = glow.test(fill)
           // Each subpath of a path is a piece of its own (a path often holds many windows or stones).
           const subs = el.tagName === 'path' ? (el.getAttribute('d') ?? '').split(/(?=M)/).map((s) => s.trim()).filter(Boolean) : [null]
-          // The element's user space → the frame's (both layers share the 1600×900 viewBox).
-          const ref = svg.getCTM()!.inverse()
-          const ctm = ref.multiply(el.getCTM()!)
+          // The element's user space → the screen, with the layer's drift (CSS transform) included.
+          const ctm = el.getScreenCTM()!
           subs.forEach((d, k) => {
             let local = el
             if (d !== null && subs.length > 1) {
@@ -127,7 +158,7 @@ for (const place of PLACES) {
         return false
       }
 
-      const out: Array<{ layer: string; piece: string; rule: 'light' | 'floating' | 'edge' | 'hole' }> = []
+      const out: Array<{ layer: string; piece: string; rule: 'light' | 'floating' | 'edge' | 'hole' | 'ground' }> = []
       // Rule 1: lights, propagated (a light touching a held light is held too).
       const lights = pieces.filter((p) => isLight(p.layer))
       const held = new Set<Piece>()
@@ -147,13 +178,13 @@ for (const place of PLACES) {
       // Rule 2: silhouettes. The frame's bottom edge is the ground for the farthest things.
       for (const p of pieces) {
         if (isLight(p.layer)) continue
-        if (p.box.bottom >= 896 || p.box.top <= 2 || p.box.left <= -38 || p.box.right >= 1638) continue
+        if (p.box.bottom >= 896 || p.box.top <= 2 || p.box.left <= 2 || p.box.right >= 1598) continue
         const lvl = rank(p.layer)
         // Held by a shape of its layer or the one behind, or resting on a light that drifts with it (a lamp's cap on its glass).
         const ok = pieces.some((q) => q !== p && (isLight(q.layer) ? held.has(q) && motion[q.layer] === motion[p.layer] : rank(q.layer) <= lvl && rank(q.layer) >= lvl - 1) && touches(p, q))
         if (!ok) out.push({ layer: p.layer, piece: p.label, rule: 'floating' })
       }
-      // Rule 3: a light's hard edge must not line up with a shape that drifts differently. The drift is
+      // Rule 3 (at rest): a light's hard edge must not line up with a shape that drifts differently. The drift is
       // sideways, so a shared horizontal edge stays lined up; what breaks is a shared upright or sloped
       // edge (a shaft's side down a window's jamb) or a shared corner (a spill's corner on a sill's).
       const width = (q: Piece) => (q.outline ? parseFloat(getComputedStyle(q.el).strokeWidth) || 1 : 0) + 2 * touch
@@ -180,7 +211,7 @@ for (const place of PLACES) {
         const lvl = rank(l.layer)
         return !pieces.some((c) => !isLight(c.layer) && rank(c.layer) >= lvl && [[0, 0], [touch, 0], [-touch, 0], [0, touch], [0, -touch]].every(([dx, dy]) => inside(c, p.x + dx, p.y + dy)))
       }
-      for (const l of outlines) {
+      for (const l of atRest ? outlines : []) {
         if (!isLight(l.layer) || l.outline) continue
         const lt = traced(l)
         if (lt.pts.length < 3) continue
@@ -211,16 +242,39 @@ for (const place of PLACES) {
           }
         }
       }
-      // Rule 4: a point inside one shape of a path must be filled by the whole path.
-      for (const p of outlines) {
+      // Rule 4 (at rest): a point inside one shape of a path must be filled by the whole path.
+      for (const p of atRest ? outlines : []) {
         if (p.local === p.el || p.outline || (p.el.getAttribute('fill-rule') ?? getComputedStyle(p.el).fillRule) === 'evenodd') continue
         const wholeCtm = p.ctm
         const holes = pointsOf(p).filter(([x, y]) => !p.el.isPointInFill(new DOMPoint(x, y).matrixTransform(wholeCtm.inverse())))
         if (holes.length > 0) out.push({ layer: p.layer, piece: `${p.label}: unfilled at (${Math.round(holes[0][0])}, ${Math.round(holes[0][1])}), a shape overlapping it winds the other way`, rule: 'hole' })
       }
+      // Rule 5: grounded shapes rest their foot on something in their own layer or the one in front (the
+      // ground covering a wall's foot), never on the scenery behind. `data-ground="each"`: every piece
+      // (grass blades, which can't stand on each other); otherwise the group's lowest pieces (a wall, not
+      // the roof resting on it).
+      const groupOf = (q: Piece) => q.el.closest('[data-ground]')
+      const bottoms = new Map<Element, number>()
+      for (const q of pieces) {
+        const g = groupOf(q)
+        if (g) bottoms.set(g, Math.max(bottoms.get(g) ?? -Infinity, q.box.bottom))
+      }
+      for (const p of pieces) {
+        const g = groupOf(p)
+        if (!g) continue
+        if (g.getAttribute('data-ground') !== 'each' && p.box.bottom < bottoms.get(g)! - 4) continue
+        const feet = pointsOf(p).filter(([, y]) => y >= p.box.bottom - 2)
+        const lvl = rank(p.layer)
+        const loose = feet.filter(([x, y]) => y + touch < 898 && !pieces.some((q) => groupOf(q) !== g && !isLight(q.layer) && rank(q.layer) >= lvl && rank(q.layer) <= lvl + 1 && inside(q, x, y + touch)))
+        if (loose.length > 0) out.push({ layer: p.layer, piece: `${p.label}: its foot at (${Math.round(loose[0][0])}, ${Math.round(loose[0][1])}) stands on nothing`, rule: 'ground' })
+      }
       for (const p of outlines) if (p.local !== p.el) p.local.remove()
       return out
-    }, [TOUCH, EDGE])
-    expect(problems, problems.map((p) => `${p.rule} in ${p.layer}: ${p.piece}`).join('\n')).toEqual([])
+    }, [TOUCH, EDGE, state === 'rest'] as const)
+    for (const p of problems) {
+      if (!all.some((q) => q.piece.startsWith(p.piece) && q.rule === p.rule)) all.push({ ...p, piece: `${p.piece} [${state}]` })
+    }
+    }
+    expect(all, all.map((p) => `${p.rule} in ${p.layer}: ${p.piece}`).join('\n')).toEqual([])
   })
 }
