@@ -102,9 +102,10 @@ describe('mcp: sign-in and discovery', () => {
 
   it('lists the tools, with instructions for the model', async () => {
     const { tools } = await alice.mcp.listTools()
-    expect(tools.map((t) => t.name)).toEqual(['grimoire_guide', 'save_outline', 'write_scenes', 'list_my_stories', 'get_story', 'edit_story'])
+    expect(tools.map((t) => t.name)).toEqual(['grimoire_guide', 'save_outline', 'write_scenes', 'list_my_stories', 'get_story', 'edit_story', 'save_image'])
     expect(tools.find((t) => t.name === 'get_story')!.annotations).toMatchObject({ readOnlyHint: true })
     expect(tools.find((t) => t.name === 'edit_story')!.annotations).toMatchObject({ readOnlyHint: false, destructiveHint: true })
+    expect(tools.find((t) => t.name === 'save_image')!.annotations).toMatchObject({ readOnlyHint: false, destructiveHint: true })
     expect(alice.mcp.getInstructions()).toContain('grimoire_guide')
     expect(alice.mcp.getServerVersion()).toMatchObject({ name: 'grimoire' })
   })
@@ -112,6 +113,7 @@ describe('mcp: sign-in and discovery', () => {
   it('serves the guide', async () => {
     expect(await call(alice, 'grimoire_guide', { topic: 'workflow' })).toContain('save_outline')
     expect(await call(alice, 'grimoire_guide', { topic: 'rules' })).toContain('Originality')
+    expect(await call(alice, 'grimoire_guide', { topic: 'images' })).toContain('save_image')
   })
 })
 
@@ -231,12 +233,84 @@ describe('mcp: creating a story', () => {
       expect(count).toBe(1)
     })
 
+    it('draws pictures: stores a safe SVG, attaches it, replaces and removes it', async () => {
+      const night = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 900"><!-- sky --><rect width="1600" height="900" fill="#0b1020"/></svg>'
+      const folder = `${alice.id}/${storyId}`
+      const read = async (path: string) => {
+        const { data, error } = await alice.db.storage.from('story-packs').download(`${folder}/${path}`)
+        return error ? null : await data!.text()
+      }
+      const row = async () => (await alice.db.from('stories').select('content, pack_files, updated_at').eq('id', storyId).single()).data!
+      let { version } = await call(alice, 'get_story', { storyId })
+
+      // A scene background.
+      const saved = await call(alice, 'save_image', { storyId, version, name: 'mill-night.svg', svg: night, attach: { scene: 'mill' } })
+      expect(saved).toMatchObject({ storyId, path: 'images/mill-night.svg', attachedTo: { scene: 'mill' }, replaced: false, version: expect.any(String) })
+      expect(saved.version).not.toBe(version)
+      version = saved.version
+      expect(await read('images/mill-night.svg')).toBe('<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="900" viewBox="0 0 1600 900"><rect width="1600" height="900" fill="#0b1020"/></svg>\n')
+      let r = await row()
+      expect(r.pack_files).toEqual(['images/mill-night.svg'])
+      const mill = () => (r.content as { acts: Array<{ scenes: Array<{ id: string; screen?: unknown }> }> }).acts.flatMap((a) => a.scenes).find((x) => x.id === 'mill')!
+      expect(mill().screen).toEqual({ image: 'images/mill-night.svg' })
+      expect(JSON.parse((await read('story.json'))!).acts[0].scenes[1].screen).toEqual({ image: 'images/mill-night.svg' })
+      // edit_story set_screen keeps the picture; get_story says where pictures are used.
+      const screen = await call(alice, 'edit_story', { storyId, version, ops: [{ op: 'set_screen', id: 'mill', screen: { preset: 'storm' } }] })
+      version = screen.version
+      const sum = await call(alice, 'get_story', { storyId })
+      expect(sum.images).toEqual([{ path: 'images/mill-night.svg', scenes: ['mill'], handouts: [] }])
+
+      // A handout picture: the handout must exist first.
+      expect((await call(alice, 'save_image', { storyId, version, name: 'letter.svg', svg: night, attach: { handout: 'letter' } })).error).toMatch(/^not_found: .*put_handout/)
+      expect(await read('images/letter.svg')).toBeNull()
+      version = (await call(alice, 'edit_story', { storyId, version, ops: [{ op: 'put_handout', handout: { id: 'letter', title: 'A letter', text: 'Come at once.' } }] })).version
+      const letter = await call(alice, 'save_image', { storyId, version, name: 'letter.svg', svg: night.replace('#0b1020', '#e8dcc0'), attach: { handout: 'letter' } })
+      version = letter.version
+      r = await row()
+      expect((r.content as { handouts: unknown[] }).handouts).toEqual([{ id: 'letter', title: 'A letter', text: 'Come at once.', image: 'images/letter.svg' }])
+      expect(r.pack_files).toEqual(['images/mill-night.svg', 'images/letter.svg'])
+
+      // Unsafe SVG, a stale version or a bad name: refused, nothing stored.
+      const evil = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 10 10" onload="alert(document.domain)"><script>alert(1)</script></svg>'
+      expect((await call(alice, 'save_image', { storyId, version, name: 'evil.svg', svg: evil })).error).toMatch(/^unsafe_svg: .*event handlers/)
+      expect((await call(alice, 'save_image', { storyId, version, name: 'evil.svg', svg: night.replace('<rect', '<image href="https://evil.example/x.png"/><rect') })).error).toMatch(/^unsafe_svg/)
+      expect((await call(alice, 'save_image', { storyId, version: saved.version, name: 'late.svg', svg: night })).error).toMatch(/^conflict/)
+      expect((await call(alice, 'save_image', { storyId, version, name: '../story.json', svg: night })).error).toMatch(/^bad_request/)
+      expect(await read('images/evil.svg')).toBeNull()
+      expect(await read('images/late.svg')).toBeNull()
+      expect((await row()).updated_at).toBe(version)
+
+      // Replace (same name), reuse a stored picture elsewhere, then remove it everywhere.
+      const replaced = await call(alice, 'save_image', { storyId, version, name: 'mill-night.svg', svg: night.replace('#0b1020', '#101010') })
+      expect(replaced).toMatchObject({ replaced: true, attachedTo: null })
+      expect(await read('images/mill-night.svg')).toContain('#101010')
+      const reused = await call(alice, 'save_image', { storyId, version: replaced.version, name: 'mill-night.svg', attach: { scene: 'cellar' } })
+      expect(reused.images).toEqual([
+        { path: 'images/mill-night.svg', scenes: ['mill', 'cellar'], handouts: [] },
+        { path: 'images/letter.svg', scenes: [], handouts: ['letter'] },
+      ])
+      expect((await call(alice, 'save_image', { storyId, version: reused.version, name: 'nothing.svg', attach: { scene: 'mill' } })).error).toMatch(/^not_found/)
+      const removed = await call(alice, 'save_image', { storyId, version: reused.version, name: 'mill-night.svg', remove: true })
+      expect(removed).toMatchObject({ removed: true, images: [{ path: 'images/letter.svg', scenes: [], handouts: ['letter'] }] })
+      expect(await read('images/mill-night.svg')).toBeNull()
+      r = await row()
+      expect(r.pack_files).toEqual(['images/letter.svg'])
+      expect(mill().screen).toEqual({ preset: 'storm' })
+
+      // Another keeper can't touch it; every call counted as an edit, pictures apart.
+      expect((await call(bob, 'save_image', { storyId, version: removed.version, name: 'x.svg', svg: night })).error).toMatch(/^not_found/)
+      const { data: usage } = await service.from('ai_usage').select('input_tokens').eq('owner_id', alice.id).eq('kind', 'mcp-edit')
+      expect(usage!.filter((u) => u.input_tokens > 0)).toHaveLength(3)
+    })
+
     it('does not edit a story a creation is still writing', async () => {
       const { creationId: id } = await call(alice, 'save_outline', { brief, outline: FAKE_OUTLINE })
       const { storyId: busy } = await call(alice, 'write_scenes', { creationId: id, draft: draftFor([['act-1', 'arrival']]) })
       const { version, beingWrittenBy } = await call(alice, 'get_story', { storyId: busy })
       expect(beingWrittenBy).toBe(id)
       expect((await call(alice, 'edit_story', { storyId: busy, version, ops: [{ op: 'set_info', info: { title: 'Y' } }] })).error).toMatch(/^busy/)
+      const svg = '<svg viewBox="0 0 16 9"><rect width="16" height="9"/></svg>'
+      expect((await call(alice, 'save_image', { storyId: busy, version, name: 'busy.svg', svg })).error).toMatch(/^busy/)
       const list = await call(alice, 'list_my_stories')
       expect(list.unfinishedCreations).toEqual([expect.objectContaining({ creationId: id, status: 'writing', storyId: busy })])
     })

@@ -67,6 +67,14 @@ const APP_UI_EN: Record<string, string> = {
   Affichage: 'Display',
   'joueurs, chrono, fin du scénario': 'players, timer, end of the scenario',
   'thème et langue': 'theme and language',
+  // Scene flow choices, documents, investigator sheets (scripts/engine-ui)
+  'Selon le choix des joueurs': "Depending on the players' choice",
+  Documents: 'Documents',
+  Document: 'Document',
+  "Montrer sur l'écran": 'Show on the screen',
+  Fermer: 'Close',
+  'Fiche de présentation': 'Investigator sheet',
+  "Document montré sur l'écran d'ambiance.": 'Document shown on the ambiance screen.',
 }
 const I18N: EngineGlobals['I18N'] = {
   ...(PRIVATE.I18N ?? FALLBACK.I18N),
@@ -99,6 +107,7 @@ export function engineGlobals(story: StoryForEngine): EngineGlobals {
     WHO_NOTE: e.WHO_NOTE,
     RITUAL: e.RITUAL,
     NPC_WORDS: e.NPC_WORDS,
+    HANDOUTS: e.HANDOUTS,
   }
 }
 

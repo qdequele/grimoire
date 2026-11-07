@@ -14,7 +14,7 @@ import { cn } from '@/lib/utils'
 import { findScene, isPlace, isPreset, isTime, LOOKS, PLACE_LABEL, PLACES, PRESET_LABEL, PRESETS, TIME_LABEL, TIMES } from '@/screen/ambiance'
 import type { ImageRef, ScreenHandout } from '@/screen/state'
 import {
-  handoutImagePath, listUploads, screenUrl, uploadPicture, useCreateScreenLink, useReplaceScreenLink, useScreenLink,
+  listUploads, packImage, storyHandout, screenUrl, uploadPicture, useCreateScreenLink, useReplaceScreenLink, useScreenLink,
   type ScreenControl, type ScreenStory,
 } from './screen'
 
@@ -25,20 +25,17 @@ const uploadsKey = (gameId: string) => ['screen-uploads', gameId] as const
 
 /** The story's handouts and pictures, this scene's first. Pictures the pack doesn't have are left out. */
 function storyItems(story: ScreenStory, sceneId: string | undefined): { scene: Item[]; other: Item[] } {
-  const files = new Set(story.files)
-  const ref = (p: string | undefined): ImageRef | null => (p && files.has(p) ? { bucket: 'story-packs', path: `${story.folder}/${p}` } : null)
   const scene = findScene(story.content, sceneId)
   const inScene = new Set(scene?.handouts ?? [])
   const out = { scene: [] as Item[], other: [] as Item[] }
   for (const h of story.content.handouts ?? []) {
-    const image = ref(handoutImagePath(h.image))
-    if (!image && !h.text) continue
-    const item = { label: h.title, handout: { key: `handout:${h.id}`, title: h.title, ...(h.text ? { text: h.text } : {}), image } }
-    ;(inScene.has(h.id) || (sceneId && h.scene === sceneId) ? out.scene : out.other).push(item)
+    const handout = storyHandout(story, h.id)
+    if (!handout) continue
+    ;(inScene.has(h.id) || (sceneId && h.scene === sceneId) ? out.scene : out.other).push({ label: h.title, handout })
   }
   for (const s of story.content.acts.flatMap((a) => a.scenes)) {
     for (const img of s.images ?? []) {
-      const image = ref(img.src)
+      const image = packImage(story, img.src)
       if (!image) continue
       const title = img.caption ?? ''
       ;(s.id === sceneId ? out.scene : out.other).push({ label: title || img.src.replace(/^images\//, ''), handout: { key: `image:${img.src}`, title, image } })

@@ -836,6 +836,17 @@ export const EN: Record<string, string> = {
   'Cette image est trop lourde.': 'This picture is too large.',
   "Cette image n'a pas pu être lue.": 'This picture couldn’t be read.',
   "Impossible d'enregistrer la photo : {error}": 'Couldn’t save the photo: {error}',
+  // Investigator presentation sheet
+  "Fiche d'investigateur": 'Investigator sheet',
+  'actuelle {n}': 'now {n}',
+  'Progression': 'Progress',
+  'Améliorées en jeu': 'Improved in play',
+  'Cochées, à améliorer': 'Ticked, to improve',
+  'Investigateur introuvable.': 'Investigator not found.',
+  'Modifier': 'Edit',
+  // Game screen: the ambiance screen preview beside a scene's sounds
+  'Image de la scène': 'Scene picture',
+  'Écran : {what}': 'Screen: {what}',
 
   // ---------------------------------------------------------------- landing page (signed-out "/")
   'Grimoire · Le compagnon du gardien': 'Grimoire · The keeper’s companion',

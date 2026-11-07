@@ -4,6 +4,7 @@ import { AppLayout, RequireAuth } from '@/AppLayout'
 import { AuthProvider } from '@/auth/auth'
 import { LoginPage } from '@/auth/LoginPage'
 import { OAuthConsentPage } from '@/auth/OAuthConsentPage'
+import { CharacterSheetPage } from '@/characters/CharacterSheetPage'
 import { CharactersPage } from '@/characters/CharactersPage'
 import { PlayersPage } from '@/characters/PlayersPage'
 import { CharacterWizardPage } from '@/characters/wizard/CharacterWizardPage'
@@ -63,6 +64,8 @@ const router = createBrowserRouter([
   { path: '/games/:id', element: <RequireAuth><GameRoute /></RequireAuth> },
   // Ambiance screen: a TV or tablet in the middle of the table, opened from the keeper's link (no account).
   { path: '/screen/:token', element: <ScreenPage /> },
+  // What the ambiance screen draws for a scene, small in the game screen (no account, query params only).
+  { path: '/screen-preview', lazy: () => import('@/screen/ScreenPreview').then((m) => ({ Component: m.ScreenPreview })) },
   // Dev only (never in a production build): the drawn décors, from query params.
   ...(import.meta.env.DEV
     ? [{ path: '/dev/places', lazy: () => import('@/screen/PlacesGallery').then((m) => ({ Component: m.PlacesGallery })) }]
@@ -109,7 +112,9 @@ const router = createBrowserRouter([
           { path: 'joueurs', element: <PlayersPage /> },
         ],
       },
-      { path: 'characters/:id', element: <CharacterWizardPage /> },
+      { path: 'characters/new', element: <CharacterWizardPage /> },
+      { path: 'characters/:id', element: <CharacterSheetPage /> },
+      { path: 'characters/:id/edit', element: <CharacterWizardPage /> },
       { path: 'settings', element: <SettingsPage /> },
       { path: 'marketplace', element: <Moved to="/stories" /> },
       { path: 'import', element: <Moved to="/stories/import" /> },

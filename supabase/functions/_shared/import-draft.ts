@@ -53,6 +53,8 @@ export interface DraftRoll {
 
 export interface DraftStep {
   title: string
+  /** One of several choices of the step before it: the choice ("If she burns the letters"), else "". */
+  branch: string
   text: string
   /** Zero or one roll (an array instead of an optional field). */
   roll: DraftRoll[]
@@ -167,6 +169,7 @@ export function importDraftSchema(sounds: { ambience: string[]; sfx: string[] })
   })
   const step = obj({
     title: str('What this step is, e.g. "Search the keeper\'s room".'),
+    branch: str('When the players can go several ways at this point: one step per choice right after the step that sets it up, each naming its choice here ("If she burns the letters"). Else "".'),
     text,
     roll: arr(roll, 'Zero or one roll for this step.'),
     success: text,
@@ -400,6 +403,7 @@ export function draftToStory(d: ImportDraft, meta: StoryMetaInput): Json {
             flow: s.flow.map((st) =>
               compact({
                 title: st.title,
+                branch: st.branch,
                 text: st.text,
                 roll: st.roll[0] ? toRoll(st.roll[0]) : undefined,
                 success: st.success,

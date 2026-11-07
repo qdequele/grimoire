@@ -6,7 +6,7 @@ import { supabase, type Tables } from '@/lib/supabase'
 import { findScene, sceneAmbiance, type StoryForScreen } from '@/screen/ambiance'
 import {
   imagesOf, INITIAL_SCREEN, sameScreen, screenReducer, toScreenScene,
-  type ImageRef, type ScreenAction, type ScreenScene, type ScreenState,
+  type ImageRef, type ScreenAction, type ScreenHandout, type ScreenScene, type ScreenState,
 } from '@/screen/state'
 import { packFolder } from '@/stories/packStorage'
 
@@ -109,6 +109,28 @@ export const screenStory = (story: { id: string; owner_id: string | null; pack_f
 export const handoutImagePath = (image: string | undefined): string | undefined =>
   image ? (image.startsWith('images/') ? image : `images/${image}`) : undefined
 
+/** A picture of the story pack, if the pack really has it. */
+export const packImage = (story: ScreenStory, path: string | undefined): ImageRef | null =>
+  path && story.files.includes(path) ? { bucket: 'story-packs', path: `${story.folder}/${path}` } : null
+
+/** A story document as the screen shows it; null if it has neither text nor a picture the pack has. */
+export function storyHandout(story: ScreenStory, id: string): ScreenHandout | null {
+  const h = story.content.handouts?.find((x) => x.id === id)
+  if (!h) return null
+  const image = packImage(story, handoutImagePath(h.image))
+  if (!image && !h.text) return null
+  return { key: `handout:${h.id}`, title: h.title, ...(h.text ? { text: h.text } : {}), image }
+}
+
+/** Query params of /screen-preview for a scene (the picture as a signed URL). */
+export function previewParams(scene: ScreenScene, imageUrl: string | undefined): URLSearchParams {
+  const p = new URLSearchParams({ preset: scene.preset })
+  if (scene.place) p.set('place', scene.place)
+  if (scene.time) p.set('time', scene.time)
+  if (imageUrl) p.set('image', imageUrl)
+  return p
+}
+
 /**
  * Holds the screen state for one game: reduces game events and keeper actions, then publishes
  * (signs the pictures, writes games.screen; the database broadcasts it to the screen). Publications
@@ -155,6 +177,28 @@ export class ScreenControl {
 
   ambianceOf(sceneId: string | undefined): ScreenScene {
     return toScreenScene(sceneAmbiance(this.story.content, sceneId, this.story.files), this.story.folder)
+  }
+
+  /** The page drawing a scene's ambiance small (/screen-preview), and the ambiance it draws. */
+  async preview(sceneId: string): Promise<{ src: string; scene: ScreenScene } | null> {
+    if (!findScene(this.story.content, sceneId)) return null
+    const scene = this.ambianceOf(sceneId)
+    const url = scene.image ? await this.sign(scene.image) : undefined
+    return { src: `/screen-preview?${previewParams(scene, url)}`, scene }
+  }
+
+  /** Shows one of the story's documents on the screen; false if it has nothing to show. */
+  showHandout(id: string): boolean {
+    const handout = storyHandout(this.story, id)
+    if (!handout) return false
+    this.dispatch({ type: 'show', handout })
+    return true
+  }
+
+  /** A signed URL of a document's picture, if the pack has one. */
+  async handoutImage(id: string): Promise<string | null> {
+    const image = storyHandout(this.story, id)?.image
+    return image ? ((await this.sign(image)) ?? null) : null
   }
 
   /** The engine shows a scene (called on every engine save: only a change counts). */
