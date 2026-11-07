@@ -34,9 +34,11 @@ type Mode = 'signin' | 'signup'
 export function LoginPage() {
   const { session } = useAuth()
   const t = useT()
-  const next = safeNext(useSearchParams()[0].get('next'))
+  const [params] = useSearchParams()
+  const next = safeNext(params.get('next'))
   const schema = useMemo(() => makeSchema(t), [t])
-  const [mode, setMode] = useState<Mode>('signin')
+  // ?mode=signup: the landing page's "Créer un compte" opens the sign-up tab.
+  const [mode, setMode] = useState<Mode>(params.get('mode') === 'signup' ? 'signup' : 'signin')
   const [error, setError] = useState<string | null>(returnedOAuthError)
   // Where accounts need an e-mail confirmation (hosted Supabase), sign-up returns no session.
   const [confirmTo, setConfirmTo] = useState<string | null>(null)

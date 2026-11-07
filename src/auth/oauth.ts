@@ -31,6 +31,6 @@ export function oauthErrorFromUrl(href: string): string | null {
   return url.searchParams.get('error_description') ?? hash.get('error_description')
 }
 
-/** Read once at start-up: the router sends signed-out visitors from `/` to `/login` and drops the
- *  query and hash on the way. */
+/** Read once at start-up: with an error, the router sends signed-out visitors from `/` (where Google
+ *  brings them back) to `/login`, dropping the query and hash on the way. */
 export const returnedOAuthError = typeof window === 'undefined' ? null : oauthErrorFromUrl(window.location.href)
