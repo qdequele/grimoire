@@ -9,7 +9,7 @@
 //   pnpm decor:shots all --clean                  every place, without fog, grain and particles
 //
 // Options: --time night,dusk,day · --preset <id> · --crop x,y,w,h · --clean · --out <dir>
-// (default test-results/decors, gitignored) · --url <dev server> (default http://localhost:5173).
+// (default decor-review, gitignored) · --url <dev server> (default http://localhost:5173).
 // Files: <out>/<place>-<time>-a.png (drift start), -b.png (drift end), -a-zoom.png / -b-zoom.png.
 import { mkdirSync } from 'node:fs'
 import { chromium } from '@playwright/test'
@@ -28,7 +28,7 @@ for (const p of places) if (!PLACES.includes(p)) throw new Error(`Unknown place 
 const times = opt('time', 'night').split(',')
 const preset = opt('preset')
 const crop = opt('crop')?.split(',').map(Number)
-const out = opt('out', 'test-results/decors')
+const out = opt('out', 'decor-review')
 const url = opt('url', 'http://localhost:5173')
 mkdirSync(out, { recursive: true })
 

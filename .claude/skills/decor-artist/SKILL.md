@@ -15,7 +15,7 @@ enough.** Every mistake below was found by the keeper after a scene was called d
 1. **Render** both ends of the drift (where shapes at different depths are furthest apart), with the
    dev server running (`pnpm dev`):
    ```sh
-   pnpm decor:shots <place> --clean                 # test-results/decors/<place>-night-a.png / -b.png
+   pnpm decor:shots <place> --clean                 # decor-review/<place>-night-a.png / -b.png
    pnpm decor:shots <place> --crop x,y,w,h --clean  # plus a 2× zoom of a region (frame px)
    pnpm decor:shots <place> --time night,dusk,day   # times of day (lights off by day, sun not moon)
    ```
@@ -29,9 +29,9 @@ enough.** Every mistake below was found by the keeper after a scene was called d
 5. **Check**: `pnpm e2e:decors` (all places; the dev server or `pnpm dev` must answer on :5173).
 6. **Show the before/after**: `pnpm decor:compare [places] [--ref <commit>]` renders the places on
    the ref (default `origin/main`, in a temporary checkout) and here, and writes
-   `test-results/decors/compare/index.html`: a slider over each pair, per time of day and drift end.
+   `decor-review/compare/index.html`: a slider over each pair, per time of day and drift end.
    Open it in the browser (with `pnpm dev` running it is at
-   `/test-results/decors/compare/index.html`) and show it to the keeper. "After" frames alone don't
+   `/decor-review/compare/index.html`) and show it to the keeper. "After" frames alone don't
    show what changed.
 
 ## Checklist (every one of these happened)

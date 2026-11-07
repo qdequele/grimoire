@@ -2,15 +2,15 @@
 // Before / after of the drawn décors: renders the places as they are on another commit (default
 // origin/main) and as they are in this checkout, then writes a page with a slider over each pair.
 // Needs the dev server for "after" (`pnpm dev`); "before" runs in a temporary checkout of the ref (a git
-// worktree under test-results/, sharing this checkout's node_modules), on its own port, removed after.
+// worktree under decor-review/, sharing this checkout's node_modules), on its own port, removed after.
 //
 //   pnpm decor:compare                         every place, night and day, both ends of the drift
 //   pnpm decor:compare harbour,street --ref HEAD~3 --time night
 //
 // Options: --ref <commit> · --time night,dusk,day · --url <after dev server> (default
 // http://localhost:5173) · --port <before port> (default 5198) · --out <dir> (default
-// test-results/decors/compare). Open <out>/index.html (any static server, or `pnpm dev` and
-// /test-results/… is not served: use `npx serve <out>` or the browser's file://).
+// decor-review/compare, gitignored). With `pnpm dev` running the page is at
+// http://localhost:5173/decor-review/compare/index.html.
 import { spawn, execFileSync } from 'node:child_process'
 import { existsSync, mkdirSync, rmSync, symlinkSync, writeFileSync } from 'node:fs'
 import { resolve } from 'node:path'
@@ -27,8 +27,8 @@ const ref = opt('ref', 'origin/main')
 const times = opt('time', 'night,day')
 const afterUrl = opt('url', 'http://localhost:5173')
 const port = Number(opt('port', '5198'))
-const out = resolve(opt('out', 'test-results/decors/compare'))
-const src = resolve('test-results/decors/before-src')
+const out = resolve(opt('out', 'decor-review/compare'))
+const src = resolve('decor-review/before-src')
 const label = execFileSync('git', ['log', '-1', '--format=%h %s', ref]).toString().trim()
 
 const run = (cmd, argv, opts = {}) => execFileSync(cmd, argv, { stdio: 'inherit', ...opts })

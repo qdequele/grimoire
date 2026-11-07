@@ -28,3 +28,6 @@ supabase/.temp/
 
 # Directory submission zip (pnpm directory:package)
 directory/*.zip
+
+# décor review renders (pnpm decor:shots / decor:compare)
+/decor-review/
