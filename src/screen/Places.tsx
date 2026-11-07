@@ -418,44 +418,109 @@ const graveyard: Draw = (id) => {
 }
 
 const crypt: Draw = (id) => {
-  // Vaults: a solid wall pierced by round arches between columns (even-odd fill).
-  // A bay right in the middle, so the lit doorway shows through it.
-  const cols = [-225, 165, 555, 945, 1335, 1725]
-  let vault = `M-80 -10 H${W + 80} V${H} H-80 Z`
-  for (let i = 0; i < cols.length - 1; i++) {
-    const x1 = cols[i] + 100
-    const x2 = cols[i + 1]
-    const w = x2 - x1
-    vault += ` M${x1} ${H} V420 A${w / 2} ${w / 2} 0 0 1 ${x2} 420 V${H} Z`
+  // A burial corridor in one-point perspective: vaulted bays, each one lighter as it nears the lit
+  // doorway at the far end, burial niches in the side walls, a stone coffin in the foreground.
+  const cx = 800
+  const vy = 540
+  const floor = (s: number) => vy + (920 - vy) * s
+  const spring = (s: number) => floor(s) - 540 * s
+  const hw = (s: number) => 520 * s // inner edge of a rib
+  const ww = (s: number) => 590 * s // the wall behind the ribs
+  const frames = [1, 0.6, 0.38, 0.25, 0.17]
+  const back = 0.12
+  const archBand = (s: number) => {
+    const fl = floor(s)
+    const sp = spring(s)
+    return `M${f(cx - ww(s))} ${f(fl)} V${f(sp)} A${f(ww(s))} ${f(ww(s))} 0 0 1 ${f(cx + ww(s))} ${f(sp)} V${f(fl)} H${f(cx + hw(s))} V${f(sp)} A${f(hw(s))} ${f(hw(s))} 0 0 0 ${f(cx - hw(s))} ${f(sp)} V${f(fl)} Z`
   }
+  // One bay (between two frames): both side walls and the vault, as one shape.
+  const bay = (a: number, b: number) => {
+    const L = (s: number) => cx - ww(s)
+    const R = (s: number) => cx + ww(s)
+    return `M${f(L(a))} ${f(floor(a))} V${f(spring(a))} A${f(ww(a))} ${f(ww(a))} 0 0 1 ${f(R(a))} ${f(spring(a))} V${f(floor(a))} L${f(R(b))} ${f(floor(b))} V${f(spring(b))} A${f(ww(b))} ${f(ww(b))} 0 0 0 ${f(L(b))} ${f(spring(b))} V${f(floor(b))} Z`
+  }
+  // Burial niches in the side walls of a bay: quads by interpolation along the wall (u: depth, v: height).
+  const niches = (a: number, b: number, cols: number, shrouds = true) => {
+    const holes: string[] = []
+    const skulls: string[] = []
+    const r = rng(Math.round(a * 1000))
+    for (const side of [-1, 1]) {
+      const at = (u: number, v: number) => {
+        const s = a + (b - a) * u
+        return [cx + side * ww(s), floor(s) + (spring(s) - floor(s)) * v]
+      }
+      for (let i = 0; i < cols; i++) {
+        for (const [v1, v2] of [[0.1, 0.3], [0.4, 0.6], [0.7, 0.88]]) {
+          const u1 = 0.12 + (i / cols) * 0.8
+          const u2 = u1 + 0.5 / cols
+          const p = [at(u1, v1), at(u2, v1), at(u2, v2), at(u1, v2)]
+          holes.push(`M${p.map(([x, y]) => `${f(x)} ${f(y)}`).join(' L')} Z`)
+          if (r() < 0.45 && shrouds) {
+            // a shrouded shape lying in the niche
+            const q = [at(u1 + 0.02, v1 + 0.02), at(u2 - 0.02, v1 + 0.02), at(u2 - 0.03, v1 + 0.08), at(u1 + 0.03, v1 + 0.09)]
+            skulls.push(`M${q.map(([x, y]) => `${f(x)} ${f(y)}`).join(' L')} Z`)
+          }
+        }
+      }
+    }
+    return { holes: holes.join(' '), skulls: skulls.join(' ') }
+  }
+  const nA = niches(1, 0.6, 2, false)
+  const nB = niches(0.6, 0.38, 2)
+  const nC = niches(0.38, 0.25, 1)
+  const shades = ['var(--cr-1)', 'var(--cr-2)', 'var(--cr-3)', 'var(--cr-4)']
+  // Steps up to the door, catching its light.
+  const steps = Array.from({ length: 4 }, (_, i) => {
+    const s = 0.17 - i * 0.012
+    const y = floor(s) - i * 6
+    return `M${f(cx - 46 + i * 2)} ${f(y)} h${f(92 - i * 4)} v2.5 h${f(-92 + i * 4)} Z`
+  }).join(' ')
+  const doorTop = floor(back) - 100
+  const door = `M${cx - 40} ${f(floor(back))} V${f(doorTop + 40)} A40 40 0 0 1 ${cx + 40} ${f(doorTop + 40)} V${f(floor(back))} Z`
   return (
     <>
       <Layer depth="far">
-        {/* back wall, a lit doorway at the top of the stairs */}
-        <path d={`M-80 -10 H${W + 80} V${H} H-80 Z M736 640 V440 A64 64 0 0 1 864 440 V640 Z`} fillRule="evenodd" />
-        <path d="M700 900 L736 640 H864 L900 900 Z" opacity={0.6} />
-      </Layer>
-      <Layer depth="lit">
-        <path d="M736 640 V440 A64 64 0 0 1 864 440 V640 Z" opacity={0.5} />
-        <Halo id={`${id}-halo`} x={800} y={560} r={170} o={0.6} />
-        <path d="M770 650 h60 v8 h-60 Z M762 680 h76 v8 h-76 Z M752 715 h96 v9 h-96 Z M740 760 h120 v10 h-120 Z M726 815 h148 v11 h-148 Z" opacity={0.2} />
+        {/* the end wall and its doorway */}
+        <path d={`M-80 -10 H${W + 80} V${H} H-80 Z`} fill="var(--cr-5)" />
+        <path d={door} fill={`url(#${id}-glass)`} />
       </Layer>
       <Layer depth="mid">
-        <path d={vault} fillRule="evenodd" />
-        {/* ribs and capitals */}
-        <path d={cols.map((x) => `M${x - 14} 430 h128 v22 h-128 Z`).join(' ')} />
+        {/* the floor, then each bay, nearest first, lighter as it nears the door */}
+        <path d={`M${f(cx - ww(1.2))} ${f(floor(1.2))} H${f(cx + ww(1.2))} L${f(cx + ww(back))} ${f(floor(back))} H${f(cx - ww(back))} Z`} fill="var(--cr-0)" />
+        {frames.map((a, i) => (
+          <path key={a} d={bay(i === 0 ? 1.25 : a, frames[i + 1] ?? back)} fill={shades[Math.min(i, 3)]} />
+        ))}
+        <path d={`${nA.holes} ${nB.holes} ${nC.holes}`} fill="var(--cr-0)" opacity={0.85} />
+        <path d={`${nA.skulls} ${nB.skulls} ${nC.skulls}`} fill="var(--cr-3)" opacity={0.6} />
+        {/* the ribs: darker, against the light behind them */}
+        {frames.slice(1).map((s, i) => <path key={s} d={archBand(s)} fill={shades[Math.max(0, i - 1)]} />)}
+        <path d={frames.slice(1).map((s) => `M${f(cx - ww(s) - 4 * s)} ${f(spring(s))} h${f(ww(s) - hw(s) + 8 * s)} v${f(14 * s)} h${f(-(ww(s) - hw(s) + 8 * s))} Z M${f(cx + hw(s) - 4 * s)} ${f(spring(s))} h${f(ww(s) - hw(s) + 8 * s)} v${f(14 * s)} h${f(-(ww(s) - hw(s) + 8 * s))} Z`).join(' ')} fill="var(--cr-0)" />
+        <path d={steps} fill="var(--lit)" opacity={0.35} />
+      </Layer>
+      <Layer depth="lit">
+        <Halo id={`${id}-halo`} x={cx} y={floor(back) - 50} r={260} o={0.75} />
+        {/* the door's light running along the floor */}
+        <path d={`M${cx - 40} ${f(floor(back))} H${cx + 40} L${cx + 260} 920 H${cx - 260} Z`} fill={`url(#${id}-ray)`} opacity={0.8} />
       </Layer>
       <Layer depth="near">
-        {/* the sarcophagus and two candle stands */}
-        <path d="M610 900 V740 H990 V900 Z M590 744 L630 700 H970 L1010 744 Z" />
-        <path d="M470 900 l20 -16 v-170 h-12 v-10 h40 v10 h-12 v170 l20 16 Z M1110 900 l20 -16 v-170 h-12 v-10 h40 v10 h-12 v170 l20 16 Z" />
-        <path d="M-40 900 V-10 H90 V900 Z M1510 900 V-10 H1640 V900 Z" />
+        {/* the nearest pillars, framing the view (their arch is above the screen) */}
+        <path d={`M-80 -10 H${W + 80} V${H + 20} H-80 Z M${cx - hw(1)} 930 V${spring(1)} A${hw(1)} ${hw(1)} 0 0 1 ${cx + hw(1)} ${spring(1)} V930 Z`} fillRule="evenodd" />
+        {/* courses of stone on the nearest pillars */}
+        <path d={Array.from({ length: 16 }, (_, j) => `M-80 ${j * 58 + 20} H${cx - hw(1) - 2} v3 H-80 Z M${cx + hw(1) + 2} ${j * 58 + 20} H${W + 80} v3 H${cx + hw(1) + 2} Z ${Array.from({ length: 6 }, (_, i) => { const x = -60 + i * 64 + (j % 2) * 32; const xr = x + cx + hw(1) + 40; return `${x < cx - hw(1) - 6 ? `M${x} ${j * 58 + 23} v55 h3 v-55 Z` : ''} ${xr < W + 60 ? `M${xr} ${j * 58 + 23} v55 h3 v-55 Z` : ''}` }).join(' ')}`).join(' ')} fill="var(--cr-2)" opacity={0.18} />
+        {/* a stone coffin: its end towards us, the gabled lid running back into the dark */}
+        <path d="M690 930 V766 H910 V930 Z" />
+        <path d="M676 770 L800 728 L924 770 Z" />
+        <path d="M676 770 L800 728 L800 690 L701 723 Z" fill="var(--cr-2)" />
+        <path d="M924 770 L800 728 L800 690 L899 723 Z" fill="var(--cr-1)" />
+        <path d="M794 790 h12 v84 h-12 Z M772 812 h56 v12 h-56 Z" fill="var(--cr-1)" />
+        {/* two iron candle stands */}
+        <path d="M376 930 l22 -20 v-186 h-12 v-10 h44 v10 h-12 v186 l22 20 Z M1180 930 l22 -20 v-186 h-12 v-10 h44 v10 h-12 v186 l22 20 Z" />
       </Layer>
       <Layer depth="pulse">
-        <Halo id={`${id}-halo`} x={508} y={674} r={180} />
-        <Halo id={`${id}-halo`} x={1148} y={674} r={180} />
-        <path d="M502 704 v-22 h12 v22 Z M1142 704 v-22 h12 v22 Z" className="scr-wax" />
-        <path d="M508 682 q-7 -10 0 -24 q7 14 0 24 Z M1148 682 q-7 -10 0 -24 q7 14 0 24 Z" />
+        <Halo id={`${id}-halo`} x={408} y={690} r={200} />
+        <Halo id={`${id}-halo`} x={1212} y={690} r={200} />
+        <path d="M402 714 v-22 h12 v22 Z M1206 714 v-22 h12 v22 Z" className="scr-wax" />
+        <path d="M408 692 q-7 -10 0 -24 q7 14 0 24 Z M1212 692 q-7 -10 0 -24 q7 14 0 24 Z" />
       </Layer>
     </>
   )

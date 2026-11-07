@@ -169,6 +169,15 @@
   --lit: #f2b866;
   --moon: #ece6d2;
 }
+/* The crypt: each bay a little lighter as it nears the lit doorway at the end. */
+.scr-place[data-place='crypt'] {
+  --cr-0: color-mix(in srgb, var(--sil-near) 90%, var(--lit));
+  --cr-1: color-mix(in srgb, var(--sil-mid) 94%, var(--lit));
+  --cr-2: color-mix(in srgb, var(--sil-back) 90%, var(--lit));
+  --cr-3: color-mix(in srgb, var(--sil-far) 86%, var(--lit));
+  --cr-4: color-mix(in srgb, var(--sil-far) 76%, var(--lit));
+  --cr-5: color-mix(in srgb, var(--sil-far) 64%, var(--lit));
+}
 /* Moonlight (or sunlight) catching the edges that face it: strokes, nothing to fill. */
 .scr-rim {
   fill: none;
