@@ -61,6 +61,12 @@ const APP_UI_EN: Record<string, string> = {
   'Joueurs à la table': 'Players at the table',
   Carnet: 'Notebook',
   "Écran d'ambiance": 'Ambiance screen',
+  // Game menu sub-menus
+  Partie: 'Game',
+  Sauvegardes: 'Saves',
+  Affichage: 'Display',
+  'joueurs, chrono, fin du scénario': 'players, timer, end of the scenario',
+  'thème et langue': 'theme and language',
 }
 const I18N: EngineGlobals['I18N'] = {
   ...(PRIVATE.I18N ?? FALLBACK.I18N),

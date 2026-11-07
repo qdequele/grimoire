@@ -488,7 +488,7 @@ function saveChar(){const D=S.draft,dv=derived();
 $("#fab").onclick=()=>{const p=$("#dicePanel");p.hidden=!p.hidden;$("#fab").setAttribute("aria-expanded",String(!p.hidden));};
 $("#diceClose").onclick=()=>{$("#dicePanel").hidden=true;$("#fab").setAttribute("aria-expanded","false");};
 document.addEventListener("keydown",e=>{if(e.key!=="Escape")return;
-  if(!$("#gMenu").hidden){closeMenu();return;}
+  if(!$("#gMenu").hidden){if(gmPanel())gmShow("");else closeMenu();return;}
   const open=["#dicePanel","#sndPanel","#narrPanel"].filter(s=>$(s)&&!$(s).hidden);
   if(open.length){open.forEach(s=>s==="#narrPanel"?toggleNarr(false):$(s).hidden=true);return;}
   if(S.view==="jouer"&&!/INPUT|TEXTAREA|SELECT/.test(document.activeElement?.tagName||""))openMenu();});
@@ -1160,11 +1160,16 @@ function openMenu(){if(S.view!=="jouer")return;const st=ST();
   $("#gmTitle").textContent=SC().t;
   const done=Object.values(st.done).filter(Boolean).length,n=scenesOf(SC()).length;
   $("#gmSub").textContent=`${done} / ${n} scènes jouées · ${st.party.map(sl=>sl.player||charById(sl.cid)?.n).filter(Boolean).join(", ")||"aucun joueur"}`;
-  $("#gmSaves").hidden=true;tick();saveHint();$("#gMenu").hidden=false;$("#menuBtn").setAttribute("aria-expanded","true");setTimeout(()=>$("#gmResume").focus(),30);}
+  gmShow("",true);tick();saveHint();$("#gMenu").hidden=false;$("#menuBtn").setAttribute("aria-expanded","true");setTimeout(()=>$("#gmResume").focus(),30);}
+/* Grimoire: game menu sub-menus (Partie, Sauvegardes, Affichage). */
+function gmPanel(){const p=document.querySelector("#gMenu [data-gm-panel]:not([hidden])");return p?p.dataset.gmPanel:"";}
+function gmShow(name,quiet){const m=$("#gMenu"),from=gmPanel();m.querySelector(".gm-main").hidden=!!name;
+  m.querySelectorAll("[data-gm-panel]").forEach(p=>p.hidden=p.dataset.gmPanel!==name);$("#gmSaves").hidden=true;
+  if(quiet)return;const f=name?m.querySelector('[data-gm-panel="'+name+'"] .gm-item'):m.querySelector('[data-gm-go="'+from+'"]');if(f)f.focus();}
 function closeMenu(){const m=$("#gMenu");if(!m||m.hidden)return;m.hidden=true;$("#menuBtn").setAttribute("aria-expanded","false");}
 $("#menuBtn").onclick=()=>$("#gMenu").hidden?openMenu():closeMenu();
 $("#gmResume").onclick=closeMenu;
-$("#gMenu").addEventListener("click",e=>{if(e.target.id==="gMenu")closeMenu();if(e.target.closest("[data-nav]"))closeMenu();});
+$("#gMenu").addEventListener("click",e=>{if(e.target.id==="gMenu")closeMenu();const g=e.target.closest("[data-gm-go]");if(g)gmShow(g.dataset.gmGo);if(e.target.closest("[data-gm-back]"))gmShow("");if(e.target.closest("[data-nav]"))closeMenu();});
 $("#gmLoad").onclick=()=>{const box=$("#gmSaves");if(!box.hidden){box.hidden=true;return;}
   const list=SAVES.filter(s=>s.scen===S.cur&&true);
   box.innerHTML=list.length?`<ul>${list.map(s=>`<li><span>${esc(s.name)} <span class="mut">· ${new Date(s.at).toLocaleString("fr-FR",{day:"numeric",month:"short",hour:"2-digit",minute:"2-digit"})}</span></span><span data-svz="${s.id}"><button class="btn" data-restore="${s.id}">Charger</button></span></li>`).join("")}</ul>`:`<p class="mut">Aucune sauvegarde pour ce scénario dans cette campagne.</p>`;

@@ -847,3 +847,14 @@ html[data-skin="deco"] .npcc-h b{font-family:"Josefin Sans",sans-serif;letter-sp
 /* Grimoire: toolbar without Règles / Combat, the first group only holds "PNJ et monstres" */
 .qa-g:not(:has(> .btn:not([hidden]))){display:none}
 .qa-g:not(:has(> .btn:not([hidden]))) + .qa-tools{padding-left:0;border-left:0}
+/* Grimoire: game menu sub-menus */
+.gm-box{display:grid;grid-template-columns:minmax(0,1fr);align-content:center;gap:18px}
+.gm-box > .gm-list{grid-row:2;grid-column:1;align-self:start}
+.gm-box > .gm-list[hidden]{display:flex!important;visibility:hidden}
+.gm-go::after{content:"";position:absolute;right:16px;top:50%;width:7px;height:7px;margin-top:-4px;border:solid var(--mute);border-width:1.5px 1.5px 0 0;transform:rotate(45deg);box-sizing:border-box}
+.gm-go:hover::after,.gm-go:focus-visible::after{border-color:var(--gold)}
+.gm-back{display:flex;align-items:center;gap:12px;width:100%;margin-bottom:6px;padding:4px 14px 12px 20px;background:none;border:0;border-bottom:1px solid var(--line);font-size:11px;letter-spacing:.24em;text-transform:uppercase;text-align:left;color:var(--gold);cursor:pointer}
+.gm-back::before{content:"";width:7px;height:7px;border:solid currentColor;border-width:0 0 1.5px 1.5px;transform:rotate(45deg);box-sizing:border-box;flex:none}
+.gm-back:hover,.gm-back:focus-visible{color:var(--bone);outline:none}
+.gm-back .gm-k{position:static;order:1;margin-left:auto;letter-spacing:0;text-transform:none}
+html[data-skin="deco"] .gm-back{letter-spacing:.35em}
