@@ -1,12 +1,15 @@
-import { BookOpen, FileUp, Feather, Store } from 'lucide-react'
-import type { ReactNode } from 'react'
-import { Link } from 'react-router'
+import { BookOpen, FileUp, Feather, Languages, Store } from 'lucide-react'
+import { useId, type ReactNode } from 'react'
+import { Link, useSearchParams } from 'react-router'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Button } from '@/components/ui/button'
 import { Empty, EmptyContent, EmptyDescription, EmptyHeader, EmptyMedia, EmptyTitle } from '@/components/ui/empty'
+import { Label } from '@/components/ui/label'
+import { NativeSelect, NativeSelectOption } from '@/components/ui/native-select'
 import { Skeleton } from '@/components/ui/skeleton'
 import { useMarketplaceStories, useMyStories, type StoryRow } from './api'
 import { StoryCard } from './StoryCard'
+import { ALL_LANGS, filterByLanguage, languageName, pickLanguage, storyLanguages } from './languages'
 import { useT } from '@/i18n/t'
 
 function StoryGrid({ stories, isPending, error, empty }: {
@@ -31,9 +34,56 @@ function StoryGrid({ stories, isPending, error, empty }: {
     )
   }
   if (!stories?.length) return empty
+  return <FilteredGrid stories={stories} />
+}
+
+/** The stories in the chosen language (`?lang=`, else the app's language), with the dropdown. */
+function FilteredGrid({ stories }: { stories: StoryRow[] }) {
+  const t = useT()
+  const id = useId()
+  const [params, setParams] = useSearchParams()
+  const langs = storyLanguages(stories, t.lang)
+  const chosen = params.get('lang')
+  const lang = pickLanguage(chosen, langs, t.lang)
+  const shown = filterByLanguage(stories, lang)
+  const options = lang === ALL_LANGS || langs.includes(lang) ? langs : [...langs, lang]
+  const choose = (v: string) => setParams((p) => {
+    const next = new URLSearchParams(p)
+    next.set('lang', v)
+    return next
+  }, { replace: true })
+
   return (
-    <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-      {stories.map((s) => <StoryCard key={s.id} story={s} />)}
+    <div className="flex flex-col gap-4">
+      {(langs.length > 1 || chosen) && (
+        <div className="flex justify-end">
+          <Label htmlFor={id} className="font-normal text-muted-foreground">
+            <Languages aria-hidden="true" className="size-4" />
+            {t("Langue de l'histoire")}
+          </Label>
+          <NativeSelect id={id} size="sm" className="ml-2" value={lang} onChange={(e) => choose(e.target.value)}>
+            <NativeSelectOption value={ALL_LANGS}>{t('Toutes les langues')}</NativeSelectOption>
+            {options.map((code) => (
+              <NativeSelectOption key={code} value={code}>{languageName(code, t.lang)}</NativeSelectOption>
+            ))}
+          </NativeSelect>
+        </div>
+      )}
+      {shown.length ? (
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          {shown.map((s) => <StoryCard key={s.id} story={s} />)}
+        </div>
+      ) : (
+        <Empty>
+          <EmptyHeader>
+            <EmptyMedia variant="icon"><Languages /></EmptyMedia>
+            <EmptyTitle>{t('Aucune histoire dans cette langue')}</EmptyTitle>
+          </EmptyHeader>
+          <EmptyContent>
+            <Button variant="outline" onClick={() => choose(ALL_LANGS)}>{t('Voir toutes les langues')}</Button>
+          </EmptyContent>
+        </Empty>
+      )}
     </div>
   )
 }
