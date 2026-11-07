@@ -836,6 +836,9 @@ export const EN: Record<string, string> = {
   'Cette image est trop lourde.': 'This picture is too large.',
   "Cette image n'a pas pu être lue.": 'This picture couldn’t be read.',
   "Impossible d'enregistrer la photo : {error}": 'Couldn’t save the photo: {error}',
+  // Keeper photo (Réglages → Profil)
+  'Sans photo choisie, Grimoire affiche ton Gravatar s’il existe, sinon tes initiales.': 'Without a photo of your own, Grimoire shows your Gravatar if you have one, else your initials.',
+  'Elle remplace ton Gravatar ou tes initiales dans le menu du compte.': 'It replaces your Gravatar or your initials in the account menu.',
   // Investigator presentation sheet
   "Fiche d'investigateur": 'Investigator sheet',
   'actuelle {n}': 'now {n}',

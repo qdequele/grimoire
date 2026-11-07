@@ -7,13 +7,17 @@ import { Avatar } from './Avatar'
 import { PhotoError, photoFromFile } from './photo'
 
 /**
- * Choose, change or remove an investigator's photo. A picked picture is cropped to a square and
+ * Choose, change or remove an investigator's (or the keeper's) photo. A picked picture is cropped to a square and
  * shrunk in the browser, shown, then saved with "Enregistrer". `onSave(null)` removes the photo;
  * it rejects when the save failed (the caller says why), and the dialog stays open.
  */
-export function PhotoDialog({ name, photo, open, onOpenChange, onSave }: {
+export function PhotoDialog({ name, photo, url, description, open, onOpenChange, onSave }: {
   name: string
   photo: string | null | undefined
+  /** Shown while there's no photo (the keeper's Gravatar), as in Avatar. */
+  url?: string | null
+  /** Under the title; defaults to the investigator's text. */
+  description?: string
   open: boolean
   onOpenChange: (open: boolean) => void
   onSave: (photo: string | null) => Promise<void>
@@ -69,14 +73,14 @@ export function PhotoDialog({ name, photo, open, onOpenChange, onSave }: {
           <DialogTitle className="font-heading text-2xl font-normal">{name}</DialogTitle>
           <span className="double-rule" />
           <DialogDescription className="font-serif text-base text-muted-foreground">
-            {t('Elle remplace les initiales dans le rond qui représente l’investigateur, chez le gardien et sur les téléphones.')}
+            {description ?? t('Elle remplace les initiales dans le rond qui représente l’investigateur, chez le gardien et sur les téléphones.')}
           </DialogDescription>
           <DialogClose render={<Button variant="ghost" size="icon-sm" className="absolute top-3 right-3" aria-label={t('Fermer')} />}>
             <X />
           </DialogClose>
         </header>
 
-        <Avatar name={name} photo={picked ?? photo} className="mx-auto size-40 text-4xl" />
+        <Avatar name={name} photo={picked ?? photo} url={url} className="mx-auto size-40 text-4xl" />
         {error && <p role="alert" className="text-center text-sm text-destructive">{error}</p>}
 
         <input

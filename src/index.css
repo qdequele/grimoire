@@ -150,6 +150,18 @@
 }
 
 @layer components {
+  /* Initials in a round head (Avatar): the line box trimmed to the capitals, so they sit in the
+     middle of the circle whatever the font. Josefin Sans (Art Deco) draws its capitals 0.11em
+     above the middle of its line box: browsers without text-box get that nudge instead. */
+  .avatar-initials {
+    text-box: trim-both cap alphabetic;
+  }
+  @supports not (text-box: trim-both cap alphabetic) {
+    :root[data-skin="deco"] .avatar-initials {
+      transform: translateY(0.11em);
+    }
+  }
+
   /* Small caps label above titles ("eyebrow"), as on the legacy home screen. */
   .eyebrow {
     color: var(--gold);
