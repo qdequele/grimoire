@@ -759,6 +759,8 @@ export const EN: Record<string, string> = {
   'Crée et modifie tes histoires en discutant avec ChatGPT ou Claude : ils écrivent, Grimoire vérifie et range l’histoire dans ta bibliothèque.':
     'Create and revise your stories by chatting with ChatGPT or Claude: they write, Grimoire checks the story and puts it in your library.',
   'Ouvrir ChatGPT': 'Open ChatGPT',
+  'Rien ne s’ouvre, ou tu préfères le faire toi-même ?': 'Nothing opens, or you’d rather do it yourself?',
+  'Ajouter Grimoire à la main': 'Add Grimoire by hand',
   'Compétence pour Claude (.zip)': 'Skill for Claude (.zip)',
   'Facultatif : à ajouter dans Claude, Réglages → Capacités → Compétences.': 'Optional: add it in Claude, Settings → Capabilities → Skills.',
   'Applications connectées': 'Connected apps',

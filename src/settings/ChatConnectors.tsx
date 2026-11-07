@@ -1,12 +1,14 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { strToU8, zipSync } from 'fflate'
 import { Download, ExternalLink } from 'lucide-react'
+import { Link } from 'react-router'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
 import { supabase } from '@/lib/supabase'
 import { useT } from '@/i18n/t'
 import { DIRECTORY_LISTING } from '@/legal/info'
+import { LEGAL_PATHS } from '@/legal/paths'
 import { CHATGPT_PLUGINS_URL, claudeAddLink, connectorUrl } from './connectorUrl'
 import skill from '../../skills/grimoire-story/SKILL.md?raw'
 
@@ -76,6 +78,12 @@ export function ChatConnectors() {
           {DIRECTORY_LISTING.chatgpt ? t('Ajouter à ChatGPT') : t('Ouvrir ChatGPT')}
         </Button>
       </div>
+      {/* When the install link opens no dialog (e.g. a Team or Enterprise member, where only an Owner adds
+          connectors) or for ChatGPT: the help page gives the address and the steps by hand. */}
+      <p className="-mt-2 text-sm text-muted-foreground">
+        {t('Rien ne s’ouvre, ou tu préfères le faire toi-même ?')}{' '}
+        <Link to={LEGAL_PATHS.help[t.lang]} className="text-gold underline underline-offset-4">{t('Ajouter Grimoire à la main')}</Link>
+      </p>
 
       <div className="flex flex-wrap items-center gap-3">
         <Button variant="outline" onClick={downloadSkill}>
