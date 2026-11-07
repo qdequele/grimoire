@@ -3,6 +3,7 @@ import { cn } from '@/lib/utils'
 import { DEFAULT_FIRE, LOOKS, paletteFor, type PresetEffect, type PresetId, type TimeOfDay } from './ambiance'
 import { Hearth } from './Hearth'
 import { Particles } from './Particles'
+import { PhotoLights } from './PhotoLights'
 import { Place } from './Places'
 import { sceneKey, type ScreenHandout, type ScreenScene } from './state'
 import './screen.css'
@@ -87,8 +88,8 @@ function SceneLayer({ layer, reduced, onShown }: { layer: Layer; reduced: boolea
   const fire = layer.scene?.fire ?? DEFAULT_FIRE
   // A drawn décor only when there is no picture: the picture is the place.
   const place = layer.scene?.place ?? null
-  // Underground, no daylight: a crypt keeps its night colours.
-  const time: TimeOfDay = place === 'crypt' && !layer.url ? 'night' : (layer.scene?.time ?? look.time)
+  // Underground, no daylight: a crypt or a cavern keeps its night colours.
+  const time: TimeOfDay = (place === 'crypt' || place === 'cavern') && !layer.url ? 'night' : (layer.scene?.time ?? look.time)
   const palette = paletteFor(preset, time)
   const style = {
     '--c0': palette[0],
@@ -114,6 +115,7 @@ function SceneLayer({ layer, reduced, onShown }: { layer: Layer; reduced: boolea
         // The fire sits inside the pan-and-zoom, so it stays on the picture's hearth.
         <div className="scr-fill scr-kb">
           <img className="scr-fill scr-cover" src={layer.url} alt="" draggable={false} />
+          <PhotoLights imageUrl={layer.url} />
           {look.fire && <Hearth fire={fire} imageUrl={layer.url} still={reduced} />}
         </div>
       ) : (

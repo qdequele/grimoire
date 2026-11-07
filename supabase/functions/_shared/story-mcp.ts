@@ -515,7 +515,7 @@ Two uses:
 - A handout picture: a paper the investigators find, a letter, a newspaper clipping, a map, a floor plan (attach { "handout": "<handout id>" }, sets the handout's image). The handout must exist: create it with edit_story put_handout { id, title, text } first.
 
 When to draw: once the scenes are written, offer a few pictures; don't draw unasked, and don't draw every scene. Two or three backgrounds for the key scenes and the handouts that are documents are plenty.
-Before drawing a background, check the built-in décors (topic "sounds"): if the scene takes place in a church, graveyard, crypt, castle, manor, library, police station, forest, harbour or street, set its screen.place with edit_story set_screen instead. The built-in décors are animated and go with every atmosphere and time of day; a picture replaces the décor.
+Before drawing a background, check the built-in décors (topic "sounds"): if the scene takes place in a church, graveyard, crypt, castle, manor, library, police station, forest, harbour, street, asylum, railway station, swamp, desert dig, mountain, museum, cavern, farm, ship, fairground, mine or moor, set its screen.place with edit_story set_screen instead. The built-in décors are animated and go with every atmosphere and time of day; a picture replaces the décor.
 
 ## Scene backgrounds
 

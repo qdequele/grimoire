@@ -111,6 +111,15 @@ describe('places (drawn décors)', () => {
     expect(placeFromText('Au commissariat')).toBe('police')
     expect(placeFromText('Inside the lighthouse')).toBe('harbour')
     expect(placeFromText(undefined, 'chateau-noir')).toBe('castle')
+    expect(placeFromText('La gare de Kingsport')).toBe('station')
+    expect(placeFromText('À bord du navire')).toBe('ship')
+    expect(placeFromText('La grotte sous la colline')).toBe('cavern')
+    expect(placeFromText('La crypte')).toBe('crypt')
+    expect(placeFromText('The old asylum')).toBe('asylum')
+    expect(placeFromText('Les menhirs de la lande')).toBe('moor')
+    expect(placeFromText('Night at the fairground')).toBe('fair')
+    expect(placeFromText('La mine abandonnée')).toBe('mine')
+    expect(placeFromText('Les fouilles')).toBe('dig')
   })
 
   it('the most specific place wins', () => {

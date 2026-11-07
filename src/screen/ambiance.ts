@@ -184,7 +184,10 @@ export const presetFromSounds = (sounds: readonly string[] | undefined): PresetI
  * Drawn décors (Places.tsx): silhouettes of a place, shown when the scene has no picture.
  * They go with any preset: the preset is the weather and the light, the place is what stands there.
  */
-export const PLACES = ['church', 'graveyard', 'crypt', 'castle', 'manor', 'library', 'police', 'forest', 'harbour', 'street'] as const
+export const PLACES = [
+  'church', 'graveyard', 'crypt', 'castle', 'manor', 'library', 'police', 'forest', 'harbour', 'street',
+  'asylum', 'station', 'swamp', 'dig', 'mountain', 'museum', 'cavern', 'farm', 'ship', 'fair', 'mine', 'moor',
+] as const
 export type PlaceId = (typeof PLACES)[number]
 
 export const isPlace = (v: unknown): v is PlaceId => typeof v === 'string' && (PLACES as readonly string[]).includes(v)
@@ -201,6 +204,18 @@ export const PLACE_LABEL: Record<PlaceId, string> = {
   forest: 'Forêt',
   harbour: 'Port',
   street: 'Rue',
+  asylum: 'Asile',
+  station: 'Gare',
+  swamp: 'Marais',
+  dig: 'Fouilles',
+  mountain: 'Montagne',
+  museum: 'Musée',
+  cavern: 'Grotte',
+  farm: 'Ferme',
+  ship: 'Navire',
+  fair: 'Fête foraine',
+  mine: 'Mine',
+  moor: 'Lande',
 }
 
 /** The preset a place gets when neither the scene nor its sounds name one. */
@@ -215,6 +230,18 @@ export const PLACE_PRESET: Record<PlaceId, PresetId> = {
   forest: 'fog',
   harbour: 'fog',
   street: 'rain',
+  asylum: 'storm',
+  station: 'rain',
+  swamp: 'fog',
+  dig: 'dust',
+  mountain: 'snow',
+  museum: 'candle',
+  cavern: 'candle',
+  farm: 'night',
+  ship: 'storm',
+  fair: 'night',
+  mine: 'night',
+  moor: 'fog',
 }
 
 /**
@@ -222,6 +249,13 @@ export const PLACE_PRESET: Record<PlaceId, PresetId> = {
  * "La crypte de l'église" is a crypt, "La bibliothèque du manoir" a library.
  */
 const PLACE_WORDS: Array<[PlaceId, string[]]> = [
+  ['fair', ['foraine', 'foire', 'cirque', 'manege', 'carnaval', 'fair', 'fairground', 'funfair', 'carnival', 'circus']],
+  ['station', ['gare', 'train', 'wagon', 'locomotive', 'station', 'railway', 'platform', 'depot']],
+  ['ship', ['navire', 'bateau', 'paquebot', 'cargo', 'goelette', 'ship', 'boat', 'steamer', 'liner', 'deck', 'schooner', 'freighter']],
+  ['museum', ['musee', 'exposition', 'museum', 'exhibit', 'exhibition']],
+  ['asylum', ['asile', 'sanatorium', 'hopital', 'clinique', 'hospice', 'asylum', 'hospital', 'clinic', 'infirmary', 'madhouse']],
+  ['mine', ['mine', 'mines', 'puits', 'houillere', 'charbonnage', 'mineshaft', 'colliery', 'pit']],
+  ['cavern', ['grotte', 'grottes', 'caverne', 'cavernes', 'gouffre', 'grotto', 'cavern', 'caverns', 'sinkhole']],
   ['crypt', ['crypte', 'caveau', 'catacombe', 'catacombes', 'souterrain', 'souterrains', 'cave', 'crypt', 'vault', 'catacomb', 'catacombs', 'cellar', 'tunnel', 'tunnels']],
   ['library', ['bibliotheque', 'archives', 'librairie', 'library', 'archive', 'study', 'bookshop']],
   ['police', ['commissariat', 'police', 'gendarmerie', 'prison', 'cellule', 'jail', 'precinct', 'sheriff']],
@@ -229,6 +263,11 @@ const PLACE_WORDS: Array<[PlaceId, string[]]> = [
   ['church', ['eglise', 'chapelle', 'cathedrale', 'abbaye', 'presbytere', 'church', 'chapel', 'cathedral', 'abbey', 'parish', 'rectory']],
   ['castle', ['chateau', 'forteresse', 'donjon', 'castle', 'fortress']],
   ['harbour', ['port', 'quai', 'quais', 'docks', 'phare', 'jetee', 'harbour', 'harbor', 'dock', 'pier', 'wharf', 'quay', 'lighthouse']],
+  ['dig', ['fouilles', 'fouille', 'desert', 'dunes', 'oasis', 'excavation', 'dig']],
+  ['mountain', ['montagne', 'montagnes', 'sommet', 'refuge', 'chalet', 'glacier', 'mountain', 'mountains', 'peak', 'summit']],
+  ['swamp', ['marais', 'marecage', 'marecages', 'bayou', 'tourbiere', 'swamp', 'marsh', 'bog', 'fen']],
+  ['farm', ['ferme', 'grange', 'champ', 'champs', 'mais', 'moulin', 'farm', 'barn', 'field', 'fields', 'cornfield', 'windmill', 'farmhouse']],
+  ['moor', ['lande', 'landes', 'menhir', 'menhirs', 'dolmen', 'cromlech', 'moor', 'moors', 'heath', 'megalith', 'megaliths']],
   ['forest', ['foret', 'bois', 'sous-bois', 'clairiere', 'forest', 'woods', 'wood', 'clearing', 'grove']],
   ['manor', ['manoir', 'demeure', 'villa', 'manor', 'mansion', 'estate']],
   ['street', ['rue', 'ruelle', 'avenue', 'boulevard', 'quartier', 'faubourg', 'street', 'alley', 'lane', 'downtown']],
