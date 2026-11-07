@@ -844,6 +844,9 @@ html[data-skin="deco"] .npcc-h b{font-family:"Josefin Sans",sans-serif;letter-sp
 .npcp h3 .ptog,#invPanel h3 .ptog{margin-right:auto}
 #invPanel h3{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
 .panel.collapsed .tabs{display:none}
+/* Grimoire: toolbar without Règles / Combat, the first group only holds "PNJ et monstres" */
+.qa-g:not(:has(> .btn:not([hidden]))){display:none}
+.qa-g:not(:has(> .btn:not([hidden]))) + .qa-tools{padding-left:0;border-left:0}
 /* Grimoire: game menu sub-menus */
 .gm-box{display:grid;grid-template-columns:minmax(0,1fr);align-content:center;gap:18px}
 .gm-box > .gm-list{grid-row:2;grid-column:1;align-self:start}

@@ -399,6 +399,15 @@ patch(
   '$("#qaTable").onclick=()=>{GRIMOIRE_HOST.openTable&&GRIMOIRE_HOST.openTable();};$("#qaScreen").onclick=()=>{GRIMOIRE_HOST.openScreen&&GRIMOIRE_HOST.openScreen();};',
   'toolbar button opens the ambiance screen dialog',
 )
+// Toolbar: no "Règles" and "Combat" buttons (removed from the markup below). Rules stay in the game
+// menu (#gmRules) and on R; combat in the scene NPCs panel, the NPC dialog and on C.
+patch('$("#qaCombat").onclick=()=>openCombat();', '', 'no combat toolbar button')
+patch(
+  'renderCombat();$("#qaCombat").setAttribute("aria-pressed","true");}',
+  'renderCombat();}',
+  'no combat toolbar button to press',
+)
+patch('$("#qaRules").onclick=()=>openRulesSheet();', '', 'no rules toolbar button')
 // Game menu: grouped into sub-menus (markup below). Escape in a sub-menu goes back to the main list.
 patch(
   'if(!$("#gMenu").hidden){closeMenu();return;}',
@@ -456,6 +465,8 @@ markup = patchText(markup,
   '<button class="btn ico" id="qaSnd"',
   `<button class="btn ico" id="qaScreen" aria-label="Écran d'ambiance" title="Écran d'ambiance" aria-pressed="false">${SCREEN_ICON}</button>\n    <button class="btn ico" id="qaSnd"`,
   'ambiance screen toolbar button')
+markup = patchText(markup, '\n    <button class="btn" id="qaRules">Règles</button>', '', 'no rules toolbar button')
+markup = patchText(markup, '\n    <button class="btn" id="qaCombat">⚔ Combat</button>', '', 'no combat toolbar button')
 const narrPanel = markup.match(/\n\s*<section class="panel narr" id="narrPanel"[^\n]*<\/section>/)
 if (!narrPanel) throw new Error('narrator panel markup not found')
 markup = markup.replace(narrPanel[0], '')
@@ -537,6 +548,9 @@ css += `
 .npcp h3 .ptog,#invPanel h3 .ptog{margin-right:auto}
 #invPanel h3{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
 .panel.collapsed .tabs{display:none}
+/* Grimoire: toolbar without Règles / Combat, the first group only holds "PNJ et monstres" */
+.qa-g:not(:has(> .btn:not([hidden]))){display:none}
+.qa-g:not(:has(> .btn:not([hidden]))) + .qa-tools{padding-left:0;border-left:0}
 /* Grimoire: game menu sub-menus */
 .gm-box{display:grid;grid-template-columns:minmax(0,1fr);align-content:center;gap:18px}
 .gm-box > .gm-list{grid-row:2;grid-column:1;align-self:start}
