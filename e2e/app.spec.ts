@@ -32,6 +32,46 @@ test('signed-out visitors are sent to the login page, and back once signed in', 
   await expect(page).toHaveURL(/localhost:5173\/$/)
 })
 
+test('signed-out visitors get the landing page at the root, with its live demos', async ({ page }) => {
+  await page.goto('/')
+  await expect(page).toHaveURL(/\/$/)
+  await expect(page.getByRole('heading', { level: 1 })).toHaveText('Grimoire')
+  // The ambiance screen's drawn décor, live, and its places
+  await expect(page.locator('.scr-root')).toBeVisible()
+  await page.getByRole('button', { name: 'Forêt' }).click()
+  await expect(page.getByRole('button', { name: 'Forêt' })).toHaveAttribute('aria-pressed', 'true')
+  // The phone demo rolls a d100 with the 3D dice, then says the level
+  await page.getByRole('button', { name: /^Bibliothèque/ }).first().click() // the phone's (the progression demo has one too)
+  await expect(page.getByTestId('dice-tray')).toBeVisible()
+  await expect(page.getByText(/^\d+ — (Réussite|Échec)/)).toBeVisible()
+  // Combat: the creature attacks until nobody is standing, through the damage rules
+  const attack = page.getByRole('button', { name: /^Griffes sur/ })
+  await attack.click()
+  await expect(page.getByText(/^Round 1 · Griffes/)).toBeVisible()
+  for (let i = 0; i < 30 && await attack.count(); i++) await attack.click()
+  await expect(page.getByRole('button', { name: 'Plus personne debout' })).toBeDisabled()
+  // Creation: eight characteristics rolled, multiples of 5
+  await page.getByRole('button', { name: 'Tirer les caractéristiques' }).click()
+  await expect(page.locator('dd.font-mono.text-xl')).toHaveCount(8)
+  for (const v of await page.locator('dd.font-mono.text-xl').allTextContents()) expect(Number(v) % 5).toBe(0)
+  // Progression: the three ticked skills each roll once
+  await page.getByRole('button', { name: 'Phase d’amélioration' }).click()
+  await expect(page.getByText(/ : jet \d+/)).toHaveCount(3)
+  await expect(page.getByRole('button', { name: 'Phase d’amélioration' })).toBeDisabled()
+  // Sounds: an ambience on, then everything off
+  await page.getByRole('button', { name: 'Pluie' }).click()
+  await expect(page.getByText('1 ambiance en cours')).toBeVisible()
+  await page.getByRole('button', { name: 'Tout arrêter' }).click()
+  await expect(page.getByText('Silence.')).toBeVisible()
+  // English, then back
+  await page.getByRole('button', { name: 'English' }).click()
+  await expect(page.getByRole('link', { name: 'Create an account' }).first()).toBeVisible()
+  await page.getByRole('button', { name: 'Français' }).click()
+  await page.getByRole('banner').getByRole('link', { name: 'Se connecter' }).click()
+  await expect(page).toHaveURL(/\/login$/)
+  await expect(page.getByRole('tab', { name: 'Se connecter' })).toHaveAttribute('aria-selected', 'true')
+})
+
 test('login form validates input', async ({ page }) => {
   await page.goto('/login')
   await page.getByLabel('E-mail').fill('not-an-email')
