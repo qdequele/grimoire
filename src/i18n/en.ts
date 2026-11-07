@@ -758,20 +758,7 @@ export const EN: Record<string, string> = {
   'ChatGPT et Claude': 'ChatGPT and Claude',
   'Crée et modifie tes histoires en discutant avec ChatGPT ou Claude : ils écrivent, Grimoire vérifie et range l’histoire dans ta bibliothèque.':
     'Create and revise your stories by chatting with ChatGPT or Claude: they write, Grimoire checks the story and puts it in your library.',
-  'Adresse du connecteur': 'Connector address',
-  'Adresse copiée.': 'Address copied.',
-  'Impossible de copier l’adresse.': 'Could not copy the address.',
-  '**Claude** : « Ajouter à Claude » ouvre Claude avec Grimoire déjà rempli. Clique sur Ajouter, puis Connecter, et connecte-toi à Grimoire.':
-    '**Claude**: “Add to Claude” opens Claude with Grimoire already filled in. Click Add, then Connect, and sign in to Grimoire.',
-  '**Claude** : « Ajouter à Claude » ouvre la fiche de Grimoire. Clique sur Connecter, puis connecte-toi à Grimoire.':
-    '**Claude**: “Add to Claude” opens Grimoire’s page. Click Connect, then sign in to Grimoire.',
-  '**ChatGPT** : « Ouvrir ChatGPT », puis + → ajouter un serveur MCP personnalisé. Nomme-le Grimoire, colle l’adresse, choisis OAuth, accepte l’avertissement et crée-le, puis connecte-toi à Grimoire.':
-    '**ChatGPT**: “Open ChatGPT”, then + → Add custom MCP server. Name it Grimoire, paste the address, choose OAuth, accept the warning and create it, then sign in to Grimoire.',
-  '**ChatGPT** : « Ajouter à ChatGPT » ouvre la fiche de Grimoire. Clique sur Connecter, puis connecte-toi à Grimoire.':
-    '**ChatGPT**: “Add to ChatGPT” opens Grimoire’s page. Click Connect, then sign in to Grimoire.',
   'Ouvrir ChatGPT': 'Open ChatGPT',
-  'Demande par exemple : « Crée-moi une histoire Grimoire dans un village de pêcheurs en 1925, pour trois joueurs. »':
-    'Then ask, for example: “Write me a Grimoire story in a fishing village in 1925, for three players.”',
   'Compétence pour Claude (.zip)': 'Skill for Claude (.zip)',
   'Facultatif : à ajouter dans Claude, Réglages → Capacités → Compétences.': 'Optional: add it in Claude, Settings → Capabilities → Skills.',
   'Applications connectées': 'Connected apps',
@@ -796,7 +783,6 @@ export const EN: Record<string, string> = {
 
   'Ajouter à Claude': 'Add to Claude',
   'Ajouter à ChatGPT': 'Add to ChatGPT',
-  'Mode d’emploi complet du connecteur': 'Full guide to the connector',
   // ---------------------------------------------------------------- privacy policy, terms, help (legal/)
   'Confidentialité': 'Privacy',
   'Conditions': 'Terms',

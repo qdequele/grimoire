@@ -2,6 +2,8 @@ import { LogOut, Settings, UserRound } from 'lucide-react'
 import type { ReactNode } from 'react'
 import { Link, Navigate, NavLink, Outlet, useLocation } from 'react-router'
 import { useAuth, useProfile } from '@/auth/auth'
+import { ResumeAfterLogin } from '@/auth/LoginPage'
+import { rememberedNext } from '@/auth/oauth'
 import { Button } from '@/components/ui/button'
 import {
   DropdownMenu,
@@ -92,6 +94,10 @@ export function AppLayout() {
     )
   }
   if (!session) return <ToLogin />
+  // Back from Google or the sign-up confirmation e-mail, which return to the root: on to the page
+  // that sent the keeper to /login (the OAuth consent page, for a chat app waiting on it).
+  const resume = isHome ? rememberedNext() : null
+  if (resume) return <ResumeAfterLogin to={resume} />
 
   return (
     <div className="relative flex min-h-svh flex-col">
