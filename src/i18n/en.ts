@@ -837,4 +837,15 @@ export const EN: Record<string, string> = {
   'Réussite': 'Success',
   'Majeure': 'Hard',
   'Extrême': 'Extreme',
+  // ---------------------------------------------------------------- investigator photos
+  'Photo': 'Photo',
+  'Changer la photo de {name}': 'Change {name}’s photo',
+  'Ajouter une photo de {name}': 'Add a photo of {name}',
+  'Elle remplace les initiales dans le rond qui représente l’investigateur, chez le gardien et sur les téléphones.': 'It replaces the initials in the round head that stands for the investigator, on the keeper’s screen and on the phones.',
+  'Choisir une photo': 'Choose a photo',
+  'Changer la photo': 'Change the photo',
+  'Retirer la photo': 'Remove the photo',
+  'Cette image est trop lourde.': 'This picture is too large.',
+  "Cette image n'a pas pu être lue.": 'This picture couldn’t be read.',
+  "Impossible d'enregistrer la photo : {error}": 'Couldn’t save the photo: {error}',
 }

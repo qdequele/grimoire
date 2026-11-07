@@ -829,3 +829,69 @@ describe('companion: dice rolls', () => {
     expect(forged.error).not.toBeNull()
   })
 })
+
+// ------------------------------------------------------------------ investigator photos
+// Smallest valid-looking JPEG data URL (only the format is checked: base64, JPEG magic bytes).
+const JPEG = 'data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2w=='
+
+describe('companion: investigator photos', () => {
+  it('a phone sets and removes a photo; companion_open returns it', async () => {
+    const g = await newGame(alice, [{ name: 'One' }, { name: 'Two' }])
+    const l = await link(alice, g.gameId)
+    expect((await anon.rpc('companion_set_photo', { p_token: l.token, p_character: g.ids[1], p_photo: JPEG })).error).toBeNull()
+    const opened = (await anon.rpc('companion_open', { p_token: l.token })).data as unknown as { party: Array<{ id: string; photo: string | null }> }
+    expect(opened.party.find((p) => p.id === g.ids[1])?.photo).toBe(JPEG)
+    expect(opened.party.find((p) => p.id === g.ids[0])?.photo).toBeNull()
+    // The keeper reads it with the investigator.
+    expect((await alice.client.from('characters').select('photo').eq('id', g.ids[1]).single()).data?.photo).toBe(JPEG)
+
+    expect((await anon.rpc('companion_set_photo', { p_token: l.token, p_character: g.ids[1], p_photo: '' })).error).toBeNull()
+    expect((await alice.client.from('characters').select('photo').eq('id', g.ids[1]).single()).data?.photo).toBeNull()
+  })
+
+  it('anything but a small base64 image is refused, from a phone or the keeper', async () => {
+    const g = await newGame(alice, [{ name: 'One' }])
+    const l = await link(alice, g.gameId)
+    const bad = [
+      'https://example.com/me.jpg',
+      'data:image/svg+xml;base64,PHN2Zz48L3N2Zz4=',
+      'data:image/jpeg;base64,/9j/");background:url(x',
+      'data:image/png;base64,/9j/AAAA', // JPEG bytes announced as PNG
+      'data:image/jpeg;base64,/9j/' + 'A'.repeat(60_000),
+    ]
+    for (const p_photo of bad) {
+      const r = await anon.rpc('companion_set_photo', { p_token: l.token, p_character: g.ids[0], p_photo })
+      expect(r.error?.message, p_photo.slice(0, 40)).toContain('bad_value')
+      const k = await alice.client.from('characters').update({ photo: p_photo }).eq('id', g.ids[0])
+      expect(k.error, p_photo.slice(0, 40)).not.toBeNull()
+    }
+  })
+
+  it('a personal link sets only its own photo; other games and revoked links nothing', async () => {
+    const g = await newGame(alice, [{ name: 'One' }, { name: 'Two' }])
+    const other = await newGame(alice, [{ name: 'Other' }])
+    const l = await link(alice, g.gameId, g.ids[0])
+    const set = (p_character: string) => anon.rpc('companion_set_photo', { p_token: l.token, p_character, p_photo: JPEG })
+    expect((await set(g.ids[1])).error?.message).toContain('not_in_game')
+    expect((await set(other.ids[0])).error?.message).toContain('not_in_game')
+    expect((await set(b.characterId)).error?.message).toContain('not_in_game')
+    expect((await set(g.ids[0])).error).toBeNull()
+    await alice.client.rpc('revoke_table_link', { p_link: l.id })
+    expect((await set(g.ids[0])).error?.message).toContain('link_invalid')
+    expect((await bob.client.from('characters').select('photo').eq('id', g.ids[0])).data).toEqual([])
+  })
+
+  it("a photo change is broadcast on the game's topic", async () => {
+    const g = await newGame(alice, [{ name: 'One' }])
+    const l = await link(alice, g.gameId)
+    const channel = (await alice.client.from('games').select('channel').eq('id', g.gameId).single()).data!.channel
+    const payload = await waitFor<Record<string, unknown>>(
+      (resolve) => listen(channel, 'photo', (p) => resolve(p as Record<string, unknown>)),
+      async () => {
+        const { error } = await anon.rpc('companion_set_photo', { p_token: l.token, p_character: g.ids[0], p_photo: JPEG })
+        expect(error).toBeNull()
+      },
+    )
+    expect(payload).toMatchObject({ characterId: g.ids[0] })
+  })
+})

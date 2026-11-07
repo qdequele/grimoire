@@ -129,7 +129,9 @@ function ensureGroups(){const st=ST();
   st.party.forEach(p=>{if(!st.groups.some(g=>g.id===p.grp))p.grp=st.groups[0].id;});}
 const grpOf=id=>ST().groups.find(g=>g.id===id);
 const initials=n=>n.split(/\s+/).filter(Boolean).map(w=>w[0]).slice(0,2).join("").toUpperCase();
-function head(p,g){const c=charById(p.cid);if(!c)return"";return `<span class="head ${p.state==="mort"?"dead":""}" style="--gc:${GCOL[g.col%4]}" title="${esc(c.n)}${p.player?" · "+esc(p.player):""}">${initials(c.n)}</span>`;}
+var PHOTOS={};
+const photoOf=cid=>{const v=PHOTOS[cid];return typeof v==="string"&&v.length<=60000&&/^data:image\/(jpeg|png|webp);base64,[A-Za-z0-9+\/]+=*$/.test(v)?v:"";};
+function head(p,g){const c=charById(p.cid);if(!c)return"";const ph=photoOf(p.cid);return `<span class="head ${p.state==="mort"?"dead":""}${ph?" ph":""}" style="--gc:${GCOL[g.col%4]}${ph?";background-image:url("+ph+")":""}" title="${esc(c.n)}${p.player?" · "+esc(p.player):""}">${ph?"":esc(initials(c.n))}</span>`;}
 function sceneName(id){const s=scenesOf(SC()).find(x=>x.id===id);return s?s.t:"—";}
 function renderNav(){let k=0;const st=ST();ensureGroups();const multi=st.groups.length>1;
   const headsAt=sid=>st.groups.filter(g=>g.scene===sid).map(g=>st.party.filter(p=>p.grp===g.id).map(p=>head(p,g)).join("")).join("");
@@ -1725,6 +1727,8 @@ window.GRIMOIRE_ENGINE={
     const sl=mkSlot(c);sl.player=name;if(pl)sl.pid=pl.id;ensureGroups();sl.grp=ST().active;
     ST().party.push(sl);save();keepFocus(()=>renderPlay());},
   setNotebooks(n){NOTEBOOKS=n||{};fillCarnets();},
+  setPhotos(p){p=p&&typeof p==="object"?p:{};if(JSON.stringify(p)===JSON.stringify(PHOTOS))return;PHOTOS=p;
+    try{keepFocus(()=>{renderNav();renderInv();});}catch(e){}},
   logRoll(txt,k){jlog(String(txt).slice(0,300),k==="san"||k==="test"?k:"de");},
 };
 try{route()}catch(e){}

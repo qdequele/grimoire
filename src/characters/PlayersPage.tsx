@@ -20,6 +20,7 @@ import {
   type CharacterRow,
   type PlayerRow,
 } from './api'
+import { Avatar } from './Avatar'
 import { progressSummary } from './character'
 import { skillText, useT } from '@/i18n/t'
 
@@ -82,6 +83,7 @@ function CharacterCard({ c, players }: { c: CharacterRow; players: PlayerRow[] }
     <Collapsible className="border border-border bg-background/40">
       <CollapsibleTrigger className="group flex w-full flex-wrap items-baseline gap-x-3 gap-y-1 px-3 py-2 text-left hover:text-gold">
         <ChevronRight className="size-3.5 self-center transition-transform group-data-[panel-open]:rotate-90" />
+        <Avatar name={c.data.name} photo={c.photo} className="size-7 self-center text-[0.625rem]" />
         <span className="font-heading text-lg">{c.data.name}</span>
         <span className="text-sm text-muted-foreground">{c.data.occupation && t(c.data.occupation)}</span>
         <span className="ml-auto text-xs tracking-wide text-muted-foreground uppercase">

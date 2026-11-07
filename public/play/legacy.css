@@ -855,3 +855,6 @@ html[data-skin="deco"] .npcc-h b{font-family:"Josefin Sans",sans-serif;letter-sp
 .gm-back:hover,.gm-back:focus-visible{color:var(--bone);outline:none}
 .gm-back .gm-k{position:static;order:1;margin-left:auto;letter-spacing:0;text-transform:none}
 html[data-skin="deco"] .gm-back{letter-spacing:.35em}
+/* Grimoire: investigators' photos in the round heads */
+.head.ph{background-color:var(--ink);background-size:cover;background-position:center}
+.head.ph.dead{filter:grayscale(1)}

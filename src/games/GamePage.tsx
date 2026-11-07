@@ -2,6 +2,7 @@ import { useQueryClient } from '@tanstack/react-query'
 import { useEffect, useRef, useState } from 'react'
 import { useNavigate, useParams } from 'react-router'
 import { characterKeys, useCharacters, type CharacterRow } from '@/characters/api'
+import { photoOr } from '@/characters/photo'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Spinner } from '@/components/ui/spinner'
 import type { Json } from '@/lib/database.types'
@@ -76,6 +77,8 @@ interface Live {
   /** Re-read this investigator's game_points row. */
   onPoints: (characterId: string) => void
   onNotes: (characterId: string) => void
+  /** Re-read this investigator's photo (`photo` hint). */
+  onPhoto: (characterId: string) => void
   /** After (re)subscribing, or a `member` hint: catch up on what happened while not listening. */
   catchUp: () => void
 }
@@ -100,9 +103,9 @@ export function GamePage() {
   const iframe = useRef<HTMLIFrameElement>(null)
   const live = useRef<Live | null>(null)
   // Investigators' names for the roll toasts (phones can add investigators during the game).
-  const names = useRef(new Map<string, string>())
+  const names = useRef(new Map<string, { name: string; photo: string | null }>())
   useEffect(() => {
-    names.current = new Map((characters.data ?? []).map((c) => [c.id, c.data.name]))
+    names.current = new Map((characters.data ?? []).map((c) => [c.id, { name: c.data.name, photo: c.photo }]))
   }, [characters.data])
 
   // Start once, from fresh data: a cached game could miss investigators who joined from a phone.
@@ -125,7 +128,7 @@ export function GamePage() {
     // Ambiance screen: follows the engine's scene, the keeper pushes handouts from the dialog.
     const screenControl = new ScreenControl(g.id, screenStory(start.game.story), g.screen ? parseScreen(g.screen) : null)
     const sceneOf = (S: LegacyState) => ((S.scen ?? {}) as Record<string, { scene?: string } | undefined>)[storyId]?.scene
-    const toMember = (c: CharacterRow): TableMember => ({ id: c.id, name: c.data.name, player: c.player?.name ?? undefined })
+    const toMember = (c: CharacterRow): TableMember => ({ id: c.id, name: c.data.name, player: c.player?.name ?? undefined, photo: c.photo })
 
     // Points last written to (or received from) game_points, per account investigator.
     let lastWritten: Tracked = new Map()
@@ -134,6 +137,13 @@ export function GamePage() {
     // Newest game_points update seen per investigator, to catch up after (re)subscribing.
     const seen = new Map<string, string>()
     let notebooks: Record<string, NotebookEntry[]> = {}
+    // Account investigators' photos (the round heads), kept out of the engine's saved state.
+    let photos: Record<string, string> = {}
+    const setPhoto = (characterId: string, photo: string | null) => {
+      const { [characterId]: _old, ...rest } = photos
+      photos = photo ? { ...rest, [characterId]: photo } : rest
+    }
+    for (const c of party) setPhoto(c.id, photoOr(c.photo))
 
     // The engine API appears in the iframe once its script has run: queue calls until then.
     const queue: Array<(e: EngineApi) => void> = []
@@ -274,6 +284,7 @@ export function GamePage() {
         if (disposed) return
         const row = c.data as unknown as CharacterRow
         setMembers((m) => [...m, toMember(row)])
+        setPhoto(row.id, photoOr(row.photo))
         withEngine((e) => {
           if (accountIds.has(row.id)) return
           const legacy = toLegacyCharacter(row.id, row.data)
@@ -281,6 +292,7 @@ export function GamePage() {
           accountIds.add(row.id)
           written.set(row.id, JSON.stringify(row.data.progress ?? null))
           e.addMember(legacy, row.player?.name ?? '', row.data.progress)
+          e.setPhotos(photos)
           const r = newer(p.data ? toPointsRow(p.data) : undefined, early.get(row.id))
           early.delete(row.id)
           if (r) {
@@ -309,6 +321,17 @@ export function GamePage() {
           lastWritten.set(cid, { ...v, checks: mine?.checks ?? r.checks })
           e.setPoints(cid, v)
         }
+      })
+    }
+    const readPhoto = (characterId: string) => {
+      void supabase.from('characters').select('photo').eq('id', characterId).single().then(({ data, error }) => {
+        if (error) return console.error('Photo load failed', error)
+        if (disposed) return
+        const photo = photoOr(data.photo)
+        setPhoto(characterId, photo)
+        setMembers((m) => m.map((x) => (x.id === characterId ? { ...x, photo } : x)))
+        withEngine((e) => e.setPhotos(photos))
+        void qc.invalidateQueries({ queryKey: characterKeys.all })
       })
     }
     const readPoints = (characterId: string) => {
@@ -357,6 +380,7 @@ export function GamePage() {
       const since = Number(g.state.serverSavedAt) || Date.parse(g.updated_at) || 0
       notebooks = notes
       withEngine((e) => e.setNotebooks(notebooks))
+      withEngine((e) => e.setPhotos(photos))
 
       window.__grimoirePlay = {
         data: engineGlobals(story),
@@ -401,6 +425,7 @@ export function GamePage() {
         withEngine,
         onPoints: readPoints,
         onNotes: (cid) => accountIds.has(cid) && refreshNotes(cid),
+        onPhoto: (cid) => accountIds.has(cid) && readPhoto(cid),
         catchUp: () => void catchUp().catch((error) => console.error('Catch-up failed', error)),
       }
       setMembers(party.map(toMember))
@@ -435,8 +460,8 @@ export function GamePage() {
     const rolls = rollFeed(id, (roll) => {
       const known = names.current.get(roll.characterId)
       if (!known) void qc.invalidateQueries({ queryKey: characterKeys.all })
-      const name = known ?? t('Un investigateur')
-      showRollToast(t, roll, name)
+      const name = known?.name ?? t('Un investigateur')
+      showRollToast(t, roll, name, known?.photo)
       const line = rollJournal(t, roll, name)
       live.current?.withEngine((e) => e.logRoll(line.text, line.kind))
     })
@@ -449,6 +474,10 @@ export function GamePage() {
       .on('broadcast', { event: 'notes' }, ({ payload }) => {
         const cid = characterIdOf(payload)
         if (cid) live.current?.onNotes(cid)
+      })
+      .on('broadcast', { event: 'photo' }, ({ payload }) => {
+        const cid = characterIdOf(payload)
+        if (cid) live.current?.onPhoto(cid)
       })
       // Only investigators listed in the game's party in the database join (catchUp reads it).
       .on('broadcast', { event: 'member' }, () => live.current?.catchUp())
