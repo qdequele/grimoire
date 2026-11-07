@@ -699,53 +699,99 @@ const manor: Draw = (id) => {
 }
 
 const library: Draw = (id) => {
-  // Shelves full of books: random widths and heights, a few leaning.
+  // A private library at night: two walls of books in tall cases, a traceried window with the moon in it
+  // and its light falling across the floor, a desk with a shaded lamp and an open book, a wing chair and
+  // a globe in the foreground.
   const r = rng(51)
-  const books: string[] = []
+  const tones: string[][] = [[], [], []]
+  const gilt: string[] = []
   const shelves: string[] = []
   const fill = (x1: number, x2: number, top: number, bottom: number, step: number) => {
-    for (let y = top; y + step <= bottom; y += step) {
-      shelves.push(`M${x1 - 12} ${y + step - 10} H${x2 + 12} v12 H${x1 - 12} Z`)
+    for (let y = top; y + step <= bottom + 1; y += step) {
+      const base = y + step - 10
+      shelves.push(`M${x1 - 12} ${base} H${x2 + 12} v12 H${x1 - 12} Z`)
       let x = x1
       while (x < x2 - 10) {
-        const w = 9 + r() * 16
-        const h = step * (0.55 + r() * 0.35)
-        if (r() < 0.06) {
+        const w = 9 + r() * 15
+        const h = step * (0.55 + r() * 0.33)
+        const roll = r()
+        if (roll < 0.05) {
           x += w * 2.5
           continue
         }
-        books.push(`M${f(x)} ${f(y + step - 10)} v${f(-h)} h${f(w - 2)} v${f(h)} Z`)
+        if (roll < 0.1 && x + 70 < x2) {
+          // a pile lying flat
+          for (let k = 0; k < 3 + Math.floor(r() * 3); k++) tones[Math.floor(r() * 3)].push(`M${f(x + r() * 6)} ${f(base - (k + 1) * 9)} h${f(56 + r() * 10)} v8 h${f(-60)} Z`)
+          x += 74
+          continue
+        }
+        if (roll < 0.14) {
+          // one leaning on its neighbour
+          tones[Math.floor(r() * 3)].push(`M${f(x)} ${f(base)} l${f(h * 0.3)} ${f(-h)} l${f(w - 2)} 2 l${f(-h * 0.3)} ${f(h - 2)} Z`)
+          x += w + h * 0.3
+          continue
+        }
+        tones[Math.floor(r() * 3)].push(`M${f(x)} ${f(base)} v${f(-h)} h${f(w - 2)} v${f(h)} Z`)
+        if (r() < 0.3) gilt.push(`M${f(x + 1)} ${f(base - h + 6)} h${f(w - 4)} v2 h${f(-(w - 4))} Z M${f(x + 1)} ${f(base - 10)} h${f(w - 4)} v2 h${f(-(w - 4))} Z`)
         x += w
       }
     }
   }
-  fill(30, 560, 60, 880, 120)
-  fill(1040, 1570, 60, 880, 120)
-  fill(640, 960, 660, 880, 110)
+  fill(30, 580, 70, 870, 114)
+  fill(1020, 1570, 70, 870, 114)
+  fill(640, 960, 668, 870, 101)
+  const win = `M690 618 V250 A110 110 0 0 1 910 250 V618 Z`
   return (
     <>
       <Layer depth="far">
-        {/* the back wall, a tall window onto the night */}
-        <path d={`M-80 -10 H${W + 80} V${H} H-80 Z ${arched(680, 110, 240, 500)}`} fillRule="evenodd" />
-        <path d="M795 140 h10 v470 h-10 Z M680 340 h240 v10 h-240 Z M680 470 h240 v10 h-240 Z" />
-        <path d={arched(680, 110, 240, 500)} fill={`url(#${id}-shaft)`} />
+        {/* the night outside the window, then the wall around it */}
+        <Moon x={800} y={196} r={34} id={id} />
+        <path d={`M-80 -10 H${W + 80} V${H} H-80 Z ${win}`} fillRule="evenodd" />
+        {/* the window's stone mullions, transoms and the tracery in its arch */}
+        <g fill="none" stroke="currentColor" strokeWidth={9}>
+          <path d="M763 618 V250 M837 618 V250 M690 400 H910 M690 520 H910 M690 250 H910" />
+        </g>
+        <path d="M676 630 H924 v-14 H676 Z" />
       </Layer>
       <Layer depth="mid">
-        <path d="M0 0 H600 V900 H0 Z M1000 0 H1600 V900 H1000 Z M620 640 H980 V900 H620 Z" fill="var(--sil-near)" />
-        <path d={books.join(' ')} className="scr-books" />
+        {/* the cases: cornice, plinth, uprights between the bays */}
+        <path d="M0 0 H600 V900 H0 Z M1000 0 H1600 V900 H1000 Z M620 650 H980 V900 H620 Z" fill="var(--sil-near)" />
+        <path d={tones[0].join(' ')} className="scr-books" />
+        <path d={tones[1].join(' ')} className="scr-books scr-books-dark" />
+        <path d={tones[2].join(' ')} className="scr-books scr-books-pale" />
+        <path d={gilt.join(' ')} fill="var(--lit)" opacity={0.35} />
         <path d={shelves.join(' ')} />
+        <path d="M-20 0 H620 V46 H-20 Z M-20 46 H624 v10 H-20 Z M980 0 H1620 V46 H980 Z M976 46 H1620 v10 H976 Z M610 640 H990 v14 H610 Z M196 56 v820 h16 v-820 Z M392 56 v820 h16 v-820 Z M1188 56 v820 h16 v-820 Z M1388 56 v820 h16 v-820 Z M576 0 h28 v900 h-28 Z M996 0 h28 v900 h-28 Z" />
+        <path d="M-20 870 H1620 V900 H-20 Z" />
+      </Layer>
+      {/* moonlight (or sunlight) through the window, across the floor */}
+      <Layer depth="lit">
+        <g className="scr-moon">
+          <path d="M690 250 L910 250 L900 900 L450 900 Z" fill={`url(#${id}-shaft)`} opacity={0.3} />
+        </g>
       </Layer>
       <Layer depth="near">
-        {/* the ladder, the desk, its lamp and a pile of books */}
-        <path d="M430 900 L540 60 h14 L444 900 Z M520 900 L620 60 h14 L534 900 Z" />
-        <path d={Array.from({ length: 13 }, (_, i) => { const y = 860 - i * 64; const k = (900 - y) / 840; return `M${f(437 + 103 * k)} ${y} h${f(90)} v8 h${f(-90)} Z` }).join(' ')} />
-        <path d="M540 900 V780 H1080 V900 Z M520 784 H1100 v-18 H520 Z" />
-        <path d="M640 766 h120 v-20 h-120 Z M650 746 h100 v-18 h-100 Z M662 728 h80 v-16 h-80 Z" />
-        <path d="M930 766 h40 v-8 h-14 v-70 h-12 v70 h-14 Z M900 690 L920 640 H980 L1000 690 Z" />
+        {/* the rolling ladder on the left case */}
+        <path d="M430 900 L520 40 h14 L444 900 Z M512 900 L600 40 h14 L526 900 Z" />
+        <path d={Array.from({ length: 13 }, (_, i) => { const y = 860 - i * 64; const k = (900 - y) / 860; return `M${f(437 + 88 * k)} ${y} h${f(82)} v8 h${f(-82)} Z` }).join(' ')} />
+        {/* the desk, its drawers, a pile of books, an open book, the shaded lamp */}
+        <path d="M560 900 V786 H1090 V900 Z M540 790 H1110 v-18 H540 Z" />
+        <path d="M600 840 h120 v6 h-120 Z M930 840 h120 v6 h-120 Z" fill="var(--sil-mid)" />
+        <path d="M600 772 h110 v-18 h-110 Z M608 754 h96 v-16 h-96 Z M614 738 h84 v-15 h-84 Z" />
+        <path d="M748 772 L752 760 Q790 750 826 762 L830 772 Z M826 772 L830 762 Q866 750 904 760 L908 772 Z" className="scr-books scr-books-pale" />
+        <path d="M972 772 h56 v-8 h-22 v-62 h-12 v62 h-22 Z" />
+        <path d="M950 704 Q950 676 1000 672 Q1050 676 1050 704 Z" />
+        {/* a wing chair, its back to us */}
+        <path d="M120 900 V700 Q120 640 170 630 Q230 600 290 630 Q340 640 340 700 V900 Z M96 900 V760 Q96 728 124 726 V900 Z M336 900 V726 Q364 728 364 760 V900 Z" />
+        {/* a globe on its stand */}
+        <circle cx={1330} cy={700} r={74} />
+        <path d="M1320 900 l10 -60 l10 60 Z M1270 900 l56 -116 h8 l-48 116 Z M1390 900 l-56 -116 h-8 l48 116 Z M1324 784 h12 v-10 h-12 Z" />
+        <path d="M1240 700 A90 90 0 0 1 1420 700" fill="none" stroke="currentColor" strokeWidth={8} />
       </Layer>
       <Layer depth="pulse">
-        <Halo id={`${id}-halo`} x={950} y={700} r={300} />
-        <path d="M904 690 h92 v6 h-92 Z" />
+        <Halo id={`${id}-halo`} x={1000} y={720} r={320} />
+        <path d="M954 704 h92 v5 h-92 Z" />
+        <path d="M748 772 L752 760 Q790 750 826 762 L830 772 Z M826 772 L830 762 Q866 750 904 760 L908 772 Z" opacity={0.35} />
       </Layer>
     </>
   )

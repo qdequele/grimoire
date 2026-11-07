@@ -230,6 +230,8 @@
 }
 .scr-layer[data-time='day'] .scr-place[data-place='harbour'] .scr-par-pulse { display: none; }
 .scr-books { fill: var(--book); }
+.scr-books-dark { fill: color-mix(in srgb, var(--book) 62%, var(--sil-near)); }
+.scr-books-pale { fill: color-mix(in srgb, var(--book) 72%, var(--lit)); }
 .scr-wax { fill: #d8ccae; }
 @keyframes scr-par-far {
   from { transform: translate3d(-0.4%, 0, 0); }
