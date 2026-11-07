@@ -4,6 +4,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import type { Json } from '@/lib/database.types'
 import { supabase, type Tables } from '@/lib/supabase'
 import { findScene, sceneAmbiance, type StoryForScreen } from '@/screen/ambiance'
+import { previewParams } from '@/screen/preview'
 import {
   imagesOf, INITIAL_SCREEN, sameScreen, screenReducer, toScreenScene,
   type ImageRef, type ScreenAction, type ScreenHandout, type ScreenScene, type ScreenState,
@@ -120,15 +121,6 @@ export function storyHandout(story: ScreenStory, id: string): ScreenHandout | nu
   const image = packImage(story, handoutImagePath(h.image))
   if (!image && !h.text) return null
   return { key: `handout:${h.id}`, title: h.title, ...(h.text ? { text: h.text } : {}), image }
-}
-
-/** Query params of /screen-preview for a scene (the picture as a signed URL). */
-export function previewParams(scene: ScreenScene, imageUrl: string | undefined): URLSearchParams {
-  const p = new URLSearchParams({ preset: scene.preset })
-  if (scene.place) p.set('place', scene.place)
-  if (scene.time) p.set('time', scene.time)
-  if (imageUrl) p.set('image', imageUrl)
-  return p
 }
 
 /**

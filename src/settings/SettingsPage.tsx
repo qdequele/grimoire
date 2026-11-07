@@ -3,9 +3,10 @@ import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { SKIN_LABEL, useSkin, type Skin } from '@/theme/skin'
 import { useT } from '@/i18n/t'
 import { ChatConnectors } from './ChatConnectors'
+import { KeeperProfile } from './KeeperProfile'
 import { LANG_LABEL, useLang, type Lang } from './lang'
 
-/** Réglages: theme and language, remembered on this device; ChatGPT and Claude connectors (account). */
+/** Réglages: theme and language, remembered on this device; profile photo and ChatGPT and Claude connectors (account). */
 export function SettingsPage() {
   const t = useT()
   const { skin, setSkin } = useSkin()
@@ -40,6 +41,7 @@ export function SettingsPage() {
           </Field>
         </FieldGroup>
       </FieldSet>
+      <KeeperProfile />
       <ChatConnectors />
     </section>
   )

@@ -1,10 +1,14 @@
-import { describe, expect, it } from 'vitest'
-import { previewParams } from '@/games/screen'
-import { previewScene } from './preview'
+import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest'
+import { previewParams, previewScene } from './preview'
 
-const STORAGE = `${import.meta.env.VITE_SUPABASE_URL}/storage/v1/object/sign/story-packs/x.svg?token=t`
+// Not read from .env.local: CI has none.
+const PROJECT = 'https://project.supabase.co'
+const STORAGE = `${PROJECT}/storage/v1/object/sign/story-packs/x.svg?token=t`
 
 describe('ambiance screen preview', () => {
+  beforeAll(() => vi.stubEnv('VITE_SUPABASE_URL', PROJECT))
+  afterAll(() => vi.unstubAllEnvs())
+
   it('round-trips a scene through its query params', () => {
     const p = previewParams({ preset: 'rain', image: null, sounds: [], place: 'manor', time: 'dusk' }, undefined)
     expect(previewScene(p)).toEqual({ preset: 'rain', image: null, sounds: [], place: 'manor', time: 'dusk' })

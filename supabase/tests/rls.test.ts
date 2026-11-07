@@ -67,6 +67,18 @@ describe('profiles', () => {
     const { error } = await alice.client.from('profiles').update({ display_name: 'Alice' }).eq('id', alice.id)
     expect(error).toBeNull()
   })
+
+  it('allow setting and removing your own photo, image data only', async () => {
+    const photo = 'data:image/jpeg;base64,/9j/4AAQSkZJRg=='
+    expect((await alice.client.from('profiles').update({ photo }).eq('id', alice.id)).error).toBeNull()
+    const bad = await alice.client.from('profiles').update({ photo: 'https://example.com/a.jpg' }).eq('id', alice.id)
+    expect(bad.error).not.toBeNull()
+    // Someone else's photo: RLS matches no row.
+    await bob.client.from('profiles').update({ photo: null }).eq('id', alice.id)
+    const { data } = await service.from('profiles').select('photo').eq('id', alice.id).single()
+    expect(data!.photo).toBe(photo)
+    expect((await alice.client.from('profiles').update({ photo: null }).eq('id', alice.id)).error).toBeNull()
+  })
 })
 
 describe('stories', () => {
