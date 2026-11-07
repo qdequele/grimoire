@@ -1086,48 +1086,117 @@ const harbour: Draw = (id) => {
 }
 
 const street: Draw = (id) => {
+  // An old-town street in one-point perspective at night: facades on both sides running to the end of
+  // the street, shop windows, hanging signs, gas lamps along the wet cobbles, a man in a hat waiting
+  // under a lamp, the moon and a far spire in the strip of sky between the roofs.
+  // World units: the eye is 380 above the ground; s is the scale at a depth (1 = the nearest).
+  const VX = 820
+  const VY = 520
+  const X = (side: number, s: number, off = 860) => VX + side * off * s
+  const Y = (s: number, z: number) => VY + (380 - z) * s
+  const quad = (side: number, s1: number, s2: number, z1: number, z2: number, off = 860) =>
+    `M${f(X(side, s1, off))} ${f(Y(s1, z1))} L${f(X(side, s2, off))} ${f(Y(s2, z1))} L${f(X(side, s2, off))} ${f(Y(s2, z2))} L${f(X(side, s1, off))} ${f(Y(s1, z2))} Z`
   const r = rng(91)
-  const houses: string[] = []
-  const chimneys: string[] = []
-  const lit: string[] = []
-  const dark: string[] = []
-  for (let x = -60; x < W + 60; ) {
-    const w = 170 + r() * 90
-    const top = 260 + r() * 220
-    const gable = r() < 0.5
-    houses.push(gable ? `M${f(x)} 820 V${f(top)} L${f(x + w / 2)} ${f(top - 80)} L${f(x + w)} ${f(top)} V820 Z` : `M${f(x)} 820 V${f(top)} H${f(x + w)} V820 Z M${f(x - 6)} ${f(top + 4)} H${f(x + w + 6)} v-14 H${f(x - 6)} Z`)
-    chimneys.push(`M${f(x + w * 0.7)} ${f(top - (gable ? 60 : 0))} v-50 h22 v50 Z`)
-    const cols = Math.max(2, Math.floor(w / 60))
-    const gx = w / cols
-    for (let y = top + 40; y < 700; y += 90) {
-      for (let i = 0; i < cols; i++) (r() < 0.32 ? lit : dark).push(`M${f(x + i * gx + gx / 2 - 14)} ${f(y)} h28 v48 h-28 Z`)
+  const left: Array<[number, number, number]> = [[1.1, 0.62, 2300], [0.62, 0.44, 1900], [0.44, 0.33, 2500], [0.33, 0.25, 1700], [0.25, 0.19, 2200], [0.19, 0.14, 1600]]
+  const right: Array<[number, number, number]> = [[1.1, 0.7, 2000], [0.7, 0.5, 2600], [0.5, 0.36, 1800], [0.36, 0.27, 2300], [0.27, 0.2, 1700], [0.2, 0.14, 2100]]
+  const sides: ReactNode[] = []
+  const litWin: string[] = []
+  const darkWin: string[] = []
+  const shops: string[] = []
+  const eaves: string[] = []
+  const glints: string[] = []
+  for (const [side, list] of [[-1, left], [1, right]] as const) {
+    // Farthest first: a nearer building covers the one behind it.
+    for (const [sa, sb, h] of [...list].reverse()) {
+      // the end wall facing us, seen above a lower neighbour; a chimney stack on it
+      const x0 = X(side, sa)
+      const depth = 1300 * sa
+      sides.push(<path key={`${side}${sa}`} d={`M${f(x0)} ${f(Y(sa, 0))} V${f(Y(sa, h))} H${f(x0 + side * depth)} V${f(Y(sa, 0))} Z M${f(x0 + side * depth * 0.3)} ${f(Y(sa, h))} v${f(-160 * sa)} h${f(side * 90 * sa)} v${f(160 * sa)} Z`} fill="var(--sil-back)" />)
+      sides.push(<path key={`f${side}${sa}`} d={quad(side, sa, sb, 0, h)} />)
+      eaves.push(`M${f(X(side, sa))} ${f(Y(sa, h))} L${f(X(side, sb))} ${f(Y(sb, h))}`)
+      // windows: a shop front below, rows of sash windows above
+      const cols = Math.max(2, Math.round((sa - sb) * 16))
+      for (let c = 0; c < cols; c++) {
+        const s1 = sa - ((sa - sb) * (c + 0.27)) / cols
+        const s2 = sa - ((sa - sb) * (c + 0.73)) / cols
+        for (const [z1, z2] of [[980, 1300], [1620, 1940], [2240, 2460]]) {
+          if (z2 > h - 140) continue
+          ;(r() < 0.3 ? litWin : darkWin).push(quad(side, s1, s2, z1, z2))
+        }
+      }
+      // the shop front: always lit behind the man waiting on the right
+      const s1 = sa - (sa - sb) * 0.12
+      const s2 = sb + (sa - sb) * 0.12
+      if (r() < 0.5 || (side === 1 && sa === 0.5)) {
+        shops.push(quad(side, s1, s2, 140, 500))
+        // mirrored on the wet pavement
+        glints.push(quad(side, s1, s2, -60, -340))
+      } else darkWin.push(quad(side, s1, s2, 140, 500))
     }
-    x += w + 8
   }
+  // Gas lamps on both curbs.
+  const lamps: Array<[number, number]> = [[-1, 0.55], [-1, 0.32], [-1, 0.21], [1, 0.52], [1, 0.26], [1, 0.17]]
+  const lampPost = (side: number, s: number) => {
+    const x = X(side, s, 700)
+    const k = s
+    return `M${f(x - 5 * k)} ${f(Y(s, 0))} V${f(Y(s, 760))} h${f(10 * k)} V${f(Y(s, 0))} Z M${f(x - 22 * k)} ${f(Y(s, 760))} h${f(44 * k)} l${f(-8 * k)} ${f(-26 * k)} h${f(-28 * k)} Z M${f(x - 14 * k)} ${f(Y(s, 0))} l${f(6 * k)} ${f(-40 * k)} h${f(16 * k)} l${f(6 * k)} ${f(40 * k)} Z`
+  }
+  // Cobbles: lines across the street, closer together towards the end.
+  let cobbles = ''
+  for (let s = 1.2; s > 0.15; s *= 0.93) cobbles += `M${f(X(-1, s, 690))} ${f(Y(s, 0))} H${f(X(1, s, 690))} v${f(Math.max(0.8, 3 * s))} H${f(X(-1, s, 690))} Z `
+  // A man in a hat and a long coat, waiting under the lamp on the right.
+  const man = (x: number, y: number, k: number) =>
+    `M${f(x - 30 * k)} ${y} L${f(x - 26 * k)} ${f(y - 230 * k)} Q${f(x - 30 * k)} ${f(y - 300 * k)} ${f(x - 12 * k)} ${f(y - 310 * k)} Q${f(x - 20 * k)} ${f(y - 330 * k)} ${f(x - 16 * k)} ${f(y - 350 * k)} L${f(x - 36 * k)} ${f(y - 352 * k)} L${f(x - 34 * k)} ${f(y - 362 * k)} L${f(x - 16 * k)} ${f(y - 364 * k)} Q${f(x)} ${f(y - 400 * k)} ${f(x + 16 * k)} ${f(y - 364 * k)} L${f(x + 34 * k)} ${f(y - 362 * k)} L${f(x + 36 * k)} ${f(y - 352 * k)} L${f(x + 16 * k)} ${f(y - 350 * k)} Q${f(x + 20 * k)} ${f(y - 330 * k)} ${f(x + 12 * k)} ${f(y - 310 * k)} Q${f(x + 32 * k)} ${f(y - 300 * k)} ${f(x + 28 * k)} ${f(y - 230 * k)} L${f(x + 30 * k)} ${y} Z`
   return (
     <>
       <Layer depth="far">
-        <path d={ridge(560, 30, 92)} />
-        <path d={`M1180 600 V260 h40 V600 Z M1172 264 L1200 120 L1228 264 Z ${cross(1200, 124, 40)}`} />
+        <Moon x={830} y={190} r={30} id={id} />
+        {/* the end of the street: far roofs and a spire */}
+        <path d={`M560 900 V470 L600 450 L640 470 V430 H720 V456 L770 420 L800 440 V400 H840 V340 L852 300 L864 340 V400 H880 V450 L940 420 L980 450 V410 H1060 V900 Z ${cross(852, 304, 30)}`} />
       </Layer>
       <Layer depth="mid">
-        <path d={`${houses.join(' ')} ${chimneys.join(' ')}`} />
-        <path d={dark.join(' ')} fill="var(--sil-near)" opacity={0.55} />
+        {/* the street: cobbles, pavements, then the buildings */}
+        <path d={`M${f(X(-1, 1.3))} ${f(Y(1.3, 0))} H${f(X(1, 1.3))} L${f(X(1, 0.13))} ${f(Y(0.13, 0))} H${f(X(-1, 0.13))} Z`} />
+        <path d={`${quad(-1, 1.3, 0.13, 0, 0)} M${f(X(-1, 1.3))} ${f(Y(1.3, 0))} L${f(X(-1, 0.13))} ${f(Y(0.13, 0))} L${f(X(-1, 0.13, 690))} ${f(Y(0.13, 0))} L${f(X(-1, 1.3, 690))} ${f(Y(1.3, 0))} Z M${f(X(1, 1.3))} ${f(Y(1.3, 0))} L${f(X(1, 0.13))} ${f(Y(0.13, 0))} L${f(X(1, 0.13, 690))} ${f(Y(0.13, 0))} L${f(X(1, 1.3, 690))} ${f(Y(1.3, 0))} Z`} fill="var(--sil-back)" opacity={0.6} />
+        <path d={cobbles} fill="var(--sil-near)" opacity={0.5} />
+        {/* tram rails running down the middle of the street */}
+        <path d={[-118, -96, 96, 118].map((g) => `M${f(VX + g * 1.3)} ${f(Y(1.3, 0))} L${f(VX + g * 0.13)} ${f(Y(0.13, 0))}`).join(' ')} stroke="var(--sil-back)" strokeWidth={3} fill="none" opacity={0.8} />
+        {sides}
+        <path d={darkWin.join(' ')} fill="var(--sil-near)" opacity={0.55} />
+        {/* hanging signs on brackets */}
+        <path d={`M${f(X(-1, 0.52))} ${f(Y(0.52, 820))} h${f(170 * 0.52)} v${f(8 * 0.52)} h${f(-170 * 0.52)} Z M${f(X(-1, 0.52) + 60 * 0.52)} ${f(Y(0.52, 800))} h${f(100 * 0.52)} v${f(150 * 0.52)} h${f(-100 * 0.52)} Z M${f(X(1, 0.6))} ${f(Y(0.6, 860))} h${f(-150 * 0.6)} v${f(8 * 0.6)} h${f(150 * 0.6)} Z M${f(X(1, 0.6) - 130 * 0.6)} ${f(Y(0.6, 840))} h${f(90 * 0.6)} v${f(120 * 0.6)} h${f(-90 * 0.6)} Z`} />
+        <path d={lamps.map(([side, s]) => lampPost(side, s)).join(' ')} />
+        <path d={man(X(1, 0.42, 780), Y(0.42, 0), 0.42)} fill="var(--sil-near)" />
+        <g className="scr-rim" strokeWidth={2}>
+          <path d={eaves.join(' ')} />
+        </g>
       </Layer>
       <Layer depth="lit">
-        <path d={lit.join(' ')} opacity={0.8} />
-        {/* lamps and their reflections on the wet street */}
-        {[300, 1250].map((x) => (
-          <g key={x}>
-            <Halo id={`${id}-halo`} x={x} y={560} r={210} />
-            <path d={`M${x - 16} 552 h32 l-6 24 h-20 Z`} />
-            <ellipse cx={x} cy={880} rx={30} ry={70} fill={`url(#${id}-halo)`} />
-          </g>
-        ))}
+        <path d={litWin.join(' ')} fill={`url(#${id}-glass)`} />
+        <path d={shops.join(' ')} fill={`url(#${id}-glass)`} opacity={0.6} />
+        {glints.map((d) => <path key={d} d={d} fill={`url(#${id}-ray)`} opacity={0.55} />)}
+        {lamps.map(([side, s]) => {
+          const x = X(side, s, 700)
+          return (
+            <g key={`${side}${s}`}>
+              <Halo id={`${id}-halo`} x={x} y={Y(s, 750)} r={300 * s} />
+              <path d={`M${f(x - 18 * s)} ${f(Y(s, 758))} h${f(36 * s)} l${f(-6 * s)} ${f(-22 * s)} h${f(-24 * s)} Z`} />
+              {/* its broken reflection running towards us on the wet cobbles */}
+              <ellipse cx={x + side * -40 * s} cy={Y(s, 0) + 50 * s} rx={22 * s} ry={70 * s} fill={`url(#${id}-halo)`} />
+            </g>
+          )
+        })}
       </Layer>
       <Layer depth="near">
-        <path d="M-40 900 V834 H1640 V900 Z" />
-        {[300, 1250].map((x) => <path key={x} d={`M${x - 6} 834 V576 h12 V834 Z M${x - 18} 834 l12 -30 h12 l12 30 Z M${x - 18} 552 h36 l-8 -14 h-20 Z M${x - 2} 538 v-10 h4 v10 Z`} />)}
+        {/* the nearest lamp post, on the left kerb */}
+        <path d={`M112 910 V150 h16 V910 Z M96 150 h48 l-10 -34 h-28 Z M116 116 v-14 h8 v14 Z M100 910 l12 -60 h16 l12 60 Z`} />
+      </Layer>
+      <Layer depth="pulse">
+        <g className="scr-glow">
+          <Halo id={`${id}-halo`} x={120} y={160} r={300} />
+          <path d="M98 150 h44 l-8 -30 h-28 Z" />
+          <ellipse cx={180} cy={880} rx={40} ry={90} fill={`url(#${id}-halo)`} />
+        </g>
       </Layer>
     </>
   )
