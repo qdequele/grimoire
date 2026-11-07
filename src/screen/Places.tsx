@@ -526,31 +526,90 @@ const crypt: Draw = (id) => {
   )
 }
 
+/** A bat in flight, wings spread, centred on x, y. */
+const bat = (x: number, y: number, s: number) =>
+  `M${f(x)} ${f(y - 3 * s)} Q${f(x - 8 * s)} ${f(y - 12 * s)} ${f(x - 22 * s)} ${f(y - 8 * s)} Q${f(x - 16 * s)} ${f(y - 4 * s)} ${f(x - 18 * s)} ${f(y + 2 * s)} Q${f(x - 10 * s)} ${f(y - 2 * s)} ${f(x - 6 * s)} ${f(y + 3 * s)} Q${f(x - 3 * s)} ${f(y)} ${f(x)} ${f(y + 4 * s)} Q${f(x + 3 * s)} ${f(y)} ${f(x + 6 * s)} ${f(y + 3 * s)} Q${f(x + 10 * s)} ${f(y - 2 * s)} ${f(x + 18 * s)} ${f(y + 2 * s)} Q${f(x + 16 * s)} ${f(y - 4 * s)} ${f(x + 22 * s)} ${f(y - 8 * s)} Q${f(x + 8 * s)} ${f(y - 12 * s)} ${f(x)} ${f(y - 3 * s)} Z`
+
+/** A jagged outline through the given points, each segment broken into small random steps (rock). */
+function jagged(points: Array<[number, number]>, seed: number, rough = 10): string {
+  const r = rng(seed)
+  let d = `M${points[0][0]} ${points[0][1]}`
+  for (let i = 1; i < points.length; i++) {
+    const [x0, y0] = points[i - 1]
+    const [x1, y1] = points[i]
+    const n = Math.max(1, Math.round(Math.hypot(x1 - x0, y1 - y0) / 26))
+    for (let k = 1; k <= n; k++) {
+      const t = k / n
+      const j = k === n ? 0 : rough
+      d += ` L${f(x0 + (x1 - x0) * t + (r() - 0.5) * j)} ${f(y0 + (y1 - y0) * t + (r() - 0.5) * j)}`
+    }
+  }
+  return `${d} Z`
+}
+
 const castle: Draw = (id) => {
-  const tower = (x: number, top: number, w: number, roof: number) =>
-    `M${x} 700 V${top} H${x + w} V700 Z M${x - 10} ${top + 2} L${x + w / 2} ${top - roof} L${x + w + 10} ${top + 2} Z`
+  // A fortress on a crag above a valley: keep, round towers, a slender watchtower, the great hall,
+  // a gatehouse reached by an arched bridge from the next outcrop. The moon is on the left.
+  const roundTower = (x: number, w: number, base: number, top: number, roof: number) =>
+    `M${x} ${base} V${top} H${x + w} V${base} Z M${x - 8} ${top + 4} L${x + w / 2} ${top - roof} L${x + w + 8} ${top + 4} Z M${x - 6} ${top + 6} h${w + 12} v-8 h${-w - 12} Z`
+  const corbels = (x1: number, x2: number, y: number) => {
+    let d = ''
+    for (let x = x1; x < x2; x += 14) d += `M${x} ${y} h8 v10 h-8 Z `
+    return d
+  }
+  const win = (x: number, y: number, w = 14, h = 26) => arched(x, y, w, h)
   return (
     <>
       <Layer depth="far">
         <Moon x={360} y={180} r={50} id={id} />
-        <path d={ridge(560, 150, 31, 30)} />
+        <path d={ridge(520, 170, 37, 30)} fill="var(--sil-haze)" />
+        <path d={ridge(640, 120, 31, 30)} />
+        <path d={`${bat(1180, 190, 0.9)} ${bat(1240, 240, 0.7)} ${bat(1130, 260, 0.6)}`} />
       </Layer>
       <Layer depth="mid">
-        {/* the crag */}
-        <path d="M380 900 L520 700 L600 690 L640 640 L1160 640 L1210 680 L1290 690 L1420 900 Z" />
-        {/* curtain wall, keep and towers */}
-        <path d={`M640 660 V520 H1170 V660 Z ${merlons(640, 1170, 520, 18)}`} />
-        <path d={`M820 560 V300 H980 V560 Z ${merlons(820, 980, 300, 20)}`} />
-        <path d={`${tower(600, 430, 76, 120)} ${tower(1150, 450, 76, 110)} ${tower(1010, 250, 52, 110)}`} />
+        {/* the crag, the outcrop on the left, and the bridge between them */}
+        <path d={jagged([[560, 910], [610, 790], [660, 720], [690, 650], [720, 628], [1000, 640], [1290, 630], [1330, 660], [1380, 720], [1440, 790], [1530, 910]], 38, 14)} />
+        <path d={jagged([[120, 910], [180, 800], [250, 742], [330, 716], [420, 712], [460, 760], [480, 910]], 39, 12)} />
+        <path d={`M400 716 L700 650 v18 L400 734 Z ${[0, 1, 2].map((i) => { const x = 440 + i * 86; const y = 728 - i * 19; return `M${x} ${y} v${120 - i * 10} h16 v${-(120 - i * 10)} Z` }).join(' ')}`} />
+        <path d="M410 734 L700 668 V700 Q660 690 640 720 Q620 700 586 730 Q566 712 532 750 Q512 732 478 770 Q460 750 420 790 Z" />
+        {/* curtain wall with its walkway corbels and merlons */}
+        <path d={`M700 640 V540 H1290 V640 Z ${merlons(700, 1290, 540, 14)} ${corbels(702, 1290, 548)}`} />
+        {/* gatehouse */}
+        <path d={`M720 640 V500 H808 V640 Z ${merlons(720, 808, 500, 11)}`} />
+        {/* keep with its corner turrets */}
+        <path d={`M860 600 V300 H1020 V600 Z ${merlons(860, 1020, 300, 14)} ${roundTower(842, 24, 330, 296, 44)} ${roundTower(1014, 24, 330, 296, 44)}`} />
+        {/* slender watchtower and its pennant */}
+        <path d={`${roundTower(1046, 46, 600, 220, 110)} M1068 112 v-40 h3 v40 Z M1071 74 l30 8 l-30 8 Z`} />
+        {/* great hall, chimney */}
+        <path d="M1100 600 V500 H1250 V600 Z M1092 504 L1175 448 L1258 504 Z M1210 476 V430 h16 v46 Z" />
+        {/* round towers at the corners */}
+        <path d={`${roundTower(668, 58, 660, 430, 96)} ${roundTower(1262, 58, 660, 460, 90)}`} />
+        {/* faces turned from the moon */}
+        <path d="M1000 600 V318 h20 V600 Z M1078 600 V226 h14 V600 Z M708 660 V436 h18 V660 Z M1302 660 V466 h18 V660 Z" fill="var(--sil-near)" opacity={0.4} />
+        {/* the crag's faces: lit ledges turned to the moon, cracks in the rock */}
+        <path d="M600 800 L640 760 L668 770 L630 820 Z M650 712 L686 660 L700 668 L672 724 Z M570 880 L600 830 L622 842 L596 900 Z M720 700 L760 660 L790 668 L750 716 Z M180 812 L240 752 L262 760 L210 822 Z M300 730 L360 718 L370 730 L320 748 Z" fill="var(--sil-back)" opacity={0.5} />
+        <g fill="none" stroke="var(--sil-near)" strokeWidth={3} strokeLinejoin="round" opacity={0.6}>
+          <path d="M820 660 L840 720 L828 780 L850 860 M1000 650 L990 700 L1012 760 M1180 650 L1200 700 L1190 760 L1220 840 M1330 690 L1310 740 L1340 800 M260 760 L280 820 L270 880" />
+        </g>
+        <g className="scr-rim" strokeWidth={2}>
+          <path d="M660 434 L697 334 M1038 226 L1069 110 M1254 464 L1291 370 M834 300 L854 252 M1092 504 L1175 448" />
+        </g>
       </Layer>
       <Layer depth="lit">
-        <path d={`${arched(860, 360, 18, 34)} ${arched(925, 420, 18, 34)} ${arched(1028, 300, 16, 30)} ${arched(628, 480, 16, 28)} ${arched(895, 470, 16, 28)}`} opacity={0.9} />
-        <Halo id={`${id}-halo`} x={900} y={420} r={150} o={0.45} />
+        <Halo id={`${id}-halo`} x={764} y={600} r={120} o={0.55} />
+        <g fill={`url(#${id}-glass)`}>
+          <path d={`${win(900, 360)} ${win(950, 420)} ${win(905, 500)} ${win(1062, 300, 12, 22)} ${win(1062, 420, 12, 22)} ${win(690, 500)} ${win(1284, 520)} ${win(1120, 530, 16, 34)} ${win(1150, 530, 16, 34)} ${win(1180, 530, 16, 34)}`} />
+          {/* the gate, lit from within, its portcullis half raised */}
+          <path d="M744 640 V600 A20 20 0 0 1 784 600 V640 Z" />
+        </g>
+        <path d="M744 640 V600 A20 20 0 0 1 784 600 V616 H744 Z M750 616 v24 h3 v-24 Z M760 616 v24 h3 v-24 Z M770 616 v24 h3 v-24 Z" fill="var(--sil-mid)" opacity={0.85} />
+        <Halo id={`${id}-halo`} x={940} y={440} r={200} o={0.3} />
       </Layer>
       <Layer depth="near">
-        <path d={ridge(880, 26, 32)} />
-        <BareTree x={150} base={900} h={560} seed={33} lean={0.15} />
-        <BareTree x={1480} base={900} h={360} seed={34} lean={-0.2} />
+        <path d={ridge(884, 22, 32)} />
+        <path d={grass(884, 35)} />
+        <BareTree x={150} base={904} h={560} seed={33} lean={0.15} />
+        <BareTree x={1500} base={904} h={380} seed={34} lean={-0.2} />
       </Layer>
     </>
   )
