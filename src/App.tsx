@@ -63,6 +63,10 @@ const router = createBrowserRouter([
   { path: '/games/:id', element: <RequireAuth><GameRoute /></RequireAuth> },
   // Ambiance screen: a TV or tablet in the middle of the table, opened from the keeper's link (no account).
   { path: '/screen/:token', element: <ScreenPage /> },
+  // Dev only (never in a production build): the drawn décors, from query params.
+  ...(import.meta.env.DEV
+    ? [{ path: '/dev/places', lazy: () => import('@/screen/PlacesGallery').then((m) => ({ Component: m.PlacesGallery })) }]
+    : []),
   // Player companion: public pages opened from a table link (no account).
   {
     path: '/t/:token',
