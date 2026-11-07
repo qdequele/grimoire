@@ -27,6 +27,12 @@ enough.** Every mistake below was found by the keeper after a scene was called d
 4. **Fix**, then go back to 1. Stop only when a full loop finds nothing, and never before 5 loops on
    a new or redrawn place.
 5. **Check**: `pnpm e2e:decors` (all places; the dev server or `pnpm dev` must answer on :5173).
+6. **Show the before/after**: `pnpm decor:compare [places] [--ref <commit>]` renders the places on
+   the ref (default `origin/main`, in a temporary checkout) and here, and writes
+   `test-results/decors/compare/index.html`: a slider over each pair, per time of day and drift end.
+   Open it in the browser (with `pnpm dev` running it is at
+   `/test-results/decors/compare/index.html`) and show it to the keeper. "After" frames alone don't
+   show what changed.
 
 ## Checklist (every one of these happened)
 
@@ -40,7 +46,10 @@ enough.** Every mistake below was found by the keeper after a scene was called d
   a frame's jamb, a spill's corner on a sill's corner). Shared horizontal edges are fine: the drift is
   sideways.
 - An object resting on another is at the same depth (a book on a desk, a candle on its stand, a
-  lantern on its wall).
+  lantern on its wall, a doorway with the corridor that ends at it).
+- Something in front of a light is drawn after it: lights are layers of their own, so a veranda at
+  the depth of the lit windows behind it goes in `mid-front` (drifts with mid, drawn after its lights),
+  in shadow so it reads against the wall.
 
 **Support**
 - Nothing floats: walls go below the ground line, trees and stones are planted on the ridge
@@ -49,6 +58,8 @@ enough.** Every mistake below was found by the keeper after a scene was called d
 - Nothing is only partly supported: a tower's foot past the edge of its headland, a ladder leaning
   past the end of the shelves, a hook ending inside a roof. (The automatic check doesn't see these:
   your eyes must.)
+- Buildings by the water stand on a quay, never on the sea; a lamp stands on the ground, not in the
+  water at the edge of the frame.
 - Things in water sit at the waterline: piles stop there (below it only faint reflections), hulls
   float, nothing stands on stilts under a boat.
 - No line runs off into bare sky with nothing to hold it: tall straight trunks rising out of the
@@ -57,6 +68,15 @@ enough.** Every mistake below was found by the keeper after a scene was called d
 **Shapes**
 - Matching widths: an arch as wide as its window, a cap as wide as its post, a roof overhanging both
   sides of its wall.
+- Moonlit edges (`.scr-rim`) follow their shape exactly: a rim drawn a few units off (above a dome,
+  past a spire's foot) floats. A ring is whole or held at both ends.
+- Even rhythms: battlements balanced on both sides of a spire, columns paired about a door (one
+  standing in the doorway was the even spacing's fault), stone courses broken at windows and recesses
+  (a line through a dark pane reads as a glazing bar).
+- No hairlines: two shapes that only share an edge show a light seam between them (anti-aliasing).
+  Overlap them by a few units. `P` gives split pieces a thin outline in their own colour for this.
+- At the frame's edges: something cut by the edge at one drift end (a cross sliding out, its arm and
+  the crow on it left in the air) must be moved inward.
 - One path holding several overlapping shapes fills their overlap only if they wind the same way
   (nonzero rule). `P` (in Places.tsx) draws each shape of a plain path as its own element, so use
   `<P>` for silhouettes, never a raw `<path>` with overlapping shapes and opacity or a gradient. Holes
@@ -87,5 +107,5 @@ loosen a rule to make a scene pass.
 
 ## When you're done
 
-Show the keeper the final `-a` / `-b` frames (and zooms of what changed), list what each loop found,
-and say what you're still unsure about.
+Open the before/after page for the keeper, list what each loop found (place by place), and say what
+you're still unsure about.

@@ -14,7 +14,8 @@ const H = 900
 
 // A light goes in the lit layer of its shape's depth (`lit-far`, `lit` = mid, `lit-near`): layers of
 // different depths drift apart, so a lamp's glass drawn at another depth than its post slides off it.
-type Depth = 'far' | 'mid' | 'near' | 'lit' | 'lit-far' | 'lit-near' | 'pulse' | 'pulse-mid' | 'water'
+// `mid-front`: drifts with mid but is drawn after its lights (a veranda's railing in front of lit windows).
+type Depth = 'far' | 'mid' | 'mid-front' | 'near' | 'lit' | 'lit-far' | 'lit-near' | 'pulse' | 'pulse-mid' | 'water'
 
 function Layer({ depth, children }: { depth: Depth; children: ReactNode }) {
   return (
@@ -38,10 +39,14 @@ function P({ d, ...rest }: SVGProps<SVGPathElement>) {
   const whole = !d || rest.fillRule === 'evenodd' || rest.opacity !== undefined || fill.includes('url(') || fill === 'none'
   const shapes = whole ? [] : d.split(/(?=M)/).map((x) => x.trim()).filter(Boolean)
   if (shapes.length < 2) return <path d={d} {...rest} />
+  // Shapes that only touched inside one path would now meet as separate elements, and anti-aliasing
+  // leaves a light hairline where two elements share an edge: a thin outline in their own colour makes
+  // neighbours overlap. (Paths coloured by a class keep their look and get none.)
+  const seam = rest.className || rest.stroke ? {} : { stroke: fill || 'currentColor', strokeWidth: 0.6, strokeLinejoin: 'round' as const }
   return (
     <>
       {shapes.map((x, i) => (
-        <path key={i} d={x} {...rest} />
+        <path key={i} d={x} {...seam} {...rest} />
       ))}
     </>
   )
@@ -122,7 +127,7 @@ function BareTree({ x, base, h, seed, lean = 0 }: { x: number; base: number; h: 
   grow(x, base, h * 0.36, -Math.PI / 2 + lean, 0)
   return (
     <g stroke="currentColor" strokeLinecap="round" fill="none">
-      {levels.map((d, i) => d.length > 0 && <P key={i} d={d.join('')} strokeWidth={Math.max(1, h * 0.05 * 0.6 ** i)} />)}
+      {levels.map((d, i) => d.length > 0 && <path key={i} d={d.join('')} strokeWidth={Math.max(1, h * 0.05 * 0.6 ** i)} />)}
     </g>
   )
 }
@@ -304,18 +309,20 @@ const church: Draw = (id) => {
         <P d="M1176 870 V650 H1294 V870 Z M1170 654 Q1196 600 1235 568 Q1274 600 1300 654 Z" />
         {/* tower: stages, string courses, corner buttresses, parapet and pinnacles */}
         <P d="M548 870 V364 H692 V870 Z M542 604 h156 v10 h-156 Z M542 472 h156 v10 h-156 Z M538 364 h164 v-16 h-164 Z" />
-        <P d={`M520 870 V760 l10 -14 V604 h18 V870 Z ${pinnacle(546, 350, 16, 54)} ${pinnacle(694, 350, 16, 54)} ${merlons(560, 680, 348, 12)}`} />
+        <P d={`M520 870 V760 l10 -14 V604 h18 V870 Z ${pinnacle(546, 350, 16, 54)} ${pinnacle(694, 350, 16, 54)} M555 348 h10 v-12 h-10 Z M675 348 h10 v-12 h-10 Z`} />
+        {/* one merlon in each gap between a corner pinnacle and the spire: spaced from the parapet's end, a lone one stuck out on the left only */}
         {/* the spire and its cross */}
         <P d={`M566 352 L620 104 L674 352 Z ${cross(620, 108, 58)}`} />
         {/* belfry louvres: dark slats in the openings */}
         <P d={belfry} fill="var(--sil-near)" />
         <P d={[0, 1, 2, 3, 4].map((i) => `M584 ${412 + i * 9} h18 v3 h-18 Z M618 ${412 + i * 9} h18 v3 h-18 Z`).join(' ')} fill="var(--sil-back)" />
-        {/* the buttresses' faces turned from the moon, in shadow */}
-        <P d={piers.map((x) => `M${x - 14} 870 V780 l4 -10 V622 h7 V870 Z`).join(' ')} fill="var(--sil-near)" opacity={0.55} />
+        {/* the buttresses' and pinnacles' faces turned from the moon, in shadow (without them the pinnacles,
+            as dark as the wall behind, showed only as their moonlit edge: a stroke floating on the wall) */}
+        <P d={piers.map((x) => `M${x - 14} 870 V780 l4 -10 V622 h7 V870 Z M${x - 9} 624 L${x} 564 L${x} 624 Z`).join(' ')} fill="var(--sil-near)" opacity={0.55} />
         {/* moonlight on the edges facing the moon */}
         <g className="scr-rim" strokeWidth={2}>
-          <P d="M620 108 L674 352 M1156 384 L1188 478 M712 384 H1156 M1235 568 Q1274 600 1300 654 M700 664 H1176 M538 348 H702" />
-          <P d={piers.map((x) => `M${x} 564 L${x + 9} 624 V664`).join(' ')} />
+          <path d="M620 108 L673.1 348 M1156 384 L1188 478 M712 384 H1156 M1235 568 Q1274 600 1300 654 M700 664 H1176 M538 348 H702" />
+          <path d={piers.map((x) => `M${x} 564 L${x + 9} 624 V664`).join(' ')} />
         </g>
         <P d={ridge(872, 8, 12)} />
       </Layer>
@@ -323,14 +330,14 @@ const church: Draw = (id) => {
         <Halo id={`${id}-halo`} x={620} y={830} r={170} o={0.75} />
         <Halo id={`${id}-halo`} x={940} y={600} r={330} o={0.25} />
         <g fill={`url(#${id}-glass)`}>
-          <P d={`${clerestory} ${aisle} ${apse}`} />
+          <path d={`${clerestory} ${aisle} ${apse}`} />
           <circle cx={620} cy={530} r={30} />
           {/* the west door, open */}
-          <P d={gothic(596, 796, 48, 74)} />
+          <path d={gothic(596, 796, 48, 74)} />
         </g>
         <g stroke="var(--sil-mid)" strokeWidth={3} fill="none">
-          <P d={tracery} />
-          <P d={rose} />
+          <path d={tracery} />
+          <path d={rose} />
           <circle cx={620} cy={530} r={10} />
           <circle cx={620} cy={530} r={30} strokeWidth={4} />
         </g>
@@ -409,7 +416,7 @@ const graveyard: Draw = (id) => {
         <P d="M526 808 V772 H594 V808 Z M534 772 V760 H586 V772 Z M540 760 Q542 712 550 690 Q552 664 566 656 Q584 652 588 672 Q586 684 578 690 Q586 716 584 760 Z" />
         <P d="M640 812 V786 H730 V812 Z M634 788 H736 v-8 H634 Z M1290 812 V790 H1370 V812 Z M1284 792 H1376 v-8 H1284 Z" />
         <g className="scr-rim" strokeWidth={2}>
-          <P d="M1080 532 L1166 590 M1146 612 V766 M1156 764 H1168 M1168 788 H1180 M588 672 Q586 684 578 690 Q586 716 584 760 M736 780 H634 M1376 784 H1284" />
+          <path d="M1080 532 L1166 590 M1146 612 V766 M1146 764 H1156 M1156 776 H1168 M1168 788 H1180 M588 672 Q586 684 578 690 Q586 716 584 760 M736 780 H634 M1376 784 H1284" />
         </g>
       </Layer>
       <Layer depth="lit">
@@ -419,7 +426,8 @@ const graveyard: Draw = (id) => {
       </Layer>
       <Layer depth="near">
         <BareTree x={200} base={904} h={740} seed={26} lean={0.1} />
-        <P d={`${stone(1400, 908, 96, 176)} ${cross(1520, 908, 210)} ${stone(60, 910, 70, 120)} ${crow(1520, 908 - 210, 1.3, true)}`} />
+        {/* kept inside the frame at both ends of the drift: at x 1520 the cross slid out, leaving its arm and the crow in the air */}
+        <P d={`${stone(1330, 908, 96, 176)} ${cross(1450, 908, 210)} ${stone(60, 910, 70, 120)} ${crow(1450, 908 - 210, 1.3, true)}`} />
         <Fence y={904} h={96} gateFrom={980} gateTo={1180} />
         <P d={crow(973, 904 - 96 - 56, 1.1)} />
         {/* a lantern on a bracket, on the right gate pillar */}
@@ -499,9 +507,8 @@ const crypt: Draw = (id) => {
   return (
     <>
       <Layer depth="far">
-        {/* the end wall and its doorway */}
+        {/* the end wall (plain: no edge to show the drift) */}
         <P d={`M-80 -10 H${W + 80} V${H} H-80 Z`} fill="var(--cr-5)" />
-        <P d={door} fill={`url(#${id}-glass)`} />
       </Layer>
       <Layer depth="mid">
         {/* the floor, then each bay, nearest first, lighter as it nears the door */}
@@ -514,6 +521,9 @@ const crypt: Draw = (id) => {
         {/* the ribs: darker, against the light behind them */}
         {frames.slice(1).map((s, i) => <P key={s} d={archBand(s)} fill={shades[Math.max(0, i - 1)]} />)}
         <P d={frames.slice(1).map((s) => `M${f(cx - ww(s) - 4 * s)} ${f(spring(s))} h${f(ww(s) - hw(s) + 8 * s)} v${f(14 * s)} h${f(-(ww(s) - hw(s) + 8 * s))} Z M${f(cx + hw(s) - 4 * s)} ${f(spring(s))} h${f(ww(s) - hw(s) + 8 * s)} v${f(14 * s)} h${f(-(ww(s) - hw(s) + 8 * s))} Z`).join(' ')} fill="var(--cr-0)" />
+        {/* the doorway at the corridor's end, drawn with it: in the back layer it slid inside the corridor's
+            end, away from its steps and the light it spills */}
+        <P d={door} fill={`url(#${id}-glass)`} />
         <P d={steps} fill="var(--lit)" opacity={0.35} />
       </Layer>
       <Layer depth="lit">
@@ -590,8 +600,10 @@ const castle: Draw = (id) => {
         {/* the crag, the outcrop on the left, and the bridge between them */}
         <P d={jagged([[560, 910], [610, 790], [660, 720], [690, 650], [720, 628], [1000, 640], [1290, 630], [1330, 660], [1380, 720], [1440, 790], [1530, 910]], 38, 14)} />
         <P d={jagged([[120, 910], [180, 800], [250, 742], [330, 716], [420, 712], [460, 760], [480, 910]], 39, 12)} />
-        <P d={`M400 716 L700 650 v18 L400 734 Z ${[0, 1, 2].map((i) => { const x = 440 + i * 86; const y = 728 - i * 19; return `M${x} ${y} v${120 - i * 10} h16 v${-(120 - i * 10)} Z` }).join(' ')}`} />
-        <P d="M410 734 L700 668 V700 Q660 690 640 720 Q620 700 586 730 Q566 712 532 750 Q512 732 478 770 Q460 750 420 790 Z" />
+        <P d={`M400 716 L700 650 v18 L400 734 Z ${[0, 1, 2].map((i) => { const x = 440 + i * 86; const y = 728 - i * 19; return `M${x} ${y} V910 h16 V${y} Z` }).join(' ')}`} />
+        {/* (the arches' top runs up into the deck: two shapes sharing an edge leave a light hairline between them) */}
+        {/* the piers go down to the valley floor: the middle one stands over the chasm (it stopped in mid-air) */}
+        <P d="M410 728 L700 662 V700 Q660 690 640 720 Q620 700 586 730 Q566 712 532 750 Q512 732 478 770 Q460 750 420 790 Z" />
         {/* curtain wall with its walkway corbels and merlons */}
         <P d={`M700 640 V540 H1290 V640 Z ${merlons(700, 1290, 540, 14)} ${corbels(702, 1290, 548)}`} />
         {/* gatehouse */}
@@ -609,18 +621,18 @@ const castle: Draw = (id) => {
         {/* the crag's faces: lit ledges turned to the moon, cracks in the rock */}
         <P d="M600 800 L640 760 L668 770 L630 820 Z M650 712 L686 660 L700 668 L672 724 Z M570 880 L600 830 L622 842 L596 900 Z M720 700 L760 660 L790 668 L750 716 Z M180 812 L240 752 L262 760 L210 822 Z M300 730 L360 718 L370 730 L320 748 Z" fill="var(--sil-back)" opacity={0.5} />
         <g fill="none" stroke="var(--sil-near)" strokeWidth={3} strokeLinejoin="round" opacity={0.6}>
-          <P d="M820 660 L840 720 L828 780 L850 860 M1000 650 L990 700 L1012 760 M1180 650 L1200 700 L1190 760 L1220 840 M1330 690 L1310 740 L1340 800 M260 760 L280 820 L270 880" />
+          <path d="M820 660 L840 720 L828 780 L850 860 M1000 650 L990 700 L1012 760 M1180 650 L1200 700 L1190 760 L1220 840 M1330 690 L1310 740 L1340 800 M260 760 L280 820 L270 880" />
         </g>
         <g className="scr-rim" strokeWidth={2}>
-          <P d="M660 434 L697 334 M1038 226 L1069 110 M1254 464 L1291 370 M834 300 L854 252 M1092 504 L1175 448" />
+          <path d="M660 434 L697 334 M1038 226 L1069 110 M1254 464 L1291 370 M834 300 L854 252 M1092 504 L1175 448" />
         </g>
       </Layer>
       <Layer depth="lit">
         <Halo id={`${id}-halo`} x={764} y={600} r={120} o={0.55} />
         <g fill={`url(#${id}-glass)`}>
-          <P d={`${win(900, 360)} ${win(950, 420)} ${win(905, 500)} ${win(1062, 300, 12, 22)} ${win(1062, 420, 12, 22)} ${win(690, 500)} ${win(1284, 520)} ${win(1120, 530, 16, 34)} ${win(1150, 530, 16, 34)} ${win(1180, 530, 16, 34)}`} />
+          <path d={`${win(900, 360)} ${win(950, 420)} ${win(905, 500)} ${win(1062, 300, 12, 22)} ${win(1062, 420, 12, 22)} ${win(690, 500)} ${win(1284, 520)} ${win(1120, 530, 16, 34)} ${win(1150, 530, 16, 34)} ${win(1180, 530, 16, 34)}`} />
           {/* the gate, lit from within, its portcullis half raised */}
-          <P d="M744 640 V600 A20 20 0 0 1 784 600 V640 Z" />
+          <path d="M744 640 V600 A20 20 0 0 1 784 600 V640 Z" />
         </g>
         <P d="M744 640 V600 A20 20 0 0 1 784 600 V616 H744 Z M750 616 v24 h3 v-24 Z M760 616 v24 h3 v-24 Z M770 616 v24 h3 v-24 Z" fill="var(--sil-mid)" opacity={0.85} />
         <Halo id={`${id}-halo`} x={940} y={440} r={200} o={0.3} />
@@ -680,14 +692,10 @@ const manor: Draw = (id) => {
         <P d={`M786 836 V350 H894 V836 Z M776 354 H904 v-12 H776 Z M780 344 Q808 320 816 270 H864 Q872 320 900 344 Z ${cresting(816, 864, 270)} M838 270 V214 l2 -8 l2 8 V270 Z`} />
         <circle cx={840} cy={240} r={5} />
         <P d="M818 330 v-26 a6 6 0 0 1 12 0 v26 Z M850 330 v-26 a6 6 0 0 1 12 0 v26 Z" fill="var(--sil-near)" opacity={0.6} />
-        {/* the veranda: roof, slim columns, railing, steps to the door */}
-        <P d="M540 716 L556 700 H1144 L1160 716 Z M546 716 H1154 v8 H546 Z" />
-        <P d={`${Array.from({ length: 11 }, (_, i) => `M${556 + i * 58} 724 h8 v108 h-8 Z`).join(' ')} M546 796 H788 v6 H546 Z M892 796 H1154 v6 H892 Z ${Array.from({ length: 34 }, (_, i) => { const x = 552 + i * 18; return x > 780 && x < 900 ? '' : `M${x} 802 h3 v30 h-3 Z` }).join(' ')}`} />
-        <P d="M800 836 V826 H880 V836 Z M808 826 V816 H872 V826 Z" />
         {/* window panes, dark */}
         <P d={darkD} fill="var(--sil-near)" opacity={0.55} />
         <g className="scr-rim" strokeWidth={2}>
-          <P d="M1170 478 L1192 570 M864 270 Q872 320 900 344 M450 560 L542 644 M530 478 H1170 M1122 396 V482" />
+          <path d="M1170 478 L1192 570 M864 270 Q872 320 900 344 M450 560 L542 644 M530 478 H1170 M1122 396 V478" />
         </g>
       </Layer>
       <Layer depth="lit">
@@ -700,6 +708,18 @@ const manor: Draw = (id) => {
         {/* someone standing at the window upstairs */}
         <P d="M641 666 V650 Q641 640 650 637 Q646 632 646 627 A7 7 0 0 1 660 627 Q660 632 656 637 Q665 640 665 650 V666 Z" fill="var(--sil-mid)" opacity={0.9} />
         <P d="M800 836 H880 L940 900 H740 Z" fill={`url(#${id}-ray)`} />
+      </Layer>
+      <Layer depth="mid-front">
+        {/* the veranda: roof, slim columns (in pairs about the door, its bay open: evenly spaced, one stood
+            in the doorway), railing, steps to the door. In front of the lit windows (it drifts
+            with the house, drawn after its lights) and in shadow, so it reads against the wall: drawn in the
+            wall's own layer and tone it vanished, and the windows' light showed through its railing. */}
+        <P d="M540 716 L556 700 H1144 L1160 716 Z M546 716 H1154 v8 H546 Z" />
+        <P d={`${[556, 614, 672, 730, 788, 884, 942, 1000, 1058, 1116].map((x) => `M${x} 724 h8 v108 h-8 Z`).join(' ')} M546 796 H788 v6 H546 Z M892 796 H1154 v6 H892 Z ${Array.from({ length: 34 }, (_, i) => { const x = 552 + i * 18; return x > 780 && x < 900 ? '' : `M${x} 802 h3 v30 h-3 Z` }).join(' ')}`} />
+        <P d="M800 836 V826 H880 V836 Z M808 826 V816 H872 V826 Z" />
+        <g className="scr-rim" strokeWidth={2}>
+          <path d="M556 700 H1144 L1160 716" />
+        </g>
       </Layer>
       <Layer depth="near">
         {/* clipped hedges, the drive and the gate */}
@@ -770,7 +790,7 @@ const library: Draw = (id) => {
         <P d={`M-80 -10 H${W + 80} V${H} H-80 Z ${win}`} fillRule="evenodd" />
         {/* the window's stone mullions, transoms and the tracery in its arch */}
         <g fill="none" stroke="currentColor" strokeWidth={9}>
-          <P d="M763 618 V250 M837 618 V250 M690 400 H910 M690 520 H910 M690 250 H910" />
+          <path d="M763 618 V250 M837 618 V250 M690 400 H910 M690 520 H910 M690 250 H910" />
         </g>
         <P d="M676 630 H924 v-14 H676 Z" />
       </Layer>
@@ -862,6 +882,19 @@ const police: Draw = (id) => {
   const up2 = bays.map((x) => `M${x} 512 h40 v72 h-40 Z`)
   const down = bays.map((x) => arched(x, 700, 40, 96))
   const lit = new Set([0, 2, 3, 5, 7, 8, 10, 13, 15, 16, 19])
+  // Stone courses on the ground floor, broken at the portico and at each arched window (lines running
+  // through the dark panes read as glazing bars).
+  const courses = Array.from({ length: 7 }, (_, i) => {
+    const y = 672 + i * 30
+    const gaps = [[672, 928], ...(y + 3 > 700 && y < 796 ? bays.map((x) => [x - 2, x + 42]) : [])].sort((a, b) => a[0] - b[0])
+    let d = ''
+    let x0 = 396
+    for (const [g1, g2] of gaps) {
+      if (g1 > x0) d += `M${x0} ${y} H${g1} v3 H${x0} Z `
+      x0 = Math.max(x0, g2)
+    }
+    return `${d}M${x0} ${y} H1204 v3 H${x0} Z`
+  }).join(' ')
   const all = [...up1, ...up2, ...down]
   return (
     <>
@@ -871,10 +904,11 @@ const police: Draw = (id) => {
         <P d={skyLit} fill="var(--lit)" className="scr-glow" opacity={0.35} />
       </Layer>
       <Layer depth="mid">
-        {/* the station: rusticated ground floor, upper floors, cornice with dentils, attic and clock */}
+        {/* the station: rusticated ground floor (its stone courses stop at the portico: they showed through
+            its dark recess, behind the columns), upper floors, cornice with dentils, attic and clock */}
         <P d="M396 862 V640 H1204 V862 Z M416 640 V360 H1184 V640 Z M386 364 H1214 V334 H386 Z M408 334 V304 H1192 V334 Z M690 304 V236 H910 V304 Z M680 240 H920 v-14 H680 Z" />
         <P d={Array.from({ length: 58 }, (_, i) => `M${394 + i * 14.3} 364 h7 v9 h-7 Z`).join(' ')} />
-        <P d={`${Array.from({ length: 7 }, (_, i) => `M396 ${672 + i * 30} H1204 v3 H396 Z`).join(' ')} M436 360 h12 v280 h-12 Z M672 360 h12 v280 h-12 Z M916 360 h12 v280 h-12 Z M1152 360 h12 v280 h-12 Z`} fill="var(--sil-back)" opacity={0.6} />
+        <P d={`${courses} M436 360 h12 v280 h-12 Z M672 360 h12 v280 h-12 Z M916 360 h12 v280 h-12 Z M1152 360 h12 v280 h-12 Z`} fill="var(--sil-back)" opacity={0.6} />
         {/* the flag on its pole, hanging limp */}
         <P d="M600 304 V170 h5 V304 Z M605 176 h50 q-6 30 4 62 h-54 Z" />
         {/* the portico: steps, four columns, entablature carrying the sign */}
@@ -886,7 +920,7 @@ const police: Draw = (id) => {
         <P d="M620 872 V760 h8 V872 Z M972 872 V760 h8 V872 Z M612 872 h24 v-10 h-24 Z M964 872 h24 v-10 h-24 Z" />
         <P d={all.filter((_, i) => !lit.has(i)).join(' ')} fill="var(--sil-near)" opacity={0.6} />
         <g className="scr-rim" strokeWidth={2}>
-          <P d="M386 334 H1214 M680 226 H920 M662 592 H938" />
+          <path d="M386 334 H1214 M680 226 H920 M662 592 H938" />
         </g>
       </Layer>
       <Layer depth="lit">
@@ -919,7 +953,7 @@ const police: Draw = (id) => {
         <P d="M150 870 m-10 0 a10 10 0 1 0 20 0 a10 10 0 1 0 -20 0 M422 870 m-10 0 a10 10 0 1 0 20 0 a10 10 0 1 0 -20 0" fill="var(--sil-back)" />
         <circle cx={480} cy={800} r={11} fill="var(--sil-back)" />
         <g className="scr-rim scr-rim-lamp" strokeWidth={2.5}>
-          <P d="M166 716 H312 Q326 716 326 728 M326 792 L460 798 Q474 800 474 812 M360 810 Q418 812 440 854 M90 812 Q142 814 152 850" />
+          <path d="M166 716 H312 Q326 716 326 728 M326 792 L460 798 Q474 800 474 812 M360 810 Q418 812 440 854 M90 812 Q142 814 152 850" />
         </g>
       </Layer>
       <Layer depth="lit-near">
@@ -1066,7 +1100,8 @@ const harbour: Draw = (id) => {
         <g transform="translate(-70 0)">
           <P d="M1357 640 L1366 436 H1398 L1407 640 Z M1348 438 h68 v-10 h-68 Z M1366 428 v-34 h32 v34 Z M1360 396 Q1382 362 1404 396 Z M1380 384 v-30 h4 v30 Z" />
           <P d="M1352 428 v-12 M1362 428 v-12 M1402 428 v-12 M1412 428 v-12 M1350 418 H1414" stroke="currentColor" strokeWidth={2} fill="none" />
-          <P d="M1398 436 L1406 618 M1382 364 Q1398 374 1404 396" className="scr-rim" strokeWidth={2} />
+          {/* the dome's moonlit edge follows the dome (it started 15 units above its top) */}
+          <path d="M1398 436 L1406 618 M1382 379 Q1393 379 1404 396" className="scr-rim" strokeWidth={2} />
           <P d="M1430 636 V578 H1500 V636 Z M1424 580 L1465 552 L1506 580 Z M1484 566 v-18 h8 v18 Z" />
           <P d="M1446 588 h10 v12 h-10 Z" fill="var(--lit)" className="scr-glow" opacity={0.75} />
         </g>
@@ -1083,7 +1118,8 @@ const harbour: Draw = (id) => {
           <P d={streak(720, 700, 900, 90, 84)} opacity={0.35} />
         </g>
         <g className="scr-glow">
-          <P d={`${streak(1312, 700, 800, 18, 85)} ${streak(1520, 790, 900, 22, 86)} ${streak(232, 800, 900, 14, 87)} ${streak(330, 800, 900, 14, 88)}`} opacity={0.45} />
+          {/* the lighthouse's light on the water (the sheds and the lamp stand on the quay: no reflection under them) */}
+          <P d={streak(1312, 700, 800, 18, 85)} opacity={0.45} />
         </g>
       </Layer>
       <Layer depth="pulse">
@@ -1093,6 +1129,8 @@ const harbour: Draw = (id) => {
         <circle cx={1312} cy={410} r={9} />
       </Layer>
       <Layer depth="mid">
+        {/* the stone quay the warehouses stand on, down into the water (they stood on the sea) */}
+        <P d="M-40 900 V786 H534 V900 Z" />
         {/* warehouses: a tall one with loading doors, a broad one, a low shed */}
         <P d="M-40 790 V420 L50 360 L140 420 V790 Z M150 790 V430 L280 350 L410 430 V790 Z M340 400 V350 h20 v50 Z M400 790 V560 L470 520 L540 560 V790 Z" />
         {/* a vent housing on the ridge, its foot inside the roof */}
@@ -1115,26 +1153,26 @@ const harbour: Draw = (id) => {
         {/* boats mirrored in the water, broken by the ripples */}
         <P d="M560 792 Q572 810 600 812 H896 Q920 806 930 792 Z M950 796 Q960 806 990 808 H1140 Q1158 804 1166 796 Z M680 812 V880 h4 V812 Z M800 812 V860 h4 V812 Z" fill="var(--sil-near)" opacity={0.35} />
         <g className="scr-rim" strokeWidth={2}>
-          <P d="M50 360 L140 420 M280 350 L410 430 M470 520 L540 560" />
+          <path d="M50 360 L140 420 M280 350 L410 430 M470 520 L540 560" />
         </g>
       </Layer>
       <Layer depth="lit">
         <P d="M200 600 h26 v40 h-26 Z M300 520 h30 v44 h-30 Z M240 680 h30 v44 h-30 Z M30 470 h20 v30 h-20 Z M1012 730 h14 v14 h-14 Z M1036 730 h14 v14 h-14 Z" fill={`url(#${id}-glass)`} />
       </Layer>
       <Layer depth="near">
-        {/* the stone quay in front, a bollard with its rope, crates and barrels, the lamp post */}
+        {/* the stone quay in front, a bollard with its rope, the lamp post, crates and barrels */}
         <P d="M-40 900 V846 H560 L600 900 Z" />
         <P d="M-40 846 H560 v4 H-40 Z" fill="var(--sil-back)" opacity={0.5} />
         <P d="M80 846 v-30 q20 -12 40 0 v30 Z M74 818 h52 v-8 h-52 Z" />
         <P d="M120 836 q40 10 60 -2 q20 -10 40 4" stroke="currentColor" strokeWidth={5} fill="none" />
         <P d="M300 846 V776 H380 V846 Z M318 776 V722 H380 V776 Z M300 846 h80 M440 846 v-50 q20 -8 40 0 v50 Z M488 846 v-40 q16 -6 32 0 v40 Z" />
         <P d="M300 800 h80 v3 h-80 Z M318 748 h62 v3 h-62 Z" fill="var(--sil-back)" opacity={0.5} />
-        <P d="M1514 900 V566 h12 V900 Z M1506 548 h28 l-6 -12 h-16 Z M1500 900 l14 -24 h12 l14 24 Z" />
+        <P d="M256 846 V566 h12 V846 Z M248 548 h28 l-6 -12 h-16 Z M242 846 l14 -24 h12 l14 24 Z" />
       </Layer>
       <Layer depth="lit-near">
-        {/* the lamp's glass, on its post */}
-        <Halo id={`${id}-halo`} x={1520} y={556} r={200} />
-        <P d="M1506 548 h28 l-6 20 h-16 Z" />
+        {/* the lamp's glass, on its post (on the quay, between the bollard's rope and the crates; it stood in the sea) */}
+        <Halo id={`${id}-halo`} x={262} y={556} r={200} />
+        <P d="M248 548 h28 l-6 20 h-16 Z" />
       </Layer>
     </>
   )
@@ -1224,7 +1262,7 @@ const street: Draw = (id) => {
         <P d={lamps.map(([side, s]) => lampPost(side, s)).join(' ')} />
         <P d={man(X(1, 0.42, 780), Y(0.42, 0), 0.42)} fill="var(--sil-near)" />
         <g className="scr-rim" strokeWidth={2}>
-          <P d={eaves.join(' ')} />
+          <path d={eaves.join(' ')} />
         </g>
       </Layer>
       <Layer depth="lit">

@@ -233,6 +233,7 @@
 }
 .scr-par-far { color: var(--sil-far); animation-name: scr-par-far; animation-duration: 90s; }
 .scr-par-mid { color: var(--sil-mid); }
+.scr-par-mid-front { color: var(--sil-near); }
 .scr-par-near { color: var(--sil-near); animation-name: scr-par-near; animation-duration: 55s; }
 /* Lights drift with the shapes they belong to (a lamp's glass with its post, a doorway with its wall):
    one lit layer per depth, or they slide apart. */

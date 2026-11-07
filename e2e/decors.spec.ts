@@ -39,8 +39,10 @@ for (const place of PLACES) {
       const layers = [...document.querySelectorAll<SVGSVGElement>('.scr-place svg.scr-par')]
       const harbour = document.querySelector('.scr-place')?.getAttribute('data-place') === 'harbour'
       // Which silhouette layer a light layer drifts with (screen.css: same keyframes). Keep in step with screen.css.
-      const motion: Record<string, string> = { far: 'far', mid: 'mid', near: 'near', lit: 'mid', 'lit-far': 'far', 'lit-near': 'near', pulse: harbour ? 'far' : 'near', 'pulse-mid': 'mid', water: 'water' }
+      const motion: Record<string, string> = { far: 'far', mid: 'mid', 'mid-front': 'mid', near: 'near', lit: 'mid', 'lit-far': 'far', 'lit-near': 'near', pulse: harbour ? 'far' : 'near', 'pulse-mid': 'mid', water: 'water' }
       const order = ['far', 'mid', 'near']
+      // A silhouette layer's rank, back to front (`mid-front` drifts with mid, drawn after its lights).
+      const rank = (layer: string) => order.indexOf(motion[layer] ?? layer)
       const isLight = (d: string) => d.startsWith('lit') || d.startsWith('pulse')
 
       type Piece = { el: SVGGeometryElement; local: SVGGeometryElement; layer: string; label: string; box: DOMRect; ctm: DOMMatrix; glow?: boolean; outline?: boolean }
@@ -134,7 +136,7 @@ for (const place of PLACES) {
         grew = false
         for (const l of lights) {
           if (held.has(l)) continue
-          const ok = pieces.some((p) => (!isLight(p.layer) && p.layer === motion[l.layer] && touches(l, p)) || (held.has(p) && p.layer === l.layer && touches(l, p)))
+          const ok = pieces.some((p) => (!isLight(p.layer) && motion[p.layer] === motion[l.layer] && touches(l, p)) || (held.has(p) && p.layer === l.layer && touches(l, p)))
           if (ok) {
             held.add(l)
             grew = true
@@ -146,9 +148,9 @@ for (const place of PLACES) {
       for (const p of pieces) {
         if (isLight(p.layer)) continue
         if (p.box.bottom >= 896 || p.box.top <= 2 || p.box.left <= -38 || p.box.right >= 1638) continue
-        const lvl = order.indexOf(p.layer)
+        const lvl = rank(p.layer)
         // Held by a shape of its layer or the one behind, or resting on a light that drifts with it (a lamp's cap on its glass).
-        const ok = pieces.some((q) => q !== p && (isLight(q.layer) ? held.has(q) && motion[q.layer] === p.layer : order.indexOf(q.layer) <= lvl && order.indexOf(q.layer) >= lvl - 1) && touches(p, q))
+        const ok = pieces.some((q) => q !== p && (isLight(q.layer) ? held.has(q) && motion[q.layer] === motion[p.layer] : rank(q.layer) <= lvl && rank(q.layer) >= lvl - 1) && touches(p, q))
         if (!ok) out.push({ layer: p.layer, piece: p.label, rule: 'floating' })
       }
       // Rule 3: a light's hard edge must not line up with a shape that drifts differently. The drift is
@@ -175,8 +177,8 @@ for (const place of PLACES) {
       const visible = (l: Piece, p: DOMPoint) => {
         // Off the frame (not on screen), or hidden: inside a shape that drifts with the light or is in front of it.
         if (p.y >= 897 || p.y <= 3 || p.x <= 3 || p.x >= 1597) return false
-        const lvl = order.indexOf(motion[l.layer])
-        return !pieces.some((c) => !isLight(c.layer) && order.indexOf(c.layer) >= lvl && [[0, 0], [touch, 0], [-touch, 0], [0, touch], [0, -touch]].every(([dx, dy]) => inside(c, p.x + dx, p.y + dy)))
+        const lvl = rank(l.layer)
+        return !pieces.some((c) => !isLight(c.layer) && rank(c.layer) >= lvl && [[0, 0], [touch, 0], [-touch, 0], [0, touch], [0, -touch]].every(([dx, dy]) => inside(c, p.x + dx, p.y + dy)))
       }
       for (const l of outlines) {
         if (!isLight(l.layer) || l.outline) continue
@@ -184,7 +186,7 @@ for (const place of PLACES) {
         if (lt.pts.length < 3) continue
         const shown = lt.pts.map((p) => visible(l, p))
         for (const q of outlines) {
-          if (isLight(q.layer) || q.layer === 'water' || q.layer === motion[l.layer]) continue
+          if (isLight(q.layer) || q.layer === 'water' || motion[q.layer] === motion[l.layer]) continue
           if (l.box.right < q.box.left - touch || q.box.right < l.box.left - touch || l.box.bottom < q.box.top - touch || q.box.bottom < l.box.top - touch) continue
           const w = q.local.style.strokeWidth
           q.local.style.strokeWidth = `${width(q)}px`
