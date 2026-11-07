@@ -3,9 +3,10 @@ import { expect, type Page } from '@playwright/test'
 // Flows shared by the app and companion specs.
 
 export async function signUp(page: Page, name = 'Keeper') {
+  // Through the landing page: its "Créer un compte" opens the login page on the sign-up tab.
   await page.goto('/')
-  await expect(page).toHaveURL(/\/login$/)
-  await page.getByRole('tab', { name: 'Créer un compte' }).click()
+  await page.getByRole('main').getByRole('link', { name: 'Créer un compte' }).first().click()
+  await expect(page).toHaveURL(/\/login\?mode=signup$/)
   await page.getByLabel('Nom affiché').fill(name)
   await page.getByLabel('E-mail').fill(`e2e-${crypto.randomUUID()}@example.com`)
   await page.getByLabel('Mot de passe').fill('correct-horse-battery')

@@ -3,7 +3,7 @@ import type { ReactNode } from 'react'
 import { Link, Navigate, NavLink, Outlet, useLocation } from 'react-router'
 import { useAuth, useProfile } from '@/auth/auth'
 import { ResumeAfterLogin } from '@/auth/LoginPage'
-import { rememberedNext } from '@/auth/oauth'
+import { rememberedNext, returnedOAuthError } from '@/auth/oauth'
 import { Button } from '@/components/ui/button'
 import {
   DropdownMenu,
@@ -17,6 +17,7 @@ import {
 import { Spinner } from '@/components/ui/spinner'
 import { supabase } from '@/lib/supabase'
 import { useT } from '@/i18n/t'
+import { LandingPage } from '@/landing/LandingPage'
 import { LegalLinks } from '@/legal/LegalPage'
 import { cn } from '@/lib/utils'
 
@@ -79,7 +80,10 @@ export function RequireAuth({ children }: { children: ReactNode }) {
   return children
 }
 
-/** Shell for every signed-in page. Signed-out visitors go to /login. */
+/**
+ * Shell for every signed-in page. Signed-out visitors get the landing page at "/" and go to /login
+ * elsewhere; coming back from Google with an error, "/" goes to /login too, which shows it.
+ */
 export function AppLayout() {
   const t = useT()
   const { session, ready } = useAuth()
@@ -93,7 +97,7 @@ export function AppLayout() {
       </div>
     )
   }
-  if (!session) return <ToLogin />
+  if (!session) return isHome && !returnedOAuthError ? <LandingPage /> : <ToLogin />
   // Back from Google or the sign-up confirmation e-mail, which return to the root: on to the page
   // that sent the keeper to /login (the OAuth consent page, for a chat app waiting on it).
   const resume = isHome ? rememberedNext() : null
