@@ -53,6 +53,10 @@ export function dataKeys(): string[] {
     ...Object.values(PLACE_LABEL), // ambiance screen drawn décors
     ...Object.values(TIME_LABEL), // ambiance screen time of day
     'Confidentialité', 'Conditions', 'Aide', // LegalLinks (legal/LegalPage.tsx)
+    // Free tools (src/tools/): nav labels, blank sheet's statuses, derived values and weapon columns.
+    'Lanceur de dés', 'Créer un investigateur', 'Fiche vierge', 'Scénarios',
+    'Blessure grave', 'Inconscient', 'Mourant', 'Folie passagère', 'Folie durable',
+    'Mouvement', 'Impact', 'Carrure', 'Arme', 'Valeur', 'Dégâts', 'Portée', 'Attaques', 'Munitions',
   ].filter(Boolean)
 }
 

@@ -43,6 +43,7 @@ export function ProfileStep({ draft: d, update }: StepProps) {
   const empty = PROFILE_FIELDS.filter((f) => !d.profile[f.id]?.trim()).length
 
   async function suggest(field?: ProfileField) {
+    if (!suggestProfile) return
     setBusy(field ?? 'all')
     try {
       const suggestions = await suggestProfile(profileRequest(d, t.lang, field))
@@ -59,20 +60,20 @@ export function ProfileStep({ draft: d, update }: StepProps) {
     <>
       <Tuto>
         <p><Rich text={t("Quelques affirmations courtes. Deux ou trois suffisent pour commencer. Le gardien s'en sert : une folie passagère peut par exemple faire voir une **personne importante** dans un inconnu.")} /></p>
-        <p>{t("L'IA peut proposer des idées à partir de l'occupation, des caractéristiques et du lien avec l'histoire. Ce que tu as déjà écrit est gardé, et tout reste modifiable.")}</p>
+        {suggestProfile && <p>{t("L'IA peut proposer des idées à partir de l'occupation, des caractéristiques et du lien avec l'histoire. Ce que tu as déjà écrit est gardé, et tout reste modifiable.")}</p>}
       </Tuto>
-      <div>
+      {suggestProfile && <div>
         <Button type="button" variant="outline" onClick={() => suggest()} disabled={busy !== null || empty === 0}>
           {busy === 'all' ? <Spinner data-icon="inline-start" /> : <Sparkles data-icon="inline-start" />}
           {empty === PROFILE_FIELDS.length ? t('Suggérer avec l’IA') : t.n(empty, 'Compléter le champ vide', 'Compléter les {n} champs vides')}
         </Button>
-      </div>
+      </div>}
       <div className="grid gap-4 sm:grid-cols-2">
         {PROFILE_FIELDS.map((f) => (
           <Field key={f.id}>
             <div className="flex items-center justify-between gap-2">
               <FieldLabel htmlFor={`bg-${f.id}`}>{t(f.label)}</FieldLabel>
-              <Button
+              {suggestProfile && <Button
                 type="button"
                 variant="ghost"
                 size="icon-xs"
@@ -82,7 +83,7 @@ export function ProfileStep({ draft: d, update }: StepProps) {
                 onClick={() => suggest(f.id)}
               >
                 {busy === f.id ? <Spinner /> : <RefreshCw />}
-              </Button>
+              </Button>}
             </div>
             <Textarea
               id={`bg-${f.id}`}

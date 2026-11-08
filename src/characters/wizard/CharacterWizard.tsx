@@ -19,10 +19,14 @@ export interface CharacterWizardProps {
   extraActions?: ReactNode
   /** One column, step list on top: inside the phone companion's narrow layout. */
   compact?: boolean
+  /** The save button's text, when it doesn't save (the public tool shows the sheet to print). */
+  saveLabel?: string
+  /** h2 when the page already has its own title. */
+  heading?: 'h1' | 'h2'
 }
 
 /** The 7-step creation wizard: step list, current step, save. The step is `?etape=` in the URL. */
-export function CharacterWizard({ initial, editing, onSave, extraActions, compact = false }: CharacterWizardProps) {
+export function CharacterWizard({ initial, editing, onSave, extraActions, compact = false, saveLabel, heading: Heading = 'h1' }: CharacterWizardProps) {
   const t = useT()
   const { draftKey } = useWizardHost()
   const [params, setParams] = useSearchParams()
@@ -89,16 +93,16 @@ export function CharacterWizard({ initial, editing, onSave, extraActions, compac
       </nav>
 
       <section className="flex max-w-4xl min-w-0 flex-col gap-5">
-        <h1 className={cn('font-heading text-4xl', compact && 'text-3xl')}>
+        <Heading className={cn('font-heading text-4xl', compact && 'text-3xl')}>
           {step === 0 ? (editing ? t('Modifier un investigateur') : t('Créer un investigateur')) : last ? draft.name || t('Sans nom') : t(title)}
-        </h1>
+        </Heading>
         <Component draft={draft} update={update} goTo={goTo} />
 
         {last && (
           <div className="flex flex-wrap items-center gap-2">
             <Button onClick={save} disabled={issues.length > 0 || saving}>
               {saving && <Spinner data-icon="inline-start" />}
-              {editing ? t('Enregistrer les modifications') : t('Enregistrer le personnage')}
+              {saveLabel ?? (editing ? t('Enregistrer les modifications') : t('Enregistrer le personnage'))}
             </Button>
             {!editing && !confirmReset && (
               <Button variant="ghost" onClick={() => setConfirmReset(true)}>{t('Recommencer à zéro')}</Button>

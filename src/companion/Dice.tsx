@@ -1,4 +1,4 @@
-import { Dices, Minus, Plus } from 'lucide-react'
+import { Dices } from 'lucide-react'
 import { useState } from 'react'
 import { create } from 'zustand'
 import { Button } from '@/components/ui/button'
@@ -8,9 +8,10 @@ import { cn } from '@/lib/utils'
 import { useRollCheck, useRollDice } from './api'
 import { checkDice, freeDice } from './dice3d/dice'
 import { DiceTray } from './dice3d/DiceTray'
+import { RollResult, Stepper, useThrow } from './RollResult'
 import {
-  DICE_SIDES, diceDetail, diceFormula, keptTens, LEVEL_LABEL, MAX_DICE, MAX_MODIFIER, MAX_NET, netLabel, subjectName,
-  type CheckRoll, type DiceRoll, type Roll, type RollSubject,
+  DICE_SIDES, diceFormula, keptTens, LEVEL_LABEL, MAX_DICE, MAX_MODIFIER, MAX_NET, netLabel, subjectName,
+  type Roll, type RollSubject,
 } from './rolls'
 import { useSheetContext } from './SheetPage'
 
@@ -24,85 +25,6 @@ const useRollHistory = create<{ rolls: Record<string, Roll[]>; add: (r: Roll) =>
   add: (r) => set((s) => ({ rolls: { ...s.rolls, [r.characterId]: [r, ...(s.rolls[r.characterId] ?? [])].slice(0, HISTORY) } })),
 }))
 
-// ------------------------------------------------------------------ pieces
-
-/** − value + : a small stepper. */
-function Stepper({ label, value, text, min, max, onChange }: {
-  label: string
-  value: number
-  text: string
-  min: number
-  max: number
-  onChange: (v: number) => void
-}) {
-  const t = useT()
-  return (
-    <div className="flex items-center justify-between gap-2 border border-border bg-card px-1">
-      <Button variant="ghost" size="icon-lg" className="text-gold" aria-label={t('Moins : {label}', { label })} disabled={value <= min} onClick={() => onChange(value - 1)}>
-        <Minus />
-      </Button>
-      <output aria-label={label} className="text-center text-sm">{text}</output>
-      <Button variant="ghost" size="icon-lg" className="text-gold" aria-label={t('Plus : {label}', { label })} disabled={value >= max} onClick={() => onChange(value + 1)}>
-        <Plus />
-      </Button>
-    </div>
-  )
-}
-
-const levelClass = (r: CheckRoll) =>
-  r.level === 'failure' ? 'text-destructive' : r.level === 'regular' ? 'text-foreground' : 'text-gold'
-
-/** One roll's result: the big number, how it reads, the dice. */
-export function RollResult({ roll, compact }: { roll: Roll; compact?: boolean }) {
-  const t = useT()
-  if (roll.kind === 'dice') return <DiceResult roll={roll} compact={compact} />
-  const kept = keptTens(roll)
-  return (
-    <div data-testid="roll-result" className={cn('flex flex-col items-center gap-1 text-center', !compact && 'animate-in fade-in-0 zoom-in-95')}>
-      <output className={cn('font-heading leading-none', compact ? 'text-2xl' : 'text-6xl', levelClass(roll))}>{roll.result}</output>
-      <p className={cn('font-semibold tracking-[0.14em] uppercase', compact ? 'text-[0.625rem]' : 'text-xs', levelClass(roll))}>
-        {t(LEVEL_LABEL[roll.level])}
-      </p>
-      {!compact && (
-        <p className="font-mono text-xs text-muted-foreground">
-          {t('dizaines')}{' '}
-          {roll.tens.map((d, i) => (
-            <span key={i} className={cn(roll.tens.length > 1 && i === kept && 'text-gold underline underline-offset-2', roll.tens.length > 1 && i !== kept && 'line-through')}>
-              {i > 0 && ' · '}{d}0
-            </span>
-          ))}
-          {' — '}{t('unités')} {roll.units}
-        </p>
-      )}
-    </div>
-  )
-}
-
-function DiceResult({ roll, compact }: { roll: DiceRoll; compact?: boolean }) {
-  return (
-    <div data-testid="roll-result" className={cn('flex flex-col items-center gap-1 text-center', !compact && 'animate-in fade-in-0 zoom-in-95')}>
-      <output className={cn('font-heading leading-none text-gold', compact ? 'text-2xl' : 'text-6xl')}>{roll.result}</output>
-      {(roll.results.length > 1 || roll.modifier !== 0) && (
-        <p className="font-mono text-xs text-muted-foreground">{diceDetail(roll)}</p>
-      )}
-    </div>
-  )
-}
-
-/**
- * A roll being thrown on this phone: the dice tumble before the result shows. `fresh` is the roll just
- * received (thrown once); older rolls, like the last one when the Dés tab opens again, show at once.
- */
-function useThrow() {
-  const [fresh, setFresh] = useState<string | null>(null)
-  const [settled, setSettled] = useState<string | null>(null)
-  return {
-    fresh,
-    received: (r: Roll) => setFresh(r.id),
-    onSettled: setSettled,
-    revealed: (r: Roll | null | undefined, pending: boolean): r is Roll => !!r && !pending && (r.id !== fresh || settled === r.id),
-  }
-}
 
 // ------------------------------------------------------------------ d100 check
 

@@ -218,3 +218,52 @@ export const ISSUE_STEP: Record<Issue['code'], number> = {
   occupationValues: 3,
   personalInterests: 4,
 }
+
+// ------------------------------------------------------------------ random investigator
+
+/** Specialties a random investigator gets when its occupation names none. */
+const RANDOM_SPECIALTIES: Record<string, string> = {
+  'art-craft': 'Photographie',
+  'language-other': 'Latin',
+  science: 'Biologie',
+  'science-2': 'Pharmacologie',
+}
+
+/**
+ * A complete, valid investigator in one go (the free tool's "au hasard" button), built the way the
+ * wizard builds one: an occupation and its skills, the fixed characteristic array in a random order,
+ * the occupation values and four personal interests. checkDraft finds nothing to fix.
+ */
+export function randomInvestigator(rng: Rng = defaultRng): CreationDraft {
+  const pick = <T,>(xs: readonly T[]): T => xs[Math.floor(rng() * xs.length)]
+  const shuffle = <T,>(xs: readonly T[]): T[] => xs.map((v) => [rng(), v] as const).sort((a, b) => a[0] - b[0]).map(([, v]) => v)
+  const occupation = pick(OCCUPATIONS)
+  const d = newDraft(occupation.id)
+  const specialties: Record<string, string> = { ...d.specialties }
+  // Skills that need a specialty only when we have one to give them.
+  const usable = (id: string) => !SKILL_BY_ID.get(id)?.specialty || Boolean(specialties[id] ?? RANDOM_SPECIALTIES[id])
+  const pool = shuffle(
+    [...SKILL_BY_ID.values()].filter((s) => !s.noCreation && s.id !== 'credit-rating' && s.id !== 'dodge').map((s) => s.id).filter(usable),
+  )
+  const skills = [...d.occupationSkills]
+  if (occupation.social && !skills.some((s) => SOCIAL_SKILLS.includes(s))) skills.push(pick(SOCIAL_SKILLS))
+  for (const id of pool) if (skills.length < OCCUPATION_SKILL_COUNT && !skills.includes(id)) skills.push(id)
+  const interests = pool.filter((id) => !skills.includes(id)).slice(0, PERSONAL_INTEREST_COUNT)
+  for (const id of [...skills, ...interests]) {
+    if (SKILL_BY_ID.get(id)?.specialty && !specialties[id]) specialties[id] = RANDOM_SPECIALTIES[id] ?? ''
+  }
+  const values = shuffle(OCCUPATION_ARRAY)
+  const characteristics = Object.fromEntries(shuffle(CHARACTERISTIC_ARRAY).map((v, i) => [CHARACTERISTICS[i], v]))
+  const origin = pick(Object.keys(NAME_ORIGINS))
+  return {
+    ...d,
+    name: generateNames(origin, 'any', rng, 1)[0],
+    age: 20 + Math.floor(rng() * 36),
+    characteristics,
+    luck: rollLuck(rng),
+    occupationSkills: skills,
+    occupationValues: Object.fromEntries([...skills, 'credit-rating'].map((id, i) => [id, values[i]])),
+    personalInterests: interests,
+    specialties,
+  }
+}

@@ -26,6 +26,7 @@ import { StoryPage } from '@/stories/StoryPage'
 import { CreateStoryPage } from '@/stories/create/CreateStoryPage'
 import { SettingsPage } from '@/settings/SettingsPage'
 import { Section } from '@/theme/Section'
+import { toolRoutes } from '@/tools/routes'
 
 /** Old addresses (bookmarks, links in tests) → their place in the new menu, query string kept. */
 function Moved({ to }: { to: string }) {
@@ -58,6 +59,9 @@ const router = createBrowserRouter([
   ...(Object.keys(LEGAL_PATHS) as LegalKind[]).flatMap((kind) =>
     (['fr', 'en'] as const).map((lang) => ({ path: LEGAL_PATHS[kind][lang], element: <LegalPage key={`${kind}-${lang}`} kind={kind} lang={lang} /> })),
   ),
+  // Free tools and scenarios: public, one address per language, prerendered at build time for search
+  // engines (scripts/prerender.mjs).
+  ...toolRoutes,
   // ChatGPT or Claude asks to use the MCP connector (Supabase Auth's OAuth server sends the keeper here).
   { path: '/oauth/consent', element: <RequireAuth><OAuthConsentPage /></RequireAuth> },
   // Full-screen game screen, outside the app chrome.

@@ -8,6 +8,8 @@
     { "source": "/mcp", "destination": "https://fovyhcbasmmstkocavlp.supabase.co/functions/v1/mcp" },
     { "source": "/mcp/.well-known/oauth-protected-resource", "destination": "https://fovyhcbasmmstkocavlp.supabase.co/functions/v1/mcp/.well-known/oauth-protected-resource" },
     { "source": "/.well-known/oauth-protected-resource/mcp", "destination": "https://fovyhcbasmmstkocavlp.supabase.co/functions/v1/mcp/.well-known/oauth-protected-resource" },
+    { "source": "/:dir(outils|tools|scenarios|free-scenarios)", "destination": "/:dir/index.html" },
+    { "source": "/:dir(outils|tools|scenarios)/:page", "destination": "/:dir/:page/index.html" },
     { "source": "/(.*)", "destination": "/index.html" }
   ],
   "git": { "deploymentEnabled": { "main": false } }

@@ -11,6 +11,7 @@ import { DiceDemo } from './DiceDemo'
 import { Feature, LinkButton, SectionTitle, Showcase } from './parts'
 import { ProgressDemo } from './ProgressDemo'
 import { SoundDemo } from './SoundDemo'
+import { TOOL_PATHS, type ToolKind } from '@/tools/pages'
 
 // The public front page: what signed-out visitors see at "/" (signed-in keepers get the home menu).
 // Laid out like the rest of the app (legacy home screen: eyebrows, diamond bullets, gold rules), and
@@ -75,6 +76,13 @@ export function LandingPage() {
     [t('Crée les investigateurs'), t('Un assistant pas à pas : caractéristiques, occupation, compétences, profil.')],
     [t('Invite la table'), t('Un QR code par joueur. Ils ouvrent leur fiche sur leur téléphone, sans compte.')],
     [t('Joue'), t('Scène après scène, Grimoire tient les règles, les points et le journal. Toi, tu racontes.')],
+  ]
+
+  const tools: [ToolKind, string, string][] = [
+    ['dice', t('Lanceur de dés'), t('Un d100 avec dés bonus et de pénalité, et tous les dés du D3 au D100.')],
+    ['investigator', t('Créer un investigateur'), t('Pas à pas ou au hasard, avec la fiche prête à imprimer.')],
+    ['sheet', t('Fiche d’investigateur vierge'), t('Deux pages A4 à remplir au crayon.')],
+    ['scenarios', t('Scénarios gratuits'), t('Des histoires originales complètes, à lire, imprimer ou jouer.')],
   ]
 
   return (
@@ -216,6 +224,21 @@ export function LandingPage() {
           </p>
         </section>
 
+        <section aria-labelledby="outils" className="flex scroll-mt-24 flex-col gap-10">
+          <SectionTitle id="outils" eyebrow={t('Gratuit, sans compte')} title={t('Des outils pour ta prochaine partie')} />
+          <ul className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
+            {tools.map(([kind, title, text]) => (
+              <li key={kind} className="flex">
+                <Link to={TOOL_PATHS[kind][t.lang]} className="group flex w-full flex-col gap-2 border border-border bg-card p-5 hover:border-gold/60">
+                  <h3 className="font-heading text-xl leading-tight group-hover:text-gold">{title}</h3>
+                  <p className="font-serif text-lg leading-relaxed text-muted-foreground">{text}</p>
+                  <span className="mt-auto text-sm text-gold">{t('Ouvrir')} →</span>
+                </Link>
+              </li>
+            ))}
+          </ul>
+        </section>
+
         <section aria-labelledby="deroulement" className="flex scroll-mt-24 flex-col gap-12">
           <SectionTitle id="deroulement" eyebrow={t('Comment ça marche')} title={t('De l’histoire à la table, en quatre temps')} />
           <ol className="grid gap-x-10 gap-y-8 sm:grid-cols-2 lg:grid-cols-4">
@@ -242,7 +265,10 @@ export function LandingPage() {
       </main>
 
       <footer className="mx-auto flex w-full max-w-6xl flex-wrap items-center justify-between gap-4 px-4 pb-6 sm:px-10">
-        <LegalLinks t={t} />
+        <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
+          <LegalLinks t={t} />
+          <Link to={TOOL_PATHS.hub[t.lang]} className="text-xs tracking-[0.14em] text-muted-foreground uppercase hover:text-gold">{t('Outils gratuits')}</Link>
+        </div>
         <SkinToggle />
       </footer>
     </div>

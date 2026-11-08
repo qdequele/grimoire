@@ -9,7 +9,8 @@ import { useCharacter, useDeleteCharacter, useSaveCharacter } from '../api'
 import { toCharacterData } from '../character'
 import { CharacterWizard } from './CharacterWizard'
 import { draftFromCharacter } from './draft'
-import { keeperWizardHost, loadLocalDraft, saveLocalDraft, WizardHostProvider } from './host'
+import { loadLocalDraft, saveLocalDraft, WizardHostProvider } from './host'
+import { keeperWizardHost } from './keeperHost'
 
 function DeleteAction({ id }: { id: string }) {
   const t = useT()

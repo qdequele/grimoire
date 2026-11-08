@@ -9,6 +9,8 @@ export const SKIN_LABEL: Record<Skin, string> = { deco: 'Art déco', classic: 'C
 const KEY = 'gardien-skin'
 
 function initialSkin(): Skin {
+  // No document while the public tools are rendered at build time: the default skin.
+  if (typeof document === 'undefined') return 'deco'
   const fromDom = document.documentElement.dataset.skin
   return fromDom === 'classic' ? 'classic' : 'deco'
 }
