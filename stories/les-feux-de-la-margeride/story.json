@@ -15,7 +15,7 @@
     "system": "d100",
     "author": "Grimoire",
     "license": "CC-BY-4.0",
-    "version": "1.0",
+    "version": "1.1",
     "tags": [
       "groupe",
       "campagne",
@@ -543,7 +543,7 @@
           "title": "Les traces dans le champ de la Croix",
           "lead": "Lundi 29 à l'aube : des traces dans la neige qui commencent au milieu d'un champ. Le garde Pradal et ses cartes.",
           "screen": {
-            "place": "forest",
+            "place": "moor",
             "preset": "snow",
             "time": "day"
           },
@@ -856,7 +856,8 @@
           "title": "Rosalie",
           "lead": "La chanteuse des feux, face à ce que savent les investigateurs. Elle seule connaît tout le chant.",
           "screen": {
-            "preset": "hearth",
+            "place": "farm",
+            "preset": "candle",
             "time": "dusk"
           },
           "readAloud": [
@@ -957,7 +958,7 @@
           "title": "Le Mas-Haut",
           "lead": "La ferme des Malafosse : le fenil cadenassé, Émile drogué, et ce que fera le hameau s'il perd son passant.",
           "screen": {
-            "place": "manor",
+            "place": "farm",
             "preset": "night",
             "time": "night"
           },
@@ -1104,7 +1105,7 @@
           "title": "Les feux du Plan",
           "lead": "Mercredi 31 : le hameau allume les feux et chante. À 23 heures, la procession descend la draille.",
           "screen": {
-            "place": "forest",
+            "place": "moor",
             "preset": "ritual",
             "time": "night"
           },

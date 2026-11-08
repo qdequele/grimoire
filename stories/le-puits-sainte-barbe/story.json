@@ -16,7 +16,7 @@
     "system": "d100",
     "author": "Grimoire",
     "license": "CC-BY-4.0",
-    "version": "1.0",
+    "version": "1.1",
     "tags": [
       "groupe",
       "mine",
@@ -386,6 +386,7 @@
           "title": "Le dispensaire de la Compagnie",
           "lead": "Le registre de samedi soir et l'examen d'un des sept : peau froide, pouls lent et égal, et un sang qui tourne en sable.",
           "screen": {
+            "place": "asylum",
             "preset": "bulb",
             "time": "day"
           },
@@ -502,6 +503,7 @@
           "title": "Le carreau de la fosse 7",
           "lead": "La lampisterie et le poste de secours : quatorze lampes pour sept hommes, un journal de sauvetage, un canari mort, des coups la nuit.",
           "screen": {
+            "place": "mine",
             "preset": "fog",
             "time": "day"
           },
@@ -903,7 +905,7 @@
           "title": "La descente au 480",
           "lead": "Mercredi 18, 22 h : 480 mètres sous la cité, la paroi de verre où dorment les sept. Les libérer, ou tout sceller.",
           "screen": {
-            "place": "crypt",
+            "place": "cavern",
             "preset": "bulb",
             "time": "night"
           },
@@ -1128,7 +1130,7 @@
           "title": "Jeudi, six heures",
           "lead": "L'aube sur le carreau, et ce que la cité 7 garde de cette nuit.",
           "screen": {
-            "place": "street",
+            "place": "mine",
             "preset": "fog",
             "time": "dusk"
           },

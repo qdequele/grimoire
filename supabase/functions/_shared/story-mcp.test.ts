@@ -205,7 +205,9 @@ describe('applyEdits', () => {
     expect(firstScene(out)).toEqual({ ...firstScene(s), screen: { place: 'harbour', preset: 'storm' } })
     expect(validate(out), JSON.stringify(validate.errors)).toBe(true)
     const back = applyEdits(out, [{ op: 'set_screen', id, screen: {} }]) as Record<string, any> // eslint-disable-line @typescript-eslint/no-explicit-any
-    expect(firstScene(back)).toEqual(firstScene(s))
+    const noScreen = { ...firstScene(s) }
+    delete noScreen.screen
+    expect(firstScene(back)).toEqual(noScreen)
     expect(() => applyEdits(s, [{ op: 'set_screen', id: 'nowhere', screen: {} }])).toThrow(ToolError)
     expect(() => applyEdits(s, [{ op: 'set_screen', id, screen: 'fog' }])).toThrow(ToolError)
     // An unknown value gets through applyEdits but not the schema check that follows it.

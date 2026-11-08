@@ -122,7 +122,9 @@ function SceneLayer({ layer, reduced, onShown }: { layer: Layer; reduced: boolea
         <div className="scr-fill scr-abstract" data-place={place ?? undefined}>
           <div className="scr-blob a" />
           {place ? <Place place={place} /> : <div className="scr-blob b" />}
-          {look.fire && <Hearth fire={fire} imageUrl={null} still={reduced} />}
+          {/* The fire belongs on a picture's hearth or the bare glow: drawn in front of a place (a farmyard, a
+              street) it would burn in the middle of it. The hearth's warm colours stay. */}
+          {look.fire && !place && <Hearth fire={fire} imageUrl={null} still={reduced} />}
         </div>
       )}
       {look.flicker && <div className="scr-fill scr-flicker" />}
