@@ -333,9 +333,9 @@ test('game screen: documents, choices, the ambiance preview, a toolbar on top an
   await signUp(page)
   await page.goto('/characters/new')
   await createJournalist(page, 'Vera Holt')
-  // The library's first French story has documents, a scene with choices and ambiance screens.
+  // La Dame de trois heures dix has documents, choices in its last scene and ambiance screens.
   await page.goto('/stories')
-  await page.locator('[data-slot="card"] a[href^="/stories/"]').first().click()
+  await page.getByRole('link', { name: 'La Dame de trois heures dix' }).click()
   await page.getByLabel(/Vera Holt/).check()
   await page.getByRole('button', { name: 'Lancer la partie' }).click()
   const game = page.frameLocator('iframe[title="Partie"]')
@@ -583,7 +583,7 @@ test('the whole app follows the language chosen in settings', async ({ page }) =
   await expect(page.getByRole('heading', { name: 'Settings', level: 1 })).toBeVisible()
   await expect(page.locator('html')).toHaveAttribute('lang', 'en')
 
-  await page.getByRole('link', { name: 'Grimoire' }).click()
+  await page.getByRole('link', { name: 'Grimoire', exact: true }).click()
   await expect(page.getByText('Good evening, Keeper')).toBeVisible()
   const menu = page.getByRole('list').first()
   await expect(menu.getByRole('link')).toHaveText([/^New game/, /^Stories/, /^Investigators/, /^Settings/])

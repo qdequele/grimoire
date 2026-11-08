@@ -1,7 +1,7 @@
 // story.json → the data constants the legacy engine reads (SCENARIOS entry, BEASTS, NPC_X…).
 // Works for stories converted from the legacy app (exact round trip, see adapter.test.ts) and for
 // any other story pack (sample story, AI imports), filling the gaps the legacy shapes need.
-import { LIBRARY_TO_AMB, LIBRARY_TO_SFX } from './sounds.ts'
+import { engineAmbience, engineSfx } from './sounds.ts'
 import type {
   LegacyBeast, LegacyChip, LegacyHandout, LegacyPregen, LegacyRitual, LegacyScenario, LegacyScene, LegacySec, LegacyStep,
 } from './types.ts'
@@ -130,8 +130,10 @@ export function storyToEngine(story: StoryForEngine, skillLabel: SkillLabel): En
   const SCENE_NPC: Record<string, string[]> = {}
 
   const scene = (s: Scene): LegacyScene => {
-    if (s.ambience?.length) AMB_FOR[s.id] = s.ambience.map((a) => LIBRARY_TO_AMB[a] ?? a)
-    if (s.sfx?.length) SFX_FOR[s.id] = s.sfx.map((x) => LIBRARY_TO_SFX[x] ?? x)
+    const amb = engineAmbience(s.ambience)
+    const sfx = engineSfx(s.sfx)
+    if (amb.length) AMB_FOR[s.id] = amb
+    if (sfx.length) SFX_FOR[s.id] = sfx
     if (s.npcs?.length) SCENE_NPC[s.id] = s.npcs
     const chips = (s.rolls ?? []).map((r) => rollToChip(r, skillLabel))
     const flow = (s.flow ?? []).map((st): LegacyStep => {

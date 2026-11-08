@@ -12,7 +12,7 @@
     "system": "d100",
     "author": "Grimoire sample",
     "license": "CC-BY-4.0",
-    "version": "1.1",
+    "version": "1.2",
     "tags": ["introductory", "coastal", "investigation"],
     "contentWarnings": ["drowning", "grief", "death of a child"]
   },
@@ -60,6 +60,7 @@
           "id": "harbour",
           "title": "The harbour",
           "lead": "Arrival, rumours, and a boat nobody will lend.",
+          "screen": { "place": "harbour", "time": "day" },
           "readAloud": [
             "Port Ansel smells of tar and cold fish. A dozen boats knock against the pier, and every one of them is tied up tight, though the sea is calm.",
             "Out past the breakwater, on its black rock, the lighthouse stands like a dead candle. Men mending nets stop talking when you pass."
@@ -78,6 +79,7 @@
           "id": "widow",
           "title": "Martha Varnum",
           "lead": "The keeper's wife, worn thin by grief.",
+          "screen": { "place": "street", "time": "dusk" },
           "readAloud": [
             "The cottage is spotless and very quiet. On the mantel, a photograph of a small boy in a sailor suit is turned face down.",
             "Martha listens to you without blinking. 'He hasn't been right since Thomas drowned,' she says at last. 'Bring him home. Whatever he's become.'"
@@ -102,6 +104,7 @@
           "id": "crossing",
           "title": "The crossing",
           "lead": "A short row at dusk that feels much longer.",
+          "screen": { "place": "harbour", "time": "dusk" },
           "readAloud": [
             "The oars dip into water as dark as ink. Halfway across, the gulls fall silent all at once.",
             "Something bumps the hull from below. Once. Then again, gently, like a hand testing a door."
@@ -118,6 +121,7 @@
           "id": "lighthouse",
           "title": "Inside the lighthouse",
           "lead": "Wet footprints, a cold stove, the logbook, a locked oil store.",
+          "screen": { "place": "harbour", "time": "night" },
           "readAloud": [
             "The door is unlocked. Inside, the stove is cold and the air smells of seaweed.",
             "Small wet footprints, a child's, lead from the door to the spiral stairs. They stop on the first step, in a crust of salt, as if whoever made them stood there a long time, waiting."
@@ -145,6 +149,7 @@
           "id": "the-lamp",
           "title": "The lamp",
           "lead": "Relight the lamp while the drowned child climbs.",
+          "screen": { "place": "harbour", "time": "night" },
           "readAloud": [
             "The lamp room is a cage of glass and brass. Elias Varnum kneels by the great dead lens, a cold match in his fingers.",
             "Far below, a small voice calls up the stairwell. 'Papa? Papa, it's cold. Let me in.'"
@@ -166,6 +171,7 @@
           "id": "epilogue",
           "title": "Dawn",
           "lead": "Rewards and consequences.",
+          "screen": { "place": "harbour", "time": "day" },
           "readAloud": [
             "Morning comes grey and ordinary. Out on Gull Rock, the light is still turning, though no one needs it now."
           ],

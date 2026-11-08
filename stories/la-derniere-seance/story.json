@@ -15,7 +15,7 @@
     "system": "d100",
     "author": "Grimoire",
     "license": "CC-BY-4.0",
-    "version": "1.0",
+    "version": "1.1",
     "tags": [
       "groupe",
       "court",
@@ -201,6 +201,7 @@
           "title": "Le Mirage, avant la séance",
           "lead": "20 h 40 – 21 h : trois pistes à se partager : la cabine, le bureau, le foyer.",
           "screen": {
+            "place": "street",
             "preset": "bulb",
             "time": "night"
           },
@@ -392,6 +393,7 @@
           "title": "L'Invitation",
           "lead": "21 h – 22 h 20 : le générique, l'entracte, le bal, les visages, et le septième masque qui choisit.",
           "screen": {
+            "place": "manor",
             "preset": "night",
             "time": "night"
           },
@@ -502,6 +504,7 @@
           "title": "Le bal",
           "lead": "La salle devient le bal. Huit rounds pour retenir l'élu, atteindre la cabine et choisir : brûler, à rebours, ou laisser finir.",
           "screen": {
+            "place": "manor",
             "preset": "nightmare",
             "time": "night"
           },

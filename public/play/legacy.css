@@ -918,3 +918,6 @@ html[data-skin="deco"] .hdc{border-radius:0;border-color:rgba(226,192,110,.35);f
 /* Investigator cards: the name opens the full sheet */
 .inv .nm-sheet{background:none;border:0;padding:0;margin:0;font:inherit;color:inherit;letter-spacing:inherit;text-transform:inherit;cursor:pointer;text-align:left}
 .inv .nm-sheet:hover,.inv .nm-sheet:focus-visible{text-decoration:underline;text-underline-offset:3px;outline:none}
+/* Scene list: the investigators' heads on the current scene (22 px) no longer make its row taller than the
+   others, so the number, the title and the heads share one centre line */
+.act ol button .heads{margin-block:-4px}

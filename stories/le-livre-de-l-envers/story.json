@@ -15,7 +15,7 @@
     "system": "d100",
     "author": "Grimoire",
     "license": "CC-BY-4.0",
-    "version": "1.0",
+    "version": "1.1",
     "tags": [
       "groupe",
       "enquête urbaine",
@@ -1088,6 +1088,7 @@
           "title": "La nuit des lumières",
           "lead": "Lundi 8 décembre, neuf heures du soir : le Cercle solde son compte devant quarante miroirs.",
           "screen": {
+            "place": "manor",
             "preset": "ritual",
             "time": "night"
           },
