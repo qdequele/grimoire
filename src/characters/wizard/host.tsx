@@ -1,12 +1,11 @@
-// What the creation wizard needs from where it runs: the keeper's account pages, or a player's
-// phone opened from a table link (no account). Steps read it with useWizardHost().
+// What the creation wizard needs from where it runs: the keeper's account pages (keeperHost.ts), a
+// player's phone opened from a table link (no account), or the free public tool (no account, no
+// server). Steps read it with useWizardHost(). Nothing here talks to Supabase, so the public tool
+// can be rendered at build time.
 import { createContext, useContext, type ComponentType } from 'react'
 import { newDraft, type CreationDraft } from '@/engine/creation'
-import { supabase } from '@/lib/supabase'
 import type { ProfileField } from '@/rules/d100'
 import type { Lang } from '@/settings/lang'
-import { usePlayers } from '../api'
-import { PlayerField } from './PlayerField'
 
 /** What the suggest-profile function needs to know (see supabase/functions/_shared/profile.ts). */
 export interface ProfileRequest {
@@ -34,8 +33,8 @@ export interface WizardHost {
    * keeper's version reads the players list.
    */
   usePlayerName: (playerId: string | undefined) => string | undefined
-  /** Throws the function's error (FunctionsHttpError) when it refuses. */
-  suggestProfile: (body: ProfileRequest) => Promise<ProfileSuggestions>
+  /** Throws the function's error (FunctionsHttpError) when it refuses. Absent: no AI help (the public tool). */
+  suggestProfile?: (body: ProfileRequest) => Promise<ProfileSuggestions>
   /** localStorage key of the unsaved draft. */
   draftKey: string
   /**
@@ -45,25 +44,17 @@ export interface WizardHost {
   noMarkup?: boolean
 }
 
-/** Calls suggest-profile with the given extra body fields (the keeper's session goes in the headers). */
-export async function invokeSuggestProfile(body: ProfileRequest & { link?: string }): Promise<ProfileSuggestions> {
-  const { data, error } = await supabase.functions.invoke<{ suggestions: ProfileSuggestions }>('suggest-profile', { body })
-  if (error) throw error
-  return data?.suggestions ?? {}
+/** localStorage key of the keeper's unsaved new investigator (the public tool hands its draft over through it). */
+export const KEEPER_DRAFT_KEY = 'grimoire-character-draft'
+
+/** Each page provides its host; this one only keeps the context typed. */
+const noHost: WizardHost = {
+  PlayerInput: () => null,
+  usePlayerName: () => undefined,
+  draftKey: KEEPER_DRAFT_KEY,
 }
 
-export const keeperWizardHost: WizardHost = {
-  PlayerInput: PlayerField,
-  usePlayerName: (playerId) => {
-    const players = usePlayers()
-    return players.data?.find((p) => p.id === playerId)?.name
-  },
-  suggestProfile: (body) => invokeSuggestProfile(body),
-  // Unsaved new investigator, kept per browser so a reload doesn't lose it (like the legacy S.draft).
-  draftKey: 'grimoire-character-draft',
-}
-
-const WizardHostContext = createContext<WizardHost>(keeperWizardHost)
+const WizardHostContext = createContext<WizardHost>(noHost)
 export const WizardHostProvider = WizardHostContext.Provider
 export const useWizardHost = (): WizardHost => useContext(WizardHostContext)
 

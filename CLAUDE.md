@@ -7,7 +7,7 @@ Keeper's companion web app for d100 investigation/horror tabletop games. Built i
 ```
 src/                  NEW app: Vite + React 19 + TypeScript (strict) + Tailwind v4 + shadcn/ui (base-nova)
   engine/             pure game rules, no UI: dice, success levels, damage. Unit-tested (Vitest).
-  auth/ characters/ stories/ games/ import/ home/ companion/ screen/   features, co-located (page + TanStack Query hooks in api.ts)
+  auth/ characters/ stories/ games/ import/ home/ companion/ screen/ tools/   features, co-located (page + TanStack Query hooks in api.ts)
   lib/supabase.ts     typed client; lib/database.types.ts is generated (`pnpm db:types` → scripts/gen-db-types.mjs)
   components/ui/      shadcn components (add with `pnpm dlx shadcn@latest add <name>`)
   App.tsx             router (React Router) + providers
@@ -167,6 +167,17 @@ Keepers create and revise stories, and make investigators, from ChatGPT or Claud
 - These long texts are written whole in each language (`fr` and `en` objects), not through `t()`; `legal.test.ts` keeps both outlines aligned and the links valid. **Update them** (and `LEGAL.updated`) when Grimoire collects new data, adds a provider or an AI feature, or changes the connector's tools or limits.
 - Directory submission: `directory/README.md` (checklist, reviewer account, form texts), `directory/chatgpt/` (OpenAI plugin package: `plugin.json`, `mcp.json`, logo), `pnpm directory:package` (renders the icons, checks OpenAI's limits, writes the gitignored `directory/grimoire-chatgpt.zip`). Both directories require a `title` and explicit `readOnlyHint`/`destructiveHint`/`openWorldHint` booleans on every tool (`story-mcp.test.ts`).
 - Once listed, put the listing links in `DIRECTORY_LISTING` (`src/legal/info.ts`): the Réglages buttons then go to the directory pages ("Ouvrir ChatGPT" becomes "Ajouter à ChatGPT").
+
+## Free tools and scenarios (public pages for search engines)
+
+Public pages, no account, no Supabase, linked from the landing page ("Des outils pour ta prochaine partie" + footer). One address per language, the page's language comes from it (`PageLang` context in `src/i18n/t.ts`: `useT()` follows it without touching the visitor's setting). `src/tools/`:
+
+- **Pages**: `/outils` `/tools` (hub, `ToolsHub.tsx`), `/outils/lanceur-de-des` `/tools/dice-roller` (`DiceRollerPage.tsx`: d100 against a value with bonus/penalty dice and success level, free dice D3–D100, the phones' 3D dice, rolled in the browser; shares `Stepper`, `RollResult`, `useThrow` with the phones via `src/companion/RollResult.tsx`), `/outils/creer-un-investigateur` `/tools/investigator-generator` (`InvestigatorToolPage.tsx`: the keeper's `CharacterWizard` with a public `WizardHost`, no players list and no AI help, or `randomInvestigator()` from `src/engine/creation.ts`; then the sheet to print; "Garder dans Grimoire" writes the draft under the keeper wizard's key `KEEPER_DRAFT_KEY` and goes to sign-up, then `/characters/new?etape=7`), `/outils/fiche-investigateur-vierge` `/tools/blank-investigator-sheet` (`BlankSheetPage.tsx`, Grimoire's own layout, two A4 pages: keep it at two when changing it), `/scenarios` `/free-scenarios` (list) and `/scenarios/:id` (`scenarios/ScenarioPage.tsx`: a story of `stories/` whole, in its own language: pitch, then the keeper's part behind a "players, stop here" notice, scenes, NPCs, handouts, CC BY notice; rich text via `StoryText.tsx`).
+- **Registry**: `pages.ts` (`TOOL_PATHS`, titles and descriptions written whole per language, schema.org data, `publicPages()`); routes in `routes.tsx` (shared by the app's router and the prerender). The wizard host split: `characters/wizard/host.tsx` has no Supabase import (the keeper's host is `keeperHost.ts`), so these pages render in Node.
+- **Stories**: the list reads `virtual:story-metas` (a plugin in `vite.config.ts`: every `stories/*/story.json` meta, not the stories); a story's page loads its story.json as its own chunk (`preloadStory`; `main.tsx` awaits it on a direct visit so the page doesn't flash). A new story in `stories/` gets its page at the next build.
+- **Prerender**: `pnpm build` ends with `scripts/prerender.mjs`: builds `src/tools/prerender.tsx` for Node (Vite SSR), renders each page with `renderToString` into a copy of `dist/index.html` (title, description, canonical, `hreflang` pairs, Open Graph, JSON-LD) at `dist/<path>/index.html`, and writes `dist/sitemap.xml` and `dist/robots.txt` (the app's private screens disallowed). The browser then renders over it with `createRoot` (not hydration). `vercel.json` rewrites `/outils/…`, `/tools/…`, `/scenarios/…` to those files before the SPA fallback. Code these pages import must not touch `window`/`document`/`localStorage` at import or render time.
+- **Printing**: `print.css` (redefines the skin palette black on white, A4, `print:hidden` on the chrome).
+- **Tests**: `src/tools/pages.test.ts` (titles, pairs, every page renders one `<h1>` in its language), `e2e/tools.spec.ts` (project `tools`, no database), `randomInvestigator` in `creation.test.ts`.
 
 ## Landing page
 

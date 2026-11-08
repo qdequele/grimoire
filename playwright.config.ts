@@ -18,6 +18,8 @@ export default defineConfig({
     { name: 'companion', testMatch: 'companion.spec.ts', use: { baseURL: 'http://localhost:5173' } },
     // The drawn décors: lights on their own depth, nothing floating (dev gallery, no database).
     { name: 'decors', testMatch: 'decors.spec.ts', use: { baseURL: 'http://localhost:5173' } },
+    // The free public tools and scenarios (no account, no database).
+    { name: 'tools', testMatch: 'tools.spec.ts', use: { baseURL: 'http://localhost:5173' } },
     // MCP connector sign-in (OAuth with Supabase Auth's OAuth server).
     { name: 'mcp', testMatch: 'mcp.spec.ts', use: { baseURL: 'http://localhost:5173' } },
     // Original vs new game screen, scene by scene (private data only): pnpm e2e:parity

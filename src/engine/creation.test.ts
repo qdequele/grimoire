@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { CHARACTERISTIC_ARRAY, OCCUPATION_ARRAY } from '@/rules/d100'
+import { CHARACTERISTIC_ARRAY, OCCUPATION_ARRAY, SKILL_BY_ID } from '@/rules/d100'
 import {
   applyOccupation,
   checkDraft,
@@ -8,6 +8,7 @@ import {
   generateNames,
   ISSUE_STEP,
   newDraft,
+  randomInvestigator,
   remaining,
   rollCharacteristic,
   rollLuck,
@@ -130,5 +131,20 @@ describe('generateNames', () => {
 describe('ISSUE_STEP', () => {
   it('points every issue of a new draft at a step before the summary', () => {
     for (const i of checkDraft(newDraft()).issues) expect(ISSUE_STEP[i.code]).toBeLessThan(6)
+  })
+})
+
+describe('randomInvestigator', () => {
+  it('always builds a complete investigator, with a specialty wherever one is needed', () => {
+    let x = 7
+    const rng = () => ((x = (x * 1103515245 + 12345) % 2 ** 31) / 2 ** 31)
+    for (let i = 0; i < 300; i++) {
+      const d = randomInvestigator(rng)
+      expect(checkDraft(d)).toEqual({ issues: [], warnings: [] })
+      expect(new Set([...d.occupationSkills, ...d.personalInterests]).size).toBe(12)
+      for (const id of [...d.occupationSkills, ...d.personalInterests]) {
+        if (SKILL_BY_ID.get(id)?.specialty) expect(d.specialties[id]).toBeTruthy()
+      }
+    }
   })
 })

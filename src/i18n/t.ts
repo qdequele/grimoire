@@ -1,3 +1,4 @@
+import { createContext, useContext } from 'react'
 import { SKILL_BY_ID } from '@/rules/d100'
 import { useLang, type Lang } from '@/settings/lang'
 import { EN } from './en'
@@ -34,9 +35,16 @@ export function makeT(lang: Lang): T {
 
 const cache = { fr: makeT('fr'), en: makeT('en') }
 
+/**
+ * A page whose language comes from its address (the free tools, one address per language) sets it
+ * for everything inside, without changing the visitor's own setting.
+ */
+export const PageLang = createContext<Lang | null>(null)
+
 /** Translation function for the current language; components re-render when it changes. */
 export function useT(): T {
-  return cache[useLang((s) => s.lang)]
+  const setting = useLang((s) => s.lang)
+  return cache[useContext(PageLang) ?? setting]
 }
 
 /** Outside React (mutations, helpers): the current language, read once. */
