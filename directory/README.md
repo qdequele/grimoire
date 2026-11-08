@@ -100,7 +100,7 @@ Portail : https://claude.ai/directory/manage → **Submit new** → **MCP connec
 | Étape | À remplir |
 |---|---|
 | Connection | Server URL `https://www.legrimoire.quest/mcp`, Universal URL |
-| Tools | Le portail lit les outils : les 7 ont un titre et leurs annotations |
+| Tools | Le portail lit les outils : les 11 ont un titre et leurs annotations |
 | Listing → Server name | `Grimoire` |
 | Listing → One-liner (200 max) | `Create and revise original investigation and horror tabletop stories, saved in your Grimoire library and ready to play.` |
 | Listing → Description (2 000 max) | Le texte ci-dessous |
@@ -126,14 +126,18 @@ Description pour Claude :
 > taken from protected works, and saves it after every step. You can then ask Claude to revise any of your private
 > stories: add or rewrite a scene, change a non-player character, add a handout.
 >
-> The connector only reaches the private stories of the Grimoire account you connect. It cannot see your games,
-> investigators or players, and it never deletes a whole story. Requires a Grimoire account.
+> Claude can also help make investigators for your players: it suggests the occupation, characteristics, skills and
+> profile, and Grimoire checks every choice against the creation rules and computes the sheet before saving it.
+>
+> The connector only reaches the private stories and the investigators of the Grimoire account you connect. It
+> cannot see your games, and it never deletes a story or an investigator. Requires a Grimoire account.
 
 Demandes d'exemple (la politique Anthropic en exige au moins trois qui marchent) :
 
 1. `Create a short Grimoire story in a fishing village in 1925, for three players. Show me the outline first.`
 2. `List my Grimoire stories and summarise The Silent Light.`
 3. `In my Grimoire story The Silent Light, add a short scene at the end of the last act where the investigators return to the village at dawn.`
+4. `Create a Grimoire investigator for Sam: a curious, stubborn press photographer. Show me the sheet before saving it.`
 
 Contacts Anthropic : `mcp-review@anthropic.com` (relecture), `directory@anthropic.com` (changement d'authentification).
 Pas de délai de relecture annoncé ; le connecteur reste utilisable comme connecteur personnalisé en attendant.

@@ -3,36 +3,11 @@ import { useState, type ReactNode } from 'react'
 import { useSearchParams } from 'react-router'
 import { Button } from '@/components/ui/button'
 import { Spinner } from '@/components/ui/spinner'
-import { checkDraft, derivedValues, finalSkills, ISSUE_STEP, newDraft, occupationOf, type CreationDraft } from '@/engine/creation'
+import { checkDraft, ISSUE_STEP, newDraft, type CreationDraft } from '@/engine/creation'
 import { cn } from '@/lib/utils'
 import { useT } from '@/i18n/t'
-import type { CharacterData } from '../character'
 import { saveLocalDraft, useWizardHost } from './host'
 import { STEPS, type StepProps } from './steps'
-
-/** A whole number in 0..99: the range the sheet's points live in (and the companion RPC accepts). */
-const points = (n: number) => Math.min(99, Math.max(0, Math.round(n)))
-
-export function toCharacterData(d: CreationDraft): CharacterData {
-  const v = derivedValues(d.characteristics)
-  return {
-    name: d.name.trim(),
-    occupation: occupationOf(d).label,
-    age: d.age,
-    link: d.link.trim() || undefined,
-    characteristics: d.characteristics,
-    hp: points(v.hp),
-    mp: points(v.mp),
-    san: points(v.san),
-    luck: d.luck === undefined ? undefined : points(d.luck),
-    move: v.move,
-    build: v.build,
-    damageBonus: v.damageBonus,
-    skills: finalSkills(d),
-    profile: Object.fromEntries(Object.entries(d.profile).filter(([, t]) => t?.trim())),
-    creation: d,
-  }
-}
 
 export interface CharacterWizardProps {
   initial: CreationDraft

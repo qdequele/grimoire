@@ -1,5 +1,6 @@
 // The MCP connector's logic: ChatGPT or Claude write a story (or revise one of the keeper's private
-// stories) and Grimoire checks, converts and saves what they send.
+// stories) and Grimoire checks, converts and saves what they send. Investigator sheets have their own
+// module (investigator.ts); their tools are defined here with the others.
 //
 // The chat app's model does the writing, so everything that arrives here is untrusted: drafts are
 // coerced field by field (normalizeDraft), edits are applied to a copy and the result must pass the
@@ -8,6 +9,17 @@
 // Pure TypeScript, no Deno or browser APIs: used by the mcp Edge Function and unit-tested with Vitest.
 import { CRAFT_RULES, EXAMPLE_INTRO, FORBIDDEN_NAMES, ORIGINALITY_RULES, SOUND_RULES } from './create-prompt.ts'
 import { DIFFICULTIES, importDraftSchema, ROLL_TYPES, SCREEN_PLACES, SCREEN_PRESETS, SCREEN_TIMES, STAT_KEYS, type DraftNpc, type DraftRoll, type DraftScene, type ImportDraft } from './import-draft.ts'
+import {
+  AGE_RANGE,
+  CHARACTERISTICS,
+  CREATION_SKILL_IDS,
+  INVESTIGATORS_GUIDE,
+  OCCUPATIONS,
+  PERSONAL_INTEREST_COUNT,
+  OCCUPATION_SKILL_COUNT,
+  PROFILE_FIELDS,
+  SHEET_LIMITS,
+} from './investigator.ts'
 import { SAMPLE_STORY, SOUNDS, STORY_FORMAT_MD } from './spec-bundle.ts'
 import { BRIEF_LIMITS, LENGTHS, outlineSchema, THREATS, TONES } from './story-create.ts'
 import { SVG_ELEMENTS, SVG_LIMITS } from './svg-safe.ts'
@@ -501,7 +513,7 @@ export const usesImage = (content: unknown, path: string) => JSON.stringify(deta
 
 // ------------------------------------------------------------------ the guide
 
-export const GUIDE_TOPICS = ['workflow', 'rules', 'format', 'sounds', 'images', 'example'] as const
+export const GUIDE_TOPICS = ['workflow', 'rules', 'format', 'sounds', 'images', 'example', 'investigators'] as const
 export type GuideTopic = (typeof GUIDE_TOPICS)[number]
 
 const IMAGE_ELEMENTS = [...SVG_ELEMENTS].filter((e) => !e.startsWith('fe')).join(', ')
@@ -584,11 +596,15 @@ You write the story; Grimoire checks it, saves it as a private story in the keep
 3. On "conflict", the story changed since you read it: call get_story again and redo the edit on the new version.
 4. Pictures: save_image stores an SVG you draw as a scene's background or a handout's picture, replaces it, or removes it (topic "images"). get_story lists the story's pictures and where they are used. save_image and edit_story both return the new version: use it for the next call.
 
-Stories being written by a creation can't be edited until their last scene is written. Marketplace stories can't be edited.`
+Stories being written by a creation can't be edited until their last scene is written. Marketplace stories can't be edited.
+
+# Investigators
+
+You can also help make an investigator (a player character) for the keeper's table: read grimoire_guide topic "investigators", check the choices with check_investigator, show the keeper the finished sheet, then save_investigator. list_my_investigators and get_investigator read the keeper's investigators; save_investigator with characterId changes one.`
 
 export const SERVER_INSTRUCTIONS = `Grimoire is a keeper's companion app for d100 investigation and horror tabletop games. These tools let you write ORIGINAL stories into the keeper's Grimoire library and revise their private stories.
 
-You do the writing; Grimoire checks and saves it. Before writing or editing, call grimoire_guide with topic "workflow", then topic "rules". Agree on the outline with the keeper before writing any scene. Never use names from published games or fiction: stories that do are refused. You can also draw pictures for a story in SVG (save_image, guide topic "images").`
+You do the writing; Grimoire checks and saves it. Before writing or editing, call grimoire_guide with topic "workflow", then topic "rules". Agree on the outline with the keeper before writing any scene. Never use names from published games or fiction: stories that do are refused. You can also draw pictures for a story in SVG (save_image, guide topic "images"), and make investigators (player characters) by the creation rules (guide topic "investigators", check_investigator, then save_investigator).`
 
 /** Text of one guide topic. Built from the same sections as Grimoire's own creator prompt. */
 export function guideText(topic: GuideTopic): string {
@@ -612,6 +628,8 @@ export function guideText(topic: GuideTopic): string {
       return IMAGES_GUIDE
     case 'example':
       return `${EXAMPLE_INTRO}\n\n${JSON.stringify(SAMPLE_STORY, null, 1)}`
+    case 'investigators':
+      return INVESTIGATORS_GUIDE()
   }
 }
 
@@ -657,6 +675,48 @@ const briefSchema = (): JsonSchema => ({
 
 const anyObject = (description: string): JsonSchema => ({ type: 'object', description })
 
+const skillChoice = (withValue: boolean): JsonSchema => ({
+  type: 'object',
+  properties: {
+    id: { enum: CREATION_SKILL_IDS },
+    ...(withValue ? { value: { type: 'integer', description: 'One of the occupation values (see the guide).' } } : {}),
+    specialty: { type: 'string', maxLength: SHEET_LIMITS.specialty, description: 'Only for skills that need one (art-craft, language-other, pilot, science, science-2, survival).' },
+  },
+  required: withValue ? ['id', 'value'] : ['id'],
+  additionalProperties: false,
+})
+
+/** The creation choices (InvestigatorInput): Grimoire computes everything else. */
+export const investigatorSchema = (): JsonSchema => ({
+  type: 'object',
+  description: 'The creation choices only (grimoire_guide topic "investigators"). Hit points, sanity, magic points, damage bonus and final skill values are computed by Grimoire.',
+  properties: {
+    name: { type: 'string', maxLength: SHEET_LIMITS.name },
+    player: { type: 'string', maxLength: SHEET_LIMITS.playerName, description: 'The player\'s first name ("" for nobody). Left out when changing an investigator: the player stays.' },
+    occupation: { enum: OCCUPATIONS.map((o) => o.id) },
+    age: { type: 'integer', minimum: AGE_RANGE[0], maximum: AGE_RANGE[1] },
+    link: { type: 'string', maxLength: SHEET_LIMITS.link, description: 'Their link with the story or the other investigators.' },
+    rolled: { type: 'boolean', description: 'true only if the characteristics were rolled with dice (with the keeper\'s agreement). Default: the fixed values 40, 50, 50, 50, 60, 60, 70, 80.' },
+    characteristics: {
+      type: 'object',
+      properties: Object.fromEntries(CHARACTERISTICS.map((k) => [k, { type: 'integer', minimum: 15, maximum: 90 }])),
+      required: [...CHARACTERISTICS],
+      additionalProperties: false,
+    },
+    luck: { type: 'integer', minimum: 15, maximum: 90, description: '3D6 × 5.' },
+    occupationSkills: { type: 'array', minItems: OCCUPATION_SKILL_COUNT, maxItems: OCCUPATION_SKILL_COUNT, items: skillChoice(true) },
+    creditRating: { type: 'integer', description: 'One of the occupation values.' },
+    personalInterests: { type: 'array', minItems: PERSONAL_INTEREST_COUNT, maxItems: PERSONAL_INTEREST_COUNT, items: skillChoice(false) },
+    profile: {
+      type: 'object',
+      properties: Object.fromEntries(PROFILE_FIELDS.map((k) => [k, { type: 'string', maxLength: SHEET_LIMITS.profile }])),
+      additionalProperties: false,
+    },
+  },
+  required: ['name', 'occupation', 'age', 'characteristics', 'luck', 'occupationSkills', 'creditRating', 'personalInterests'],
+  additionalProperties: false,
+})
+
 export interface ToolDef {
   name: string
   title: string
@@ -672,7 +732,7 @@ export function toolDefinitions(): ToolDef[] {
       name: 'grimoire_guide',
       title: 'Grimoire guide',
       description:
-        'How to write a Grimoire story: "workflow" (the steps and tools, read it first), "rules" (originality and what makes a good story, plus the brief presets), "format" (story.json), "sounds" (allowed sound ids, and the ambiance screen\'s décors and atmospheres), "images" (drawing SVG pictures for scene backgrounds and handouts with save_image), "example" (a complete story).',
+        'How to write a Grimoire story: "workflow" (the steps and tools, read it first), "rules" (originality and what makes a good story, plus the brief presets), "format" (story.json), "sounds" (allowed sound ids, and the ambiance screen\'s décors and atmospheres), "images" (drawing SVG pictures for scene backgrounds and handouts with save_image), "example" (a complete story). And how to make an investigator (player character): "investigators" (creation rules, occupations, skills, an example).',
       inputSchema: { type: 'object', properties: { topic: { enum: [...GUIDE_TOPICS] } }, required: ['topic'], additionalProperties: false },
       annotations: { readOnlyHint: true, destructiveHint: false, openWorldHint: false },
     },
@@ -800,6 +860,46 @@ export function toolDefinitions(): ToolDef[] {
         additionalProperties: false,
       },
       annotations: { readOnlyHint: false, destructiveHint: true, openWorldHint: false },
+    },
+    {
+      name: 'check_investigator',
+      title: 'Check an investigator',
+      description:
+        'Check an investigator\'s creation choices against the rules without saving anything (grimoire_guide "investigators"). Returns ok: false with every problem to fix, or ok: true with the finished sheet: characteristics, hit points, sanity, magic points, luck, damage bonus, build, and every skill\'s final value. Show that sheet to the keeper before save_investigator.',
+      inputSchema: { type: 'object', properties: { investigator: investigatorSchema() }, required: ['investigator'], additionalProperties: false },
+      annotations: { readOnlyHint: true, destructiveHint: false, openWorldHint: false },
+    },
+    {
+      name: 'save_investigator',
+      title: 'Save an investigator',
+      description:
+        'Save an investigator in the keeper\'s Grimoire account from creation choices the keeper approved (the same choices check_investigator accepts; anything breaking the rules is refused with the reasons, nothing saved). Without characterId it creates a new investigator; with characterId and version (from get_investigator) it rebuilds that investigator\'s sheet from the choices, keeping what they gained in play. The player is found by first name or added. Returns the link and the saved sheet.',
+      inputSchema: {
+        type: 'object',
+        properties: {
+          characterId: { type: 'string', description: 'Only to change an existing investigator.' },
+          version: { type: 'string', description: 'With characterId: the version get_investigator returned.' },
+          investigator: investigatorSchema(),
+        },
+        required: ['investigator'],
+        additionalProperties: false,
+      },
+      annotations: { readOnlyHint: false, destructiveHint: true, openWorldHint: false },
+    },
+    {
+      name: 'list_my_investigators',
+      title: 'List my investigators',
+      description: 'The keeper\'s investigators: id, name, occupation, age, player and last change.',
+      inputSchema: { type: 'object', properties: {}, additionalProperties: false },
+      annotations: { readOnlyHint: true, destructiveHint: false, openWorldHint: false },
+    },
+    {
+      name: 'get_investigator',
+      title: 'Read an investigator',
+      description:
+        'Read one of the keeper\'s investigators: the sheet with every computed value, the creation choices behind it (to change some and send them to save_investigator), whether they gained anything in play, and the version save_investigator needs.',
+      inputSchema: { type: 'object', properties: { characterId: { type: 'string' } }, required: ['characterId'], additionalProperties: false },
+      annotations: { readOnlyHint: true, destructiveHint: false, openWorldHint: false },
     },
   ]
 }

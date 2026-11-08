@@ -15,10 +15,10 @@
       "interface": {
         "displayName": "Grimoire",
         "shortDescription": "Write tabletop horror stories",
-        "longDescription": "Grimoire is the keeper's companion for investigation and horror tabletop role-playing games. With this app, ChatGPT writes original stories for your table and Grimoire saves them in your library, ready to play.\n\nDescribe the setting, the tone, the mystery and your players; ChatGPT proposes an outline (acts, scenes, non-player characters and the secret behind it all), and once you approve it, writes every scene: what the investigators can find, the clues, the read-aloud text and the handouts. Grimoire checks the story against its format, refuses names taken from protected works, and saves it after every step. You can then ask ChatGPT to revise any of your private stories: add or rewrite a scene, change a non-player character, add a handout.\n\nThe app only reaches the private stories of the Grimoire account you connect. It cannot see your games, investigators or players, and it never deletes a whole story. It requires a Grimoire account.",
+        "longDescription": "Grimoire is the keeper's companion for investigation and horror tabletop role-playing games. With this app, ChatGPT writes original stories for your table and Grimoire saves them in your library, ready to play.\n\nDescribe the setting, the tone, the mystery and your players; ChatGPT proposes an outline (acts, scenes, non-player characters and the secret behind it all), and once you approve it, writes every scene: what the investigators can find, the clues, the read-aloud text and the handouts. Grimoire checks the story against its format, refuses names taken from protected works, and saves it after every step. You can then ask ChatGPT to revise any of your private stories: add or rewrite a scene, change a non-player character, add a handout.\n\nChatGPT can also help make investigators for your players: it suggests the occupation, characteristics, skills and profile, and Grimoire checks every choice against the creation rules and computes the sheet before saving it.\n\nThe app only reaches the private stories and the investigators of the Grimoire account you connect. It cannot see your games, and it never deletes a story or an investigator. It requires a Grimoire account.",
         "developerName": "Quentin de Quelen",
         "category": "Entertainment",
-        "capabilities": ["Create original tabletop stories", "Read your Grimoire stories", "Revise your Grimoire stories"],
+        "capabilities": ["Create original tabletop stories", "Read your Grimoire stories", "Revise your Grimoire stories", "Create investigators by the rules"],
         "websiteURL": "https://www.legrimoire.quest",
         "supportURL": "https://www.legrimoire.quest/help",
         "privacyPolicyURL": "https://www.legrimoire.quest/privacy",
@@ -60,16 +60,16 @@
               "expected_behavior": "Reads the story, writes a new scene in the story format and adds it to the last act with edit_story, then confirms what changed. The story in Grimoire shows the new scene."
             },
             {
-              "description": "Revise a non-player character",
-              "prompt": "In The Silent Light, give one of the non-player characters a hidden motive and update their description.",
-              "tools_triggered": "get_story, edit_story",
-              "expected_behavior": "Reads the story's NPCs, rewrites the chosen NPC with a hidden motive and saves it with edit_story, leaving the other NPCs unchanged."
+              "description": "Create an investigator by the creation rules",
+              "prompt": "Create a Grimoire investigator for Sam: a curious, stubborn press photographer. Show me the sheet before saving it.",
+              "tools_triggered": "grimoire_guide, check_investigator, save_investigator",
+              "expected_behavior": "Reads the investigators guide, proposes the choices (occupation, characteristics, skills, profile), checks them with check_investigator until they follow the rules, shows the computed sheet and, after approval, saves it with save_investigator and gives its link. The investigator appears in Grimoire with Sam as player."
             }
           ],
           "negative": [
             { "description": "Deleting every story is not supported", "prompt": "Delete all my Grimoire stories." },
             { "description": "Another user's stories are out of reach", "prompt": "Show me the Grimoire stories of another user." },
-            { "description": "Games and investigators are out of reach", "prompt": "Roll the dice for my investigators in my current Grimoire game." }
+            { "description": "Games are out of reach", "prompt": "Roll the dice for my investigators in my current Grimoire game." }
           ]
         },
         "demo_recording_url": "",
@@ -77,11 +77,11 @@
         "commerce_description": "Grimoire does not sell products or process payments."
       },
       "publication": {
-        "release_notes": "First release: create original stories from a brief, list, read and revise your private Grimoire stories.",
+        "release_notes": "First release: create original stories from a brief, list, read and revise your private Grimoire stories, and create investigators checked against the creation rules.",
         "translations": {
           "fr-FR": {
             "subtitle": "Écris des scénarios d’horreur",
-            "description": "Grimoire est le compagnon du gardien pour les jeux de rôle d’enquête et d’horreur sur table. Avec cette application, ChatGPT écrit des histoires originales pour ta table et Grimoire les range dans ta bibliothèque, prêtes à jouer.\n\nDécris le cadre, l’ambiance, le mystère et tes joueurs ; ChatGPT propose un plan (actes, scènes, personnages non joueurs et le secret derrière tout cela), puis, une fois le plan validé, écrit chaque scène : ce que les investigateurs peuvent trouver, les indices, le texte à lire et les aides de jeu. Grimoire vérifie le format de l’histoire, refuse les noms tirés d’œuvres protégées et l’enregistre à chaque étape. Tu peux ensuite demander à ChatGPT de réviser tes histoires privées : ajouter ou réécrire une scène, changer un personnage, ajouter une aide de jeu.\n\nL’application n’accède qu’aux histoires privées du compte Grimoire connecté. Elle ne voit ni tes parties, ni tes investigateurs, ni tes joueurs, et ne supprime jamais une histoire entière. Un compte Grimoire est nécessaire."
+            "description": "Grimoire est le compagnon du gardien pour les jeux de rôle d’enquête et d’horreur sur table. Avec cette application, ChatGPT écrit des histoires originales pour ta table et Grimoire les range dans ta bibliothèque, prêtes à jouer.\n\nDécris le cadre, l’ambiance, le mystère et tes joueurs ; ChatGPT propose un plan (actes, scènes, personnages non joueurs et le secret derrière tout cela), puis, une fois le plan validé, écrit chaque scène : ce que les investigateurs peuvent trouver, les indices, le texte à lire et les aides de jeu. Grimoire vérifie le format de l’histoire, refuse les noms tirés d’œuvres protégées et l’enregistre à chaque étape. Tu peux ensuite demander à ChatGPT de réviser tes histoires privées : ajouter ou réécrire une scène, changer un personnage, ajouter une aide de jeu.\n\nChatGPT peut aussi t’aider à créer les investigateurs de tes joueurs : il propose l’occupation, les caractéristiques, les compétences et le profil, et Grimoire vérifie chaque choix selon les règles de création et calcule la fiche avant de l’enregistrer.\n\nL’application n’accède qu’aux histoires privées et aux investigateurs du compte Grimoire connecté. Elle ne voit pas tes parties, et ne supprime jamais une histoire ni un investigateur. Un compte Grimoire est nécessaire."
           }
         }
       }
