@@ -102,7 +102,10 @@ describe('mcp: sign-in and discovery', () => {
 
   it('lists the tools, with instructions for the model', async () => {
     const { tools } = await alice.mcp.listTools()
-    expect(tools.map((t) => t.name)).toEqual(['grimoire_guide', 'save_outline', 'write_scenes', 'list_my_stories', 'get_story', 'edit_story', 'save_image'])
+    expect(tools.map((t) => t.name)).toEqual([
+      'grimoire_guide', 'save_outline', 'write_scenes', 'list_my_stories', 'get_story', 'edit_story', 'save_image',
+      'check_investigator', 'save_investigator', 'list_my_investigators', 'get_investigator',
+    ])
     expect(tools.find((t) => t.name === 'get_story')!.annotations).toMatchObject({ readOnlyHint: true })
     expect(tools.find((t) => t.name === 'edit_story')!.annotations).toMatchObject({ readOnlyHint: false, destructiveHint: true })
     expect(tools.find((t) => t.name === 'save_image')!.annotations).toMatchObject({ readOnlyHint: false, destructiveHint: true })
@@ -114,6 +117,7 @@ describe('mcp: sign-in and discovery', () => {
     expect(await call(alice, 'grimoire_guide', { topic: 'workflow' })).toContain('save_outline')
     expect(await call(alice, 'grimoire_guide', { topic: 'rules' })).toContain('Originality')
     expect(await call(alice, 'grimoire_guide', { topic: 'images' })).toContain('save_image')
+    expect(await call(alice, 'grimoire_guide', { topic: 'investigators' })).toContain('save_investigator')
   })
 })
 
@@ -314,6 +318,82 @@ describe('mcp: creating a story', () => {
       const list = await call(alice, 'list_my_stories')
       expect(list.unfinishedCreations).toEqual([expect.objectContaining({ creationId: id, status: 'writing', storyId: busy })])
     })
+  })
+})
+
+describe('mcp: investigators', () => {
+  /** The investigators guide's example: valid creation choices. */
+  let choices: Record<string, unknown>
+  beforeAll(async () => {
+    choices = JSON.parse((await call(alice, 'grimoire_guide', { topic: 'investigators' })).split('## Example of choices')[1])
+  })
+
+  it('checks choices without saving: every problem, or the computed sheet', async () => {
+    const bad = await call(alice, 'check_investigator', { investigator: { ...choices, luck: 52, creditRating: 70, hp: 15 } })
+    expect(bad.ok).toBe(false)
+    expect(bad.problems.join('\n')).toMatch(/Unknown fields: hp/)
+    expect(bad.problems.join('\n')).toMatch(/luck:/)
+    expect(bad.problems.join('\n')).toMatch(/each used once/)
+    const good = await call(alice, 'check_investigator', { investigator: choices })
+    expect(good).toMatchObject({ ok: true, sheet: { name: choices.name, hp: 10, san: 60, mp: 12, damageBonus: '0' } })
+    const { count } = await alice.db.from('characters').select('id', { count: 'exact', head: true })
+    expect(count).toBe(0)
+  })
+
+  it('refuses to save a sheet that breaks the rules', async () => {
+    const res = await call(alice, 'save_investigator', { investigator: { ...choices, characteristics: { STR: 90, CON: 90, SIZ: 90, DEX: 90, APP: 90, INT: 90, POW: 90, EDU: 90 } } })
+    expect(res.error).toMatch(/^invalid_investigator: .*nothing was saved/s)
+    const { count } = await alice.db.from('characters').select('id', { count: 'exact', head: true })
+    expect(count).toBe(0)
+  })
+
+  it('saves an investigator the way the wizard does, with its player', async () => {
+    await alice.db.from('players').insert({ owner_id: alice.id, name: 'sam' })
+    const saved = await call(alice, 'save_investigator', { investigator: choices })
+    expect(saved).toMatchObject({ characterId: expect.any(String), version: expect.any(String), url: expect.stringContaining(`/characters/${saved.characterId}`), player: 'Sam' })
+    const { data: row } = await alice.db.from('characters').select('data, player:players(name)').eq('id', saved.characterId).single()
+    // The existing player "sam" is reused (case-insensitive), not duplicated.
+    expect(row!.player).toEqual({ name: 'sam' })
+    const { count } = await alice.db.from('players').select('id', { count: 'exact', head: true })
+    expect(count).toBe(1)
+    const data = row!.data as Record<string, any> // eslint-disable-line @typescript-eslint/no-explicit-any
+    expect(data).toMatchObject({ name: choices.name, occupation: 'Journaliste', hp: 10, san: 60, mp: 12, luck: 55, damageBonus: '0' })
+    expect(data.skills).toMatchObject({ 'library-use': 70, 'art-craft:Photographie': 60, occult: 25, dodge: 30, 'credit-rating': 40 })
+    expect(data.creation).toMatchObject({ occupation: 'journalist', playerId: expect.any(String) })
+
+    const list = await call(alice, 'list_my_investigators')
+    expect(list.investigators).toEqual([expect.objectContaining({ characterId: saved.characterId, name: choices.name, occupation: 'Journaliste', player: 'sam' })])
+    const got = await call(alice, 'get_investigator', { characterId: saved.characterId })
+    expect(got).toMatchObject({ version: saved.version, hasPlayProgress: false, choices: { ...choices, player: 'sam' } })
+  })
+
+  it('changes an investigator at the version read, keeping play progress and the player', async () => {
+    const { characterId } = await call(alice, 'save_investigator', { investigator: { ...choices, name: 'Ruth Abernathy', player: '' } })
+    expect((await alice.db.from('characters').select('player_id').eq('id', characterId).single()).data!.player_id).toBeNull()
+    // Play adds progress (the game screen writes it).
+    const { data: before } = await alice.db.from('characters').select('data').eq('id', characterId).single()
+    await alice.db.from('characters').update({ data: { ...(before!.data as object), progress: { san: 51 } } }).eq('id', characterId)
+    const { version, choices: current } = await call(alice, 'get_investigator', { characterId })
+
+    const { player: _player, ...withoutPlayer } = current
+    const changed = await call(alice, 'save_investigator', { characterId, version, investigator: { ...withoutPlayer, age: 45 } })
+    expect(changed).toMatchObject({ characterId, replaced: true, keptPlayProgress: true, player: null })
+    const { data: after } = await alice.db.from('characters').select('data, player_id').eq('id', characterId).single()
+    expect(after!.data).toMatchObject({ age: 45, progress: { san: 51 } })
+    expect(after!.player_id).toBeNull()
+
+    // An old version, a missing version, another keeper.
+    expect((await call(alice, 'save_investigator', { characterId, version, investigator: current })).error).toMatch(/^conflict/)
+    expect((await call(alice, 'save_investigator', { characterId, investigator: current })).error).toMatch(/^bad_request/)
+    expect((await call(bob, 'get_investigator', { characterId })).error).toMatch(/^not_found/)
+    expect((await call(bob, 'save_investigator', { characterId, version: changed.version, investigator: current })).error).toMatch(/^not_found/)
+    expect((await call(bob, 'list_my_investigators')).investigators).toEqual([])
+  })
+
+  it('reads an investigator made without the creation rules', async () => {
+    const { data } = await alice.db.from('characters').insert({ owner_id: alice.id, data: { name: 'Old sheet', skills: { listen: 40 } } }).select('id').single()
+    const got = await call(alice, 'get_investigator', { characterId: data!.id })
+    expect(got).toMatchObject({ choices: null, note: expect.stringContaining('not made with the creation rules'), sheet: { name: 'Old sheet', skills: [expect.objectContaining({ key: 'listen', value: 40 })] } })
   })
 })
 

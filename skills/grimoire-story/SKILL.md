@@ -1,11 +1,11 @@
 ---
 name: grimoire-story
-description: Write an original story (scenario) for the Grimoire app, revise one of the keeper's Grimoire stories, or draw pictures for it (scene backgrounds, handouts, maps), through the Grimoire connector. Use when the user asks for a Grimoire story, a scenario or one-shot for d100 investigation or horror tabletop games, a change to one of their Grimoire stories, or pictures for one.
+description: Write an original story (scenario) for the Grimoire app, revise one of the keeper's Grimoire stories, draw pictures for it (scene backgrounds, handouts, maps), or make an investigator (player character) by the creation rules, through the Grimoire connector. Use when the user asks for a Grimoire story, a scenario or one-shot for d100 investigation or horror tabletop games, a change to one of their Grimoire stories, pictures for one, or a Grimoire investigator or character sheet.
 ---
 
 # Grimoire stories
 
-Grimoire is a keeper's companion app for d100 investigation and horror tabletop games. Its connector (tools `grimoire_guide`, `save_outline`, `write_scenes`, `list_my_stories`, `get_story`, `edit_story`, `save_image`) lets you write stories straight into the keeper's library. You write; Grimoire checks and saves.
+Grimoire is a keeper's companion app for d100 investigation and horror tabletop games. Its connector (tools `grimoire_guide`, `save_outline`, `write_scenes`, `list_my_stories`, `get_story`, `edit_story`, `save_image`, `check_investigator`, `save_investigator`, `list_my_investigators`, `get_investigator`) lets you write stories straight into the keeper's library and make investigators for their table. You write; Grimoire checks and saves.
 
 If the Grimoire tools are not available, tell the user to add the connector first (Grimoire → Réglages / Settings → ChatGPT et Claude) and stop.
 
@@ -37,3 +37,13 @@ You draw pictures in SVG; `save_image` stores them in the story and the keeper s
 - **Maps and floor plans**: top-down ink on paper, thick walls, door gaps with swing arcs, stairs as hatching, a label in each room, a compass rose, a scale bar and a small legend. Only what the investigators know.
 - **Technical**: one root `<svg>` with a viewBox, at most 300 KB; shapes, paths, text, gradients, patterns, clip paths, masks, filters (no `feImage`); no scripts, event attributes, `foreignObject`, `<image>`, links, animation, DOCTYPE, editor namespaces or external URLs (`href` and `url()` only to `#id`; plain CSS, no `@import` or `@font-face`). Whole-number coordinates, `<symbol>` and `<use>` for repeated shapes.
 - **Calls**: `name` like `harbour-night.svg` (same name again replaces it), the `version` from `get_story` or from the previous call's answer, `svg`, and `attach: { "scene": "<id>" }` or `{ "handout": "<id>" }`. `attach` without `svg` reuses a stored picture; `remove: true` deletes one. Don't paste the SVG in the chat: say what you drew.
+
+## Investigators
+
+You help make an investigator (a player character); Grimoire checks it against the creation rules and computes the sheet. Read `grimoire_guide` topic `investigators` first.
+
+- **Ask little.** Who it is for (the player's first name), the occupation, a concept in a sentence. Propose the rest, fitted to the concept: where the eight characteristic values go, the eight occupation skills, the four personal interests, the specialties, the profile.
+- **Send choices, not numbers you computed.** Hit points, sanity, magic points, damage bonus and skill totals are Grimoire's job: send only the fields the guide lists. Characteristics use the fixed values 40, 50, 50, 50, 60, 60, 70, 80 unless the keeper wants them rolled; roll luck honestly or take the player's roll.
+- **Check, show, then save.** `check_investigator` lists every problem at once: fix them all and check again. When it says `ok`, show the keeper a short readable sheet (characteristics, hit points, sanity, luck, main skills, profile) and save with `save_investigator` only after their go-ahead. Give the link it returns.
+- **Changes**: `list_my_investigators`, `get_investigator` (its `choices` and `version`), change only what was asked, check, then `save_investigator` with `characterId` and `version`. What the investigator gained in play is kept.
+- Invent names: no characters from published games or fiction. Write the profile and specialties in the keeper's language.

@@ -1,13 +1,15 @@
 import type { Bilingual } from './doc'
 
 // Public documentation of the ChatGPT and Claude connector (the directories ask for one) and the
-// support contact. Keep it in step with the tools (supabase/functions/_shared/story-mcp.ts), their
+// support contact. Keep it in step with the tools (supabase/functions/_shared/story-mcp.ts and
+// investigator.ts), their
 // limits (MCP_STORIES_MONTHLY_LIMIT, MCP_EDITS_DAILY_LIMIT) and Réglages → ChatGPT et Claude.
 export const HELP: Bilingual = {
   fr: {
     title: 'Grimoire dans ChatGPT et Claude',
     intro: [
       'Le connecteur Grimoire permet de créer et de réviser tes histoires en discutant avec ChatGPT ou Claude. L’application de discussion écrit ; Grimoire la guide, vérifie l’histoire, la convertit au format des histoires Grimoire et la range dans ta bibliothèque, prête à jouer.',
+      'Il aide aussi à créer des investigateurs : ChatGPT ou Claude propose les choix (occupation, caractéristiques, compétences, profil), Grimoire vérifie chacun d’eux selon les règles de création et calcule le reste (points de vie, santé mentale, valeurs des compétences), comme l’assistant de création.',
     ],
     sections: [
       {
@@ -48,6 +50,7 @@ export const HELP: Bilingual = {
             '« Liste mes histoires Grimoire. »',
             '« Dans mon histoire du phare, ajoute une scène où les investigateurs fouillent la cabane du gardien. »',
             '« Rends le PNJ du médecin plus inquiétant et donne-lui un secret. »',
+            '« Crée un investigateur pour Sam : une photographe de presse curieuse et têtue. »',
           ],
         ],
       },
@@ -61,8 +64,11 @@ export const HELP: Bilingual = {
             '**list_my_stories** et **get_story** : lisent tes histoires privées (lecture seule).',
             '**edit_story** : modifie une de tes histoires privées (ajouter, remplacer ou retirer une scène, un acte, un PNJ, une aide de jeu). Tout ou rien, et refusé si l’histoire a changé entre-temps.',
             '**save_image** : enregistre une image que ChatGPT ou Claude dessine (au format SVG) dans une de tes histoires privées, comme fond d’une scène sur l’écran d’ambiance ou comme image d’une aide de jeu (lettre, carte, plan) ; la remplace ou la retire. L’image est vérifiée strictement : rien d’actif, aucun lien vers l’extérieur.',
+            '**check_investigator** : vérifie les choix d’un investigateur selon les règles de création et renvoie la fiche calculée, sans rien enregistrer (lecture seule).',
+            '**save_investigator** : enregistre un nouvel investigateur, ou refait la fiche d’un des tiens, à partir de choix conformes aux règles ; ce qu’il a gagné en partie est gardé. Le joueur est retrouvé par son prénom, ou ajouté.',
+            '**list_my_investigators** et **get_investigator** : lisent tes investigateurs (lecture seule).',
           ],
-          'Le connecteur n’accède qu’à tes histoires privées : ni aux histoires de la bibliothèque commune, ni à tes parties, investigateurs ou joueurs. Il ne supprime jamais une histoire entière. Il refuse les noms tirés d’œuvres protégées : les histoires créées doivent être originales.',
+          'Le connecteur n’accède qu’à tes histoires privées et à tes investigateurs (et aux prénoms de tes joueurs) : ni aux histoires de la bibliothèque commune, ni à tes parties. Il ne supprime jamais une histoire ni un investigateur. Il refuse les noms tirés d’œuvres protégées : les histoires créées doivent être originales. Une fiche qui ne respecte pas les règles de création est refusée, avec la raison.',
         ],
       },
       {
@@ -70,7 +76,7 @@ export const HELP: Bilingual = {
         blocks: [
           [
             '30 nouvelles histoires par mois et par compte avec le connecteur.',
-            '500 modifications par jour (chaque image enregistrée compte aussi comme une modification), dont 100 images.',
+            '500 modifications par jour (chaque image ou investigateur enregistré compte aussi comme une modification), dont 100 images.',
             'Une histoire peut peser jusqu’à 2 Mo, une modification compter jusqu’à 20 opérations, une image peser 300 Ko et une histoire garder 40 images.',
           ],
           'Le connecteur n’appelle aucune IA de son côté : c’est ChatGPT ou Claude qui écrit, selon ton abonnement chez eux.',
@@ -104,6 +110,7 @@ export const HELP: Bilingual = {
     title: 'Grimoire in ChatGPT and Claude',
     intro: [
       'The Grimoire connector lets you create and revise your stories by chatting with ChatGPT or Claude. The chat app does the writing; Grimoire guides it, checks the story, converts it to the Grimoire story format and puts it in your library, ready to play.',
+      'It also helps create investigators: ChatGPT or Claude suggests the choices (occupation, characteristics, skills, profile), Grimoire checks each one against the creation rules and computes the rest (hit points, sanity, skill values), like the creation wizard.',
     ],
     sections: [
       {
@@ -144,6 +151,7 @@ export const HELP: Bilingual = {
             '“List my Grimoire stories.”',
             '“In my lighthouse story, add a scene where the investigators search the keeper’s hut.”',
             '“Make the doctor NPC more unsettling and give him a secret.”',
+            '“Create an investigator for Sam: a curious, stubborn press photographer.”',
           ],
         ],
       },
@@ -157,8 +165,11 @@ export const HELP: Bilingual = {
             '**list_my_stories** and **get_story**: read your private stories (read-only).',
             '**edit_story**: changes one of your private stories (add, replace or remove a scene, an act, an NPC, a handout). All or nothing, and refused if the story changed in the meantime.',
             '**save_image**: stores a picture ChatGPT or Claude draws (as SVG) in one of your private stories, as a scene’s background on the ambiance screen or as a handout’s picture (letter, map, floor plan); replaces or removes it. The picture is strictly checked: nothing active, no link to the outside.',
+            '**check_investigator**: checks an investigator’s choices against the creation rules and returns the computed sheet, without saving anything (read-only).',
+            '**save_investigator**: saves a new investigator, or rebuilds the sheet of one of yours, from choices that follow the rules; what they gained in play is kept. The player is found by first name, or added.',
+            '**list_my_investigators** and **get_investigator**: read your investigators (read-only).',
           ],
-          'The connector only reaches your private stories: not the shared library, nor your games, investigators or players. It never deletes a whole story. It refuses names taken from protected works: created stories must be original.',
+          'The connector only reaches your private stories and your investigators (and your players’ first names): not the shared library, nor your games. It never deletes a story or an investigator. It refuses names taken from protected works: created stories must be original. A sheet that breaks the creation rules is refused, with the reason.',
         ],
       },
       {
@@ -166,7 +177,7 @@ export const HELP: Bilingual = {
         blocks: [
           [
             '30 new stories per month per account through the connector.',
-            '500 edits per day (each picture saved also counts as an edit), 100 of them pictures.',
+            '500 edits per day (each picture or investigator saved also counts as an edit), 100 of them pictures.',
             'A story can be up to 2 MB, one edit can hold up to 20 operations, a picture can be up to 300 KB and a story can hold 40 pictures.',
           ],
           'The connector calls no AI on its side: ChatGPT or Claude does the writing, under your plan with them.',

@@ -1,4 +1,4 @@
-import type { CreationDraft } from '@/engine/creation'
+import { derivedValues, finalSkills, occupationOf, type CreationDraft } from '@/engine/creation'
 import { skillLabel, type Characteristic, type ProfileField } from '@/rules/d100'
 
 /** Investigator data stored in characters.data. */
@@ -40,6 +40,34 @@ export const SHEET_LIMITS = { name: 80, occupation: 200, link: 200, profile: 200
  * game screen (the database refuses them too).
  */
 export const hasMarkup = (s: string): boolean => /[<>&"]/.test(s)
+
+/** A whole number in 0..99: the range the sheet's points live in (and the companion RPC accepts). */
+const points = (n: number) => Math.min(99, Math.max(0, Math.round(n)))
+
+/**
+ * The sheet the wizard saves. The MCP connector builds the same one on the server (investigatorSheet in
+ * supabase/functions/_shared/investigator.ts; its test keeps the two equal).
+ */
+export function toCharacterData(d: CreationDraft): CharacterData {
+  const v = derivedValues(d.characteristics)
+  return {
+    name: d.name.trim(),
+    occupation: occupationOf(d).label,
+    age: d.age,
+    link: d.link.trim() || undefined,
+    characteristics: d.characteristics,
+    hp: points(v.hp),
+    mp: points(v.mp),
+    san: points(v.san),
+    luck: d.luck === undefined ? undefined : points(d.luck),
+    move: v.move,
+    build: v.build,
+    damageBonus: v.damageBonus,
+    skills: finalSkills(d),
+    profile: Object.fromEntries(Object.entries(d.profile).filter(([, t]) => t?.trim())),
+    creation: d,
+  }
+}
 
 /** "art-craft:Photographie" → "Arts et métiers (Photographie)". */
 export function skillKeyLabel(key: string): string {

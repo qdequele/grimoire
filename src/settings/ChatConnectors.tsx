@@ -58,7 +58,7 @@ export function ChatConnectors() {
       <header className="flex flex-col gap-1">
         <h2 id="chat-connectors" className="font-heading text-2xl">{t('ChatGPT et Claude')}</h2>
         <p className="text-muted-foreground">
-          {t('Crée et modifie tes histoires en discutant avec ChatGPT ou Claude : ils écrivent, Grimoire vérifie et range l’histoire dans ta bibliothèque.')}
+          {t('Crée et modifie tes histoires en discutant avec ChatGPT ou Claude : ils écrivent, Grimoire vérifie et range l’histoire dans ta bibliothèque. Ils t’aident aussi à créer des investigateurs, vérifiés selon les règles de création.')}
         </p>
       </header>
 

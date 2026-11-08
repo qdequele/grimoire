@@ -1,20 +1,22 @@
-// MCP connector: keepers create and revise their stories from ChatGPT or Claude.
+// MCP connector: keepers create and revise their stories, and make investigators, from ChatGPT or Claude.
 //
 // A remote MCP server (Streamable HTTP, stateless, JSON responses). The chat app's model does the
 // writing; these tools guide it, then check, convert and save what it sends (logic and tool
-// definitions in _shared/story-mcp.ts). No Claude API call here: nothing to pay per token.
+// definitions in _shared/story-mcp.ts, investigator rules in _shared/investigator.ts). No Claude API
+// call here: nothing to pay per token.
 //
 // Sign-in is OAuth 2.1 through Supabase Auth's OAuth server: an unauthenticated request gets a 401
 // pointing to this resource's metadata, which names Supabase Auth as the authorization server; the
 // client registers itself (dynamic registration), the keeper approves it on /oauth/consent, and the
-// access token is an ordinary Supabase user JWT. Stories and pack files are then read and written
-// with that token (RLS: the keeper's own private stories only); the service role only writes
-// story_creations and ai_usage, like create-story.
+// access token is an ordinary Supabase user JWT. Stories, pack files, investigators and players are
+// then read and written with that token (RLS: the keeper's own rows only); the service role only
+// writes story_creations and ai_usage, like create-story.
 //
 // Env: MCP_PUBLIC_URL (this endpoint as clients see it; default: the function's URL),
 // MCP_AUTH_SERVER (default SUPABASE_URL/auth/v1), APP_URL (story links, default the production
 // site), MCP_STORIES_MONTHLY_LIMIT (default 30 new stories), MCP_EDITS_DAILY_LIMIT (default 500),
 // MCP_IMAGES_DAILY_LIMIT (default 100 SVG pictures stored or replaced; each save_image call is also an edit).
+// save_investigator calls count as edits too.
 
 import { Server } from 'npm:@modelcontextprotocol/sdk@1.32.2/server/index.js'
 import { WebStandardStreamableHTTPServerTransport } from 'npm:@modelcontextprotocol/sdk@1.32.2/server/webStandardStreamableHttp.js'
@@ -55,6 +57,7 @@ import {
   type GuideTopic,
   type StoryPart,
 } from '../_shared/story-mcp.ts'
+import { choicesOf, investigatorSheet, investigatorView, parseInvestigator, type ParsedInvestigator } from '../_shared/investigator.ts'
 import { existingStory, saveStory, writePackJson } from '../_shared/story-save.ts'
 import { sanitizeSvg, SvgError } from '../_shared/svg-safe.ts'
 
@@ -99,6 +102,7 @@ const since = (unit: 'month' | 'day') => {
   return d.toISOString()
 }
 const storyUrl = (id: string) => `${APP_URL}/stories/${id}`
+const characterUrl = (id: string) => `${APP_URL}/characters/${id}`
 const str = (v: unknown) => (typeof v === 'string' ? v.trim() : '')
 
 async function isAdmin(ctx: Ctx) {
@@ -423,6 +427,122 @@ async function saveImage(ctx: Ctx, args: Record<string, unknown>) {
   }
 }
 
+// ------------------------------------------------------------------ investigators
+
+/** The checked choices, or a ToolError listing every problem (nothing saved). */
+function checkedInvestigator(args: Record<string, unknown>): ParsedInvestigator & { draft: NonNullable<ParsedInvestigator['draft']> } {
+  const parsed = parseInvestigator(args.investigator)
+  if (!parsed.draft) {
+    throw new ToolError('invalid_investigator', `The sheet breaks the creation rules (nothing was saved). Fix these and send it again:\n- ${parsed.problems.join('\n- ')}`)
+  }
+  return parsed as ParsedInvestigator & { draft: NonNullable<ParsedInvestigator['draft']> }
+}
+
+/** check_investigator: the rules' verdict and the sheet Grimoire would save. No database. */
+function checkInvestigator(args: Record<string, unknown>) {
+  const parsed = parseInvestigator(args.investigator)
+  if (!parsed.draft) return { ok: false, problems: parsed.problems, warnings: parsed.warnings }
+  return { ok: true, warnings: parsed.warnings, sheet: investigatorView(investigatorSheet(parsed.draft)) }
+}
+
+/** The keeper's player with this first name (case-insensitive, as the companion does), or a new one. */
+async function playerNamed(ctx: Ctx, name: string): Promise<string> {
+  const find = async () => {
+    const { data, error } = await ctx.db.from('players').select('id, name').eq('owner_id', ctx.userId)
+    if (error) throw error
+    return data.find((p) => p.name.trim().toLowerCase() === name.toLowerCase())?.id
+  }
+  const found = await find()
+  if (found) return found
+  const { data, error } = await ctx.db.from('players').insert({ owner_id: ctx.userId, name }).select('id').single()
+  if (!error) return data.id
+  // Created at the same moment by another call (unique name per keeper).
+  const again = error.code === '23505' ? await find() : undefined
+  if (again) return again
+  throw error
+}
+
+async function loadOwnCharacter(ctx: Ctx, characterId: unknown) {
+  const id = str(characterId)
+  if (!id) throw new ToolError('bad_request', 'characterId is required.')
+  const { data } = await ctx.db
+    .from('characters')
+    .select('id, data, updated_at, player_id, player:players(name)')
+    .eq('id', id)
+    .eq('owner_id', ctx.userId)
+    .maybeSingle()
+  if (!data) throw new ToolError('not_found', 'No investigator of yours with this id (list_my_investigators lists them).')
+  return data as typeof data & { player: { name: string } | null }
+}
+
+const INVESTIGATOR_CONFLICT = 'The investigator changed since you read it. Call get_investigator again and redo the change on the new version.'
+
+async function saveInvestigator(ctx: Ctx, args: Record<string, unknown>) {
+  const { draft, player, warnings } = checkedInvestigator(args)
+  const replacing = args.characterId !== undefined && args.characterId !== null && args.characterId !== ''
+  const version = str(args.version)
+  if (replacing && !version) throw new ToolError('bad_request', 'version is required to change an investigator (from get_investigator).')
+  await checkEditQuota(ctx, false)
+  const current = replacing ? await loadOwnCharacter(ctx, args.characterId) : null
+  if (current && current.updated_at !== version) throw new ToolError('conflict', INVESTIGATOR_CONFLICT)
+
+  // player left out on a change: the investigator keeps its player.
+  const playerId = player === undefined ? (current?.player_id ?? null) : player === '' ? null : await playerNamed(ctx, player)
+  const sheet = investigatorSheet({ ...draft, playerId: playerId ?? '' })
+  // What the investigator gained in play stays, as when the keeper edits the sheet in the wizard.
+  const progress = (current?.data as { progress?: unknown } | undefined)?.progress
+  const data = { ...sheet, ...(progress ? { progress } : {}) } as unknown as Json
+
+  const saved = current
+    ? await ctx.db.from('characters').update({ data, player_id: playerId }).eq('id', current.id).eq('owner_id', ctx.userId).eq('updated_at', version).select('id, updated_at')
+    : await ctx.db.from('characters').insert({ owner_id: ctx.userId, data, player_id: playerId }).select('id, updated_at')
+  if (saved.error) throw saved.error
+  const row = saved.data?.[0]
+  if (!row) throw new ToolError('conflict', INVESTIGATOR_CONFLICT)
+  await ctx.admin.from('ai_usage').insert({ owner_id: ctx.userId, kind: 'mcp-edit', input_tokens: 0, output_tokens: 0 })
+  return {
+    characterId: row.id,
+    version: row.updated_at,
+    url: characterUrl(row.id),
+    player: player === undefined ? (current?.player?.name ?? null) : player || null,
+    ...(current ? { replaced: true, keptPlayProgress: !!progress } : {}),
+    warnings,
+    sheet: investigatorView(sheet),
+  }
+}
+
+async function listMyInvestigators(ctx: Ctx) {
+  const { data, error } = await ctx.db
+    .from('characters')
+    .select('id, data, updated_at, player:players(name)')
+    .eq('owner_id', ctx.userId)
+    .order('name')
+    .limit(200)
+  if (error) throw error
+  return {
+    investigators: (data ?? []).map((c) => {
+      const d = (c.data ?? {}) as { name?: string; occupation?: string; age?: number }
+      const p = c.player as { name: string } | null
+      return { characterId: c.id, name: d.name ?? '', occupation: d.occupation ?? '', age: d.age, player: p?.name ?? null, updatedAt: c.updated_at, url: characterUrl(c.id) }
+    }),
+  }
+}
+
+async function getInvestigator(ctx: Ctx, args: Record<string, unknown>) {
+  const c = await loadOwnCharacter(ctx, args.characterId)
+  const choices = choicesOf(c.data, c.player?.name ?? null)
+  return {
+    characterId: c.id,
+    version: c.updated_at,
+    url: characterUrl(c.id),
+    player: c.player?.name ?? null,
+    sheet: investigatorView(c.data),
+    hasPlayProgress: !!(c.data as { progress?: unknown } | null)?.progress,
+    choices,
+    ...(choices ? {} : { note: 'This investigator was not made with the creation rules (no saved choices). To change it with save_investigator, send complete choices: the sheet is rebuilt from them.' }),
+  }
+}
+
 async function callTool(ctx: Ctx, name: string, args: Record<string, unknown>): Promise<unknown> {
   switch (name) {
     case 'grimoire_guide': {
@@ -441,6 +561,14 @@ async function callTool(ctx: Ctx, name: string, args: Record<string, unknown>): 
       return await editStory(ctx, args)
     case 'save_image':
       return await saveImage(ctx, args)
+    case 'check_investigator':
+      return checkInvestigator(args)
+    case 'save_investigator':
+      return await saveInvestigator(ctx, args)
+    case 'list_my_investigators':
+      return await listMyInvestigators(ctx)
+    case 'get_investigator':
+      return await getInvestigator(ctx, args)
     default:
       throw new ToolError('bad_request', `Unknown tool ${name}.`)
   }

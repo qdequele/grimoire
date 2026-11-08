@@ -332,25 +332,36 @@ describe('guide and tools', () => {
   it('names every tool the guide mentions, with valid JSON Schemas and annotations', () => {
     const tools = toolDefinitions()
     const names = tools.map((t) => t.name)
-    expect(names).toEqual(['grimoire_guide', 'save_outline', 'write_scenes', 'list_my_stories', 'get_story', 'edit_story', 'save_image'])
+    expect(names).toEqual([
+      'grimoire_guide', 'save_outline', 'write_scenes', 'list_my_stories', 'get_story', 'edit_story', 'save_image',
+      'check_investigator', 'save_investigator', 'list_my_investigators', 'get_investigator',
+    ])
     for (const name of names) expect(guideText('workflow') + SERVER_INSTRUCTIONS).toContain(name)
     const ajv = new Ajv2020({ strict: false })
     for (const t of tools) {
       expect(() => ajv.compile(t.inputSchema), t.name).not.toThrow()
       expect(t.inputSchema.type).toBe('object')
       expect(JSON.stringify(t.inputSchema)).not.toContain('$ref')
-      expect(t.annotations.readOnlyHint).toBe(['grimoire_guide', 'list_my_stories', 'get_story'].includes(t.name))
+      expect(t.annotations.readOnlyHint).toBe(['grimoire_guide', 'list_my_stories', 'get_story', 'check_investigator', 'list_my_investigators', 'get_investigator'].includes(t.name))
       // The ChatGPT and Claude directories: a title on every tool, and every hint an explicit boolean.
       expect(t.title, t.name).toBeTruthy()
       expect(t.name.length).toBeLessThanOrEqual(64)
       expect(t.annotations, t.name).toEqual({
         readOnlyHint: expect.any(Boolean),
-        destructiveHint: t.name === 'edit_story' || t.name === 'save_image',
+        destructiveHint: ['edit_story', 'save_image', 'save_investigator'].includes(t.name),
         openWorldHint: false,
       })
     }
     const edit = tools.find((t) => t.name === 'edit_story')!
     for (const op of EDIT_OPS) expect(edit.description).toContain(op)
+  })
+
+  it("accepts the investigators guide's example with the investigator schema, and refuses computed fields", () => {
+    const schema = toolDefinitions().find((t) => t.name === 'save_investigator')!.inputSchema
+    const validateInput = new Ajv2020({ strict: false }).compile(schema)
+    const example = JSON.parse(guideText('investigators').split('## Example of choices')[1])
+    expect(validateInput({ investigator: example }), JSON.stringify(validateInput.errors)).toBe(true)
+    expect(validateInput({ investigator: { ...example, hp: 12 } })).toBe(false)
   })
 
   it("describes every décor and atmosphere of the ambiance screen", () => {

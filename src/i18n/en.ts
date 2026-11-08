@@ -768,8 +768,8 @@ export const EN: Record<string, string> = {
 
   // ---------------------------------------------------------------- ChatGPT and Claude (MCP connector, OAuth consent)
   'ChatGPT et Claude': 'ChatGPT and Claude',
-  'Crée et modifie tes histoires en discutant avec ChatGPT ou Claude : ils écrivent, Grimoire vérifie et range l’histoire dans ta bibliothèque.':
-    'Create and revise your stories by chatting with ChatGPT or Claude: they write, Grimoire checks the story and puts it in your library.',
+  'Crée et modifie tes histoires en discutant avec ChatGPT ou Claude : ils écrivent, Grimoire vérifie et range l’histoire dans ta bibliothèque. Ils t’aident aussi à créer des investigateurs, vérifiés selon les règles de création.':
+    'Create and revise your stories by chatting with ChatGPT or Claude: they write, Grimoire checks the story and puts it in your library. They also help you create investigators, checked against the creation rules.',
   'Ouvrir ChatGPT': 'Open ChatGPT',
   'Rien ne s’ouvre, ou tu préfères le faire toi-même ?': 'Nothing opens, or you’d rather do it yourself?',
   'Ajouter Grimoire à la main': 'Add Grimoire by hand',
