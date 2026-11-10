@@ -1,5 +1,5 @@
-import { LogOut, Settings } from 'lucide-react'
-import type { ReactNode } from 'react'
+import { Inbox, LogOut, MessageSquare, Settings } from 'lucide-react'
+import { useState, type ReactNode } from 'react'
 import { Link, Navigate, NavLink, Outlet, useLocation } from 'react-router'
 import { useAuth, useProfile } from '@/auth/auth'
 import { KeeperAvatar } from '@/auth/KeeperAvatar'
@@ -16,6 +16,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import { Spinner } from '@/components/ui/spinner'
+import { FeedbackDialog } from '@/feedback/FeedbackDialog'
 import { supabase } from '@/lib/supabase'
 import { useT } from '@/i18n/t'
 import { LandingPage } from '@/landing/LandingPage'
@@ -32,7 +33,9 @@ function AccountMenu() {
   const t = useT()
   const { session } = useAuth()
   const profile = useProfile()
+  const [feedback, setFeedback] = useState(false)
   return (
+    <>
     <DropdownMenu>
       <DropdownMenuTrigger render={<Button variant="ghost" size="icon" className="rounded-full" aria-label={t('Compte')} />}>
         <KeeperAvatar />
@@ -50,6 +53,16 @@ function AccountMenu() {
             <Settings />
             {t('Réglages')}
           </DropdownMenuItem>
+          <DropdownMenuItem onClick={() => setFeedback(true)}>
+            <MessageSquare />
+            {t('Donner mon avis')}
+          </DropdownMenuItem>
+          {profile.data?.is_admin && (
+            <DropdownMenuItem render={<Link to="/admin/feedback" />}>
+              <Inbox />
+              {t('Avis reçus')}
+            </DropdownMenuItem>
+          )}
           <DropdownMenuItem onClick={() => supabase.auth.signOut()}>
             <LogOut />
             {t('Se déconnecter')}
@@ -57,6 +70,9 @@ function AccountMenu() {
         </DropdownMenuGroup>
       </DropdownMenuContent>
     </DropdownMenu>
+    {/* Outside the menu, which unmounts its content when it closes. */}
+    <FeedbackDialog open={feedback} onOpenChange={setFeedback} />
+    </>
   )
 }
 

@@ -576,6 +576,28 @@ test('main menu: stories, investigators with their players, settings', async ({ 
   expect(await page.evaluate(() => localStorage.getItem('gardien-lang'))).toBe('en')
 })
 
+test('keeper sends feedback from the account menu', async ({ page }) => {
+  await signUp(page)
+  await page.goto('/stories')
+  await page.getByRole('button', { name: 'Compte' }).click()
+  await page.getByRole('menuitem', { name: 'Donner mon avis' }).click()
+  const dialog = page.getByRole('dialog', { name: 'Donner mon avis' })
+  await expect(dialog.getByRole('button', { name: 'Envoyer' })).toBeDisabled()
+  await dialog.getByText('Un problème').click()
+  await expect(dialog.getByRole('radio', { name: 'Un problème' })).toBeChecked()
+  await dialog.getByRole('textbox', { name: 'Ton message' }).fill('The fog never lifts.')
+  await dialog.getByRole('button', { name: 'Envoyer' }).click()
+  await expect(page.getByText('Merci ! Ton avis est bien arrivé.')).toBeVisible()
+  await expect(dialog).toBeHidden()
+
+  // The inbox is for admins: no menu entry, and the page says so.
+  await page.getByRole('button', { name: 'Compte' }).click()
+  await expect(page.getByRole('menuitem', { name: 'Avis reçus' })).toHaveCount(0)
+  await page.keyboard.press('Escape')
+  await page.goto('/admin/feedback')
+  await expect(page.getByText('Cette page est réservée aux administrateurs.')).toBeVisible()
+})
+
 test('the whole app follows the language chosen in settings', async ({ page }) => {
   await signUp(page)
   await page.getByRole('link', { name: /^Réglages/ }).click()

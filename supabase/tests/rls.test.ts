@@ -243,3 +243,59 @@ describe('players', () => {
     expect(data).toEqual({ player_id: null, owner_id: alice.id })
   })
 })
+
+describe('feedback', () => {
+  it('keepers send feedback as themselves and read only their own', async () => {
+    const sent = await alice.client.from('feedback').insert({ kind: 'idea', message: 'More fog', page: '/stories', lang: 'en' })
+    expect(sent.error).toBeNull()
+    const own = await alice.client.from('feedback').select('owner_id, kind, status, contact_ok')
+    expect(own.data).toContainEqual({ owner_id: alice.id, kind: 'idea', status: 'new', contact_ok: false })
+    expect((await bob.client.from('feedback').select('id').eq('owner_id', alice.id)).data).toEqual([])
+  })
+
+  it("can't be forged, pre-triaged, empty or of an unknown kind", async () => {
+    expect((await bob.client.from('feedback').insert({ owner_id: alice.id, kind: 'bug', message: 'Forged' })).error).not.toBeNull()
+    expect((await bob.client.from('feedback').insert({ kind: 'bug', message: 'Hi', status: 'done' })).error).not.toBeNull()
+    expect((await bob.client.from('feedback').insert({ kind: 'bug', message: '   ' })).error).not.toBeNull()
+    expect((await bob.client.from('feedback').insert({ kind: 'spam', message: 'Hi' })).error).not.toBeNull()
+    expect((await bob.client.from('feedback').insert({ kind: 'bug', message: 'x'.repeat(4001) })).error).not.toBeNull()
+  })
+
+  it('admins read everyone’s feedback and change only its status; keepers change nothing', async () => {
+    const { data: row } = await service.from('feedback').insert({ owner_id: bob.id, kind: 'bug', message: 'Dice stuck' }).select('id').single()
+    // A keeper's update matches no row (RLS), even on their own feedback.
+    await bob.client.from('feedback').update({ status: 'done' }).eq('id', row!.id)
+    expect((await service.from('feedback').select('status').eq('id', row!.id).single()).data!.status).toBe('new')
+
+    const all = await admin.client.from('feedback').select('id').eq('id', row!.id)
+    expect(all.data).toHaveLength(1)
+    expect((await admin.client.from('feedback').update({ status: 'read' }).eq('id', row!.id)).error).toBeNull()
+    expect((await admin.client.from('feedback').update({ message: 'Rewritten' }).eq('id', row!.id)).error).not.toBeNull()
+    expect((await service.from('feedback').select('status, message').eq('id', row!.id).single()).data).toEqual({ status: 'read', message: 'Dice stuck' })
+  })
+
+  it('the inbox (with the sender’s e-mail) is for admins only, filtered by status and kind', async () => {
+    const { data: row } = await service.from('feedback')
+      .insert({ owner_id: alice.id, kind: 'praise', message: 'Lovely candles', contact_ok: true }).select('id').single()
+    expect((await alice.client.rpc('feedback_inbox')).error?.code).toBe('42501')
+    const anon = createClient<Database>(url, anonKey, { auth: { persistSession: false } })
+    expect((await anon.rpc('feedback_inbox')).error).not.toBeNull()
+
+    const praise = await admin.client.rpc('feedback_inbox', { p_status: 'new', p_kind: 'praise' })
+    expect(praise.error).toBeNull()
+    const mine = praise.data!.find((r) => r.id === row!.id)
+    expect(mine).toMatchObject({ owner_id: alice.id, contact_ok: true, message: 'Lovely candles' })
+    expect(mine!.email).toMatch(/^alice-.*@example\.com$/)
+    expect(praise.data!.every((r) => r.kind === 'praise' && r.status === 'new')).toBe(true)
+    const bugs = await admin.client.rpc('feedback_inbox', { p_kind: 'bug' })
+    expect(bugs.data!.some((r) => r.id === row!.id)).toBe(false)
+  })
+
+  it('a keeper sends at most 20 a day', async () => {
+    const carol = await signUp('carol')
+    const rows = Array.from({ length: 20 }, (_, i) => ({ kind: 'other', message: `Note ${i}` }))
+    expect((await carol.client.from('feedback').insert(rows)).error).toBeNull()
+    const over = await carol.client.from('feedback').insert({ kind: 'other', message: 'One more' })
+    expect(over.error?.message).toContain('feedback_limit')
+  })
+})

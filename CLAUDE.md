@@ -217,6 +217,14 @@ Reprendre la partie · Nouvelle partie (→ library) · **Histoires** (`/stories
 - Accounts: Supabase links Google to an existing account with the same verified e-mail. A new account gets its profile name from Google (`full_name`/`name`, migration `20261106130000`) and its language (`user_metadata.lang`, for the e-mails) on first sign-in (`AuthProvider`).
 - Setup (hosted): Google Cloud Console → OAuth consent screen (Grimoire, scopes openid/email/profile, published) → Credentials → OAuth client ID, type Web: JavaScript origin `https://www.legrimoire.quest`, redirect URI `https://fovyhcbasmmstkocavlp.supabase.co/auth/v1/callback`. Client ID + secret → Supabase Dashboard → Authentication → Providers → Google.
 
+## Feedback
+
+- Keepers send feedback from the account menu → **Donner mon avis** (`src/feedback/FeedbackDialog.tsx`, rendered next to the menu in `AppLayout`, which unmounts its content on close): a kind (`bug`, `idea`, `praise`, `other`: `kinds.ts`, labels listed in `dataKeys()`), a message (1…4000 chars), "you may reply by e-mail" (`contact_ok`). The page (path + query), language and user agent go with it (`feedbackRow` in `api.ts`, ≤ 500 chars each).
+- Table `feedback` (`20261110090000_feedback.sql`): keepers insert their own rows (always `status = 'new'`) and read them; admins (`is_admin()`) read all and may update `status` only (`new` → `read` → `done`; column-level grant, the message can't be rewritten). A trigger caps keepers at 20 a day (`feedback_limit`).
+- **Admins' inbox**: `/admin/feedback` (`FeedbackInboxPage.tsx`; "Avis reçus" in the account menu, admins only; other keepers get "réservée aux administrateurs"). Status tabs with counts (`?statut=new|read|done|tous`, default `new`), type filter (`?type=`), each message with its sender, page, language and browser; "Répondre" (a `mailto:`, only when `contact_ok`), mark read / done / reopen. Rows come from the `feedback_inbox(p_status, p_kind, p_limit ≤ 500)` RPC (`20261110100000_feedback_inbox.sql`, security definer, refuses non-admins with `42501`), which adds the display name and the account e-mail from `auth.users`; counts and status changes go through the table under RLS.
+- Players on phones and signed-out visitors can't send feedback (no account). Privacy policy lists it ("Tes avis").
+- Tests: `feedback` in `supabase/tests/rls.test.ts` (inbox included), `src/feedback/api.test.ts`, e2e "keeper sends feedback from the account menu" (a keeper, so it only checks the inbox is closed to them: the e2e suite has no service key to make an admin).
+
 ## Accounts, marketplace, import (Supabase)
 
 - **Only the keeper has an account.** Investigators belong to the keeper's account; players don't log in.
