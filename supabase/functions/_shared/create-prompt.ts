@@ -1,7 +1,7 @@
 // Instructions for the story creator. The system prompt is the same for every call (outline,
 // scenes, ideas) and byte-for-byte stable, so it is served from the prompt cache; everything that
 // changes (the brief, the outline, what's written so far) goes in the user message.
-import { draftContext, SCREEN_PLACES, SCREEN_PRESETS, SCREEN_TIMES, type ImportDraft } from './import-draft.ts'
+import { draftAnswerFormat, draftContext, SCREEN_PLACES, SCREEN_PRESETS, SCREEN_TIMES, SOUND_IDS, type ImportDraft } from './import-draft.ts'
 import { SAMPLE_STORY, SOUNDS, STORY_FORMAT_MD } from './spec-bundle.ts'
 import {
   IDEA_FIELDS,
@@ -185,9 +185,26 @@ export function outlineUserPrompt(b: StoryBrief, revise?: { previous: StoryOutli
     )
   }
   parts.push(
-    `Write the OUTLINE only: title, pitch, the secret, the overview, ${length.scenes[0]} to ${length.scenes[1]} scenes grouped in acts (one act is fine for a short story), with each scene's summary, clues, NPCs and next scenes, and every NPC with a short description. The full scenes are written later, from this outline.`,
+    `Write the FRAME of the outline: title, pitch, content warnings, the secret, ${length.scenes[0]} to ${length.scenes[1]} scenes grouped in acts (one act is fine for a short story), each with its id, title and summary, and every NPC with a short description. The clues, the links between scenes and the keeper's overview come in a second step; the full scenes are written later.`,
   )
   return parts.join('\n\n')
+}
+
+/** Second outline call: clues, NPCs present and next scenes for every scene, and the keeper's overview. */
+export function outlineDetailsPrompt(b: StoryBrief, o: StoryOutline): string {
+  return [
+    "The keeper's answers:",
+    describeBrief(b),
+    language(b),
+    'The outline so far (title, secret, scenes, NPCs):',
+    JSON.stringify({ title: o.title, secret: o.overview.secret, acts: o.acts.map((a) => ({ id: a.id, title: a.title, scenes: a.scenes.map((s) => ({ id: s.id, title: s.title, summary: s.summary })) })), npcs: o.npcs }),
+    [
+      'Now complete it, using only the ids above:',
+      '- For EVERY scene (same id): the clues found there, the ids of the NPCs present, the ids of the scenes it can lead to.',
+      '- The keeper\'s overview: the usual path (one line per scene with [[scene-id]]), the clues the investigators must not miss and where, the main branches, how to get stuck players moving, and a few tips.',
+      '- The clues must lead the investigators to the secret: each important truth reachable from at least two scenes.',
+    ].join('\n'),
+  ].join('\n\n')
 }
 
 /** Which scenes and NPCs exist, which are already written. Sent with every scene batch. */
@@ -218,6 +235,7 @@ export function scenesUserPrompt(b: StoryBrief, o: StoryOutline, d: ImportDraft,
       '- Handouts found in these scenes, if any.',
       '- Copy title, summary, era, setting and overview from the outline as they are.',
     ].join('\n'),
+    draftAnswerFormat(SOUND_IDS),
   ].join('\n\n')
 }
 

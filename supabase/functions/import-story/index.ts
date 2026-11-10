@@ -4,7 +4,7 @@
 // calls this function once per small batch of pages with the same importId. Each call:
 //   1. checks the caller and their monthly page quota,
 //   2. reads the batch's images and deletes them from storage straight away,
-//   3. asks Claude for an ImportDraft (structured output, see _shared/import-draft.ts),
+//   3. asks Claude for an ImportDraft (plain JSON, coerced by normalizeDraft; see _shared/import-draft.ts),
 //   4. merges it into the import's draft, converts to story.json, validates against the spec,
 //   5. saves the result as the caller's private story and returns it.
 //
@@ -19,16 +19,19 @@ import { createClient, type SupabaseClient } from 'npm:@supabase/supabase-js@2.1
 import { Ajv2020 } from 'npm:ajv@8.20.0/dist/2020.js'
 import { encodeBase64 } from 'jsr:@std/encoding@1/base64'
 import {
+  draftAnswerFormat,
   draftContext,
   draftToStory,
   emptyDraft,
-  importDraftSchema,
   mergeDraft,
+  normalizeDraft,
+  parseJsonAnswer,
+  SOUND_IDS,
   type ImportDraft,
 } from '../_shared/import-draft.ts'
 import type { Database, Json } from '../_shared/database.types.ts'
 import { importSystemPrompt, importUserText } from '../_shared/import-prompt.ts'
-import { SOUNDS, STORY_SCHEMA } from '../_shared/spec-bundle.ts'
+import { STORY_SCHEMA } from '../_shared/spec-bundle.ts'
 
 const MODEL = 'claude-opus-5-5'
 const MONTHLY_PAGE_LIMIT = Number(Deno.env.get('IMPORT_MONTHLY_PAGE_LIMIT') ?? 60)
@@ -89,13 +92,9 @@ const slugify = (s: string) =>
 
 const ajv = new Ajv2020({ allErrors: true, strict: false })
 const validateStory = ajv.compile(STORY_SCHEMA)
-const draftFormat = {
-  type: 'json_schema' as const,
-  schema: importDraftSchema({
-    ambience: SOUNDS.ambience.filter((s) => s.status !== 'planned').map((s) => s.id),
-    sfx: SOUNDS.sfx.filter((s) => s.status !== 'planned').map((s) => s.id),
-  }),
-}
+// No structured output: the draft schema's grammar is too large for the API. The schema goes in the
+// prompt as text and normalizeDraft() coerces the answer (see import-draft.ts).
+const ANSWER_FORMAT = draftAnswerFormat(SOUND_IDS)
 const SYSTEM_PROMPT = importSystemPrompt()
 
 Deno.serve(async (req) => {
@@ -192,7 +191,7 @@ Deno.serve(async (req) => {
       max_tokens: 64000,
       betas: ['server-side-fallback-2026-07-01'],
       fallbacks: 'default',
-      output_config: { effort: 'medium', format: draftFormat },
+      output_config: { effort: 'medium' },
       system: [{ type: 'text', text: SYSTEM_PROMPT, cache_control: { type: 'ephemeral' } }],
       messages: [
         {
@@ -206,7 +205,7 @@ Deno.serve(async (req) => {
                 context: draftContext(accumulated),
                 pageNumbers: `${input.firstPage}-${last} of ${input.totalPages}`,
                 titleHint: input.title,
-              }),
+              }) + '\n\n' + ANSWER_FORMAT,
             },
           ],
         },
@@ -223,13 +222,12 @@ Deno.serve(async (req) => {
       return fail(422, 'too_long', 'Too much content in one go. Send fewer pages per batch.')
     }
     const text = message.content.flatMap((b) => (b.type === 'text' ? [b.text] : [])).join('')
-    let batch: ImportDraft
-    try {
-      batch = JSON.parse(text) as ImportDraft
-    } catch {
+    const answer = parseJsonAnswer(text)
+    if (!answer || typeof answer !== 'object') {
       await markFailed(admin, importRow.id, 'invalid_output')
       return fail(502, 'invalid_output', 'The AI answer could not be read. Try this batch again.')
     }
+    const batch: ImportDraft = normalizeDraft(answer)
 
     // ---- merge, convert, validate, save
     const draft = mergeDraft(accumulated, batch)

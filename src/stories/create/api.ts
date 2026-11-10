@@ -87,6 +87,15 @@ export function useWriteOutline() {
   })
 }
 
+/** The outline's second call: clues, NPCs present and next scenes, and the keeper's overview. */
+export function useCompleteOutline() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: (args: { creationId: string; outline?: Outline }) => call<OutlineResult>({ action: 'outline-details', ...args }),
+    onSettled: () => qc.invalidateQueries({ queryKey: creationKeys.all }),
+  })
+}
+
 /** One batch of scenes. The page calls it until nothing remains. */
 export function useWriteScenes() {
   const qc = useQueryClient()

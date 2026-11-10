@@ -76,32 +76,49 @@ describe('create-story', () => {
     expect(res.body.ideas).toEqual({ era: FAKE_IDEAS.era, ideas: FAKE_IDEAS.ideas })
     const sent = requests.at(-1)!.body
     expect((sent.output_config as { effort: string }).effort).toBe('low')
+    expect(sent.model).toBe('claude-haiku-5-5')
+    expect(sent.fallbacks).toBeUndefined() // no server-side fallback on Haiku
     const { data } = await service.from('ai_usage').select('kind').eq('owner_id', userId)
     expect(data).toEqual([{ kind: 'story-ideas' }])
   })
 
-  it('writes an outline, then the scenes in batches, into a private story with its pack', async () => {
-    const outline = await invoke({ action: 'outline', brief })
-    expect(outline.status).toBe(200)
-    expect(outline.body.outline.title).toBe(FAKE_OUTLINE.title)
-    expect(outline.body.outlinesLeft).toBe(4)
-    const creationId = outline.body.creationId as string
+  it('writes an outline in two calls, then the scenes one by one, into a private story with its pack', async () => {
+    const frame = await invoke({ action: 'outline', brief })
+    expect(frame.status).toBe(200)
+    expect(frame.body.outline.title).toBe(FAKE_OUTLINE.title)
+    expect(frame.body.outline.acts[0].scenes[0].clues).toEqual([])
+    expect(frame.body.outlinesLeft).toBe(4)
+    const creationId = frame.body.creationId as string
 
     // What was sent: the answers, cached instructions, structured output, fallbacks
     const sent = requests.at(-1)!
-    expect(sent.body.model).toBe('claude-opus-5-5')
+    expect(sent.body.model).toBe('claude-sonnet-5-5')
     expect((sent.body.system as Array<{ cache_control?: unknown }>)[0].cache_control).toEqual({ type: 'ephemeral' })
     expect((sent.body.output_config as { format: { type: string } }).format.type).toBe('json_schema')
     expect(sent.body.fallbacks).toBe('default')
     expect(String(sent.headers['anthropic-beta'])).toContain('server-side-fallback-2026-07-01')
     expect(JSON.stringify(sent.body.messages)).toContain('spiders')
 
+    // Second call: clues, links and overview, from the stored frame
+    const outline = await invoke({ action: 'outline-details', creationId })
+    expect(outline.status).toBe(200)
+    expect(outline.body.outline).toEqual(FAKE_OUTLINE)
+    expect(outline.body.outlinesLeft).toBe(4)
+    expect(JSON.stringify(requests.at(-1)!.body.messages)).toContain('For EVERY scene')
+
     // The keeper renames the story and drops a scene before writing
     const edited = { ...outline.body.outline, title: 'My Mill', acts: [outline.body.outline.acts[0], { ...outline.body.outline.acts[1], scenes: [] }] }
     const first = await invoke({ action: 'write', creationId, outline: edited })
     expect(first.status).toBe(200)
-    expect(first.body).toMatchObject({ written: 2, total: 2, remaining: 0, validationErrors: [] })
-    expect(JSON.stringify(requests.at(-1)!.body.messages)).toContain('\\"arrival\\" (act \\"act-1\\"), \\"mill\\" (act \\"act-1\\")')
+    expect(first.body).toMatchObject({ written: 1, total: 2, remaining: 1, validationErrors: [] })
+    const scenesCall = requests.at(-1)!.body
+    expect(JSON.stringify(scenesCall.messages)).toContain('these scenes in full, and only these: \\"arrival\\" (act \\"act-1\\").')
+    // No structured output for the scenes (the draft grammar is too large): the schema is in the prompt
+    expect(scenesCall.output_config).toEqual({ effort: 'medium' })
+    expect(JSON.stringify(scenesCall.messages)).toContain('\\"crypt\\"')
+    expect(JSON.stringify(scenesCall.messages)).toContain('\\"ritual\\"')
+    const second = await invoke({ action: 'write', creationId })
+    expect(second.body).toMatchObject({ written: 2, total: 2, remaining: 0, validationErrors: [], storyId: first.body.storyId })
 
     const { data: story } = await user.from('stories').select('visibility, owner_id, title, content').eq('id', first.body.storyId).single()
     expect(story).toMatchObject({ visibility: 'private', owner_id: userId, title: 'My Mill' })
@@ -112,9 +129,6 @@ describe('create-story', () => {
     // The model's choices for the ambiance screen reach the story
     const scenes = (story!.content as { acts: Array<{ scenes: Array<{ id: string; screen?: unknown }> }> }).acts.flatMap((x) => x.scenes)
     expect(scenes.map((sc) => [sc.id, sc.screen ?? null])).toEqual([['arrival', FAKE_SCREEN.arrival], ['mill', null]])
-    const sceneSchema = JSON.stringify((requests.at(-1)!.body.output_config as { format: { schema: unknown } }).format.schema)
-    expect(sceneSchema).toContain('"crypt"')
-    expect(sceneSchema).toContain('"ritual"')
 
     // story.json written to the pack
     const { data: pack } = await service.storage.from('story-packs').download(`${userId}/${first.body.storyId}/story.json`)
@@ -134,8 +148,11 @@ describe('create-story', () => {
     expect(revised.body.outlinesLeft).toBe(3)
     expect(JSON.stringify(requests.at(-1)!.body.messages)).toContain('Less gore')
 
+    await invoke({ action: 'outline-details', creationId })
+
     const a = await invoke({ action: 'write', creationId })
-    expect(a.body).toMatchObject({ written: 2, total: 3, remaining: 1 })
+    expect(a.body).toMatchObject({ written: 1, total: 3, remaining: 2 })
+    expect((await invoke({ action: 'write', creationId })).body).toMatchObject({ written: 2, total: 3, remaining: 1 })
     const b = await invoke({ action: 'write', creationId })
     expect(b.body).toMatchObject({ written: 3, total: 3, remaining: 0, storyId: a.body.storyId })
     const { data } = await user.from('stories').select('content').eq('id', b.body.storyId).single()

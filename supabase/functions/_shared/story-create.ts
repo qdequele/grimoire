@@ -165,7 +165,7 @@ const obj = (properties: Record<string, JsonSchema>): JsonSchema => ({
   additionalProperties: false,
 })
 
-/** Structured output for phase 1. Every field required (structured outputs limits, see import-draft.ts). */
+/** The whole outline in one shape: what the keeper reviews, and the MCP connector's save_outline input. */
 export function outlineSchema(): JsonSchema {
   const id = str('kebab-case id, unique in its list, e.g. "the-chapel".')
   const text = str('Rich text: **bold**, *italic*, [[scene-id]] links, {{npc:id}} refs.')
@@ -222,6 +222,94 @@ function uniqueId(raw: unknown, taken: Set<string>, fallback: string): string {
   taken.add(id)
   return id
 }
+
+/**
+ * The outline is written in two calls, each well under the Edge Function's time limit:
+ *   1. the frame: title, pitch, the secret, the NPCs and the scenes (id, title, summary);
+ *   2. the details: each scene's clues, NPCs and next scenes, and the keeper's overview.
+ */
+export function outlineFrameSchema(): JsonSchema {
+  const id = str('kebab-case id, unique in its list, e.g. "the-chapel".')
+  return obj({
+    title: str('An original, evocative title.'),
+    summary: str('The pitch read on the story card: 2 or 3 sentences, no spoilers.'),
+    era: str(),
+    setting: str(),
+    contentWarnings: arr(str(), 'Short themes players may want to know about, e.g. "drowning".'),
+    secret: str('The full truth behind the mystery, for the keeper: who, what, why, and what happens if nobody intervenes.'),
+    acts: arr(
+      obj({
+        id,
+        title: str(),
+        scenes: arr(obj({ id, title: str(), summary: str('What happens here, for the keeper: 2 or 3 sentences.') })),
+      }),
+    ),
+    npcs: arr(obj({ id, name: str(), kind: { enum: ['person', 'creature'] }, role: str(), description: str('Rich text: **bold**, *italic*.') })),
+  })
+}
+
+/** Second outline call: what links the frame's scenes together. */
+export function outlineDetailsSchema(): JsonSchema {
+  const text = str('Rich text: **bold**, *italic*, [[scene-id]] links, {{npc:id}} refs.')
+  return obj({
+    overview: obj({
+      steps: arr(text, 'The usual path through the story, one line per scene with [[scene-id]].'),
+      mustNotMiss: arr(text, 'Clues the investigators must find, and where.'),
+      branches: arr(text),
+      ifStuck: arr(text, 'How to get stuck players moving again.'),
+      keeperTips: arr(text),
+    }),
+    scenes: arr(
+      obj({
+        id: str('A scene id of the outline.'),
+        clues: arr(str(), 'Clues found in this scene.'),
+        npcs: arr(str(), 'Ids of NPCs present.'),
+        next: arr(str(), 'Scene ids this scene can lead to.'),
+      }),
+      'Every scene of the outline, same ids.',
+    ),
+  })
+}
+
+/** The outline from the first call (no clues, links or overview yet). */
+export function frameToOutline(frame: unknown): StoryOutline | string {
+  if (!frame || typeof frame !== 'object') return 'outline must be an object.'
+  const f = frame as Record<string, unknown>
+  return parseOutline({ ...f, overview: { secret: f.secret } })
+}
+
+/** The outline completed with the second call's answer. Scenes it doesn't name keep what they had. */
+export function withDetails(o: StoryOutline, details: unknown): StoryOutline | string {
+  const d = (details && typeof details === 'object' ? details : {}) as Record<string, unknown>
+  const ov = (d.overview && typeof d.overview === 'object' ? d.overview : {}) as Record<string, unknown>
+  const byId = new Map<string, Record<string, unknown>>()
+  for (const s of Array.isArray(d.scenes) ? d.scenes : []) {
+    if (s && typeof s === 'object' && typeof (s as { id?: unknown }).id === 'string') byId.set((s as { id: string }).id, s as Record<string, unknown>)
+  }
+  const pick = <T>(v: unknown, fallback: T): unknown => (Array.isArray(v) ? v : fallback)
+  return parseOutline({
+    ...o,
+    overview: {
+      secret: o.overview.secret,
+      steps: pick(ov.steps, o.overview.steps),
+      mustNotMiss: pick(ov.mustNotMiss, o.overview.mustNotMiss),
+      branches: pick(ov.branches, o.overview.branches),
+      ifStuck: pick(ov.ifStuck, o.overview.ifStuck),
+      keeperTips: pick(ov.keeperTips, o.overview.keeperTips),
+    },
+    acts: o.acts.map((a) => ({
+      ...a,
+      scenes: a.scenes.map((s) => {
+        const x = byId.get(s.id)
+        return x ? { ...s, clues: pick(x.clues, s.clues), npcs: pick(x.npcs, s.npcs), next: pick(x.next, s.next) } : s
+      }),
+    })),
+  })
+}
+
+/** Whether the second outline call has been made (clues, links or a path through the story). */
+export const outlineHasDetails = (o: StoryOutline) =>
+  o.overview.steps.length > 0 || o.acts.some((a) => a.scenes.some((s) => s.clues.length > 0 || s.next.length > 0))
 
 /**
  * Validate an outline: the model's answer, or the keeper's edited version sent back by the browser.
