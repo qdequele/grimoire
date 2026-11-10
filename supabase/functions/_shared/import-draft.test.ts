@@ -3,11 +3,15 @@ import { describe, expect, it } from 'vitest'
 import storySchema from '../../../spec/story.schema.json'
 import { PLACES, PRESETS, TIMES } from '../../../src/screen/ambiance'
 import {
+  DRAFT_FORMAT_HEADING,
+  draftAnswerFormat,
   draftContext,
   draftToStory,
   emptyDraft,
   importDraftSchema,
   mergeDraft,
+  normalizeDraft,
+  parseJsonAnswer,
   SCREEN_PLACES,
   SCREEN_PRESETS,
   SCREEN_TIMES,
@@ -121,6 +125,34 @@ describe('importDraftSchema', () => {
     const text = JSON.stringify(schema)
     expect(text).toContain('"enum":["rain","wind"]')
     expect(text).toContain('"enum":["door-creak","footsteps"]')
+  })
+})
+
+describe('parseJsonAnswer', () => {
+  it('reads a bare object, a fenced one, or one inside a sentence', () => {
+    expect(parseJsonAnswer('{"a":1}')).toEqual({ a: 1 })
+    expect(parseJsonAnswer('```json\n{"a":{"b":[1]}}\n```')).toEqual({ a: { b: [1] } })
+    expect(parseJsonAnswer('Here it is: {"a":1} Done.')).toEqual({ a: 1 })
+  })
+
+  it('returns null for anything else', () => {
+    expect(parseJsonAnswer('no json')).toBeNull()
+    expect(parseJsonAnswer('{"a":')).toBeNull()
+  })
+})
+
+describe('draftAnswerFormat', () => {
+  it('gives the model the draft schema as text', () => {
+    const f = draftAnswerFormat({ ambience: ['amb-rain'], sfx: [] })
+    expect(f.startsWith(DRAFT_FORMAT_HEADING)).toBe(true)
+    expect(f).toContain('"amb-rain"')
+    expect(f).toContain('"flow"')
+  })
+
+  it('pairs with normalizeDraft: a sloppy answer becomes a well-typed draft', () => {
+    const d = normalizeDraft(parseJsonAnswer('{"acts":[{"id":"a","scenes":[{"id":"s","place":"nowhere","preset":"fog"}]}]}'))
+    expect(d.acts[0].scenes[0]).toMatchObject({ id: 's', place: '', preset: 'fog', flow: [], readAloud: [] })
+    expect(d.npcs).toEqual([])
   })
 })
 

@@ -1,15 +1,19 @@
 import { Ajv2020 } from 'ajv/dist/2020.js'
 import { describe, expect, it } from 'vitest'
 import { LENGTHS as APP_LENGTHS, THREATS as APP_THREATS, TONES as APP_TONES } from '../../../src/stories/create/brief'
-import { createSystemPrompt, FORBIDDEN_NAMES, ideasUserPrompt, outlineUserPrompt, scenesUserPrompt, writingContext } from './create-prompt'
-import { draftToStory, emptyDraft, mergeDraft, type DraftScene, type ImportDraft } from './import-draft'
+import { createSystemPrompt, FORBIDDEN_NAMES, ideasUserPrompt, outlineDetailsPrompt, outlineUserPrompt, scenesUserPrompt, writingContext } from './create-prompt'
+import { DRAFT_FORMAT_HEADING, draftToStory, emptyDraft, mergeDraft, type DraftScene, type ImportDraft } from './import-draft'
 import { STORY_SCHEMA } from './spec-bundle'
 import {
+  frameToOutline,
   ideasSchema,
   LENGTHS,
   nextBatch,
   onlyScenes,
   orderLikeOutline,
+  outlineDetailsSchema,
+  outlineFrameSchema,
+  outlineHasDetails,
   outlineSchema,
   outlineToDraft,
   parseBrief,
@@ -18,6 +22,7 @@ import {
   playersFor,
   storyMetaId,
   THREATS,
+  withDetails,
   TONES,
   type StoryBrief,
   type StoryOutline,
@@ -94,7 +99,48 @@ describe('structured output schemas', () => {
 
   it('require every field and forbid extras (structured outputs rules)', () => {
     expect(required(outlineSchema())).toEqual([])
+    expect(required(outlineFrameSchema())).toEqual([])
+    expect(required(outlineDetailsSchema())).toEqual([])
     expect(required(ideasSchema())).toEqual([])
+  })
+})
+
+describe('the outline in two calls', () => {
+  const frame = {
+    title: 'Two Steps', summary: 'Pitch.', era: '1920s', setting: 'A mill', contentWarnings: ['fire'], secret: 'The miller did it.',
+    acts: [{ id: 'act-1', title: 'One', scenes: [{ id: 'arrival', title: 'Arrival', summary: 'They come.' }, { id: 'mill', title: 'The mill', summary: 'They look.' }] }],
+    npcs: [{ id: 'miller', name: 'Abel Roe', kind: 'person', role: 'Miller', description: 'Floury.' }],
+  }
+
+  it('reads the frame as an outline without details', () => {
+    const o = frameToOutline(frame) as StoryOutline
+    expect(o.overview.secret).toBe('The miller did it.')
+    expect(o.acts[0].scenes[0]).toEqual({ id: 'arrival', title: 'Arrival', summary: 'They come.', clues: [], npcs: [], next: [] })
+    expect(outlineHasDetails(o)).toBe(false)
+  })
+
+  it('adds clues, links and the overview, dropping links to unknown ids', () => {
+    const o = frameToOutline(frame) as StoryOutline
+    const full = withDetails(o, {
+      overview: { steps: ['[[arrival]]', '[[mill]]'], mustNotMiss: ['The ribbon'], branches: [], ifStuck: [], keeperTips: [] },
+      scenes: [
+        { id: 'arrival', clues: ['A ribbon'], npcs: ['miller', 'ghost'], next: ['mill', 'nowhere'] },
+        { id: 'not-a-scene', clues: ['x'], npcs: [], next: [] },
+      ],
+    }) as StoryOutline
+    expect(full.acts[0].scenes[0]).toMatchObject({ clues: ['A ribbon'], npcs: ['miller'], next: ['mill'] })
+    expect(full.acts[0].scenes[1]).toMatchObject({ clues: [], next: [] })
+    expect(full.overview).toMatchObject({ secret: 'The miller did it.', steps: ['[[arrival]]', '[[mill]]'], mustNotMiss: ['The ribbon'] })
+    expect(outlineHasDetails(full)).toBe(true)
+    // A broken answer leaves the frame as it was
+    expect(withDetails(o, 'nonsense')).toEqual(o)
+  })
+
+  it('asks the second call for every scene of the frame, with the secret', () => {
+    const p = outlineDetailsPrompt(brief(), frameToOutline(frame) as StoryOutline)
+    expect(p).toContain('"secret":"The miller did it."')
+    expect(p).toContain('"id":"mill"')
+    expect(p).toContain('For EVERY scene')
   })
 })
 
@@ -197,6 +243,9 @@ describe('prompts', () => {
     const p = scenesUserPrompt(brief(), o, outlineToDraft(o, brief()), ['mill', 'arrival-2'])
     expect(p).toContain('"mill" (act "act-one"), "arrival-2" (act "act-2")')
     expect(p).toContain('NPCs from the outline not detailed yet: "miller"')
+    // The draft schema goes in the prompt as text (its grammar is too large for structured outputs)
+    expect(p).toContain(DRAFT_FORMAT_HEADING)
+    expect(p).toContain('"readAloud"')
   })
 
   it('ideas: fill the gaps or one field', () => {

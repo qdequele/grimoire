@@ -1,13 +1,17 @@
-// The AI import's intermediate format.
+// The intermediate format of the AI import, the story creator and the MCP connector.
 //
-// Claude's structured outputs allow at most 24 optional fields and 16 union types per schema, and
-// no free-form maps. story.schema.json has far more, so the model fills this simpler "draft" shape
-// instead: every field required, "absent" written as "" / [] / an unlisted stat. draftToStory()
-// turns it into a real story.json, which is then validated against spec/story.schema.json.
+// story.schema.json is too large and too loose for a model to fill reliably, so the model writes
+// this simpler "draft" shape instead: every field present, "absent" written as "" / [] / an
+// unlisted stat. draftToStory() turns it into a real story.json, which is then validated against
+// spec/story.schema.json.
 //
-// Pure TypeScript, no Deno or browser APIs: used by the import-story Edge Function and unit-tested
-// with Vitest.
-import { STORY_SCHEMA } from './spec-bundle.ts'
+// The draft schema is NOT sent as a structured output (output_config.format): its compiled grammar
+// is too large for the API ("The compiled grammar is too large"). The model gets the schema as text
+// (draftAnswerFormat), answers with plain JSON, and normalizeDraft() coerces whatever it sent into a
+// well-typed ImportDraft (unknown enum values dropped, sizes capped).
+//
+// Pure TypeScript, no Deno or browser APIs: used by the Edge Functions and unit-tested with Vitest.
+import { SOUNDS, STORY_SCHEMA } from './spec-bundle.ts'
 
 export const ROLL_TYPES = ['skill', 'characteristic', 'luck', 'san', 'damage', 'opposed', 'group'] as const
 export const DIFFICULTIES = ['regular', 'hard', 'extreme'] as const
@@ -229,6 +233,159 @@ export function importDraftSchema(sounds: { ambience: string[]; sfx: string[] })
     npcs: arr(npc, 'NPCs and creatures first described in THESE pages.'),
     handouts: arr(obj({ id, title: str(), text, scene: str('Scene id where found, or "".') })),
   })
+}
+
+// ------------------------------------------------------------------ sounds
+
+/** Sound ids the library really has (planned ones are left out). */
+export const SOUND_IDS = {
+  ambience: SOUNDS.ambience.filter((s) => s.status !== 'planned').map((s) => s.id),
+  sfx: SOUNDS.sfx.filter((s) => s.status !== 'planned').map((s) => s.id),
+}
+
+// ------------------------------------------------------------------ untrusted drafts → ImportDraft
+
+const isObj = (v: unknown): v is Json => !!v && typeof v === 'object' && !Array.isArray(v)
+const text = (v: unknown, max = 4000) => (typeof v === 'string' ? v.trim().slice(0, max) : typeof v === 'number' ? String(v) : '')
+const texts = (v: unknown, max: number, len = 4000) =>
+  (Array.isArray(v) ? v : typeof v === 'string' ? [v] : []).map((x) => text(x, len)).filter(Boolean).slice(0, max)
+const objs = (v: unknown, max: number): Json[] => (Array.isArray(v) ? v.filter(isObj).slice(0, max) : isObj(v) ? [v] : [])
+const toInt = (v: unknown, lo: number, hi: number, fallback = 0) => {
+  const n = Math.round(Number(v))
+  return Number.isFinite(n) ? Math.max(lo, Math.min(hi, n)) : fallback
+}
+const oneOf = <T extends string>(v: unknown, ids: readonly T[], fallback: T): T =>
+  typeof v === 'string' && (ids as readonly string[]).includes(v) ? (v as T) : fallback
+const id = (v: unknown) => text(v, 80)
+const ids = (v: unknown, max: number) => texts(v, max, 80)
+
+function roll(v: Json): DraftRoll {
+  return {
+    type: oneOf(v.type, ROLL_TYPES, 'skill'),
+    options: ids(v.options, 6),
+    difficulty: oneOf(v.difficulty, DIFFICULTIES, 'regular'),
+    bonus: toInt(v.bonus, -2, 2),
+    san: text(v.san, 20),
+    dice: text(v.dice, 40),
+    label: text(v.label, 80),
+    againstNpc: id(v.againstNpc),
+    againstSkill: id(v.againstSkill),
+  }
+}
+
+function scene(v: Json, sounds: typeof SOUND_IDS): DraftScene | null {
+  const sceneId = id(v.id)
+  if (!sceneId) return null
+  const screen = isObj(v.screen) ? v.screen : {}
+  return {
+    id: sceneId,
+    title: text(v.title, 160) || sceneId,
+    ref: text(v.ref, 40),
+    lead: text(v.lead, 600),
+    readAloud: texts(v.readAloud, 12),
+    flow: objs(v.flow, 40).map((st) => ({
+      title: text(st.title, 160),
+      branch: text(st.branch, 160),
+      text: text(st.text),
+      roll: objs(st.roll, 1).map(roll),
+      success: text(st.success),
+      failure: text(st.failure),
+      pushed: text(st.pushed),
+      extra: text(st.extra),
+      goto: ids(st.goto, 8),
+    })),
+    notes: objs(v.notes, 20).map((n) => ({ title: text(n.title, 160), items: texts(n.items, 40, 1000) })),
+    npcs: ids(v.npcs, 20),
+    handouts: ids(v.handouts, 12),
+    rolls: objs(v.rolls, 12).map(roll),
+    ambience: texts(v.ambience, 3, 60).filter((s) => sounds.ambience.includes(s)),
+    sfx: texts(v.sfx, 12, 60).filter((s) => sounds.sfx.includes(s)),
+    // The draft's place, preset and time, or story.json's screen: { place, preset, time }. Unknown values are dropped.
+    place: oneOf(v.place ?? screen.place, SCREEN_PLACES, ''),
+    preset: oneOf(v.preset ?? screen.preset, SCREEN_PRESETS, ''),
+    time: oneOf(v.time ?? screen.time, SCREEN_TIMES, ''),
+    next: ids(v.next, 8),
+  }
+}
+
+function npc(v: Json): DraftNpc | null {
+  const npcId = id(v.id)
+  const name = text(v.name, 120)
+  if (!npcId || !name) return null
+  // Skills as [{ id, value }] (the draft shape) or as a { id: value } map (story.json's shape).
+  const skills = Array.isArray(v.skills)
+    ? objs(v.skills, 40).map((s) => ({ id: id(s.id), value: toInt(s.value, 0, 100) }))
+    : isObj(v.skills)
+      ? Object.entries(v.skills).slice(0, 40).map(([k, x]) => ({ id: id(k), value: toInt(x, 0, 100) }))
+      : []
+  return {
+    id: npcId,
+    name,
+    kind: v.kind === 'creature' ? 'creature' : 'person',
+    role: text(v.role, 200),
+    description: text(v.description, 2000),
+    personality: text(v.personality, 2000),
+    knows: texts(v.knows, 20, 1000),
+    stats: objs(v.stats, STAT_KEYS.length)
+      .filter((s) => (STAT_KEYS as readonly string[]).includes(s.key as string))
+      .map((s) => ({ key: s.key as DraftNpc['stats'][number]['key'], value: toInt(s.value, 0, 999) })),
+    damageBonus: text(v.damageBonus, 20),
+    attacks: objs(v.attacks, 10).map((a) => ({ name: text(a.name, 80), skill: toInt(a.skill, 0, 100), damage: text(a.damage, 40), note: text(a.note, 400) })),
+    skills: skills.filter((s) => s.id),
+    sanLoss: text(v.sanLoss, 20),
+    special: texts(v.special, 12, 1000),
+  }
+}
+
+/** Coerce a draft sent by a chat app into a well-typed ImportDraft: wrong types become "" / [], sizes are capped. */
+export function normalizeDraft(input: unknown, sounds = SOUND_IDS): ImportDraft {
+  const d = isObj(input) ? input : {}
+  const ov = isObj(d.overview) ? d.overview : {}
+  return {
+    title: text(d.title, 160),
+    summary: text(d.summary, 1000),
+    era: text(d.era, 120),
+    setting: text(d.setting, 200),
+    duration: text(d.duration, 60),
+    overview: {
+      secret: text(ov.secret),
+      steps: texts(ov.steps, 20, 1000),
+      mustNotMiss: texts(ov.mustNotMiss, 12, 1000),
+      branches: texts(ov.branches, 12, 1000),
+      ifStuck: texts(ov.ifStuck, 12, 1000),
+      keeperTips: texts(ov.keeperTips, 12, 1000),
+    },
+    acts: objs(d.acts, 8).flatMap((a) => {
+      const actId = id(a.id)
+      if (!actId) return []
+      return [{ id: actId, title: text(a.title, 160), scenes: objs(a.scenes, 20).flatMap((s) => scene(s, sounds) ?? []) }]
+    }),
+    npcs: objs(d.npcs, 30).flatMap((n) => npc(n) ?? []),
+    handouts: objs(d.handouts, 20).flatMap((h) => (id(h.id) ? [{ id: id(h.id), title: text(h.title, 160), text: text(h.text, 8000), scene: id(h.scene) }] : [])),
+  }
+}
+
+/** Heading of the answer-format instructions (the e2e fake Claude recognises draft requests by it). */
+export const DRAFT_FORMAT_HEADING = 'ANSWER FORMAT'
+
+/** Tells the model to answer with one JSON object following the draft schema (sent as text, see the top). */
+export function draftAnswerFormat(sounds: { ambience: string[]; sfx: string[] }): string {
+  return [
+    `${DRAFT_FORMAT_HEADING}: answer with ONE JSON object and nothing else (no prose, no code fence). It follows this JSON Schema; use "" or [] for what you have nothing for, and only the listed values where a field has an "enum":`,
+    JSON.stringify(importDraftSchema(sounds)),
+  ].join('\n')
+}
+
+/** The JSON object in a model's text answer (tolerates a code fence or a sentence around it), or null. */
+export function parseJsonAnswer(text: string): unknown {
+  const start = text.indexOf('{')
+  const end = text.lastIndexOf('}')
+  if (start < 0 || end <= start) return null
+  try {
+    return JSON.parse(text.slice(start, end + 1))
+  } catch {
+    return null
+  }
 }
 
 // ------------------------------------------------------------------ merging batches

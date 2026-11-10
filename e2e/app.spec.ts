@@ -2,7 +2,7 @@ import { createServer, type Server } from 'node:http'
 import { mkdirSync, readFileSync, writeFileSync } from 'node:fs'
 import { strFromU8, strToU8, unzipSync, zipSync } from 'fflate'
 import { expect, test } from '@playwright/test'
-import { fakeAnswer } from '../supabase/tests/fake-creator.ts'
+import { DRAFT_FORMAT_HEADING, fakeAnswer } from '../supabase/tests/fake-creator.ts'
 import { createJournalist, signUp } from './helpers.ts'
 
 // The new app against the local Supabase stack (`supabase start`, plus
@@ -638,12 +638,13 @@ test.describe('AI features (fake Claude API)', () => {
       let raw = ''
       req.on('data', (c) => (raw += c))
       req.on('end', () => {
-        // The story creator and the import stream structured JSON; the narrator streams free
-        // text; profile suggestions are a plain JSON message.
+        // The story creator and the import stream JSON (the import's draft is asked for with an
+        // "ANSWER FORMAT" section); the narrator streams free text; profile suggestions are a plain
+        // JSON message.
         const body = JSON.parse(raw || '{}')
         if (body.stream) {
           res.writeHead(200, { 'content-type': 'text/event-stream' })
-          res.end(events(fakeAnswer(body) ?? (body.output_config?.format ? draft : 'Les vagues battent la jetée.')))
+          res.end(events(fakeAnswer(body) ?? (JSON.stringify(body.messages ?? []).includes(DRAFT_FORMAT_HEADING) ? draft : 'Les vagues battent la jetée.')))
         } else {
           res.writeHead(200, { 'content-type': 'application/json' })
           res.end(JSON.stringify({
@@ -741,6 +742,9 @@ test.describe('AI features (fake Claude API)', () => {
     // 5. Outline: review, rename, drop a scene, then write
     await page.getByRole('button', { name: 'Écrire le plan' }).click()
     await expect(page.getByLabel('Titre', { exact: true })).toHaveValue('The Quiet Mill')
+    // The outline's second call (clues, links) has come in
+    await expect(page.getByText('A ribbon')).toBeVisible()
+    await expect(page.getByRole('button', { name: 'Compléter le plan' })).toHaveCount(0)
     await page.getByLabel('Titre', { exact: true }).fill('Mill of Silence')
     await page.getByRole('button', { name: 'Retirer la scène 3' }).click()
     await page.getByRole('button', { name: "Écrire l'histoire (2 scènes)" }).click()

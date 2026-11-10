@@ -93,12 +93,14 @@ describe('import-story', () => {
     const { data: imp } = await user.from('story_imports').select('status, page_count').eq('id', res.body.importId).single()
     expect(imp).toEqual({ status: 'succeeded', page_count: 2 })
 
-    // What was sent to Claude: images, structured output, cached instructions, fallbacks
+    // What was sent to Claude: images, the draft schema as text (its grammar is too large for a
+    // structured output), cached instructions, fallbacks
     const sent = requests.at(-1)!
     expect(sent.body.model).toBe('claude-opus-5-5')
     const content = (sent.body.messages as Array<{ content: Array<{ type: string }> }>)[0].content
     expect(content.filter((b) => b.type === 'image')).toHaveLength(2)
-    expect((sent.body.output_config as { format: { type: string } }).format.type).toBe('json_schema')
+    expect(sent.body.output_config).toEqual({ effort: 'medium' })
+    expect(JSON.stringify(content)).toContain('ANSWER FORMAT')
     expect((sent.body.system as Array<{ cache_control?: unknown }>)[0].cache_control).toEqual({ type: 'ephemeral' })
     expect(sent.body.fallbacks).toBe('default')
     expect(String(sent.headers['anthropic-beta'])).toContain('server-side-fallback-2026-07-01')

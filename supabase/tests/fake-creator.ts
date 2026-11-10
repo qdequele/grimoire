@@ -1,6 +1,8 @@
 // Fake Claude answers for the story creator (create-story function), shared by the function test
-// and the e2e test. Picks the answer from the structured-output schema the function sends, and
-// writes exactly the scenes the prompt asks for. No scenario text: placeholder words only.
+// and the e2e test. Picks the answer from the structured-output schema the function sends (ideas,
+// outline frame, outline details), and writes exactly the scenes the prompt asks for (plain JSON).
+// No scenario text: placeholder words only.
+export { DRAFT_FORMAT_HEADING } from '../functions/_shared/import-draft.ts'
 
 export const FAKE_OUTLINE = {
   title: 'The Quiet Mill',
@@ -21,6 +23,20 @@ export const FAKE_OUTLINE = {
     { id: 'act-2', title: 'Below', scenes: [{ id: 'cellar', title: 'The cellar', summary: 'The truth.', clues: [], npcs: [], next: [] }] },
   ],
   npcs: [{ id: 'miller', name: 'Abel Roe', kind: 'person', role: 'Miller', description: 'Floury hands.' }],
+}
+
+/** The outline's first call: FAKE_OUTLINE without clues, links or overview. */
+export const FAKE_FRAME = {
+  title: FAKE_OUTLINE.title, summary: FAKE_OUTLINE.summary, era: FAKE_OUTLINE.era, setting: FAKE_OUTLINE.setting,
+  contentWarnings: FAKE_OUTLINE.contentWarnings, secret: FAKE_OUTLINE.overview.secret,
+  acts: FAKE_OUTLINE.acts.map((a) => ({ id: a.id, title: a.title, scenes: a.scenes.map((s) => ({ id: s.id, title: s.title, summary: s.summary })) })),
+  npcs: FAKE_OUTLINE.npcs,
+}
+
+/** The outline's second call: what FAKE_FRAME lacks. */
+export const FAKE_DETAILS = {
+  overview: { ...FAKE_OUTLINE.overview, secret: undefined },
+  scenes: FAKE_OUTLINE.acts.flatMap((a) => a.scenes.map((s) => ({ id: s.id, clues: s.clues, npcs: s.npcs, next: s.next }))),
 }
 
 export const FAKE_IDEAS = { era: '1890s', place: 'A river port', hook: 'A bell rings at night.', ideas: 'A drowned choir.' }
@@ -51,7 +67,8 @@ export function requestedScenes(prompt: string): Array<{ id: string; act: string
 /** The JSON text Claude would answer for this Messages API request body. */
 export function fakeAnswer(body: { output_config?: { format?: { schema?: { properties?: Record<string, unknown> } } }; messages?: Array<{ content: unknown }> }): string | null {
   const props = body.output_config?.format?.schema?.properties ?? {}
-  if ('contentWarnings' in props) return JSON.stringify(FAKE_OUTLINE)
+  if ('contentWarnings' in props) return JSON.stringify(FAKE_FRAME)
+  if ('scenes' in props && 'overview' in props) return JSON.stringify(FAKE_DETAILS)
   if ('hook' in props) return JSON.stringify(FAKE_IDEAS)
   const content = body.messages?.[0]?.content
   const wanted = requestedScenes(typeof content === 'string' ? content : '')

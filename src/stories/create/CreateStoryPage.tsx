@@ -15,8 +15,8 @@ import { tMsg, useT } from '@/i18n/t'
 import { functionErrorMessage } from '@/lib/functions'
 import { cn } from '@/lib/utils'
 import { useLang } from '@/settings/lang'
-import { useCreation, useCreationsThisMonth, useSuggestIdeas, useWriteOutline, useWriteScenes } from './api'
-import { briefSchema, emptyBrief, LENGTHS, sceneTotal, THREATS, TONES, type Brief, type IdeaField, type Outline } from './brief'
+import { useCompleteOutline, useCreation, useCreationsThisMonth, useSuggestIdeas, useWriteOutline, useWriteScenes } from './api'
+import { briefSchema, emptyBrief, LENGTHS, outlineHasDetails, sceneTotal, THREATS, TONES, type Brief, type IdeaField, type Outline } from './brief'
 import { OutlineReview } from './OutlineReview'
 import { MoodStep, MysteryStep, SettingStep, TableStep, type QuestionProps } from './steps'
 
@@ -87,6 +87,7 @@ export function CreateStoryPage() {
   const server = useCreation(creationId)
   const ideas = useSuggestIdeas()
   const writeOutline = useWriteOutline()
+  const completeOutline = useCompleteOutline()
   const writeScenes = useWriteScenes()
 
   // Remember everything the keeper did, answers included.
@@ -141,8 +142,19 @@ export function CreateStoryPage() {
       setOutlinesLeft(res.outlinesLeft)
       setNotes('')
       goTo(PLAN)
+      await addDetails(res.creationId)
     } catch (e) {
       toast.error(tMsg(t, await functionErrorMessage(e, 'Création impossible.')))
+    }
+  }
+
+  /** The outline's second call (clues, links, overview). On failure the frame stays, with a button to retry. */
+  async function addDetails(id: string) {
+    try {
+      const res = await completeOutline.mutateAsync({ creationId: id })
+      setOutline(res.outline)
+    } catch (e) {
+      toast.error(tMsg(t, await functionErrorMessage(e, 'Plan incomplet. Réessaie avec « Compléter le plan ».')))
     }
   }
 
@@ -178,7 +190,7 @@ export function CreateStoryPage() {
   }
 
   const title = STEPS[step]
-  const busy = writeOutline.isPending || phase.kind === 'writing'
+  const busy = writeOutline.isPending || completeOutline.isPending || phase.kind === 'writing'
   const Question = step < PLAN ? QUESTION_STEPS[step].Component : null
 
   return (
@@ -259,8 +271,14 @@ export function CreateStoryPage() {
                   </Field>
                 )}
                 <div className="flex flex-wrap items-center gap-2">
+                  {outline && creationId && !outlineHasDetails(outline) && !completeOutline.isPending && (
+                    <Button onClick={() => addDetails(creationId)} disabled={busy}>
+                      <ScrollText data-icon="inline-start" />
+                      {t('Compléter le plan')}
+                    </Button>
+                  )}
                   {outline && (
-                    <Button onClick={writeAll} disabled={busy}>
+                    <Button onClick={writeAll} disabled={busy} variant={outlineHasDetails(outline) ? 'default' : 'outline'}>
                       <Feather data-icon="inline-start" />
                       {t.n(sceneTotal(outline), "Écrire l'histoire ({n} scène)", "Écrire l'histoire ({n} scènes)")}
                     </Button>
@@ -270,10 +288,11 @@ export function CreateStoryPage() {
                     onClick={form.handleSubmit(makeOutline)}
                     disabled={busy || outlinesLeft === 0}
                   >
-                    {writeOutline.isPending ? <Spinner data-icon="inline-start" /> : outline ? <RefreshCw data-icon="inline-start" /> : <ScrollText data-icon="inline-start" />}
+                    {writeOutline.isPending || completeOutline.isPending ? <Spinner data-icon="inline-start" /> : outline ? <RefreshCw data-icon="inline-start" /> : <ScrollText data-icon="inline-start" />}
                     {outline ? t('Nouveau plan') : t('Écrire le plan')}
                   </Button>
-                  {writeOutline.isPending && <span className="text-sm text-muted-foreground">{t('Compte une à deux minutes.')}</span>}
+                  {writeOutline.isPending && <span className="text-sm text-muted-foreground">{t('Plan, étape 1 sur 2 : l’histoire, ses scènes et ses personnages. Compte une minute environ.')}</span>}
+                  {completeOutline.isPending && <span className="text-sm text-muted-foreground">{t('Plan, étape 2 sur 2 : les indices et les liens entre les scènes. Compte une minute environ.')}</span>}
                 </div>
               </div>
             )}
@@ -371,11 +390,11 @@ function WritingPanel({ phase, onRetry, done, storyId }: { phase: Phase; onRetry
   return (
     <div className="flex flex-col gap-4" aria-live="polite">
       <Tuto>
-        <p>{t('L’IA écrit les scènes deux par deux : texte à lire, déroulé, jets, personnages. L’histoire apparaît dans tes histoires dès les premières scènes.')}</p>
+        <p>{t('L’IA écrit les scènes une par une : texte à lire, déroulé, jets, personnages. L’histoire apparaît dans tes histoires dès les premières scènes.')}</p>
       </Tuto>
       <Progress value={pct} />
       <p className="text-sm text-muted-foreground">
-        {t('{done} / {total} scènes écrites. Compte une à deux minutes par paire de scènes.', { done: phase.written, total: phase.total })}
+        {t('{done} / {total} scènes écrites. Compte une minute environ par scène.', { done: phase.written, total: phase.total })}
       </p>
       {phase.kind === 'writing' && <Spinner />}
       {phase.kind === 'error' && (

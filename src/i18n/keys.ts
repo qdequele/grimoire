@@ -27,6 +27,7 @@ export function dataKeys(): string[] {
     'Cette histoire ne peut pas être écrite. Change quelques réponses et réessaie.', 'Réponse trop longue. Réessaie.',
     'Création introuvable.', 'Les scènes sont déjà en cours d’écriture.', 'Le plan reçu est incomplet. Réessaie.',
     'Écris d’abord le plan de l’histoire.', 'Les scènes demandées manquent dans la réponse de l’IA. Réessaie.', 'Création impossible.',
+    'L’IA a mis trop de temps à répondre. Réessaie.', 'Plan incomplet. Réessaie avec « Compléter le plan ».',
     'Art déco', 'Classique', // SKIN_LABEL (theme/skin.ts touches the DOM on import)
     // Labels passed as props, then translated by the component (Section, NameForm, Stat, nav).
     'Histoires', 'Bibliothèque', 'Mes histoires', 'Importer', 'Investigateurs', 'Joueurs', 'Réglages',

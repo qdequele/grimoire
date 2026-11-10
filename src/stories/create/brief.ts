@@ -74,6 +74,10 @@ export interface Outline {
 
 export const sceneTotal = (o: Outline) => o.acts.reduce((n, a) => n + a.scenes.length, 0)
 
+/** The outline is written in two calls; this says whether the second (clues, links, overview) is in. */
+export const outlineHasDetails = (o: Outline) =>
+  o.overview.steps.length > 0 || o.acts.some((a) => a.scenes.some((s) => s.clues.length > 0 || s.next.length > 0))
+
 /** Remove a scene from the outline (and the links to it); acts left empty go too. */
 export function removeScene(o: Outline, sceneId: string): Outline {
   return {
