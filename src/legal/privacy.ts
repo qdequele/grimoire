@@ -17,6 +17,7 @@ export const PRIVACY: Bilingual = {
             '**Ton compte** : adresse e-mail, mot de passe (stocké chiffré par notre fournisseur d’authentification, jamais lisible), nom affiché, langue et, si tu en choisis une, ta photo. Si tu te connectes avec Google : ton nom et ton adresse e-mail Google, rien d’autre.',
             '**Ce que tu crées** : histoires privées et leurs fichiers (textes, images, sons), investigateurs et leur photo, joueurs (prénoms), parties et leur état, images envoyées à l’écran d’ambiance.',
             '**Ce que les joueurs saisissent sur leur téléphone** depuis un lien de table : prénom, fiche d’investigateur, photo de l’investigateur, points de vie et autres points, notes du carnet, jets de dés. Les joueurs n’ont pas de compte : ces données appartiennent au compte du gardien qui a partagé le lien. Une photo est réduite à une petite image carrée dans le navigateur avant l’envoi ; tous ceux qui ont un lien de la partie la voient, et le gardien ou le joueur peut la retirer à tout moment.',
+            '**Tes avis** envoyés depuis « Donner mon avis » : le message, son type, la page où tu étais, la langue, ton navigateur (user agent) et si tu acceptes qu’on te réponde par e-mail.',
             '**Compteurs d’utilisation** des fonctions d’IA (nombre d’appels par mois), pour appliquer les limites mensuelles.',
             '**Connexion à ChatGPT ou Claude** : le nom de l’application autorisée et la date de l’autorisation, et les plans, scènes et images que l’application envoie à Grimoire pour créer ou modifier une histoire, ainsi que les fiches d’investigateurs (et le prénom du joueur) qu’elle envoie pour créer ou modifier un investigateur.',
           ],
@@ -29,6 +30,7 @@ export const PRIVACY: Bilingual = {
           [
             'Fournir le service que tu demandes : ton compte, ta bibliothèque, tes parties, le compagnon des joueurs, l’écran d’ambiance et les fonctions d’IA (exécution du contrat).',
             'Protéger le service : limites d’utilisation, prévention des abus, journaux techniques de sécurité (intérêt légitime).',
+            'Améliorer Grimoire à partir de tes avis et, si tu l’acceptes, te répondre (intérêt légitime).',
             'T’envoyer les e-mails nécessaires au compte : confirmation d’adresse, réinitialisation du mot de passe. Aucune lettre d’information, aucun e-mail commercial.',
           ],
         ],
@@ -105,6 +107,7 @@ export const PRIVACY: Bilingual = {
             '**Your account**: e-mail address, password (stored hashed by our authentication provider, never readable), display name, language and, if you choose one, your photo. If you sign in with Google: your Google name and e-mail address, nothing else.',
             '**What you create**: private stories and their files (texts, images, sounds), investigators and their photo, players (first names), games and their state, pictures sent to the ambiance screen.',
             '**What players enter on their phones** from a table link: first name, investigator sheet, investigator photo, hit points and other points, notebook notes, dice rolls. Players have no account: this data belongs to the account of the keeper who shared the link. A photo is shrunk to a small square picture in the browser before it is sent; everyone with a link to the game sees it, and the keeper or the player can remove it at any time.',
+            '**Your feedback** sent from “Send feedback”: the message, its type, the page you were on, the language, your browser (user agent) and whether we may answer you by e-mail.',
             '**Usage counters** for the AI features (number of calls per month), to apply the monthly limits.',
             '**Connection to ChatGPT or Claude**: the name of the authorised app and the date you authorised it, and the outlines, scenes and pictures the app sends to Grimoire to create or change a story, and the investigator sheets (and the player’s first name) it sends to create or change an investigator.',
           ],
@@ -117,6 +120,7 @@ export const PRIVACY: Bilingual = {
           [
             'To provide the service you ask for: your account, your library, your games, the player companion, the ambiance screen and the AI features (performance of a contract).',
             'To protect the service: usage limits, abuse prevention, technical security logs (legitimate interest).',
+            'To improve Grimoire from your feedback and, if you agree, answer you (legitimate interest).',
             'To send the e-mails your account needs: address confirmation, password reset. No newsletter, no marketing e-mail.',
           ],
         ],

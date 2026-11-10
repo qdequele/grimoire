@@ -15,6 +15,7 @@ import { Notebook } from '@/companion/Notebook'
 import { PickPage } from '@/companion/PickPage'
 import { DiceTab } from '@/companion/Dice'
 import { ProfileTab, SheetPage, SheetTab } from '@/companion/SheetPage'
+import { FeedbackInboxPage } from '@/feedback/FeedbackInboxPage'
 import { GamePage } from '@/games/GamePage'
 import { ScreenPage } from '@/screen/ScreenPage'
 import { HomePage } from '@/home/HomePage'
@@ -120,6 +121,7 @@ const router = createBrowserRouter([
       { path: 'characters/:id', element: <CharacterSheetPage /> },
       { path: 'characters/:id/edit', element: <CharacterWizardPage /> },
       { path: 'settings', element: <SettingsPage /> },
+      { path: 'admin/feedback', element: <FeedbackInboxPage /> },
       { path: 'marketplace', element: <Moved to="/stories" /> },
       { path: 'import', element: <Moved to="/stories/import" /> },
     ],

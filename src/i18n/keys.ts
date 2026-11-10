@@ -7,6 +7,7 @@ import {
 } from '@/rules/d100'
 import { PLACE_LABEL, PRESET_LABEL, TIME_LABEL } from '@/screen/ambiance'
 import { LEVEL_LABEL } from '@/companion/rolls'
+import { KIND_LABEL, KIND_PLACEHOLDER, STATUS_LABEL } from '@/feedback/kinds'
 
 /** Texts that reach t() from data rather than from a t('…') literal in the code. */
 export function dataKeys(): string[] {
@@ -53,6 +54,7 @@ export function dataKeys(): string[] {
     ...Object.values(PRESET_LABEL), // ambiance screen presets
     ...Object.values(PLACE_LABEL), // ambiance screen drawn décors
     ...Object.values(TIME_LABEL), // ambiance screen time of day
+    ...Object.values(KIND_LABEL), ...Object.values(KIND_PLACEHOLDER), ...Object.values(STATUS_LABEL), // feedback dialog and inbox
     'Confidentialité', 'Conditions', 'Aide', // LegalLinks (legal/LegalPage.tsx)
     // Free tools (src/tools/): nav labels, blank sheet's statuses, derived values and weapon columns.
     'Lanceur de dés', 'Créer un investigateur', 'Fiche vierge', 'Scénarios',

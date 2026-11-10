@@ -159,6 +159,53 @@ export type Database = {
           },
         ]
       }
+      feedback: {
+        Row: {
+          contact_ok: boolean
+          created_at: string
+          id: string
+          kind: string
+          lang: string | null
+          message: string
+          owner_id: string
+          page: string | null
+          status: string
+          user_agent: string | null
+        }
+        Insert: {
+          contact_ok?: boolean
+          created_at?: string
+          id?: string
+          kind: string
+          lang?: string | null
+          message: string
+          owner_id?: string
+          page?: string | null
+          status?: string
+          user_agent?: string | null
+        }
+        Update: {
+          contact_ok?: boolean
+          created_at?: string
+          id?: string
+          kind?: string
+          lang?: string | null
+          message?: string
+          owner_id?: string
+          page?: string | null
+          status?: string
+          user_agent?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "feedback_owner_id_fkey"
+            columns: ["owner_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       game_points: {
         Row: {
           chance: number | null
@@ -763,6 +810,23 @@ export type Database = {
         Returns: number
       }
       companion_text: { Args: { p: Json; p_max: number }; Returns: string }
+      feedback_inbox: {
+        Args: { p_kind?: string; p_limit?: number; p_status?: string }
+        Returns: {
+          contact_ok: boolean
+          created_at: string
+          display_name: string
+          email: string
+          id: string
+          kind: string
+          lang: string
+          message: string
+          owner_id: string
+          page: string
+          status: string
+          user_agent: string
+        }[]
+      }
       is_admin: { Args: Record<PropertyKey, never>; Returns: boolean }
       revoke_screen_link: { Args: { p_link: string }; Returns: undefined }
       revoke_table_link: { Args: { p_link: string }; Returns: undefined }
