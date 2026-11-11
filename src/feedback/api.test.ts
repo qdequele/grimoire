@@ -1,5 +1,8 @@
-import { describe, expect, it } from 'vitest'
-import { feedbackRow, isFeedbackLimit, replyLink } from './api'
+import { describe, expect, it, vi } from 'vitest'
+
+// CI runs the unit tests without Supabase keys: the real client throws at import.
+vi.mock('@/lib/supabase', () => ({ supabase: {}, supabaseUrl: '', supabaseAnonKey: '' }))
+const { feedbackRow, isFeedbackLimit, replyLink } = await import('./api')
 
 describe('feedbackRow', () => {
   it('trims the message and keeps page and user agent within the database bounds', () => {
