@@ -4,13 +4,14 @@
 import type { Lang } from '@/settings/lang'
 import { STORY_METAS, type StoryMeta } from './scenarios/stories'
 
-export type ToolKind = 'hub' | 'dice' | 'investigator' | 'sheet' | 'cards' | 'scenarios'
+export type ToolKind = 'hub' | 'dice' | 'investigator' | 'sheet' | 'map' | 'cards' | 'scenarios'
 
 export const TOOL_PATHS: Record<ToolKind, Record<Lang, string>> = {
   hub: { fr: '/outils', en: '/tools' },
   dice: { fr: '/outils/lanceur-de-des', en: '/tools/dice-roller' },
   investigator: { fr: '/outils/creer-un-investigateur', en: '/tools/investigator-generator' },
   sheet: { fr: '/outils/fiche-investigateur-vierge', en: '/tools/blank-investigator-sheet' },
+  map: { fr: '/outils/generateur-de-plans', en: '/tools/map-maker' },
   cards: { fr: '/outils/cartes-objets', en: '/tools/item-cards' },
   scenarios: { fr: '/scenarios', en: '/free-scenarios' },
 }
@@ -28,11 +29,11 @@ const HEADS: Record<ToolKind, Record<Lang, Head>> = {
   hub: {
     fr: {
       title: 'Outils gratuits pour le jeu de rôle d’horreur et d’enquête',
-      description: 'Lanceur de dés d100, créateur d’investigateur, fiche vierge et cartes d’objets à imprimer, scénarios gratuits pour les jeux d’enquête et d’horreur des années 1920. Sans compte.',
+      description: 'Lanceur de dés d100, créateur d’investigateur, fiche vierge, cartes d’objets à imprimer, générateur de plans et scénarios gratuits pour les jeux d’enquête et d’horreur des années 1920. Sans compte.',
     },
     en: {
       title: 'Free tools for investigation and horror roleplaying games',
-      description: 'A d100 dice roller, an investigator generator, a printable blank character sheet, printable item cards and free scenarios for 1920s investigation and horror games. No account needed.',
+      description: 'A d100 dice roller, an investigator generator, a printable blank character sheet, printable item cards, a map maker and free scenarios for 1920s investigation and horror games. No account needed.',
     },
   },
   dice: {
@@ -63,6 +64,16 @@ const HEADS: Record<ToolKind, Record<Lang, Head>> = {
     en: {
       title: 'Printable blank investigator sheet (d100, 1920s)',
       description: 'A blank character sheet for d100 investigation and horror games: characteristics with half and fifth values, skills with base values, weapons, background. Print it or save it as a PDF.',
+    },
+  },
+  map: {
+    fr: {
+      title: 'Générateur de plans gratuit : manoir, crypte, village pour le jeu de rôle',
+      description: 'Dessine le plan d’un bâtiment, d’un souterrain ou d’un village : pièces, portes, meubles, tombes et arbres sur une grille, version secrète pour le gardien et version pour les joueurs. À télécharger ou imprimer, sans compte.',
+    },
+    en: {
+      title: 'Free RPG map maker: floor plans, crypts and villages',
+      description: 'Draw the map of a building, a dungeon or a village: rooms, doors, furniture, graves and trees on a grid, a keeper’s copy with the secrets and a players’ copy without. Download or print it, no account needed.',
     },
   },
   cards: {

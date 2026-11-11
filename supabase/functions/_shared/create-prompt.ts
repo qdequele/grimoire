@@ -60,6 +60,7 @@ The app shows one scene per screen: a one-line lead, "read to the players" parag
 - Use [[scene-id]] to link scenes and {{npc:id}} to mention NPCs in text.
 - Sounds: pick up to 3 ambience ids that fit each scene and any matching sound effects, from the allowed ids only. Leave them empty when nothing fits.
 - Ambiance screen: give each scene the drawn décor ("place") that matches where it happens, the atmosphere ("preset": weather and mood) and the time of day ("time"), from the lists under "Ambiance screen". Use "" for a place when none fits; the strong atmospheres (abyss, ritual, nightmare, bulb, blaze) only for the scenes that call for them.
+- Maps: when the investigators explore a place room by room or part by part (a house to search, a crypt, a village to walk through), set the scene's "mapKind" (building, underground or outdoor) and describe the place in "mapDescription": its rooms or parts, what is in them, what is hidden. Grimoire draws the map. Two or three scenes per story at most; most scenes need none.
 - Respect the keeper's lines and veils exactly: content they ask to avoid never appears, not even off-screen or hinted at.`
 
 /** What each ambiance screen value looks like, for the model. A test checks every value of the format is described. */

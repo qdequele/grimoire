@@ -67,3 +67,14 @@
     color: #000 !important;
   }
 }
+
+/* The map maker prints the drawing alone, as large as the page allows. */
+@media print {
+  .map-print svg {
+    display: block;
+    width: 100%;
+    height: auto;
+    max-height: 270mm;
+    break-inside: avoid;
+  }
+}

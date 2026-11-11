@@ -64,6 +64,79 @@ test('landing page links to the free tools', async ({ page }) => {
   await expect(page).toHaveURL(/lanceur-de-des|dice-roller/)
 })
 
+test('map maker: rooms, a door, a bed, a secret room, the players’ copy', async ({ page }) => {
+  await page.goto('/outils/generateur-de-plans')
+  await expect(page.getByRole('heading', { level: 1 })).toHaveText('Générateur de plans pour le jeu de rôle')
+  const drawing = page.getByTestId('map-drawing')
+  await expect(drawing.locator('svg')).toBeVisible()
+
+  await page.getByRole('button', { name: 'Page blanche' }).click()
+  await page.getByLabel('Titre', { exact: true }).fill('Test map')
+  const canvas = page.getByTestId('map-canvas')
+  /** The middle of a square, in page pixels. */
+  const cell = async (x: number, y: number) =>
+    canvas.evaluate((el, [cx, cy]) => {
+      // Centred, so the sticky header doesn't cover the top rows.
+      el.scrollIntoView({ block: 'center' })
+      const svg = el as SVGSVGElement
+      const vb = svg.viewBox.baseVal
+      const rect = svg.getBoundingClientRect()
+      const scale = rect.width / vb.width
+      // The grid starts at (44, 96) in the drawing when the map has a title (render.ts, mapLayout).
+      return { x: rect.left + (44 + (cx + 0.5) * 40) * scale, y: rect.top + (96 + (cy + 0.5) * 40) * scale }
+    }, [x, y])
+  const drag = async (a: [number, number], b: [number, number]) => {
+    const p = await cell(...a)
+    const q = await cell(...b)
+    await page.mouse.move(p.x, p.y)
+    await page.mouse.down()
+    await page.mouse.move(q.x, q.y, { steps: 8 })
+    await page.mouse.up()
+  }
+  const click = async (x: number, y: number) => {
+    const p = await cell(x, y)
+    await page.mouse.click(p.x, p.y)
+  }
+
+  await page.getByRole('button', { name: 'Pièce', exact: true }).click()
+  await drag([1, 1], [6, 5])
+  await drag([6, 1], [11, 5])
+  await page.getByRole('group', { name: 'Sol' }).getByRole('button', { name: 'Porte', exact: true }).click()
+  await click(6, 3)
+  await page.getByRole('group', { name: 'Objets' }).getByRole('button', { name: 'Lit', exact: true }).click()
+  await click(3, 3)
+  await page.getByRole('button', { name: 'Secret', exact: true }).click()
+  await drag([7, 2], [10, 4])
+
+  // Keeper's copy: the bed, and the secret squares in red.
+  await expect(drawing.locator('use[href="#st-bed"]')).toHaveCount(1)
+  await expect(drawing.locator('[stroke="#9a3020"]')).toHaveCount(1)
+  // Undo and redo the secret.
+  await page.getByRole('button', { name: 'Annuler', exact: true }).click()
+  await expect(drawing.locator('[stroke="#9a3020"]')).toHaveCount(0)
+  await page.getByRole('button', { name: 'Rétablir', exact: true }).click()
+  await expect(drawing.locator('[stroke="#9a3020"]')).toHaveCount(1)
+
+  // Players' copy: nothing red.
+  await page.getByRole('button', { name: 'Joueurs', exact: true }).click()
+  await expect(drawing.locator('[stroke="#9a3020"], [fill="#9a3020"]')).toHaveCount(0)
+  await expect(drawing.locator('use[href="#st-bed"]')).toHaveCount(1)
+  const download = page.waitForEvent('download')
+  await page.getByRole('button', { name: 'Dessin (SVG)' }).click()
+  expect((await download).suggestedFilename()).toBe('test-map-joueurs.svg')
+
+  // The draft is kept.
+  await page.reload()
+  await expect(page.getByLabel('Titre', { exact: true })).toHaveValue('Test map')
+  await expect(drawing.locator('use[href="#st-bed"]')).toHaveCount(1)
+
+  // The same page in English, linked from the hub.
+  await page.goto('/tools')
+  await page.getByRole('link', { name: /Map maker/ }).first().click()
+  await expect(page).toHaveURL(/\/tools\/map-maker$/)
+  await expect(page.getByRole('heading', { level: 1 })).toHaveText('A map maker for roleplaying games')
+})
+
 test('item cards: search, open a card, download it as PNG, print a sheet; in English too', async ({ page }) => {
   await page.goto('/outils/cartes-objets')
   await expect(page.getByRole('heading', { level: 1 })).toHaveText('Cartes d’objets à imprimer')

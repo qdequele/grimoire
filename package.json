@@ -21,6 +21,7 @@
     "items:arts": "node scripts/item-arts-quiver.mjs",
     "items:ship": "node scripts/item-arts-ship.mjs",
     "spec:bundle": "node scripts/gen-spec-bundle.mjs",
+    "maps:bundle": "node scripts/gen-map-bundle.mjs",
     "db:seed-gen": "node scripts/gen-seed.mjs",
     "db:start": "supabase start",
     "db:reset": "supabase db reset && pnpm packs:sync",

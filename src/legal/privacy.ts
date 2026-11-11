@@ -38,7 +38,7 @@ export const PRIVACY: Bilingual = {
       {
         title: 'Fonctions d’IA',
         blocks: [
-          'Quand tu utilises l’import d’une histoire, le créateur d’histoires, le narrateur ou les suggestions de profil, le contenu nécessaire (pages à importer, réponses au questionnaire, contexte de la scène, fiche de l’investigateur) est envoyé à **Anthropic** (API Claude) pour produire la réponse. Selon ses conditions commerciales, Anthropic n’utilise pas ces données pour entraîner ses modèles. Les pages envoyées pour un import sont effacées de nos serveurs après chaque appel, que l’import réussisse ou non.',
+          'Quand tu utilises l’import d’une histoire, le créateur d’histoires, le narrateur, les suggestions de profil ou le dessin d’un plan, le contenu nécessaire (pages à importer, réponses au questionnaire, contexte de la scène, fiche de l’investigateur, description du lieu) est envoyé à **Anthropic** (API Claude) pour produire la réponse. Selon ses conditions commerciales, Anthropic n’utilise pas ces données pour entraîner ses modèles. Les pages envoyées pour un import sont effacées de nos serveurs après chaque appel, que l’import réussisse ou non.',
           'Avec le connecteur ChatGPT ou Claude, c’est l’application de discussion qui écrit : elle n’envoie à Grimoire que les appels d’outils (plan, scènes, modifications, images, fiches d’investigateurs), jamais la conversation. La conversation elle-même relève de la politique de confidentialité d’OpenAI ou d’Anthropic. Tu peux déconnecter une application à tout moment dans Réglages → ChatGPT et Claude.',
         ],
       },
@@ -73,7 +73,7 @@ export const PRIVACY: Bilingual = {
       {
         title: 'Sur ton appareil',
         blocks: [
-          'Grimoire garde dans ton navigateur ta session de connexion, ton thème, ta langue, une copie de secours des parties en cours et l’avancement du créateur d’histoires. Ce sont des réglages nécessaires au fonctionnement : pas de cookie publicitaire ni de mesure d’audience.',
+          'Grimoire garde dans ton navigateur ta session de connexion, ton thème, ta langue, une copie de secours des parties en cours, l’avancement du créateur d’histoires et le plan en cours de dessin. Ce sont des réglages nécessaires au fonctionnement : pas de cookie publicitaire ni de mesure d’audience.',
         ],
       },
       {
@@ -128,7 +128,7 @@ export const PRIVACY: Bilingual = {
       {
         title: 'AI features',
         blocks: [
-          'When you use story import, the story creator, the narrator or profile suggestions, the content needed (pages to import, questionnaire answers, scene context, investigator sheet) is sent to **Anthropic** (Claude API) to produce the answer. Under its commercial terms, Anthropic does not use this data to train its models. Pages sent for an import are deleted from our servers after every call, whether the import succeeds or not.',
+          'When you use story import, the story creator, the narrator, profile suggestions or map drawing, the content needed (pages to import, questionnaire answers, scene context, investigator sheet, description of the place) is sent to **Anthropic** (Claude API) to produce the answer. Under its commercial terms, Anthropic does not use this data to train its models. Pages sent for an import are deleted from our servers after every call, whether the import succeeds or not.',
           'With the ChatGPT or Claude connector, the chat app does the writing: it sends Grimoire only tool calls (outline, scenes, edits, pictures, investigator sheets), never the conversation. The conversation itself is covered by OpenAI’s or Anthropic’s privacy policy. You can disconnect an app at any time in Settings → ChatGPT and Claude.',
         ],
       },
@@ -163,7 +163,7 @@ export const PRIVACY: Bilingual = {
       {
         title: 'On your device',
         blocks: [
-          'Grimoire keeps in your browser your sign-in session, your theme, your language, a backup copy of games in progress and the story creator’s progress. These are settings the app needs to work: no advertising cookie and no analytics.',
+          'Grimoire keeps in your browser your sign-in session, your theme, your language, a backup copy of games in progress, the story creator’s progress and the map you are drawing. These are settings the app needs to work: no advertising cookie and no analytics.',
         ],
       },
       {

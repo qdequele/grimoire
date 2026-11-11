@@ -96,6 +96,23 @@ export function useCompleteOutline() {
   })
 }
 
+export interface SceneMapResult {
+  creationId: string
+  storyId: string | null
+  /** The scene whose map was just drawn, null when none was left. */
+  scene: string | null
+  remaining: number
+}
+
+/** Once every scene is written: the map of the next scene that needs one. The page calls it until none remains. */
+export function useDrawSceneMap() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: (args: { creationId: string }) => call<SceneMapResult>({ action: 'scene-map', ...args }),
+    onSettled: () => qc.invalidateQueries({ queryKey: storyKeys.all }),
+  })
+}
+
 /** One batch of scenes. The page calls it until nothing remains. */
 export function useWriteScenes() {
   const qc = useQueryClient()

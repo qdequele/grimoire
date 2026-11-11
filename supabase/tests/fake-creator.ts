@@ -56,7 +56,18 @@ export const fakeScene = (id: string) => ({
   }],
   notes: [], npcs: [], handouts: [], rolls: [], ambience: [], sfx: [],
   place: FAKE_SCREEN[id]?.place ?? '', preset: FAKE_SCREEN[id]?.preset ?? '', time: FAKE_SCREEN[id]?.time ?? '', next: [],
+  // The cellar is explored room by room: it asks for a map.
+  mapKind: id === 'cellar' ? 'underground' : '', mapDescription: id === 'cellar' ? 'Two cellars and a hidden one.' : '',
 })
+
+/** The map the fake model composes: two rooms, a door, a bed, a secret chest (placeholder words). */
+export const FAKE_MAP = {
+  kind: 'building', title: 'Test House', cols: 10, rows: 7,
+  ground: ['##########', '#...#....#', '#...d....#', '#...#....#', '##d#######', '  :       ', '  :       '],
+  items: [{ t: 'bed', x: 1, y: 1, r: 0, s: 1, secret: false }, { t: 'chest', x: 7, y: 1, r: 0, s: 1, secret: true }, { t: 'nope', x: 1, y: 1, r: 0, s: 1, secret: false }],
+  labels: [{ text: 'Room A', x: 2.5, y: 3.5, secret: false }, { text: 'Room B', x: 6.5, y: 3.5, secret: false }],
+  secret: [],
+}
 
 /** The scenes a "write" prompt asks for: '"id" (act "act-id")'. */
 export function requestedScenes(prompt: string): Array<{ id: string; act: string }> {
@@ -70,6 +81,7 @@ export function fakeAnswer(body: { output_config?: { format?: { schema?: { prope
   if ('contentWarnings' in props) return JSON.stringify(FAKE_FRAME)
   if ('scenes' in props && 'overview' in props) return JSON.stringify(FAKE_DETAILS)
   if ('hook' in props) return JSON.stringify(FAKE_IDEAS)
+  if ('ground' in props) return JSON.stringify(FAKE_MAP)
   const content = body.messages?.[0]?.content
   const wanted = requestedScenes(typeof content === 'string' ? content : '')
   if (!wanted.length) return null

@@ -100,8 +100,15 @@ export interface DraftScene {
   preset: string
   /** Time of day (one of SCREEN_TIMES), "" = let the app choose. */
   time: string
+  /** Story creator: the map the scene needs (a place explored room by room), "" = none. */
+  mapKind: string
+  /** What that map shows, secrets included. */
+  mapDescription: string
   next: string[]
 }
+
+/** Kinds of map a scene can ask for (the map kit's MAP_KINDS). */
+export const DRAFT_MAP_KINDS = ['building', 'underground', 'outdoor'] as const
 
 export interface DraftAct {
   id: string
@@ -130,6 +137,8 @@ export interface DraftHandout {
   title: string
   text: string
   scene: string
+  /** A picture in the pack (`images/…`), set by the server (the story creator's maps), never by a model. */
+  image?: string
 }
 
 /** An object the investigators can find and keep (a card): every field present, "" / 0 / false = absent. */
@@ -239,6 +248,8 @@ export function importDraftSchema(sounds: { ambience: string[]; sfx: string[] })
     place: { enum: ['', ...SCREEN_PLACES], description: 'Ambiance screen: the drawn décor that matches where the scene happens, or "" if none fits.' },
     preset: { enum: ['', ...SCREEN_PRESETS], description: 'Ambiance screen: the atmosphere (weather, light, mood) of the scene, or "" to let the app pick one from the sounds.' },
     time: { enum: ['', ...SCREEN_TIMES], description: 'Ambiance screen: time of day of the scene, or "" if it doesn\'t matter.' },
+    mapKind: { enum: ['', ...DRAFT_MAP_KINDS], description: 'When the investigators explore this place room by room or part by part (a house, a crypt, a village), the kind of map that would help the keeper; else "". At most a few scenes of a story.' },
+    mapDescription: str('If mapKind is set: what the map shows, in a few sentences (rooms or parts, what is in them, what is secret). Else "".'),
     next: arr(id, 'Likely next scenes, or [] for the following one.'),
   })
   const npc = obj({
@@ -363,6 +374,8 @@ function scene(v: Json, sounds: typeof SOUND_IDS): DraftScene | null {
     place: oneOf(v.place ?? screen.place, SCREEN_PLACES, ''),
     preset: oneOf(v.preset ?? screen.preset, SCREEN_PRESETS, ''),
     time: oneOf(v.time ?? screen.time, SCREEN_TIMES, ''),
+    mapKind: oneOf<string>(v.mapKind, ['', ...DRAFT_MAP_KINDS], ''),
+    mapDescription: text(v.mapDescription, 800),
     next: ids(v.next, 8),
   }
 }
@@ -706,7 +719,7 @@ export function draftToStory(d: ImportDraft, meta: StoryMetaInput): Json {
         ),
       })),
     npcs: d.npcs.map(toNpc),
-    handouts: d.handouts.map((h) => compact({ id: h.id, title: h.title, text: h.text, scene: h.scene })),
+    handouts: d.handouts.map((h) => compact({ id: h.id, title: h.title, text: h.text, image: h.image, scene: h.scene })),
     items: (d.items ?? []).map(toItem),
   })
 }

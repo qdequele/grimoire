@@ -160,6 +160,30 @@ describe('create-story', () => {
     expect(acts.map((x) => [x.id, x.scenes.map((s) => s.id)])).toEqual([['act-1', ['arrival', 'mill']], ['act-2', ['cellar']]])
   })
 
+  it('draws the maps the scenes asked for once every scene is written: two pictures and two handouts', async () => {
+    const { data: rows } = await user.from('story_creations').select('id, story_id').eq('status', 'succeeded').order('created_at', { ascending: false }).limit(1) // the long story: its cellar asks for a map
+    const creationId = rows![0].id
+    const res = await invoke({ action: 'scene-map', creationId })
+    expect(res.status).toBe(200)
+    expect(res.body).toMatchObject({ scene: 'cellar', remaining: 0, storyId: rows![0].story_id })
+    const { data } = await user.from('stories').select('content, pack_files').eq('id', res.body.storyId).single()
+    expect(data!.pack_files).toEqual(expect.arrayContaining(['images/map-cellar.svg', 'images/map-cellar-keeper.svg']))
+    const content = data!.content as { handouts: Array<{ id: string; image?: string; scene?: string }>; acts: Array<{ scenes: Array<{ id: string; handouts?: string[] }> }> }
+    expect(content.handouts.filter((h) => h.id.startsWith('map-'))).toEqual([
+      expect.objectContaining({ id: 'map-cellar', image: 'images/map-cellar.svg', scene: 'cellar' }),
+      expect.objectContaining({ id: 'map-cellar-keeper', image: 'images/map-cellar-keeper.svg', scene: 'cellar' }),
+    ])
+    expect(content.acts.flatMap((a) => a.scenes).find((s) => s.id === 'cellar')!.handouts).toEqual(expect.arrayContaining(['map-cellar', 'map-cellar-keeper']))
+    const { data: file } = await user.storage.from('story-packs').download(`${userId}/${res.body.storyId}/images/map-cellar.svg`)
+    const svg = await file!.text()
+    expect(svg).toMatch(/^<svg/)
+    expect(svg).not.toContain('#9a3020') // the players' copy: no secret in red
+    // Nothing left to draw; maps aren't charged to the keeper's monthly map quota.
+    expect((await invoke({ action: 'scene-map', creationId })).body).toMatchObject({ scene: null, remaining: 0 })
+    const { count } = await service.from('ai_usage').select('id', { count: 'exact', head: true }).eq('owner_id', userId).eq('kind', 'map')
+    expect(count).toBe(0)
+  })
+
   it("can't touch someone else's creation, or work without a session", async () => {
     const other = createClient<Database>(url, anonKey, { auth: { persistSession: false } })
     await other.auth.signUp({ email: `other-${crypto.randomUUID()}@example.com`, password: 'correct-horse-battery' })
@@ -171,6 +195,27 @@ describe('create-story', () => {
 
     const anon = createClient<Database>(url, anonKey, { auth: { persistSession: false } })
     expect((await invoke({ action: 'outline', brief }, anon)).status).toBe(401)
+  })
+
+  it('composes a map from a description, checked by the map kit, within its own monthly limit', async () => {
+    const res = await invoke({ action: 'map', description: 'A small house with two rooms.', kind: 'building', lang: 'en' })
+    expect(res.status).toBe(200)
+    expect(res.body.map).toMatchObject({ v: 1, kind: 'building', title: 'Test House', cols: 10, rows: 7 })
+    // The unknown stamp is dropped and said so; the rest is kept.
+    expect(res.body.map.items.map((i: { t: string }) => i.t)).toEqual(['bed', 'chest'])
+    expect(res.body.problems.join(' ')).toMatch(/dropped/)
+    const sent = requests.at(-1)!.body as { system: Array<{ text: string }>; output_config: { format: { schema: { properties: object } } }; messages: Array<{ content: string }> }
+    expect(sent.system[0].text).toContain('You draw maps')
+    expect(Object.keys(sent.output_config.format.schema.properties)).toContain('ground')
+    expect(sent.messages[0].content).toContain('A small house with two rooms.')
+    const { count } = await service.from('ai_usage').select('id', { count: 'exact', head: true }).eq('owner_id', userId).eq('kind', 'map')
+    expect(count).toBe(1)
+
+    expect((await invoke({ action: 'map', description: 'short' })).status).toBe(400)
+    await service.from('ai_usage').insert(Array.from({ length: 30 }, () => ({ owner_id: userId, kind: 'map' })))
+    const over = await invoke({ action: 'map', description: 'A small house with two rooms.' })
+    expect(over.status).toBe(429)
+    expect(over.body.error.code).toBe('quota_exceeded')
   })
 
   it('enforces the monthly limit on new stories', async () => {
