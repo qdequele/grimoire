@@ -37,17 +37,19 @@ $("#scene").addEventListener("click",e=>{if(e.target.closest("[data-scrprev]")&&
 function hdIcon(){return '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 3h9l4 4v14H6z"/><path d="M15 3v4h4M9 11h7M9 14.5h7M9 18h4"/></svg>';}
 function hdRowHTML(s){const H=GRIMOIRE_DATA.HANDOUTS||{};const ids=(s.hd||[]).filter(id=>H[id]);if(!ids.length)return "";
   return `<div class="hd-row"><span class="hd-lbl">Documents</span>${ids.map(id=>`<button type="button" class="hdc" data-hd="${esc(id)}">${hdIcon()}<span>${esc(H[id].t)}</span></button>`).join("")}</div>`;}
-document.body.insertAdjacentHTML("beforeend",`<div class="pickdlg" id="hdDlg" hidden role="dialog" aria-modal="true" aria-labelledby="hdTitle"><div class="pick-box hd-box"><div class="pk-head"><span class="gm-eyebrow">Document</span><h3 id="hdTitle"></h3></div><div class="hd-paper"><div class="hd-img" hidden></div><div class="hd-txt"></div></div><div class="addrow"><button class="btn prim" id="hdShow">Montrer sur l'écran</button><button class="btn" id="hdClose">Fermer</button></div></div></div>`);
+document.body.insertAdjacentHTML("beforeend",`<div class="pickdlg" id="hdDlg" hidden role="dialog" aria-modal="true" aria-labelledby="hdTitle"><div class="pick-box hd-box"><div class="pk-head"><span class="gm-eyebrow">Document</span><h3 id="hdTitle"></h3></div><div class="hd-paper"><div class="hd-img" hidden></div><div class="hd-txt"></div></div><div class="addrow"><button class="btn prim" id="hdShow">Montrer sur l'écran</button><button class="btn" id="hdGive">Donner à…</button><button class="btn" id="hdClose">Fermer</button></div></div></div>`);
 var HD=null,hdBack=null;
 function openHd(id){const h=(GRIMOIRE_DATA.HANDOUTS||{})[id];if(!h)return;HD=id;hdBack=document.activeElement;
   $("#hdTitle").textContent=h.t;const tx=$("#hdDlg .hd-txt");tx.innerHTML=h.txt||"";tx.hidden=!h.txt;
   const im=$("#hdDlg .hd-img");im.innerHTML="";im.hidden=true;
   if(h.img&&GRIMOIRE_HOST.handoutImage)Promise.resolve(GRIMOIRE_HOST.handoutImage(id)).then(u=>{if(HD!==id||!u)return;const i=new Image();i.src=String(u);i.alt=h.t;im.appendChild(i);im.hidden=false;}).catch(e=>console.error(e));
-  $("#hdShow").hidden=!GRIMOIRE_HOST.showHandout;$("#hdDlg").hidden=false;$("#hdClose").focus();}
+  $("#hdShow").hidden=!GRIMOIRE_HOST.showHandout;$("#hdGive").hidden=!GRIMOIRE_HOST.giveItem;$("#hdDlg").hidden=false;$("#hdClose").focus();}
 function closeHd(){$("#hdDlg").hidden=true;HD=null;if(hdBack&&hdBack.focus)try{hdBack.focus();}catch{}hdBack=null;}
 $("#scene").addEventListener("click",e=>{const b=e.target.closest("[data-hd]");if(!b)return;e.preventDefault();openHd(b.dataset.hd);});
 $("#hdDlg").addEventListener("click",e=>{if(e.target.id==="hdDlg"||e.target.id==="hdClose"){closeHd();return;}
-  if(e.target.id==="hdShow"&&HD){const ok=GRIMOIRE_HOST.showHandout(HD);if(ok!==false)toast("Document montré sur l'écran d'ambiance.");}});
+  if(e.target.id==="hdShow"&&HD){const ok=GRIMOIRE_HOST.showHandout(HD);if(ok!==false)toast("Document montré sur l'écran d'ambiance.");}
+  /* The document as a card an investigator keeps (src/items/documents.ts): the app's dialog takes over. */
+  if(e.target.id==="hdGive"&&HD){const id=HD;closeHd();GRIMOIRE_HOST.giveItem&&GRIMOIRE_HOST.giveItem("handout:"+id);}});
 document.addEventListener("keydown",e=>{if(e.key==="Escape"&&!$("#hdDlg").hidden){closeHd();e.stopImmediatePropagation();}},true);
 
 /* ---------- Investigator sheets ----------

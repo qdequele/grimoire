@@ -4,13 +4,14 @@
 import type { Lang } from '@/settings/lang'
 import { STORY_METAS, type StoryMeta } from './scenarios/stories'
 
-export type ToolKind = 'hub' | 'dice' | 'investigator' | 'sheet' | 'scenarios'
+export type ToolKind = 'hub' | 'dice' | 'investigator' | 'sheet' | 'cards' | 'scenarios'
 
 export const TOOL_PATHS: Record<ToolKind, Record<Lang, string>> = {
   hub: { fr: '/outils', en: '/tools' },
   dice: { fr: '/outils/lanceur-de-des', en: '/tools/dice-roller' },
   investigator: { fr: '/outils/creer-un-investigateur', en: '/tools/investigator-generator' },
   sheet: { fr: '/outils/fiche-investigateur-vierge', en: '/tools/blank-investigator-sheet' },
+  cards: { fr: '/outils/cartes-objets', en: '/tools/item-cards' },
   scenarios: { fr: '/scenarios', en: '/free-scenarios' },
 }
 
@@ -27,11 +28,11 @@ const HEADS: Record<ToolKind, Record<Lang, Head>> = {
   hub: {
     fr: {
       title: 'Outils gratuits pour le jeu de rôle d’horreur et d’enquête',
-      description: 'Lanceur de dés d100, créateur d’investigateur, fiche vierge à imprimer et scénarios gratuits pour les jeux d’enquête et d’horreur des années 1920. Sans compte.',
+      description: 'Lanceur de dés d100, créateur d’investigateur, fiche vierge et cartes d’objets à imprimer, scénarios gratuits pour les jeux d’enquête et d’horreur des années 1920. Sans compte.',
     },
     en: {
       title: 'Free tools for investigation and horror roleplaying games',
-      description: 'A d100 dice roller, an investigator generator, a printable blank character sheet and free scenarios for 1920s investigation and horror games. No account needed.',
+      description: 'A d100 dice roller, an investigator generator, a printable blank character sheet, printable item cards and free scenarios for 1920s investigation and horror games. No account needed.',
     },
   },
   dice: {
@@ -64,6 +65,16 @@ const HEADS: Record<ToolKind, Record<Lang, Head>> = {
       description: 'A blank character sheet for d100 investigation and horror games: characteristics with half and fifth values, skills with base values, weapons, background. Print it or save it as a PDF.',
     },
   },
+  cards: {
+    fr: {
+      title: 'Cartes d’objets à imprimer pour le jeu de rôle d’horreur années 20',
+      description: 'Près de cent cartes d’objets illustrées : armes, munitions, lanternes, outils, soins, lettres, clés et artefacts étranges, avec leurs règles au d100. À imprimer neuf par page ou à télécharger en PNG. Gratuit.',
+    },
+    en: {
+      title: 'Printable item cards for 1920s horror roleplaying games',
+      description: 'Nearly a hundred illustrated item cards: weapons, ammunition, lanterns, tools, medical kits, letters, keys and strange artefacts, with their d100 rules. Print them nine to a page or download them as PNG. Free.',
+    },
+  },
   scenarios: {
     fr: {
       title: 'Scénarios gratuits de jeu de rôle d’horreur à imprimer',
@@ -91,7 +102,7 @@ export const SITE = 'https://www.legrimoire.quest'
 
 function toolJsonLd(kind: ToolKind, lang: Lang, head: Head): Record<string, unknown> {
   const url = SITE + TOOL_PATHS[kind][lang]
-  if (kind === 'hub' || kind === 'scenarios') return { '@context': 'https://schema.org', '@type': 'CollectionPage', name: head.title, description: head.description, url, inLanguage: lang }
+  if (kind === 'hub' || kind === 'scenarios' || kind === 'cards') return { '@context': 'https://schema.org', '@type': 'CollectionPage', name: head.title, description: head.description, url, inLanguage: lang }
   return {
     '@context': 'https://schema.org',
     '@type': 'WebApplication',

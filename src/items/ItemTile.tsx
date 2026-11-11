@@ -1,12 +1,13 @@
 // A held card with what can be done with it: spend or regain a use, reload a weapon from matching
 // ammunition, take it back (keeper). Shared by the keeper's screens and the players' phones.
-import { Minus, Plus, RotateCcw, Trash2 } from 'lucide-react'
+import { BookOpen, Minus, Plus, RotateCcw, Trash2 } from 'lucide-react'
 import { useState, type ReactNode } from 'react'
 import { Button } from '@/components/ui/button'
 import { useT } from '@/i18n/t'
 import { cn } from '@/lib/utils'
 import { NativeSelect, NativeSelectOption } from '@/components/ui/native-select'
 import { ammoFor, CONDITION_LABEL, CONDITIONS, reloadable, reloadPlan, type Condition, type HeldItem } from './item'
+import { DocumentReader } from './DocumentReader'
 import { ItemCard } from './ItemCard'
 import { localCard, usesText } from './text'
 
@@ -21,6 +22,7 @@ export interface ItemActions {
 export function ItemTile({ item, held, actions, className, extra }: { item: HeldItem; held: HeldItem[]; actions: ItemActions; className?: string; extra?: ReactNode }) {
   const t = useT()
   const [confirming, setConfirming] = useState(false)
+  const [reading, setReading] = useState(false)
   const name = localCard(t, item.card, item.source).name
   const max = item.card.uses
   const left = item.uses ?? 0
@@ -54,6 +56,12 @@ export function ItemTile({ item, held, actions, className, extra }: { item: Held
             </Button>
           </>
         )}
+        {item.card.document && (
+          <Button size="sm" variant="outline" onClick={() => setReading(true)} aria-label={item.card.kind === 'document' ? t('Lire « {name} »', { name }) : t('Voir « {name} »', { name })}>
+            <BookOpen data-icon="inline-start" />
+            {item.card.kind === 'document' ? t('Lire') : t('Voir')}
+          </Button>
+        )}
         {/* Always there for a weapon that takes ammunition, so the buttons don't move under the finger. */}
         {actions.onReload && reloadable(item.card) && (
           <Button
@@ -84,6 +92,7 @@ export function ItemTile({ item, held, actions, className, extra }: { item: Held
         )}
         {extra}
       </div>
+      {item.card.document && <DocumentReader card={item.card} name={name} open={reading} onOpenChange={setReading} />}
     </li>
   )
 }

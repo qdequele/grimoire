@@ -141,6 +141,8 @@
   height: 86%;
   object-fit: contain;
   object-position: center;
+  /* A faint rim of light: dark iron and stone (a trap, a chain, an idol) stay readable on the dark window. */
+  filter: drop-shadow(0 0 1.2cqi rgb(255 236 200 / 0.28));
 }
 
 /* Type line under the window, like a card's species strip. */
@@ -309,6 +311,25 @@
   color: color-mix(in srgb, var(--stamp, var(--blood)) 85%, var(--bone));
 }
 
+/* ------------------------------------------------------------ documents */
+/* The first lines of a document on its card, like handwriting showing through. */
+.icard-text.is-doc { font-style: italic; color: color-mix(in srgb, var(--bone) 75%, transparent); }
+/* A document card read on aged paper (DocumentReader). */
+.idoc-paper {
+  padding: 2rem 2.2rem 2.4rem;
+  background: #efe4c8;
+  color: #2b2318;
+  box-shadow: inset 0 0 60px rgb(120 90 40 / 0.35), 0 8px 24px rgb(0 0 0 / 0.55);
+  font-family: "Cormorant Garamond", "Spectral", Georgia, serif;
+  font-size: 1.15rem;
+  line-height: 1.55;
+}
+.idoc-title { margin-bottom: 1rem; font-family: var(--f-disp); font-size: 1.5rem; line-height: 1.2; color: #1c150c; }
+.idoc-text { white-space: normal; color: inherit; font-size: inherit; }
+/* Story text sets bold in the app's light ink: dark ink on paper. */
+.idoc-text b, .idoc-text strong { color: #1c150c; }
+@media (max-width: 480px) { .idoc-paper { padding: 1.4rem 1.2rem 1.6rem; font-size: 1.05rem; } }
+
 /* ------------------------------------------------------------ the back of a card */
 .icard-back {
   container-type: inline-size;
@@ -450,6 +471,35 @@
   .icard-pick:hover { transform: none; }
 }
 
+/* ------------------------------------------------------------ print sheet (PrintSheet) */
+/* Only printed. Nine cards a page at playing-card size, a light cut line around each. */
+/* Three cards (189 mm) need narrower margins than the tool pages' 12 mm: the page adds an @page rule
+   only while it prints a sheet (ItemCardsPage). A named page would leave a blank page at the end. */
+.isheet { display: none; }
 @media print {
-  .icard-frame { box-shadow: none; }
+  .isheet {
+    display: block;
+    /* The tool pages print black on white (src/tools/print.css): cards keep their own colours. */
+    --ink: #0a0907; --slab: #12100c; --slab2: #19160f; --line: #3a3220;
+    --bone: #efe6cf; --mute: #a59a7e; --verd: #d9b45a; --gold: #e2c06e; --blood: #c8553f;
+    print-color-adjust: exact;
+    -webkit-print-color-adjust: exact;
+  }
+  :root[data-skin="classic"] .isheet {
+    --ink: #0f1513; --slab: #161e1b; --slab2: #1c2622; --line: #2b3833;
+    --bone: #e6e1d4; --mute: #93a19a; --verd: #72b8a3; --gold: #cdb06a; --blood: #cf6352;
+  }
+  .isheet-page {
+    display: grid;
+    grid-template-columns: repeat(3, 63mm);
+    grid-template-rows: repeat(3, 88mm);
+    justify-content: center;
+    align-content: start;
+    break-after: page;
+  }
+  .isheet-page:last-child { break-after: auto; }
+  .isheet-cell { width: 63mm; height: 88mm; outline: 0.2mm solid #b5b5b5; outline-offset: -0.1mm; }
+  .isheet-cell:empty { outline: none; }
+  .isheet .icard-frame { box-shadow: inset 0 0 0 1.4cqi var(--ink), inset 0 0 0 1.75cqi color-mix(in srgb, var(--gold) 55%, transparent); }
+  .isheet .icard-back { box-shadow: inset 0 0 0 1.4cqi var(--ink), inset 0 0 0 1.75cqi color-mix(in srgb, var(--gold) 55%, transparent); }
 }

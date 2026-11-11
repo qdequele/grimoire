@@ -19,6 +19,7 @@ import { useGiveItem } from './api'
 import { ART_IDS, type ArtId } from './arts'
 import { CATALOG } from './catalog'
 import { ITEM_KINDS, ITEM_LIMITS, KIND_ART, KIND_LABEL, parseCard, USE_UNITS, WEAPON_SKILLS, type ItemCard as Card, type ItemKind, type UseUnit } from './item'
+import { DocumentFields, filledCard, type DocumentDraft } from './DocumentFields'
 import { ItemArt } from './ItemArt'
 import { searchCatalog } from './search'
 import { ItemCard } from './ItemCard'
@@ -226,10 +227,19 @@ export function GiveItemDialog({ open, onOpenChange, characterId, characterName,
 }) {
   const t = useT()
   const give = useGiveItem()
-  const [tab, setTab] = useState<Tab>(storyItems.length ? 'story' : 'catalog')
+  // The story's tab first when it has items of its own; its documents alone are given from the document itself.
+  const [tab, setTab] = useState<Tab>(storyItems.some((x) => !x.itemId.startsWith('handout:')) ? 'story' : 'catalog')
   const [kind, setKind] = useState<ItemKind | typeof ALL>(ALL)
   const [query, setQuery] = useState('')
   const [pick, setPick] = useState<Pick | null>(null)
+  // A paper template's title and text, typed by the keeper before giving it.
+  const [paper, setPaper] = useState<DocumentDraft>({ title: '', text: '' })
+  const pickedTemplate = tab === 'catalog' && pick?.tab === 'catalog' ? CATALOG.find((x) => x.id === pick.id && x.fill) : undefined
+  const pickCatalog = (id: string) => {
+    setPick({ tab: 'catalog', id })
+    const c = CATALOG.find((x) => x.id === id)
+    if (c?.fill) setPaper({ title: t(c.card.name), text: '' })
+  }
   const [draft, setDraft] = useState<Draft>(EMPTY)
   const made = useMemo(() => draftCard(draft), [draft])
 
@@ -240,7 +250,9 @@ export function GiveItemDialog({ open, onOpenChange, characterId, characterName,
       : tab === 'catalog' && pick?.tab === 'catalog'
         ? (() => {
           const c = CATALOG.find((x) => x.id === pick.id)
-          return c ? { card: c.card, gift: { characterId, card: c.card, catalogId: c.id } } : null
+          if (!c) return null
+          const card = c.fill ? filledCard(c.card, paper, t(c.card.name)) : c.card
+          return { card, gift: { characterId, card, catalogId: c.id } }
         })()
         : tab === 'story' && pick?.tab === 'story'
           ? (() => {
@@ -294,7 +306,7 @@ export function GiveItemDialog({ open, onOpenChange, characterId, characterName,
                     // Enter picks the first match: search, Enter, then "Donner".
                     if (e.key === 'Enter' && catalog[0]) {
                       e.preventDefault()
-                      setPick({ tab: 'catalog', id: catalog[0].id })
+                      pickCatalog(catalog[0].id)
                     }
                   }}
                 />
@@ -310,7 +322,7 @@ export function GiveItemDialog({ open, onOpenChange, characterId, characterName,
                 <CardPicker
                   cards={catalog.map((c) => ({ key: c.id, card: c.card, source: { kind: 'catalog', id: c.id } }))}
                   selected={pick?.tab === 'catalog' ? pick.id : null}
-                  onSelect={(id) => setPick({ tab: 'catalog', id })}
+                  onSelect={pickCatalog}
                 />
               ) : (
                 <p className="font-serif text-lg">{t('Aucune carte ne correspond.')}</p>
@@ -334,6 +346,11 @@ export function GiveItemDialog({ open, onOpenChange, characterId, characterName,
             </div>
           )}
         </div>
+        {pickedTemplate && (
+          <div className="border-t border-border pt-3">
+            <DocumentFields id="give-paper" draft={paper} onChange={setPaper} kind={pickedTemplate.card.kind} />
+          </div>
+        )}
         <div className="flex flex-wrap items-center justify-end gap-2 border-t border-border pt-3">
           {tab === 'new' && made.problem && draft.name && <p className="mr-auto text-sm text-muted-foreground">{t(made.problem)}</p>}
           <Button variant="ghost" onClick={() => onOpenChange(false)}>{t('Fermer')}</Button>

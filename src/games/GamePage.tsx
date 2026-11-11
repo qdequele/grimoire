@@ -23,7 +23,7 @@ import { parseScreen } from '@/screen/state'
 import { useT } from '@/i18n/t'
 import { CharacterSheetDialog } from '@/characters/CharacterSheetDialog'
 import { fetchItems, itemKeys } from '@/items/api'
-import { storyCards, toEngineItem } from '@/items/engine'
+import { storyCards, storyDocuments, toEngineItem } from '@/items/engine'
 import type { StoryItemChoice } from '@/items/GiveItemDialog'
 import type { HeldItem } from '@/items/item'
 import { CharacterItemsDialog, GiveStoryItemDialog } from './ItemDialogs'
@@ -137,7 +137,7 @@ export function GamePage() {
   const storyItems = useMemo<StoryItemChoice[]>(() => {
     const story = start?.game.story
     if (!story) return []
-    return storyCards((story.content as { items?: unknown }).items).map((x) => ({ ...x, storyId: story.id }))
+    return [...storyCards((story.content as { items?: unknown }).items), ...storyDocuments(story.content)].map((x) => ({ ...x, storyId: story.id }))
   }, [start])
   const storyItemsRef = useRef(storyItems)
   useEffect(() => {

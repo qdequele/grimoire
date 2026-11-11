@@ -7,11 +7,12 @@
 -- (RLS, owner rows); phones go through security-definer RPCs that only change uses.
 
 -- A card the database accepts: the checks the readers rely on (the app checks the rest, parseCard).
+-- At most 24 KB: a card is small, but a document card carries its letter's whole text.
 create function public.item_card_ok(c jsonb) returns boolean
 language sql immutable set search_path = '' as $$
   select coalesce(
     jsonb_typeof(c) = 'object'
-    and octet_length(c::text) <= 4000
+    and octet_length(c::text) <= 24000
     and jsonb_typeof(c -> 'name') = 'string'
     and char_length(btrim(c ->> 'name')) between 1 and 60
     and (c ->> 'name') !~ '[<>&"]'
@@ -21,6 +22,13 @@ language sql immutable set search_path = '' as $$
       else true end
     and case when c ? 'ammo'
       then jsonb_typeof(c -> 'ammo') = 'string' and char_length(c ->> 'ammo') between 1 and 16
+      else true end
+    and case when c ? 'text'
+      then jsonb_typeof(c -> 'text') = 'string' and char_length(c ->> 'text') <= 400
+      else true end
+    -- A document's full text (a letter, a diary): up to 8,000 characters.
+    and case when c ? 'document'
+      then jsonb_typeof(c -> 'document') = 'string' and char_length(c ->> 'document') <= 8000
       else true end,
     false);
 $$;

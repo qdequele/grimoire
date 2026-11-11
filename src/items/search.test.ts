@@ -13,7 +13,7 @@ describe('searching the catalogue', () => {
   })
 
   it("finds cards by what they help with, their type, calibre or text, not only their name", () => {
-    expect(ids('grimper')).toEqual(['rope'])
+    expect(ids('grimper')).toEqual(['rope', 'climbing-irons'])
     expect(ids('.38')).toEqual(['revolver-38', 'ammo-38'])
     expect(ids('occulte')).toEqual(expect.arrayContaining(['crucifix', 'amulet', 'chalk-salt', 'old-book']))
     expect(ids('nuisibles')).toEqual(['rifle-22'])
@@ -22,7 +22,7 @@ describe('searching the catalogue', () => {
   it('wants every word, ranks names first, and filters by type', () => {
     expect(ids('balles 45')).toEqual(['ammo-45', 'pistol-45']) // the pistol's text says "balles" too: names rank first
     expect(ids('fusil')[0]).toMatch(/^(rifle|shotgun)/)
-    expect(ids('', 'medical')).toEqual(['first-aid-kit', 'bandages', 'laudanum'])
+    expect(ids('', 'medical')).toEqual(['first-aid-kit', 'bandages', 'laudanum', 'doctors-bag', 'smelling-salts', 'morphine'])
     expect(ids('zzz')).toEqual([])
   })
 
@@ -32,7 +32,7 @@ describe('searching the catalogue', () => {
     try {
       expect(ids('crowbar')).toEqual(['crowbar'])
       expect(ids('pied de biche')).toEqual(['crowbar'])
-      expect(ids('climb')).toEqual(['rope'])
+      expect(ids('climb')).toEqual(['climbing-irons', 'rope']) // a name match ranks first
     } finally {
       useLang.setState({ lang: before })
     }

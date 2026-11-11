@@ -5,6 +5,7 @@ import type { CharacterData } from '@/characters/character'
 import type { T } from '@/i18n/t'
 import type { EngineItem } from '@/play/host'
 import { SKILL_BY_ID } from '@/rules/d100'
+import { documentCard, documentItemId, type StoryNames } from './documents'
 import { CONDITION_LABEL, conditionEffects, parseCard, type HeldItem, type ItemCard } from './item'
 import { localCard } from './text'
 
@@ -49,6 +50,25 @@ function engineCondition(t: T, item: HeldItem) {
     ...(e.malfunction !== undefined ? { jam: e.malfunction } : {}),
     broken: e.broken,
   }
+}
+
+/**
+ * A story's documents (handouts) as document cards to give: the letter, diary or plan an investigator
+ * keeps (documentCard), with an id that can't clash with the story's items (documentItemId).
+ */
+export function storyDocuments(content: unknown): Array<{ itemId: string; card: ItemCard }> {
+  const s = (content && typeof content === 'object' ? content : {}) as {
+    acts?: Array<{ scenes?: Array<{ id: string; title?: string }> }>
+    npcs?: Array<{ id: string; name?: string }>
+    handouts?: Array<{ id: string; title?: string; text?: string; image?: string }>
+  }
+  const handouts = (s.handouts ?? []).filter((h) => h && typeof h.id === 'string' && typeof h.title === 'string')
+  const names: StoryNames = {
+    scene: new Map((s.acts ?? []).flatMap((a) => (a.scenes ?? []).map((x) => [x.id, x.title ?? x.id] as const))),
+    npc: new Map((s.npcs ?? []).map((n) => [n.id, n.name ?? n.id] as const)),
+    handout: new Map(handouts.map((h) => [h.id, h.title!] as const)),
+  }
+  return handouts.map((h) => ({ itemId: documentItemId(h.id), card: documentCard({ ...h, title: h.title! }, names) }))
 }
 
 /** A story's items as cards to give (the ones that check out; the story's id and scene are not part of the card). */

@@ -993,6 +993,17 @@ describe('companion: items', () => {
     expect((await alice.client.from('character_items').select('condition').eq('id', gun).single()).data?.condition).toBe('rusty')
   })
 
+  it('a document card carries up to 8,000 characters of text, and phones get it', async () => {
+    const g = await newGame(alice, [{ name: 'One' }])
+    const doc = (n: number): Json => ({ name: 'Letter', kind: 'document', document: 'é'.repeat(n) })
+    const ok = await give(g.ids[0], doc(8000), null)
+    expect(ok.error).toBeNull()
+    expect((await give(g.ids[0], doc(8001), null)).error).not.toBeNull()
+    const l = await link(alice, g.gameId)
+    const opened = (await anon.rpc('companion_open', { p_token: l.token })).data as unknown as { items: Array<{ id: string; card: { document?: string } }> }
+    expect(opened.items.find((i) => i.id === ok.data!.id)?.card.document).toHaveLength(8000)
+  })
+
   it('at most 60 cards per investigator', async () => {
     const g = await newGame(alice, [{ name: 'One' }])
     const rows = Array.from({ length: 60 }, () => ({ character_id: g.ids[0], card: rope }))

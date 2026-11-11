@@ -585,11 +585,11 @@ test('keeper browses the item cards, searches one, opens it and gives it to an i
   await page.goto('/characters')
   await page.getByRole('link', { name: 'Objets', exact: true }).click()
   await expect(page).toHaveURL(/\/characters\/objets$/)
-  await expect(page.getByText('43 cartes')).toBeVisible()
+  await expect(page.getByText('96 cartes')).toBeVisible()
 
   // The search reaches what a card helps with, not only its name.
   await page.getByRole('searchbox', { name: 'Chercher un objet' }).fill('grimper')
-  await expect(page.getByText('1 carte', { exact: true })).toBeVisible()
+  await expect(page.getByText('2 cartes', { exact: true })).toBeVisible() // the rope and the climbing irons
   await page.getByRole('button', { name: 'Corde de chanvre (15 m)' }).click()
 
   // The card opens big, with "Donner à…" the keeper's investigators.
@@ -628,6 +628,19 @@ test('keeper browses the item cards, searches one, opens it and gives it to an i
   await expect(revolver.getByText('dé de malus · −1 aux dégâts · s’enraye sur 90+')).toBeVisible()
   await page.reload()
   await expect(page.getByRole('combobox', { name: 'État de « Revolver .38 »' })).toHaveValue('rusty')
+
+  // A paper template: the keeper writes the letter, the investigator can reread it.
+  await page.getByRole('button', { name: 'Donner un objet' }).click()
+  await give.getByRole('searchbox', { name: 'Chercher un objet' }).fill('lettre')
+  await give.getByRole('searchbox', { name: 'Chercher un objet' }).press('Enter')
+  await give.getByLabel('Titre du document').fill('Lettre de la veuve')
+  await give.getByLabel('Ce qu’il dit').fill('Venez *vite*.\nIl est revenu.')
+  await give.getByRole('button', { name: 'Donner « Lettre de la veuve »' }).click()
+  await page.keyboard.press('Escape')
+  await page.getByRole('button', { name: 'Lire « Lettre de la veuve »' }).click()
+  const paper = page.getByRole('dialog', { name: 'Lettre de la veuve' })
+  await expect(paper.getByText('Il est revenu.')).toBeVisible()
+  await expect(paper.locator('i', { hasText: 'vite' })).toBeVisible()
 })
 
 test('keeper sends feedback from the account menu', async ({ page }) => {

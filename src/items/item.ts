@@ -90,6 +90,11 @@ export interface ItemCard {
   bonus?: { skill: string; note?: string }
   /** 1 common · 2 uncommon · 3 rare (catalogue); the card's corner diamonds. */
   rarity?: 1 | 2 | 3
+  /**
+   * A document's full text (a letter, a diary, a plan's legend): story rich text (**bold**, *italic*,
+   * line breaks), read on paper from the card. Copied when given, so it stays with the investigator.
+   */
+  document?: string
 }
 
 /**
@@ -183,6 +188,7 @@ export const ITEM_LIMITS = {
   rate: 12,
   ammo: 16,
   note: 120,
+  document: 8000,
   uses: 99,
   /** Cards one investigator can hold (the database counts them too). */
   perCharacter: 60,
@@ -269,6 +275,12 @@ export function parseCard(raw: unknown): { card: ItemCard; problems: [] } | { ca
       if (note && (note.length > ITEM_LIMITS.note || hasMarkup(note))) problems.push(`bonus.note: at most ${ITEM_LIMITS.note} characters`)
       card.bonus = note ? { skill, note } : { skill }
     }
+  }
+  if (r.document !== undefined) {
+    const doc = typeof r.document === 'string' ? r.document.trim() : null
+    if (doc === null) problems.push('document: must be text')
+    else if (doc.length > ITEM_LIMITS.document) problems.push(`document: over ${ITEM_LIMITS.document} characters`)
+    else if (doc) card.document = doc
   }
   if (r.rarity !== undefined) {
     if (r.rarity === 1 || r.rarity === 2 || r.rarity === 3) card.rarity = r.rarity

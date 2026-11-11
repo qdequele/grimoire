@@ -6,6 +6,7 @@ import { skillName, useT } from '@/i18n/t'
 import { cn } from '@/lib/utils'
 import { catalogNumber } from './catalog'
 import { artOf, CONDITION_LABEL, conditionEffects, KIND_LABEL, type Condition, type ItemCard as Card, type ItemSource } from './item'
+import { excerpt } from './documents'
 import { ItemArt } from './ItemArt'
 import { pictureOf } from './pictures'
 import { conditionDamageText, conditionNotes, localCard, usesText } from './text'
@@ -45,9 +46,11 @@ export interface ItemCardProps {
   artSrc?: string | null
   /** A held weapon's condition: a stamp on the picture, and the stats it changes. */
   condition?: Condition
+  /** Load the picture at once (a print sheet, an image export), not when it scrolls into view. */
+  eager?: boolean
 }
 
-export function ItemCard({ card: raw, uses, source, className, as: H = 'h3', artSrc, condition: rawCondition = 'clean' }: ItemCardProps) {
+export function ItemCard({ card: raw, uses, source, className, as: H = 'h3', artSrc, condition: rawCondition = 'clean', eager }: ItemCardProps) {
   const t = useT()
   const card = localCard(t, raw, source)
   const left = uses ?? card.uses
@@ -89,7 +92,7 @@ export function ItemCard({ card: raw, uses, source, className, as: H = 'h3', art
         </header>
         <div className="icard-window">
           {picture && broken !== picture ? (
-            <img src={picture} alt="" className="icard-art icard-picture" loading="lazy" decoding="async" onError={() => setBroken(picture)} />
+            <img src={picture} alt="" className="icard-art icard-picture" loading={eager ? 'eager' : 'lazy'} decoding="async" onError={() => setBroken(picture)} />
           ) : (
             <ItemArt art={artOf(card)} className="icard-art" />
           )}
@@ -142,6 +145,7 @@ export function ItemCard({ card: raw, uses, source, className, as: H = 'h3', art
             </div>
           )}
           {card.text && <p className="icard-text">{card.text}</p>}
+          {!card.text && card.document && <p className="icard-text is-doc">{excerpt(card.document)}</p>}
         </div>
         {card.uses !== undefined && left != null && (
           <div className="icard-uses">
