@@ -37,9 +37,17 @@ export interface LegacyScene {
   secsFirst?: boolean
   /** New-app: ids of the scene's documents (GRIMOIRE_DATA.HANDOUTS). */
   hd?: string[]
+  /** The story's items found in this scene (new-app addition): given to an investigator from there. */
+  it?: string[]
 }
 
 /** New-app: a story document as the game screen shows it. */
+/** A story item in the engine (new-app addition): its name and kind; the card itself is drawn by the app. */
+export interface LegacyItem {
+  t: string
+  k: string
+}
+
 export interface LegacyHandout {
   /** Title, plain text. */
   t: string

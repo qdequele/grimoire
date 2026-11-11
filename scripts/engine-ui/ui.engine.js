@@ -60,3 +60,45 @@ $("#invView").addEventListener("click",e=>{const b=e.target.closest("[data-sheet
 /* ---------- Toolbar always on top ----------
    Its height, for what sticks below it (combat bar, dice pool) when the page scrolls. */
 {const top=$("header.top");if(top&&window.ResizeObserver)new ResizeObserver(()=>document.documentElement.style.setProperty("--top-h",top.offsetHeight+"px")).observe(top);}
+
+/* ---------- Items (the investigators' cards, src/items) ----------
+   The app pushes each account investigator's cards with GRIMOIRE_ENGINE.setItems({cid:[{id,n,k,uses,cap,w}]})
+   (w: a weapon's {sk, v, dmg, db, imp}; not saved in S). On the investigator cards: a button with the
+   count, and once unfolded a chip per card; both open the cards above the game (GRIMOIRE_HOST.openItems).
+   In combat, weapon cards join the investigator's attacks; firing one that holds rounds spends one
+   (GRIMOIRE_HOST.useItem), and an empty one doesn't fire. The scene lists the story's items for it;
+   a click gives one to an investigator (GRIMOIRE_HOST.giveItem). */
+var ITEMS={};
+function itemsOf(cid){const v=ITEMS[cid];return Array.isArray(v)?v:[];}
+function itIcon(){return '<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="5" y="3" width="14" height="18" rx="1.5"/><path d="M12 8l2.5 4-2.5 4-2.5-4z"/></svg>';}
+/* A weapon card as an attack: [name, value, damage, item id, impales, rounds loaded, capacity]. */
+function itemAttacks(c,imp){return itemsOf(c.id).filter(x=>x.w).map(x=>{const d=String(x.w.dmg||"1D3").split("/")[0];
+  return [x.n,Number(x.w.v)||0,x.w.db&&imp?d+imp:d,x.id,!!x.w.imp,x.cap!=null?x.uses:null,x.cap];});}
+/* The generic "Arme de poing" / "Fusil" attacks give way to the investigator's own firearms. */
+function withItemAttacks(c,at,imp){const it=itemAttacks(c,imp);if(!it.length)return at;
+  const sks=new Set(itemsOf(c.id).filter(x=>x.w).map(x=>x.w.sk));
+  return at.filter(a=>!(a[0]==="Arme de poing"&&sks.has("firearms-handgun"))&&!(a[0]==="Fusil"&&sks.has("firearms-rifle"))).concat(it);}
+/* Firing a weapon card: false (with a message) when it is empty. */
+function itemFire(a){if(!a[3])return true;let x=null;for(const k in ITEMS){x=itemsOf(k).find(i=>i.id===a[3]);if(x)break;}
+  if(!x||x.cap==null)return true;
+  if(!(x.uses>0)){toast("Plus de munitions. Recharge l'arme depuis ses objets.");return false;}
+  x.uses--;a[5]=x.uses;if(GRIMOIRE_HOST.useItem)GRIMOIRE_HOST.useItem(x.id,-1);return true;}
+function itChip(cid,x){return `<button type="button" class="itc" data-items="${esc(cid)}" data-kind="${esc(x.k)}">${itIcon()}<span>${esc(x.n)}</span>${x.cap!=null?`<small>${esc(x.uses)}/${esc(x.cap)}</small>`:""}</button>`;}
+function fillItems(){document.querySelectorAll("#invView .inv").forEach(card=>{const t=card.querySelector("[data-tog]");if(!t)return;const cid=t.dataset.tog;
+  card.querySelectorAll(".itm-n,.itm-row").forEach(e=>e.remove());if(!(cid in ITEMS))return;const xs=itemsOf(cid);
+  const n=document.createElement("button");n.type="button";n.className="itm-n";n.dataset.items=cid;n.title="Objets";
+  n.setAttribute("aria-label","Objets ("+xs.length+")");n.innerHTML=itIcon()+"<b>"+xs.length+"</b>";t.before(n);
+  const body=card.querySelector(".ibody");if(!body)return;const row=document.createElement("div");row.className="itm-row";
+  row.innerHTML='<span class="hd-lbl">Objets</span>'+(xs.length?xs.map(x=>itChip(cid,x)).join(""):`<button type="button" class="itc itc-add" data-items="${esc(cid)}">Donner un objet</button>`);
+  const job=body.querySelector(".job");if(job)job.after(row);else body.prepend(row);});}
+{const _riI=renderInv;renderInv=function(){_riI();fillItems();};}
+$("#invView").addEventListener("click",e=>{const b=e.target.closest("[data-items]");if(!b)return;e.preventDefault();e.stopPropagation();
+  if(GRIMOIRE_HOST.openItems)GRIMOIRE_HOST.openItems(b.dataset.items);},true);
+/* Combat shows in the "cbtSheet" side panel (openCombat leaves ST().mode at "scene"). */
+function combatShown(){const cs=document.getElementById("cbtSheet");return ST().mode==="combat"||!!(cs&&!cs.hidden);}
+GRIMOIRE_ENGINE.setItems=function(m){ITEMS=m&&typeof m==="object"?m:{};
+  try{keepFocus(()=>{renderInv();if(combatShown())renderCombat();});}catch(e){}};
+/* The scene's items, from the story: a click gives one. */
+function itRowHTML(s){const I=GRIMOIRE_DATA.ITEMS||{};const ids=(s.it||[]).filter(id=>I[id]);if(!ids.length||!GRIMOIRE_HOST.giveItem)return "";
+  return `<div class="hd-row it-row"><span class="hd-lbl">Objets</span>${ids.map(id=>`<button type="button" class="hdc" data-giveit="${esc(id)}" title="Donner à un investigateur">${itIcon()}<span>${esc(I[id].t)}</span></button>`).join("")}</div>`;}
+$("#scene").addEventListener("click",e=>{const b=e.target.closest("[data-giveit]");if(!b)return;e.preventDefault();GRIMOIRE_HOST.giveItem(b.dataset.giveit);});

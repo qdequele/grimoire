@@ -121,7 +121,7 @@ test('keeper shows the table link; a player picks an investigator and sees their
   await expect(phoneStat(phone, 'PV')).toHaveText('13 / 13')
   await expect(phoneStat(phone, 'SAN')).toHaveText('60')
   await expect(phone.getByRole('heading', { name: 'Compétences' })).toBeVisible()
-  await expect(phone.getByRole('navigation', { name: 'Fiche' }).getByRole('link')).toHaveText(['Fiche', 'Dés', 'Carnet', 'Profil'])
+  await expect(phone.getByRole('navigation', { name: 'Fiche' }).getByRole('link')).toHaveText(['Fiche', 'Dés', 'Objets', 'Carnet', 'Profil'])
 
   // This phone remembers its investigator: the table link goes straight to the sheet
   await phone.goto(tableUrl)
@@ -478,3 +478,47 @@ test('a skill explains itself on the phone; rolls made on the phone show on the 
   await expect(phone.getByText(/^Bibliothèque \(\d+\)$/)).toBeVisible()
 })
 
+test('the keeper gives item cards from the game screen; the phone fires and reloads; both see it live, and the cards stay on the investigator', async ({ browser, baseURL }) => {
+  const { keeper, game, tableUrl, phone } = await setUpTable(browser, baseURL)
+  await unfold(game, 'Alpha')
+  await expect(card(game, 'Alpha').locator('.itm-n')).toHaveText('0')
+
+  // The items button on the investigator's card opens their cards above the game.
+  await card(game, 'Alpha').locator('.itm-n').click()
+  const items = keeper.getByRole('dialog', { name: 'Alpha' })
+  await items.getByRole('button', { name: 'Donner un objet' }).click()
+  const give = keeper.getByRole('dialog', { name: 'Donner un objet à Alpha' })
+  for (const name of ['Revolver .38', 'Boîte de balles .38']) {
+    await give.getByRole('button', { name, exact: true }).click()
+    await give.getByRole('button', { name: `Donner « ${name} »` }).click()
+    await expect(keeper.getByText(`Alpha reçoit « ${name} ».`)).toBeVisible()
+  }
+  await keeper.keyboard.press('Escape') // the toasts sit over the dialog's footer
+  await expect(give).toBeHidden()
+  await expect(items.getByRole('article')).toHaveCount(2)
+  await items.getByRole('button', { name: 'Fermer' }).click()
+  await expect(card(game, 'Alpha').locator('.itm-n')).toHaveText('2', LIVE)
+  const chip = (name: string) => card(game, 'Alpha').locator('.itm-row .itc', { hasText: name })
+  await expect(chip('Revolver .38')).toContainText('6/6')
+
+  // The phone sees the cards, fires once and reloads from the box.
+  await pick(phone, tableUrl, 'Alpha')
+  await phone.getByRole('link', { name: 'Objets' }).click()
+  await expect(phone.getByRole('article')).toHaveCount(2)
+  await phone.getByRole('button', { name: 'Revolver .38', exact: true }).click()
+  const used = phone.waitForResponse((r) => r.url().includes('/rest/v1/rpc/companion_use_item') && r.ok())
+  await phone.getByRole('button', { name: 'Utiliser : Revolver .38' }).click()
+  await used
+  await expect(phone.getByRole('dialog').locator('.icard-uses-n')).toHaveText('5/6')
+  await expect(chip('Revolver .38')).toContainText('5/6', LIVE)
+  await phone.getByRole('button', { name: 'Recharger' }).click()
+  await expect(phone.getByText('1 munition rechargée.')).toBeVisible()
+  await expect(chip('Revolver .38')).toContainText('6/6', LIVE)
+  await expect(chip('Boîte de balles .38')).toContainText('19/20', LIVE)
+
+  // The cards belong to the investigator: they are on their sheet, outside any game.
+  await keeper.goto('/characters')
+  await keeper.getByRole('link', { name: /Alpha/ }).first().click()
+  await expect(keeper.getByRole('heading', { name: 'Objets (2)' })).toBeVisible()
+  await expect(keeper.getByRole('article', { name: 'Revolver .38' })).toBeVisible()
+})

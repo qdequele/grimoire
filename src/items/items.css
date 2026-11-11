@@ -1,0 +1,247 @@
+/* Item cards (ItemCard.tsx): a collectible card's layout in the app's two skins. Everything inside is
+   sized in container units (cqi = 1% of the card's width), so a card scales as one piece. */
+
+.icard {
+  /* The type's colour (data-kind), like a card game's energy. */
+  --k: #8a6a45;
+  --ia-line: #15110a;
+  --ia-m: #cbbd93;
+  --ia-d: #3b3429;
+  --ia-w: #8c5b34;
+  --ia-p: #ece1c4;
+  --ia-g: rgb(255 238 186 / 0.38);
+  --ia-f: #ffd067;
+  --ia-c: #c9873f;
+  --ia-b: #ac3b2c;
+  --ia-k: #5d3f27;
+  container-type: inline-size;
+  position: relative;
+  aspect-ratio: 63 / 88;
+  width: 100%;
+  min-width: 0;
+  color: var(--bone);
+  font-family: var(--f-ui);
+  text-align: left;
+}
+.icard[data-kind="weapon"] { --k: #b8402f; }
+.icard[data-kind="ammo"] { --k: #b98a35; }
+.icard[data-kind="light"] { --k: #e0a63a; }
+.icard[data-kind="tool"] { --k: #5f8197; }
+.icard[data-kind="medical"] { --k: #5e9b64; }
+.icard[data-kind="document"] { --k: #a89170; }
+.icard[data-kind="occult"] { --k: #8160ad; }
+.icard[data-kind="gear"] { --k: #9a7449; }
+.icard[data-kind="key"] { --k: #d4b45a; }
+
+.icard-frame {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 1.6cqi;
+  padding: 4.2cqi 4.2cqi 3cqi;
+  overflow: hidden;
+  background:
+    radial-gradient(120% 60% at 50% 0%, color-mix(in srgb, var(--k) 34%, transparent), transparent 70%),
+    linear-gradient(180deg, color-mix(in srgb, var(--k) 14%, var(--slab)) 0%, var(--ink) 100%);
+  border: 0.9cqi solid color-mix(in srgb, var(--gold) 85%, transparent);
+  box-shadow:
+    inset 0 0 0 1.4cqi var(--ink),
+    inset 0 0 0 1.75cqi color-mix(in srgb, var(--gold) 55%, transparent),
+    0 1.5cqi 5cqi rgb(0 0 0 / 0.45);
+}
+:root[data-skin="classic"] .icard-frame {
+  border-radius: 4.5cqi;
+  border-color: color-mix(in srgb, var(--k) 60%, var(--line));
+  box-shadow:
+    inset 0 0 0 1.4cqi var(--ink),
+    inset 0 0 0 1.7cqi color-mix(in srgb, var(--verd) 35%, transparent),
+    0 1.5cqi 5cqi rgb(0 0 0 / 0.45);
+}
+
+/* Name bar: type gem, name, damage (or uses) like a card's hit points. */
+.icard-head {
+  display: flex;
+  align-items: center;
+  gap: 2cqi;
+  min-height: 12cqi;
+  padding-top: 0.6cqi;
+}
+.icard-gem {
+  flex: none;
+  width: 5.4cqi;
+  height: 5.4cqi;
+  rotate: 45deg;
+  background: radial-gradient(circle at 35% 35%, color-mix(in srgb, var(--k) 40%, white), var(--k) 60%, color-mix(in srgb, var(--k) 60%, black));
+  border: 0.5cqi solid color-mix(in srgb, var(--gold) 80%, transparent);
+}
+:root[data-skin="classic"] .icard-gem { rotate: 0deg; border-radius: 50%; border-color: var(--line); }
+.icard-name {
+  flex: 1;
+  min-width: 0;
+  font-family: var(--f-disp);
+  font-size: 6.6cqi;
+  line-height: 1.05;
+  color: var(--bone);
+  letter-spacing: 0.01em;
+  text-wrap: balance;
+  overflow-wrap: anywhere;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  overflow: hidden;
+}
+.icard-name.is-long { font-size: 5.5cqi; }
+.icard-name.is-longer { font-size: 4.7cqi; }
+:root[data-skin="deco"] .icard .icard-name { color: var(--gold); letter-spacing: 0.02em; }
+.icard-hp {
+  flex: none;
+  display: flex;
+  align-items: baseline;
+  gap: 1cqi;
+  font-family: var(--f-num);
+  font-size: 6cqi;
+  font-weight: 600;
+  color: var(--bone);
+}
+.icard-hp small {
+  font-family: var(--f-ui);
+  font-size: 3.1cqi;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--mute);
+}
+
+/* The illustration's window. */
+.icard-window {
+  position: relative;
+  flex: none;
+  aspect-ratio: 16 / 9.6;
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+  background:
+    repeating-conic-gradient(from 0deg at 50% 115%, color-mix(in srgb, var(--k) 22%, transparent) 0 4deg, transparent 4deg 12deg),
+    radial-gradient(70% 80% at 50% 55%, color-mix(in srgb, var(--k) 55%, var(--slab2)), var(--ink) 95%);
+  border: 0.6cqi solid color-mix(in srgb, var(--gold) 75%, transparent);
+  box-shadow: inset 0 0 0 0.9cqi var(--ink), inset 0 0 6cqi rgb(0 0 0 / 0.6);
+}
+:root[data-skin="classic"] .icard-window { border-radius: 2cqi; border-color: color-mix(in srgb, var(--verd) 45%, var(--line)); }
+.icard-art {
+  width: 78%;
+  height: 92%;
+  filter: drop-shadow(0 1.2cqi 1.2cqi rgb(0 0 0 / 0.55));
+}
+
+/* Type line under the window, like a card's species strip. */
+.icard-strip {
+  margin: -0.4cqi 3cqi 0;
+  padding: 0.6cqi 2cqi;
+  text-align: center;
+  font-size: 3.3cqi;
+  font-style: italic;
+  letter-spacing: 0.08em;
+  color: color-mix(in srgb, var(--bone) 80%, transparent);
+  background: linear-gradient(90deg, transparent, color-mix(in srgb, var(--k) 30%, transparent), transparent);
+  border-top: 0.3cqi solid color-mix(in srgb, var(--gold) 35%, transparent);
+  border-bottom: 0.3cqi solid color-mix(in srgb, var(--gold) 35%, transparent);
+}
+:root[data-skin="deco"] .icard-strip { font-style: normal; text-transform: uppercase; letter-spacing: 0.2em; font-size: 2.9cqi; }
+
+.icard-body {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 1.4cqi;
+  overflow: hidden;
+  padding: 0 0.6cqi;
+}
+/* An attack or ability line: cost gem, name, value. */
+.icard-move {
+  display: flex;
+  align-items: baseline;
+  gap: 2cqi;
+  font-size: 4.4cqi;
+  line-height: 1.2;
+  padding-bottom: 1cqi;
+  border-bottom: 0.3cqi solid color-mix(in srgb, var(--line) 80%, transparent);
+}
+.icard-cost {
+  flex: none;
+  align-self: center;
+  width: 3.6cqi;
+  height: 3.6cqi;
+  border-radius: 50%;
+  background: var(--k);
+  box-shadow: 0 0 0 0.5cqi color-mix(in srgb, var(--gold) 55%, transparent);
+}
+.icard-move-name { flex: 1; min-width: 0; font-weight: 600; letter-spacing: 0.02em; }
+.icard-move-val { flex: none; font-family: var(--f-num); font-size: 4.8cqi; font-weight: 600; color: var(--gold); }
+.icard-move.is-bonus { flex-wrap: wrap; }
+.icard-move-note { flex-basis: 100%; padding-left: 5.6cqi; font-family: var(--f-body); font-size: 4cqi; font-style: italic; color: var(--mute); }
+.icard-stats {
+  display: flex;
+  justify-content: space-between;
+  gap: 2cqi;
+  margin: 0;
+}
+.icard-stats div { display: flex; flex-direction: column; align-items: center; min-width: 0; }
+.icard-stats dt { font-size: 2.8cqi; letter-spacing: 0.14em; text-transform: uppercase; color: var(--mute); }
+.icard-stats dd { margin: 0; font-family: var(--f-num); font-size: 4cqi; white-space: nowrap; }
+.icard-text {
+  font-family: var(--f-body);
+  font-size: 4.1cqi;
+  line-height: 1.28;
+  color: color-mix(in srgb, var(--bone) 88%, transparent);
+  overflow-wrap: break-word;
+}
+:root[data-skin="deco"] .icard-text { font-size: 4.5cqi; line-height: 1.18; }
+/* Text that doesn't fit fades out instead of being cut mid-line. */
+.icard-body { mask-image: linear-gradient(180deg, black calc(100% - 4cqi), transparent); }
+
+/* Uses left: pips (bullets are rounded), or a bar for more than 12. */
+.icard-uses {
+  display: flex;
+  align-items: center;
+  gap: 2cqi;
+  padding: 1.4cqi 1.6cqi;
+  background: rgb(0 0 0 / 0.35);
+  border: 0.3cqi solid color-mix(in srgb, var(--gold) 30%, transparent);
+}
+:root[data-skin="classic"] .icard-uses { border-radius: 1.6cqi; }
+.icard-pips { flex: 1; display: flex; flex-wrap: wrap; gap: 1.2cqi; }
+.icard-pip {
+  width: 3.4cqi;
+  height: 3.4cqi;
+  border-radius: 50%;
+  border: 0.45cqi solid color-mix(in srgb, var(--k) 70%, var(--bone));
+}
+.icard-pip.is-round { width: 2.6cqi; height: 4.4cqi; border-radius: 1.3cqi 1.3cqi 0.4cqi 0.4cqi; }
+.icard-pip.is-full { background: color-mix(in srgb, var(--k) 55%, var(--gold)); border-color: var(--gold); }
+.icard-bar { flex: 1; height: 2.4cqi; background: var(--slab2); border: 0.3cqi solid var(--line); }
+.icard-bar span { display: block; height: 100%; background: linear-gradient(90deg, var(--k), var(--gold)); transition: width 0.2s; }
+.icard-uses-n { flex: none; font-family: var(--f-num); font-size: 3.8cqi; color: var(--bone); }
+
+.icard-foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  min-height: 4cqi;
+  font-size: 3cqi;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--mute);
+}
+.icard-rarity { display: flex; gap: 1.8cqi; }
+.icard-rarity .diamond { width: 2.2cqi; height: 2.2cqi; background: var(--gold); border: 0; }
+:root[data-skin="classic"] .icard-rarity .diamond { rotate: 0deg; border-radius: 50%; background: var(--verd); }
+.icard-no { font-family: var(--f-num); letter-spacing: 0.04em; }
+
+/* No uses left: the card dims, its illustration loses its colour. */
+.icard.is-empty .icard-window { filter: grayscale(0.85) brightness(0.7); }
+.icard.is-empty .icard-uses-n { color: var(--blood); }
+
+@media print {
+  .icard-frame { box-shadow: none; }
+}

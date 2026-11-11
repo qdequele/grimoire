@@ -14,6 +14,7 @@ import { NewInvestigatorPage } from '@/companion/NewInvestigatorPage'
 import { Notebook } from '@/companion/Notebook'
 import { PickPage } from '@/companion/PickPage'
 import { DiceTab } from '@/companion/Dice'
+import { ItemsTab } from '@/companion/ItemsTab'
 import { ProfileTab, SheetPage, SheetTab } from '@/companion/SheetPage'
 import { FeedbackInboxPage } from '@/feedback/FeedbackInboxPage'
 import { GamePage } from '@/games/GamePage'
@@ -73,7 +74,10 @@ const router = createBrowserRouter([
   { path: '/screen-preview', lazy: () => import('@/screen/ScreenPreview').then((m) => ({ Component: m.ScreenPreview })) },
   // Dev only (never in a production build): the drawn décors, from query params.
   ...(import.meta.env.DEV
-    ? [{ path: '/dev/places', lazy: () => import('@/screen/PlacesGallery').then((m) => ({ Component: m.PlacesGallery })) }]
+    ? [
+        { path: '/dev/places', lazy: () => import('@/screen/PlacesGallery').then((m) => ({ Component: m.PlacesGallery })) },
+        { path: '/dev/items', lazy: () => import('@/items/ItemsGallery').then((m) => ({ Component: m.ItemsGallery })) },
+      ]
     : []),
   // Player companion: public pages opened from a table link (no account).
   {
@@ -88,6 +92,7 @@ const router = createBrowserRouter([
         children: [
           { index: true, element: <SheetTab /> },
           { path: 'des', element: <DiceTab /> },
+          { path: 'objets', element: <ItemsTab /> },
           { path: 'carnet', element: <Notebook /> },
           { path: 'profil', element: <ProfileTab /> },
         ],

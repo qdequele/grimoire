@@ -3,6 +3,8 @@
 // keeper clicks an investigator's name there.
 import type { ReactNode } from 'react'
 import { skillName, useT, type T } from '@/i18n/t'
+import { CharacterItems } from '@/items/CharacterItems'
+import type { StoryItemChoice } from '@/items/GiveItemDialog'
 import { cn } from '@/lib/utils'
 import { CHARACTERISTIC_INFO, CHARACTERISTICS, creditTier, PROFILE_FIELDS } from '@/rules/d100'
 import type { CharacterRow } from './api'
@@ -30,7 +32,13 @@ function Section({ title, children, className }: { title: string; children: Reac
   )
 }
 
-export function CharacterSheet({ character: c, actions, headingLevel = 1 }: { character: CharacterRow; actions?: ReactNode; headingLevel?: 1 | 2 }) {
+export function CharacterSheet({ character: c, actions, headingLevel = 1, storyItems }: {
+  character: CharacterRow
+  actions?: ReactNode
+  headingLevel?: 1 | 2
+  /** The items of the story being played, to give from (game screen). */
+  storyItems?: StoryItemChoice[]
+}) {
   const t = useT()
   const d = c.data
   const progress = progressSummary(d)
@@ -141,6 +149,9 @@ export function CharacterSheet({ character: c, actions, headingLevel = 1 }: { ch
           )}
         </div>
       </div>
+
+      <span className="double-rule" />
+      <CharacterItems characterId={c.id} characterName={d.name} storyItems={storyItems} />
     </article>
   )
 }

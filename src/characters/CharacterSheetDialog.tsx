@@ -2,11 +2,12 @@ import { Button } from '@/components/ui/button'
 import { Dialog, DialogClose, DialogContent, DialogDescription, DialogTitle } from '@/components/ui/dialog'
 import { Skeleton } from '@/components/ui/skeleton'
 import { useT } from '@/i18n/t'
+import type { StoryItemChoice } from '@/items/GiveItemDialog'
 import { useCharacter } from './api'
 import { CharacterSheet } from './CharacterSheet'
 
 /** An investigator's presentation sheet above the game screen (the name on an investigator card). */
-export function CharacterSheetDialog({ characterId, onOpenChange }: { characterId: string | null; onOpenChange: (open: boolean) => void }) {
+export function CharacterSheetDialog({ characterId, onOpenChange, storyItems }: { characterId: string | null; onOpenChange: (open: boolean) => void; storyItems?: StoryItemChoice[] }) {
   const t = useT()
   const character = useCharacter(characterId ?? undefined)
   return (
@@ -21,6 +22,7 @@ export function CharacterSheetDialog({ characterId, onOpenChange }: { characterI
           <CharacterSheet
             character={character.data}
             headingLevel={2}
+            storyItems={storyItems}
             actions={<DialogClose render={<Button variant="outline" />}>{t('Fermer')}</DialogClose>}
           />
         ) : (
