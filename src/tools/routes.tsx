@@ -4,6 +4,7 @@ import type { Lang } from '@/settings/lang'
 import { BlankSheetPage } from './BlankSheetPage'
 import { DiceRollerPage } from './DiceRollerPage'
 import { InvestigatorToolPage } from './InvestigatorToolPage'
+import { MapMakerPage } from './MapMakerPage'
 import { TOOL_PATHS, type ToolKind } from './pages'
 import { ScenarioListPage } from './scenarios/ScenarioListPage'
 import { ScenarioPage } from './scenarios/ScenarioPage'
@@ -18,6 +19,7 @@ const PAGES: Record<ToolKind, (props: { lang: Lang }) => ReactElement> = {
   dice: DiceRollerPage,
   investigator: InvestigatorToolPage,
   sheet: BlankSheetPage,
+  map: MapMakerPage,
   scenarios: ScenarioListPage,
 }
 

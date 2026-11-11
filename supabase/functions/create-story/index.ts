@@ -11,6 +11,13 @@
 //                        as the AI import), merges it, converts with draftToStory, validates against
 //                        the spec and saves the private story + its story.json. The browser calls
 //                        it until `remaining` is 0.
+//   - "map":             composes a map (floor plan, crypt, village) from the keeper's description,
+//                        as a MapDoc the app's map editor opens (map kit in _shared/maps/). Counted in
+//                        ai_usage (kind "map"), MAP_MONTHLY_LIMIT a month.
+//   - "scene-map":       once every scene is written, draws the map of the next scene that asked for
+//                        one (draft mapKind, at most STORY_MAPS_PER_STORY): the players' and the
+//                        keeper's copies as SVG in the pack, two handouts of that scene. The browser
+//                        calls it until `remaining` is 0. Part of the creation, not the map quota.
 //
 // Every call must end before the Edge Function's wall-clock limit (150 s): that is why the outline
 // takes two calls, scenes go one at a time, the writing is done by Sonnet, and each Claude call is
@@ -18,7 +25,7 @@
 //
 // Secrets: ANTHROPIC_API_KEY (required). Optional: STORY_CREATE_MONTHLY_LIMIT (default 10 new
 // stories), STORY_OUTLINES_PER_STORY (default 5), STORY_SCENES_PER_CALL (default 1),
-// STORY_IDEAS_MONTHLY_LIMIT (default 50), AI_DEADLINE_MS (default 130000, from the request's start).
+// STORY_IDEAS_MONTHLY_LIMIT (default 50), MAP_MONTHLY_LIMIT (default 30), AI_DEADLINE_MS (default 130000, from the request's start).
 
 import Anthropic from 'npm:@anthropic-ai/sdk@1.4.0'
 import { createClient, type SupabaseClient } from 'npm:@supabase/supabase-js@2.118.0'
@@ -28,7 +35,12 @@ import type { Database, Json } from '../_shared/database.types.ts'
 import { createSystemPrompt, ideasUserPrompt, outlineDetailsPrompt, outlineUserPrompt, scenesUserPrompt } from '../_shared/create-prompt.ts'
 import { STORY_SCHEMA } from '../_shared/spec-bundle.ts'
 import { forbiddenNamesIn } from '../_shared/story-mcp.ts'
-import { existingStory, saveStory } from '../_shared/story-save.ts'
+import { existingStory, savePackFile, saveStory } from '../_shared/story-save.ts'
+import { mapFiles, sceneMapRequest, scenesWithoutMap, withSceneMap } from '../_shared/story-maps.ts'
+import { renderMap } from '../_shared/maps/render.ts'
+import { sanitizeSvg } from '../_shared/svg-safe.ts'
+import { mapSchema, mapSystemPrompt, mapUserPrompt, parseMapRequest, type MapRequest } from '../_shared/map-prompt.ts'
+import { mapProblems, parseMapDoc } from '../_shared/maps/model.ts'
 import {
   createdStory,
   frameToOutline,
@@ -58,6 +70,7 @@ const MONTHLY_LIMIT = Number(Deno.env.get('STORY_CREATE_MONTHLY_LIMIT') ?? 10)
 const OUTLINES_PER_STORY = Number(Deno.env.get('STORY_OUTLINES_PER_STORY') ?? 5)
 const SCENES_PER_CALL = Number(Deno.env.get('STORY_SCENES_PER_CALL') ?? 1)
 const IDEAS_MONTHLY_LIMIT = Number(Deno.env.get('STORY_IDEAS_MONTHLY_LIMIT') ?? 50)
+const MAP_MONTHLY_LIMIT = Number(Deno.env.get('MAP_MONTHLY_LIMIT') ?? 30)
 /** Claude must have answered this long after the request started (the function is killed at 150 s). */
 const AI_DEADLINE_MS = Number(Deno.env.get('AI_DEADLINE_MS') ?? 130_000)
 
@@ -76,6 +89,8 @@ const SYSTEM = [{ type: 'text' as const, text: createSystemPrompt(), cache_contr
 const FRAME_FORMAT = { type: 'json_schema' as const, schema: outlineFrameSchema() }
 const DETAILS_FORMAT = { type: 'json_schema' as const, schema: outlineDetailsSchema() }
 const IDEAS_FORMAT = { type: 'json_schema' as const, schema: ideasSchema() }
+const MAP_SYSTEM = [{ type: 'text' as const, text: mapSystemPrompt(), cache_control: { type: 'ephemeral' as const } }]
+const MAP_FORMAT = { type: 'json_schema' as const, schema: mapSchema() }
 // The scenes have no structured output: the draft schema's grammar is too large for the API. The
 // prompt carries the schema as text and normalizeDraft() coerces the answer (see import-draft.ts).
 
@@ -109,6 +124,8 @@ async function ask(
     effort: 'low' | 'medium'
     text: string
     maxTokens: number
+    /** The story creator's system prompt unless told otherwise (maps have their own). */
+    system?: typeof SYSTEM
   },
 ) {
   const left = deadline - Date.now()
@@ -126,7 +143,7 @@ async function ask(
         // Server-side fallbacks on refusals: Sonnet has them, Haiku doesn't.
         ...(opts.model === WRITER_MODEL ? { betas: ['server-side-fallback-2026-07-01'], fallbacks: 'default' as const } : {}),
         output_config: { effort: opts.effort, ...(opts.format ? { format: opts.format } : {}) },
-        system: SYSTEM,
+        system: opts.system ?? SYSTEM,
         messages: [{ role: 'user', content: opts.text }],
       },
       { signal: controller.signal },
@@ -353,6 +370,66 @@ async function write(apiKey: string, deadline: number, admin: Admin, userId: str
   return { creationId: row.id, storyId, written, total, remaining, validationErrors }
 }
 
+/** Claude composes a map; the kit coerces it and says what looks wrong. */
+async function composeMap(apiKey: string, deadline: number, req: MapRequest) {
+  const { output, usage } = await ask(apiKey, deadline, { model: WRITER_MODEL, format: MAP_FORMAT, effort: 'medium', text: mapUserPrompt(req), maxTokens: 24000, system: MAP_SYSTEM })
+  const { doc, problems } = parseMapDoc(output)
+  return { map: doc, problems: [...problems, ...mapProblems(doc)], usage }
+}
+
+async function map(apiKey: string, deadline: number, admin: Admin, userId: string, body: Record<string, unknown>) {
+  const req = parseMapRequest(body)
+  if (typeof req === 'string') throw new Failure(400, 'bad_request', req)
+  if (!(await isAdmin(admin, userId))) {
+    const { count, error } = await admin
+      .from('ai_usage')
+      .select('id', { count: 'exact', head: true })
+      .eq('owner_id', userId)
+      .eq('kind', 'map')
+      .gte('created_at', monthStart())
+    if (error) throw error
+    if ((count ?? 0) >= MAP_MONTHLY_LIMIT) throw new Failure(429, 'quota_exceeded', `Limite mensuelle atteinte (${MAP_MONTHLY_LIMIT} plans).`)
+  }
+  const { map: doc, problems, usage } = await composeMap(apiKey, deadline, req)
+  await admin.from('ai_usage').insert({ owner_id: userId, kind: 'map', input_tokens: usage.input, output_tokens: usage.output })
+  return { map: doc, problems }
+}
+
+async function sceneMap(apiKey: string, deadline: number, admin: Admin, userId: string, body: Record<string, unknown>) {
+  const row = await loadCreation(admin, body.creationId, userId)
+  const brief = parseBrief(row.brief)
+  if (typeof brief === 'string') throw new Failure(500, 'internal', brief)
+  const outline = parseOutline(row.outline)
+  if (typeof outline === 'string') throw new Failure(409, 'no_outline', 'Écris d’abord le plan de l’histoire.')
+  if (row.status !== 'succeeded' || !row.story_id || !row.draft) throw new Failure(409, 'not_written', 'Les scènes ne sont pas encore toutes écrites.')
+  let draft = row.draft as unknown as ImportDraft
+  const todo = scenesWithoutMap(draft)
+  if (!todo.length) return { creationId: row.id, storyId: row.story_id, scene: null, remaining: 0, problems: [] }
+
+  const scene = todo[0]
+  const lang = brief.lang === 'en' ? 'en' : 'fr'
+  const { map: doc, problems, usage } = await composeMap(apiKey, deadline, sceneMapRequest(scene, lang))
+  const target = await existingStory(admin, row.story_id, storyMetaId(outline.title, row.id))
+  if (!target.storyId) throw new Failure(404, 'not_found', 'Histoire introuvable.')
+  const files = mapFiles(scene.id)
+  // The renderer's output always passes sanitizeSvg (a unit test checks it); checked again before it is stored.
+  await savePackFile(admin, userId, target.storyId, files.players.image, sanitizeSvg(renderMap(doc, { audience: 'players', lang })).svg, 'image/svg+xml')
+  await savePackFile(admin, userId, target.storyId, files.keeper.image, sanitizeSvg(renderMap(doc, { audience: 'keeper', lang })).svg, 'image/svg+xml')
+
+  draft = withSceneMap(draft, scene.id, doc.title, lang)
+  await saveStory(admin, userId, target.storyId, createdStory(draft, outline, brief, target.metaId))
+  await admin
+    .from('story_creations')
+    .update({
+      draft: draft as unknown as Json,
+      input_tokens: row.input_tokens + usage.input,
+      output_tokens: row.output_tokens + usage.output,
+      updated_at: new Date().toISOString(),
+    })
+    .eq('id', row.id)
+  return { creationId: row.id, storyId: target.storyId, scene: scene.id, remaining: todo.length - 1, problems }
+}
+
 // ------------------------------------------------------------------ entry point
 
 Deno.serve(async (req) => {
@@ -386,7 +463,9 @@ Deno.serve(async (req) => {
     if (body.action === 'outline') return json(await outline(apiKey, deadline, admin, userId, body))
     if (body.action === 'outline-details') return json(await outlineDetails(apiKey, deadline, admin, userId, body))
     if (body.action === 'write') return json(await write(apiKey, deadline, admin, userId, body))
-    return fail(400, 'bad_request', 'action must be one of ideas, outline, outline-details, write.')
+    if (body.action === 'map') return json(await map(apiKey, deadline, admin, userId, body))
+    if (body.action === 'scene-map') return json(await sceneMap(apiKey, deadline, admin, userId, body))
+    return fail(400, 'bad_request', 'action must be one of ideas, outline, outline-details, write, map, scene-map.')
   } catch (e) {
     if (e instanceof Failure) return fail(e.status, e.code, e.message)
     console.error('create-story failed', e)

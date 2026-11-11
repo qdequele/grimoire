@@ -30,7 +30,7 @@ export const TERMS: Bilingual = {
       {
         title: 'Fonctions d’IA',
         blocks: [
-          'Les textes produits par l’IA (import, création d’histoires, narrateur, suggestions de profil, ainsi que ce qu’écrivent ChatGPT ou Claude avec le connecteur) peuvent être inexacts ou incomplets. Relis-les avant de les utiliser à ta table. Les fonctions d’IA ont des limites mensuelles par compte.',
+          'Les textes et les plans produits par l’IA (import, création d’histoires, narrateur, suggestions de profil, plans, ainsi que ce qu’écrivent ChatGPT ou Claude avec le connecteur) peuvent être inexacts ou incomplets. Relis-les avant de les utiliser à ta table. Les fonctions d’IA ont des limites mensuelles par compte.',
           'ChatGPT et Claude sont des services d’OpenAI et d’Anthropic, soumis à leurs propres conditions. Grimoire ne voit pas tes conversations.',
         ],
       },
@@ -103,7 +103,7 @@ export const TERMS: Bilingual = {
       {
         title: 'AI features',
         blocks: [
-          'Text produced by AI (import, story creation, narrator, profile suggestions, and what ChatGPT or Claude write through the connector) may be inaccurate or incomplete. Read it before using it at your table. AI features have monthly limits per account.',
+          'Text and maps produced by AI (import, story creation, narrator, profile suggestions, maps, and what ChatGPT or Claude write through the connector) may be inaccurate or incomplete. Read it before using it at your table. AI features have monthly limits per account.',
           'ChatGPT and Claude are services of OpenAI and Anthropic, subject to their own terms. Grimoire does not see your conversations.',
         ],
       },

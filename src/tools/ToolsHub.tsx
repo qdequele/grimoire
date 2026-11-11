@@ -1,4 +1,4 @@
-import { Dices, FileText, ScrollText, UserRound } from 'lucide-react'
+import { Dices, FileText, Map as MapIcon, ScrollText, UserRound } from 'lucide-react'
 import type { ReactNode } from 'react'
 import { Link } from 'react-router'
 import { useT } from '@/i18n/t'
@@ -31,7 +31,7 @@ export function ToolsHub({ lang }: { lang: Lang }) {
   return (
     <ToolLayout lang={lang} alternate={TOOL_PATHS.hub[other]}>
       <ToolIntro eyebrow={t('Gratuit, sans compte')} title={t('Outils pour le gardien et les joueurs')}>
-        <p>{t('De quoi préparer et mener une partie d’enquête et d’horreur des années 1920 : des dés, des investigateurs, des fiches à imprimer et des scénarios complets. Tout marche dans le navigateur, sans inscription.')}</p>
+        <p>{t('De quoi préparer et mener une partie d’enquête et d’horreur des années 1920 : des dés, des investigateurs, des fiches à imprimer, des plans et des scénarios complets. Tout marche dans le navigateur, sans inscription.')}</p>
       </ToolIntro>
       <ul className="grid gap-6 sm:grid-cols-2">
         <ToolCard kind="dice" lang={lang} icon={<Dices />} title={t('Lanceur de dés')}>
@@ -42,6 +42,9 @@ export function ToolsHub({ lang }: { lang: Lang }) {
         </ToolCard>
         <ToolCard kind="sheet" lang={lang} icon={<FileText />} title={t('Fiche d’investigateur vierge')}>
           {t('Deux pages A4 à remplir au crayon : caractéristiques, toutes les compétences avec leur valeur de base, armes, profil.')}
+        </ToolCard>
+        <ToolCard kind="map" lang={lang} icon={<MapIcon />} title={t('Générateur de plans')}>
+          {t('Le plan d’un manoir, d’une crypte ou d’un village, pièce par pièce, avec ses secrets. À télécharger ou imprimer.')}
         </ToolCard>
         <ToolCard kind="scenarios" lang={lang} icon={<ScrollText />} title={t('Scénarios gratuits')}>
           {t('Des histoires originales, complètes et sous licence libre, à lire, imprimer ou jouer dans Grimoire.')}

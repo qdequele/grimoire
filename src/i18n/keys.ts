@@ -8,6 +8,7 @@ import {
 import { PLACE_LABEL, PRESET_LABEL, TIME_LABEL } from '@/screen/ambiance'
 import { LEVEL_LABEL } from '@/companion/rolls'
 import { KIND_LABEL, KIND_PLACEHOLDER, STATUS_LABEL } from '@/feedback/kinds'
+import { BRUSHES, MAP_KIND_LABEL } from '@/maps/editor/labels'
 
 /** Texts that reach t() from data rather than from a t('…') literal in the code. */
 export function dataKeys(): string[] {
@@ -29,6 +30,7 @@ export function dataKeys(): string[] {
     'Création introuvable.', 'Les scènes sont déjà en cours d’écriture.', 'Le plan reçu est incomplet. Réessaie.',
     'Écris d’abord le plan de l’histoire.', 'Les scènes demandées manquent dans la réponse de l’IA. Réessaie.', 'Création impossible.',
     'L’IA a mis trop de temps à répondre. Réessaie.', 'Plan incomplet. Réessaie avec « Compléter le plan ».',
+    'Décris le lieu en une phrase au moins.', 'Description trop longue (1500 caractères au plus).', 'Plan impossible. Réessaie.', // map action
     'Art déco', 'Classique', // SKIN_LABEL (theme/skin.ts touches the DOM on import)
     // Labels passed as props, then translated by the component (Section, NameForm, Stat, nav).
     'Histoires', 'Bibliothèque', 'Mes histoires', 'Importer', 'Investigateurs', 'Joueurs', 'Réglages',
@@ -57,7 +59,8 @@ export function dataKeys(): string[] {
     ...Object.values(KIND_LABEL), ...Object.values(KIND_PLACEHOLDER), ...Object.values(STATUS_LABEL), // feedback dialog and inbox
     'Confidentialité', 'Conditions', 'Aide', // LegalLinks (legal/LegalPage.tsx)
     // Free tools (src/tools/): nav labels, blank sheet's statuses, derived values and weapon columns.
-    'Lanceur de dés', 'Créer un investigateur', 'Fiche vierge', 'Scénarios',
+    'Lanceur de dés', 'Créer un investigateur', 'Fiche vierge', 'Plans', 'Scénarios',
+    ...Object.values(MAP_KIND_LABEL), ...BRUSHES.map((b) => b.label), // map maker (src/maps/editor/labels.ts)
     'Blessure grave', 'Inconscient', 'Mourant', 'Folie passagère', 'Folie durable',
     'Mouvement', 'Impact', 'Carrure', 'Arme', 'Valeur', 'Dégâts', 'Portée', 'Attaques', 'Munitions',
   ].filter(Boolean)

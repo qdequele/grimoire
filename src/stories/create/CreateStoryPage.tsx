@@ -15,7 +15,7 @@ import { tMsg, useT } from '@/i18n/t'
 import { functionErrorMessage } from '@/lib/functions'
 import { cn } from '@/lib/utils'
 import { useLang } from '@/settings/lang'
-import { useCompleteOutline, useCreation, useCreationsThisMonth, useSuggestIdeas, useWriteOutline, useWriteScenes } from './api'
+import { useCompleteOutline, useCreation, useDrawSceneMap, useCreationsThisMonth, useSuggestIdeas, useWriteOutline, useWriteScenes } from './api'
 import { briefSchema, emptyBrief, LENGTHS, outlineHasDetails, sceneTotal, THREATS, TONES, type Brief, type IdeaField, type Outline } from './brief'
 import { OutlineReview } from './OutlineReview'
 import { MoodStep, MysteryStep, SettingStep, TableStep, type QuestionProps } from './steps'
@@ -65,6 +65,7 @@ const WRITE = PLAN + 1
 type Phase =
   | { kind: 'idle' }
   | { kind: 'writing'; written: number; total: number }
+  | { kind: 'maps'; drawn: number; total: number }
   | { kind: 'error'; message: string; written: number; total: number; storyId: string | null }
 
 export function CreateStoryPage() {
@@ -89,6 +90,7 @@ export function CreateStoryPage() {
   const writeOutline = useWriteOutline()
   const completeOutline = useCompleteOutline()
   const writeScenes = useWriteScenes()
+  const drawSceneMap = useDrawSceneMap()
 
   // Remember everything the keeper did, answers included.
   const brief = useWatch({ control: form.control }) as Brief
@@ -174,6 +176,7 @@ export function CreateStoryPage() {
         progress = { written: res.written, total: res.total, storyId: res.storyId }
         setPhase({ kind: 'writing', ...progress })
         if (!res.remaining) {
+          await drawMaps(creationId)
           if (res.validationErrors.length) {
             toast.warning(t.n(res.validationErrors.length, "{n} point à vérifier dans l'histoire (identifiants ou valeurs hors format).", "{n} points à vérifier dans l'histoire (identifiants ou valeurs hors format)."))
           }
@@ -189,8 +192,24 @@ export function CreateStoryPage() {
     }
   }
 
+  /** The scenes' maps, after the last scene. A map that fails is left out: the story works without it. */
+  async function drawMaps(id: string) {
+    let drawn = 0
+    setPhase({ kind: 'maps', drawn, total: 0 })
+    try {
+      for (;;) {
+        const res = await drawSceneMap.mutateAsync({ creationId: id })
+        if (res.scene) drawn++
+        setPhase({ kind: 'maps', drawn, total: drawn + res.remaining })
+        if (!res.remaining || stopped.current) return
+      }
+    } catch {
+      toast.warning(t('Un plan n’a pas pu être dessiné. L’histoire est prête sans lui ; « Reprendre l’écriture » réessaie.'))
+    }
+  }
+
   const title = STEPS[step]
-  const busy = writeOutline.isPending || completeOutline.isPending || phase.kind === 'writing'
+  const busy = writeOutline.isPending || completeOutline.isPending || phase.kind === 'writing' || phase.kind === 'maps'
   const Question = step < PLAN ? QUESTION_STEPS[step].Component : null
 
   return (
@@ -384,6 +403,16 @@ function WritingPanel({ phase, onRetry, done, storyId }: { phase: Phase; onRetry
         <Feather data-icon="inline-start" />
         {t('Reprendre l’écriture')}
       </Button>
+    )
+  }
+  if (phase.kind === 'maps') {
+    return (
+      <div className="flex flex-col gap-4" aria-live="polite">
+        <p className="text-sm text-muted-foreground">
+          {phase.total ? t('Dessin des plans des lieux à explorer : {done} / {total}.', { done: phase.drawn, total: phase.total }) : t('Dessin des plans des lieux à explorer…')}
+        </p>
+        <Spinner />
+      </div>
     )
   }
   const pct = phase.total ? (phase.written / phase.total) * 100 : 0

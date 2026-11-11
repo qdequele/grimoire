@@ -19,6 +19,7 @@
     "decor:shots": "node scripts/decor-shots.mjs",
     "decor:compare": "node scripts/decor-compare.mjs",
     "spec:bundle": "node scripts/gen-spec-bundle.mjs",
+    "maps:bundle": "node scripts/gen-map-bundle.mjs",
     "db:seed-gen": "node scripts/gen-seed.mjs",
     "db:start": "supabase start",
     "db:reset": "supabase db reset && pnpm packs:sync",

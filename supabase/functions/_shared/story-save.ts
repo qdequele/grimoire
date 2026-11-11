@@ -50,3 +50,19 @@ export async function saveStory(db: Db, ownerId: string, storyId: string | null,
   await writePackJson(db, ownerId, id, story)
   return id
 }
+
+/**
+ * Upload one file of the pack (a picture) and list it in stories.pack_files: a picture missing from
+ * pack_files is never shown (src/games/screen.ts, packImage).
+ */
+export async function savePackFile(db: Db, ownerId: string, storyId: string, path: string, body: string, contentType: string) {
+  const { error } = await db.storage.from('story-packs').upload(`${ownerId}/${storyId}/${path}`, new Blob([body], { type: contentType }), { upsert: true, contentType })
+  if (error) throw error
+  const { data, error: readError } = await db.from('stories').select('pack_files').eq('id', storyId).eq('owner_id', ownerId).single()
+  if (readError) throw readError
+  const files = data.pack_files ?? []
+  if (!files.includes(path)) {
+    const { error: writeError } = await db.from('stories').update({ pack_files: [...files, path] }).eq('id', storyId).eq('owner_id', ownerId)
+    if (writeError) throw writeError
+  }
+}

@@ -25,6 +25,7 @@ import { LEGAL_PATHS, type LegalKind } from '@/legal/paths'
 import { MarketplacePage, MyStoriesPage } from '@/stories/StoryLists'
 import { StoryPage } from '@/stories/StoryPage'
 import { CreateStoryPage } from '@/stories/create/CreateStoryPage'
+import { MapsPage } from '@/maps/MapsPage'
 import { SettingsPage } from '@/settings/SettingsPage'
 import { Section } from '@/theme/Section'
 import { toolRoutes } from '@/tools/routes'
@@ -45,6 +46,7 @@ const STORY_TABS = [
   { to: '/stories/mine', label: 'Mes histoires' },
   { to: '/stories/create', label: 'Créer' },
   { to: '/stories/import', label: 'Importer' },
+  { to: '/stories/maps', label: 'Plans' },
 ]
 const INVESTIGATOR_TABS = [
   { to: '/characters', label: 'Investigateurs', end: true },
@@ -106,6 +108,7 @@ const router = createBrowserRouter([
           { path: 'mine', element: <MyStoriesPage /> },
           { path: 'create', element: <CreateStoryPage /> },
           { path: 'import', element: <ImportPage /> },
+          { path: 'maps', element: <MapsPage /> },
         ],
       },
       { path: 'stories/:id', element: <StoryPage /> },

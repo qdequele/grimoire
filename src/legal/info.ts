@@ -7,7 +7,7 @@ export const LEGAL = {
   contact: 'contact@legrimoire.quest',
   site: 'https://www.legrimoire.quest',
   /** Date of the last change to the privacy policy or the terms (YYYY-MM-DD). */
-  updated: '2026-11-10',
+  updated: '2026-11-11',
 }
 
 /** Where Grimoire is listed in the ChatGPT and Claude directories, once it is (empty until then). */
