@@ -20,6 +20,7 @@ If the Grimoire tools are not available, tell the user to add the connector firs
 - Only then call `save_outline`, and `write_scenes` two or three scenes at a time, in the order it gives. Don't paste the scenes in the chat: say briefly what you wrote and how many remain.
 - Every story is original: invent places, people, entities and books. Names from published games or fiction are refused by the tools.
 - Respect what the keeper asked to avoid, completely.
+- Objects that matter (a key, a found weapon, a talisman, a lamp the ending needs) can be story **items**: the keeper gives them as cards during play and the investigators keep them. Two or three per story at most, each with the scene where it is found (topic `format`, §6).
 - At the end, give the story's link and suggest one thing the keeper could check or change, and offer pictures (below).
 
 ## Revising

@@ -200,6 +200,29 @@ describe('draftToStory', () => {
     expect(validate(story), JSON.stringify(validate.errors)).toBe(true)
   })
 
+  it('writes items as story items: weapons, uses, help; sloppy values are coerced or dropped', () => {
+    const d = normalizeDraft({
+      ...batchOne(),
+      items: [
+        { id: 'pistol', name: 'Old <pistol>', kind: 'weapon', art: 'revolver', text: 'Rusty.', scene: 'front-room', weaponSkill: 'firearms-handgun', damage: '1d10 dmg', addsDamageBonus: true, range: '15 m', rate: '1', uses: 6, unit: 'balles', ammo: '.38', helpsSkill: '', helpsNote: '' },
+        { id: 'rope', name: 'Rope', kind: 'tool', weapon: { skill: 'climb' }, bonus: { skill: 'climb', note: 'bonus die' }, uses: 0, unit: 'balles' },
+        { id: 'charm', name: 'Charm', kind: 'spell' },
+        { id: '', name: 'No id', kind: 'tool' },
+      ],
+    }, sounds)
+    expect(d.items.map((x) => x.id)).toEqual(['pistol', 'rope'])
+    const story = draftToStory(d, { id: 'the-clockmaker', lang: 'en' }) as { items: unknown[] }
+    expect(story.items).toEqual([
+      { id: 'pistol', name: 'Old pistol', kind: 'weapon', art: 'revolver', text: 'Rusty.', weapon: { skill: 'firearms-handgun', damage: '1D10', range: '15 m', rate: '1', impale: true }, uses: 6, unit: 'balles', ammo: '.38', scene: 'front-room' },
+      { id: 'rope', name: 'Rope', kind: 'tool', bonus: { skill: 'climb', note: 'bonus die' } },
+    ])
+    expect(validate(story), JSON.stringify(validate.errors)).toBe(true)
+    // Drafts saved before items existed still merge and convert.
+    const old = { ...batchOne() } as Partial<ImportDraft>
+    delete old.items
+    expect(mergeDraft(old as ImportDraft, d).items).toHaveLength(2)
+  })
+
   it('keeps SAN and damage values only on the matching roll type', () => {
     const story = draftToStory(batchOne(), { id: 'x', lang: 'en' }) as {
       acts: Array<{ scenes: Array<{ rolls: unknown[]; flow: Array<{ roll?: unknown }> }> }>

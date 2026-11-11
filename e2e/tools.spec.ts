@@ -63,3 +63,32 @@ test('landing page links to the free tools', async ({ page }) => {
   await page.getByRole('link', { name: /Lanceur de dés|Dice roller/ }).first().click()
   await expect(page).toHaveURL(/lanceur-de-des|dice-roller/)
 })
+
+test('item cards: search, open a card, download it as PNG, print a sheet; in English too', async ({ page }) => {
+  await page.goto('/outils/cartes-objets')
+  await expect(page.getByRole('heading', { level: 1 })).toHaveText('Cartes d’objets à imprimer')
+  await page.getByRole('searchbox', { name: 'Chercher un objet' }).fill('grimper')
+  await expect(page.getByText('2 cartes', { exact: true })).toBeVisible()
+  await page.getByRole('button', { name: 'Corde de chanvre (15 m)' }).click()
+  const view = page.getByRole('dialog', { name: 'Corde de chanvre (15 m)' })
+  const download = page.waitForEvent('download')
+  await view.getByRole('button', { name: 'Télécharger en PNG' }).click()
+  expect((await download).suggestedFilename()).toBe('corde-de-chanvre-15-m.png')
+  await page.keyboard.press('Escape')
+
+  // Printing draws the sheet of the cards shown (fronts, then mirrored backs), then opens the print dialog.
+  await page.evaluate(() => {
+    ;(window as unknown as { printed: number }).printed = 0
+    window.print = () => { (window as unknown as { printed: number }).printed++ }
+  })
+  await page.getByRole('button', { name: 'Imprimer les 2 cartes' }).click()
+  await expect.poll(() => page.evaluate(() => (window as unknown as { printed: number }).printed)).toBe(1)
+  await expect(page.locator('.isheet-page')).toHaveCount(2)
+  await expect(page.locator('.isheet .icard')).toHaveCount(2)
+  await expect(page.locator('.isheet .icard-back')).toHaveCount(2)
+
+  await page.goto('/tools/item-cards')
+  await expect(page.locator('html')).toHaveAttribute('lang', 'en')
+  await expect(page.getByRole('heading', { level: 1 })).toHaveText('Printable item cards')
+  await expect(page.getByRole('button', { name: 'Crowbar' })).toBeVisible()
+})

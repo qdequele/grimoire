@@ -24,11 +24,12 @@ export const useSheetContext = () => useOutletContext<SheetContext>()
 const TABS = [
   { to: '', label: 'Fiche', end: true },
   { to: 'des', label: 'Dés' },
+  { to: 'objets', label: 'Objets' },
   { to: 'carnet', label: 'Carnet' },
   { to: 'profil', label: 'Profil' },
 ]
 
-/** `/t/:token/c/:characterId`: one investigator, tabs Fiche · Carnet · Profil. */
+/** `/t/:token/c/:characterId`: one investigator, tabs Fiche · Dés · Objets · Carnet · Profil. */
 export function SheetPage() {
   const t = useT()
   const ctx = useCompanionContext()

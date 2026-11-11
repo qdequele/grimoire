@@ -39,6 +39,13 @@
         "$ref": "#/$defs/handout"
       }
     },
+    "items": {
+      "type": "array",
+      "description": "Objects the investigators can find and keep, given to them as cards during play.",
+      "items": {
+        "$ref": "#/$defs/item"
+      }
+    },
     "pregens": {
       "type": "array",
       "items": {
@@ -337,6 +344,13 @@
             "$ref": "#/$defs/id"
           }
         },
+        "items": {
+          "type": "array",
+          "description": "Item ids found in this scene (the keeper gives them from there).",
+          "items": {
+            "$ref": "#/$defs/id"
+          }
+        },
         "rolls": {
           "type": "array",
           "items": {
@@ -422,22 +436,65 @@
               "description": "Living layers over the picture. Default: picked from the scene's ambience sounds."
             },
             "place": {
-              "enum": ["church", "graveyard", "crypt", "castle", "manor", "library", "police", "forest", "harbour", "street", "asylum", "station", "swamp", "dig", "mountain", "museum", "cavern", "farm", "ship", "fair", "mine", "moor"],
+              "enum": [
+                "church",
+                "graveyard",
+                "crypt",
+                "castle",
+                "manor",
+                "library",
+                "police",
+                "forest",
+                "harbour",
+                "street",
+                "asylum",
+                "station",
+                "swamp",
+                "dig",
+                "mountain",
+                "museum",
+                "cavern",
+                "farm",
+                "ship",
+                "fair",
+                "mine",
+                "moor"
+              ],
               "description": "Drawn scenery shown when there is no picture. Default: guessed from the scene's title."
             },
             "time": {
-              "enum": ["day", "dusk", "night"],
+              "enum": [
+                "day",
+                "dusk",
+                "night"
+              ],
               "description": "Time of day: the light, apart from the preset's weather and mood. Default: guessed from the scene's title or sounds, else the preset's own (night, except dust)."
             },
             "fire": {
               "type": "object",
               "additionalProperties": false,
-              "required": ["x", "y", "width"],
+              "required": [
+                "x",
+                "y",
+                "width"
+              ],
               "description": "Where the fire burns in the picture, for the hearth preset: base centre and width, as fractions of the picture (0 to 1). Default: bottom centre.",
               "properties": {
-                "x": { "type": "number", "minimum": 0, "maximum": 1 },
-                "y": { "type": "number", "minimum": 0, "maximum": 1 },
-                "width": { "type": "number", "exclusiveMinimum": 0, "maximum": 1 }
+                "x": {
+                  "type": "number",
+                  "minimum": 0,
+                  "maximum": 1
+                },
+                "y": {
+                  "type": "number",
+                  "minimum": 0,
+                  "maximum": 1
+                },
+                "width": {
+                  "type": "number",
+                  "exclusiveMinimum": 0,
+                  "maximum": 1
+                }
               }
             }
           }
@@ -747,6 +804,181 @@
         "image": {
           "type": "string",
           "description": "Relative path in images/."
+        },
+        "scene": {
+          "$ref": "#/$defs/id",
+          "description": "Where it is usually found."
+        }
+      }
+    },
+    "item": {
+      "type": "object",
+      "description": "An object shown as a card: kept by the investigator it's given to, from one game to the next.",
+      "required": [
+        "id",
+        "name",
+        "kind"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "$ref": "#/$defs/id"
+        },
+        "name": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 60,
+          "pattern": "^[^<>&\"]+$"
+        },
+        "kind": {
+          "enum": [
+            "weapon",
+            "ammo",
+            "light",
+            "tool",
+            "medical",
+            "document",
+            "occult",
+            "gear",
+            "key"
+          ],
+          "description": "The card type: its colour and default illustration."
+        },
+        "art": {
+          "enum": [
+            "revolver",
+            "pistol",
+            "derringer",
+            "rifle",
+            "shotgun",
+            "knife",
+            "club",
+            "hatchet",
+            "crowbar",
+            "cane",
+            "bullets",
+            "shells",
+            "flashlight",
+            "lantern",
+            "candle",
+            "matches",
+            "flare",
+            "rope",
+            "lockpicks",
+            "toolkit",
+            "binoculars",
+            "compass",
+            "magnifier",
+            "shovel",
+            "camera",
+            "notebook",
+            "book",
+            "medkit",
+            "bandage",
+            "vial",
+            "flask",
+            "map",
+            "key",
+            "amulet",
+            "cross",
+            "chalk",
+            "watch",
+            "backpack",
+            "dynamite"
+          ],
+          "description": "Illustration from the app's set; the kind's when absent."
+        },
+        "text": {
+          "type": "string",
+          "maxLength": 400,
+          "description": "Plain text printed on the card: what it does, or what is said about it."
+        },
+        "weapon": {
+          "type": "object",
+          "required": [
+            "skill",
+            "damage"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "skill": {
+              "enum": [
+                "firearms-handgun",
+                "firearms-rifle",
+                "fighting-brawl",
+                "throw"
+              ]
+            },
+            "damage": {
+              "type": "string",
+              "pattern": "^[0-9Dd+\\-/ ]{1,24}$",
+              "description": "Dice: 1D10, 2D6+4, or bands by range 4D6/2D6/1D6."
+            },
+            "db": {
+              "type": "boolean",
+              "description": "Adds the wielder's damage bonus (melee, thrown)."
+            },
+            "range": {
+              "type": "string",
+              "maxLength": 20
+            },
+            "rate": {
+              "type": "string",
+              "maxLength": 12,
+              "description": "Attacks per round: \"1\", \"1 (3)\"."
+            },
+            "malfunction": {
+              "type": "integer",
+              "minimum": 90,
+              "maximum": 100
+            },
+            "impale": {
+              "type": "boolean"
+            }
+          }
+        },
+        "uses": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 99,
+          "description": "How many uses a full item holds (rounds, doses, charges); the players spend them."
+        },
+        "unit": {
+          "enum": [
+            "balles",
+            "cartouches",
+            "charges",
+            "utilisations",
+            "doses",
+            "allumettes",
+            "bougies",
+            "plaques",
+            "gorgées",
+            "heures"
+          ],
+          "description": "What the uses count."
+        },
+        "ammo": {
+          "type": "string",
+          "maxLength": 16,
+          "description": "Calibre: a weapon reloads from an ammunition item with the same one."
+        },
+        "bonus": {
+          "type": "object",
+          "required": [
+            "skill"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "skill": {
+              "type": "string",
+              "description": "Skill id the item helps with."
+            },
+            "note": {
+              "type": "string",
+              "maxLength": 120
+            }
+          }
         },
         "scene": {
           "$ref": "#/$defs/id",

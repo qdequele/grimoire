@@ -5,6 +5,7 @@ import { toast } from 'sonner'
 import type { CharacterData } from '@/characters/character'
 import { photoOr } from '@/characters/photo'
 import { currentT } from '@/i18n/t'
+import { asHeld, sortHeld, type HeldItem } from '@/items/item'
 import type { Json } from '@/lib/database.types'
 import { supabase } from '@/lib/supabase'
 import type { Points, PointsRow } from '@/play/companion'
@@ -29,6 +30,8 @@ export interface CompanionView {
   points: PointsRow[]
   /** Newest first. */
   notes: CompanionNote[]
+  /** The party's items, in display order. */
+  items: HeldItem[]
 }
 
 export type CompanionErrorCode = 'link_invalid' | 'not_in_game' | 'bad_value' | 'party_full' | 'network'
@@ -137,6 +140,7 @@ function asView(raw: unknown): CompanionView {
       .filter((n) => typeof n.id === 'string' && typeof n.characterId === 'string')
       .map((n) => ({ id: n.id as string, characterId: n.characterId as string, body: str(n.body), createdAt: str(n.createdAt) }))
       .sort((a, b) => b.createdAt.localeCompare(a.createdAt)),
+    items: sortHeld(objects(r.items).map(asHeld).filter((h): h is HeldItem => !!h)),
   }
 }
 
@@ -335,6 +339,47 @@ export function useCreateCharacter(token: string) {
   })
 }
 
+// ------------------------------------------------------------------ items
+
+function patchItem(view: CompanionView, id: string, uses: number): CompanionView {
+  return { ...view, items: view.items.map((i) => (i.id === id ? { ...i, uses } : i)) }
+}
+
+/** A use spent (−1) or regained (+1). The card changes at once; the server's count wins. */
+export function useUseItem(token: string) {
+  const qc = useQueryClient()
+  const key = companionKeys.one(token)
+  return useMutation<number, CompanionError, { item: HeldItem; delta: number }, { before: number | null }>({
+    mutationFn: ({ item, delta }) =>
+      enqueue(`${token}:item:${item.id}`, () => call(() => supabase.rpc('companion_use_item', { p_token: token, p_item: item.id, p_delta: delta }))),
+    onMutate: async ({ item, delta }) => {
+      await qc.cancelQueries({ queryKey: key })
+      const view = qc.getQueryData<CompanionView>(key)
+      const cur = view?.items.find((i) => i.id === item.id)
+      if (view && cur?.uses != null && cur.card.uses !== undefined) {
+        qc.setQueryData<CompanionView>(key, patchItem(view, item.id, Math.max(0, Math.min(cur.card.uses, cur.uses + delta))))
+      }
+      return { before: cur?.uses ?? null }
+    },
+    onError: (e, { item }, ctx) => {
+      const view = qc.getQueryData<CompanionView>(key)
+      if (view && ctx?.before != null) qc.setQueryData<CompanionView>(key, patchItem(view, item.id, ctx.before))
+      onWriteError(qc, token, e)
+    },
+    onSettled: () => qc.invalidateQueries({ queryKey: key }),
+  })
+}
+
+/** Reload a weapon from its matching ammunition; resolves to the rounds moved. */
+export function useReloadItem(token: string) {
+  const qc = useQueryClient()
+  return useMutation<number, CompanionError, HeldItem>({
+    mutationFn: (item) => call(() => supabase.rpc('companion_reload_item', { p_token: token, p_weapon: item.id })),
+    onError: (e) => onWriteError(qc, token, e),
+    onSettled: () => qc.invalidateQueries({ queryKey: companionKeys.one(token) }),
+  })
+}
+
 // ------------------------------------------------------------------ rolls
 
 /** The server's roll, checked (a malformed answer reads as a network error). */
@@ -376,7 +421,7 @@ export function useRollDice(token: string) {
 /**
  * Listens to the game's channel: `points` (keeper or phone) go straight into the cache, clamped to
  * what the server accepts (anyone with a link can send on this public topic; writes are re-checked
- * by the RPCs), `notes`, `member` and `photo` refetch. Returns true while subscribed (the "live" badge).
+ * by the RPCs), `notes`, `member`, `photo` and `items` refetch. Returns true while subscribed (the "live" badge).
  * A revoke sends `rotate` on the old topic before moving the game: refetching gives a still-valid
  * link the new channel (this hook resubscribes) and a revoked one the invalid-link state.
  */
@@ -407,6 +452,7 @@ export function useCompanionLive(token: string, channel: string | undefined): bo
       .on('broadcast', { event: 'notes' }, () => void qc.invalidateQueries({ queryKey: key }))
       .on('broadcast', { event: 'member' }, () => void qc.invalidateQueries({ queryKey: key }))
       .on('broadcast', { event: 'photo' }, () => void qc.invalidateQueries({ queryKey: key }))
+      .on('broadcast', { event: 'items' }, () => void qc.invalidateQueries({ queryKey: key }))
       .on('broadcast', { event: 'rotate' }, () => void qc.invalidateQueries({ queryKey: key }))
       .subscribe((status) => {
         setLive(status === 'SUBSCRIBED')

@@ -69,6 +69,73 @@ export type Database = {
           },
         ]
       }
+      character_items: {
+        Row: {
+          card: Json
+          catalog_id: string | null
+          character_id: string
+          condition: string
+          created_at: string
+          id: string
+          owner_id: string
+          position: number
+          story_id: string | null
+          story_item: string | null
+          updated_at: string
+          uses: number | null
+        }
+        Insert: {
+          card: Json
+          catalog_id?: string | null
+          character_id: string
+          condition?: string
+          created_at?: string
+          id?: string
+          owner_id?: string
+          position?: number
+          story_id?: string | null
+          story_item?: string | null
+          updated_at?: string
+          uses?: number | null
+        }
+        Update: {
+          card?: Json
+          catalog_id?: string | null
+          character_id?: string
+          condition?: string
+          created_at?: string
+          id?: string
+          owner_id?: string
+          position?: number
+          story_id?: string | null
+          story_item?: string | null
+          updated_at?: string
+          uses?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "character_items_character_fkey"
+            columns: ["character_id", "owner_id"]
+            isOneToOne: false
+            referencedRelation: "characters"
+            referencedColumns: ["id", "owner_id"]
+          },
+          {
+            foreignKeyName: "character_items_owner_id_fkey"
+            columns: ["owner_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "character_items_story_id_fkey"
+            columns: ["story_id"]
+            isOneToOne: false
+            referencedRelation: "stories"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       character_notes: {
         Row: {
           body: string
@@ -746,6 +813,29 @@ export type Database = {
         Args: { p: Json; p_hi: number; p_lo: number }
         Returns: number
       }
+      companion_item: {
+        Args: { p_item: string; p_token: string }
+        Returns: {
+          card: Json
+          catalog_id: string | null
+          character_id: string
+          condition: string
+          created_at: string
+          id: string
+          owner_id: string
+          position: number
+          story_id: string | null
+          story_item: string | null
+          updated_at: string
+          uses: number | null
+        }
+        SetofOptions: {
+          from: "*"
+          to: "character_items"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
       companion_link: {
         Args: { p_token: string }
         Returns: {
@@ -767,6 +857,10 @@ export type Database = {
       companion_open: { Args: { p_token: string }; Returns: Json }
       companion_owner: { Args: { p_token: string }; Returns: string }
       companion_party: { Args: { p_game: string }; Returns: string[] }
+      companion_reload_item: {
+        Args: { p_token: string; p_weapon: string }
+        Returns: number
+      }
       companion_roll_character: {
         Args: { p_character: string; p_game: string; p_link_character: string }
         Returns: undefined
@@ -810,6 +904,10 @@ export type Database = {
         Returns: number
       }
       companion_text: { Args: { p: Json; p_max: number }; Returns: string }
+      companion_use_item: {
+        Args: { p_delta: number; p_item: string; p_token: string }
+        Returns: number
+      }
       feedback_inbox: {
         Args: { p_kind?: string; p_limit?: number; p_status?: string }
         Returns: {
@@ -828,6 +926,16 @@ export type Database = {
         }[]
       }
       is_admin: { Args: Record<PropertyKey, never>; Returns: boolean }
+      item_add_uses: {
+        Args: { p_delta: number; p_item: string; p_owner: string }
+        Returns: number
+      }
+      item_card_ok: { Args: { c: Json }; Returns: boolean }
+      item_reload: {
+        Args: { p_owner: string; p_weapon: string }
+        Returns: number
+      }
+      reload_item: { Args: { p_weapon: string }; Returns: number }
       revoke_screen_link: { Args: { p_link: string }; Returns: undefined }
       revoke_table_link: { Args: { p_link: string }; Returns: undefined }
       save_game_state: {
@@ -835,6 +943,7 @@ export type Database = {
         Returns: undefined
       }
       screen_open: { Args: { p_token: string }; Returns: Json }
+      use_item: { Args: { p_delta: number; p_item: string }; Returns: number }
     }
     Enums: {
       import_status: "running" | "succeeded" | "failed"

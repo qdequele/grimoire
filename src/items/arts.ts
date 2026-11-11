@@ -1,0 +1,345 @@
+// The items' illustrations: original line drawings, as data (a 100 × 100 box). ItemArt draws them in
+// the card's window, with the skin's materials (metal, wood, paper…) and a dark outline.
+
+/** Materials: fill colours set per skin in items.css (--ia-<mat>); `line` is the outline's ink. */
+export type Mat = 'm' | 'd' | 'w' | 'p' | 'g' | 'f' | 'c' | 'b' | 'k' | 'line'
+
+export interface Shape {
+  d: string
+  /** Filled with this material, outlined in ink. */
+  f?: Mat
+  /** Not filled: a stroke of this material (rope, wire, a drawn line). */
+  s?: Mat
+  /** Stroke width (2 for outlines). */
+  sw?: number
+  dash?: boolean
+  /** Holes on purpose (a key's bow, a coil). */
+  eo?: boolean
+}
+
+const circle = (cx: number, cy: number, r: number) => `M${cx - r} ${cy}a${r} ${r} 0 1 0 ${2 * r} 0a${r} ${r} 0 1 0 ${-2 * r} 0Z`
+const ellipse = (cx: number, cy: number, rx: number, ry: number) => `M${cx - rx} ${cy}a${rx} ${ry} 0 1 0 ${2 * rx} 0a${rx} ${ry} 0 1 0 ${-2 * rx} 0Z`
+const rect = (x: number, y: number, w: number, h: number) => `M${x} ${y}h${w}v${h}h${-w}Z`
+const line = (d: string, sw = 2): Shape => ({ d, s: 'line', sw })
+
+export const ARTS = {
+  revolver: [
+    { d: 'M38 31h52v8H38Z', f: 'm' },
+    { d: 'M85 27h4v4h-4Z', f: 'm' },
+    { d: 'M44 40h36v3H44Z', f: 'm' },
+    { d: 'M22 46h10l-3 6-4 30c-1 4-12 4-13 0l3-30Z', f: 'w' },
+    line('M17 60l9 2M16 68l9 2M15 76l9 2', 1.2),
+    { d: 'M24 28h18v18H24Z', f: 'm' },
+    { d: 'M24 28l-7-7 4-3 8 10Z', f: 'm' },
+    { d: 'M32 29h18v16H32Z', f: 'd' },
+    line('M36 32v10M41 32v10M46 32v10', 1.4),
+    line('M34 46c0 12 14 12 14 0'),
+    line('M39 47c-1 4 1 6 2 7'),
+  ],
+  pistol: [
+    { d: 'M18 28h72v12H18Z', f: 'm' },
+    line('M24 30v8M27 30v8M30 30v8', 1.2),
+    { d: 'M90 31h4v6h-4Z', f: 'd' },
+    { d: 'M20 40h52l-4 6H40Z', f: 'm' },
+    { d: 'M22 40h18l4 38c0 4-14 6-16 2Z', f: 'd' },
+    line('M27 50l12-1M28 58l12-1M28 66l13-1', 1.2),
+    line('M42 46c0 12 18 12 18 0'),
+    line('M48 47c-1 4 1 6 2 7'),
+  ],
+  derringer: [
+    { d: 'M40 34h38v6H40Z', f: 'm' },
+    { d: 'M40 41h38v6H40Z', f: 'm' },
+    { d: 'M30 32h12v18H30Z', f: 'm' },
+    { d: 'M30 32l-5-6 4-2 6 8Z', f: 'm' },
+    { d: 'M30 48h10c2 14-4 26-12 28-6 0-6-6-2-10 4-6 4-12 4-18Z', f: 'w' },
+    line('M42 50c0 4 2 6 4 6'),
+    { d: circle(76, 37, 1.6), f: 'd' },
+    { d: circle(76, 44, 1.6), f: 'd' },
+  ],
+  rifle: [
+    { d: 'M6 58l24-8 4 10-24 12c-4 0-6-8-4-14Z', f: 'w' },
+    { d: 'M30 50l14-5 2 7-12 8Z', f: 'w' },
+    { d: 'M44 44h18v8H46Z', f: 'm' },
+    { d: 'M56 44l2-6h3l-2 6Z', f: 'm' },
+    { d: 'M62 46h22v5H62Z', f: 'w' },
+    { d: 'M62 42.5h34v3.5H62Z', f: 'm' },
+    { d: 'M92 40h2v3h-2Z', f: 'm' },
+    line('M48 52c0 8 10 8 10 0'),
+    line('M14 64c10 6 30 0 40-12', 1.4),
+  ],
+  shotgun: [
+    { d: 'M6 60l24-8 4 10-24 12c-4 0-6-8-4-14Z', f: 'w' },
+    { d: 'M30 52l14-5 2 7-12 8Z', f: 'w' },
+    { d: 'M44 45h16v9H46Z', f: 'm' },
+    { d: 'M42 44l-3-6 3-1 4 7Z', f: 'm' },
+    { d: 'M60 40h36v4H60Z', f: 'm' },
+    { d: 'M60 44h36v4H60Z', f: 'm' },
+    { d: 'M60 48h20v5H60Z', f: 'w' },
+    line('M48 54c0 8 10 8 10 0'),
+  ],
+  knife: [
+    { d: 'M18 82l14-14 6 6-14 14c-3 2-8-2-6-6Z', f: 'w' },
+    line('M22 80l5 5M26 76l5 5', 1.2),
+    { d: 'M26 66l4-4 16 16-4 4Z', f: 'm' },
+    { d: 'M36 66l44-46c4-2 6 0 4 4L42 72Z', f: 'm' },
+    line('M44 62l30-32', 1.2),
+  ],
+  club: [
+    { d: 'M22 84l4 4 56-58c4-6-2-12-8-8Z', f: 'w' },
+    line('M30 76l4 4M34 72l4 4M38 68l4 4', 1.2),
+    { s: 'line', sw: 2, d: 'M24 86c-10 6-14-6-4-8' },
+  ],
+  hatchet: [
+    { d: 'M30 88l6 2 26-64-6-2Z', f: 'w' },
+    { d: 'M48 18l24 4c10 4 14 14 10 26-6-6-12-10-18-10l-4-4-10-4Z', f: 'm' },
+    line('M66 26c6 2 10 8 12 14', 1.2),
+  ],
+  crowbar: [
+    { d: 'M24 86l6 2 42-62c4-8 0-14-6-14-8 0-12 6-10 12h4c0-4 2-7 6-7s4 5 1 9Z', f: 'm' },
+    { d: 'M24 86l-6 4 4-8Z', f: 'm' },
+  ],
+  cane: [
+    { d: 'M26 88l4 2 46-68-4-2Z', f: 'w' },
+    { d: circle(74, 17, 6), f: 'm' },
+    { d: 'M30 82l4 2 4-6-4-2Z', f: 'm' },
+    line('M60 42l4 2', 1.2),
+  ],
+  bullets: [
+    { d: 'M26 52h12v30H26Z', f: 'c' },
+    { d: 'M26 52c0-14 12-14 12 0Z', f: 'm' },
+    { d: 'M25 80h14v4H25Z', f: 'c' },
+    { d: 'M44 44h12v38H44Z', f: 'c' },
+    { d: 'M44 44c0-14 12-14 12 0Z', f: 'm' },
+    { d: 'M43 80h14v4H43Z', f: 'c' },
+    { d: 'M62 56h12v26H62Z', f: 'c' },
+    { d: 'M62 56c0-14 12-14 12 0Z', f: 'm' },
+    { d: 'M61 80h14v4H61Z', f: 'c' },
+  ],
+  shells: [
+    { d: 'M28 30h16v40H28Z', f: 'b' },
+    line('M32 30v6M36 30v6M40 30v6', 1.2),
+    { d: 'M27 70h18v14H27Z', f: 'c' },
+    { d: 'M54 40h16v34H54Z', f: 'b' },
+    line('M58 40v6M62 40v6M66 40v6', 1.2),
+    { d: 'M53 74h18v12H53Z', f: 'c' },
+  ],
+  flashlight: [
+    { s: 'f', sw: 2, d: 'M82 38l14-8M84 50h14M82 62l14 8' },
+    { d: 'M18 44h44v12H18Z', f: 'm' },
+    line('M24 44v12M28 44v12', 1.2),
+    { d: 'M36 40h8v4h-8Z', f: 'd' },
+    { d: 'M62 42l16-8v32l-16-8Z', f: 'm' },
+    { d: 'M78 34c4 4 4 28 0 32Z', f: 'f' },
+  ],
+  lantern: [
+    { d: 'M30 30C30 4 70 4 70 30', s: 'line', sw: 2 },
+    { d: 'M44 20h12v8H44Z', f: 'm' },
+    { d: 'M34 28h32l-4 6H38Z', f: 'm' },
+    { d: 'M36 66c-8-10-8-24 0-32h28c8 8 8 22 0 32Z', f: 'g' },
+    { d: 'M50 60c-6-6-2-14 0-20 2 6 6 14 0 20Z', f: 'f' },
+    line('M50 34v4M40 36c-6 10-6 20 0 28M60 36c6 10 6 20 0 28', 1.4),
+    { d: 'M32 66h36v12H32Z', f: 'm' },
+    { d: 'M30 78h40v8H30Z', f: 'm' },
+  ],
+  candle: [
+    { d: circle(50, 26, 14), f: 'g' },
+    { d: 'M50 34c-6-6-2-16 0-22 2 6 6 16 0 22Z', f: 'f' },
+    line('M50 34v4', 1.4),
+    { d: 'M42 38h16v40H42Z', f: 'p' },
+    { s: 'line', sw: 1.4, d: 'M42 44c-2 6 2 8 2 4' },
+    { d: 'M28 78h44l-4 8H32Z', f: 'm' },
+    { d: 'M70 80c8 0 10 6 4 8', s: 'line', sw: 2 },
+  ],
+  matches: [
+    { d: 'M44 52l12-32 3 1-12 32Z', f: 'w' },
+    { d: ellipse(57, 20, 3, 4), f: 'b' },
+    { d: 'M54 52l18-26 3 2-18 26Z', f: 'w' },
+    { d: ellipse(73, 26, 3, 4), f: 'b' },
+    { d: 'M20 52h60v28H20Z', f: 'p' },
+    { d: 'M20 52h60v6H20Z', f: 'b' },
+    { d: rect(32, 62, 36, 12), f: 'c' },
+    line('M36 68h28', 1.2),
+  ],
+  flare: [
+    { d: 'M72 26c-2-12 6-16 10-22 2 10 4 16-6 26Z', f: 'f' },
+    { s: 'f', sw: 2, d: 'M86 16l6-2M88 26l6 2M80 6l2-4' },
+    { d: 'M30 80l34-50 6 4-34 50Z', f: 'b' },
+    { d: 'M64 30l6 4 4-6-6-4Z', f: 'm' },
+    line('M40 70l6 4M46 61l6 4', 1.2),
+  ],
+  rope: [
+    { d: ellipse(50, 60, 32, 22), s: 'line', sw: 9 },
+    { d: ellipse(50, 60, 32, 22), s: 'w', sw: 6 },
+    { d: ellipse(50, 56, 22, 14), s: 'line', sw: 9 },
+    { d: ellipse(50, 56, 22, 14), s: 'w', sw: 6 },
+    { d: 'M72 46c10-10 16-22 12-34', s: 'line', sw: 9 },
+    { d: 'M72 46c10-10 16-22 12-34', s: 'w', sw: 6 },
+    line('M26 52l4 4M40 76l2-5M64 76l-2-5M76 58l-5 1', 1),
+  ],
+  lockpicks: [
+    { d: 'M30 60L24 22l-5 3M42 60l-2-40-4 2M54 60l4-38 3-3 2 3 3-3M66 60l8-34 4 2', s: 'm', sw: 2.6 },
+    { d: 'M14 58h72v26H14Z', f: 'k' },
+    line('M14 64h72', 1.2),
+    { d: 'M76 70h14v6H76Z', f: 'k' },
+  ],
+  toolkit: [
+    { d: 'M38 44V34h24v10', s: 'line', sw: 4 },
+    { d: 'M62 46l12-24c2-4 8-4 10 0l-4 2-2 4 4 2 4-2c0 6-4 8-8 6l-8 14Z', f: 'm' },
+    { d: 'M14 44h72v8H14Z', f: 'b' },
+    { d: 'M16 52h68v30H16Z', f: 'b' },
+    { d: rect(44, 48, 12, 8), f: 'm' },
+    line('M16 62h68', 1.2),
+  ],
+  binoculars: [
+    { d: 'M22 30h18v12H22Z', f: 'm' },
+    { d: 'M60 30h18v12H60Z', f: 'm' },
+    { d: 'M16 40h28v40H16Z', f: 'd' },
+    { d: 'M56 40h28v40H56Z', f: 'd' },
+    { d: 'M44 48h12v10H44Z', f: 'm' },
+    { d: 'M46 34h8v14h-8Z', f: 'm' },
+    { d: ellipse(30, 82, 13, 4), f: 'g' },
+    { d: ellipse(70, 82, 13, 4), f: 'g' },
+  ],
+  compass: [
+    { d: rect(45, 8, 10, 10), f: 'm' },
+    { d: circle(50, 52, 34), f: 'm' },
+    { d: circle(50, 52, 27), f: 'p' },
+    line('M50 27v5M50 72v5M25 52h5M70 52h5', 1.4),
+    { d: 'M50 30l6 22H44Z', f: 'b' },
+    { d: 'M50 74l6-22H44Z', f: 'd' },
+    { d: circle(50, 52, 2.5), f: 'm' },
+  ],
+  magnifier: [
+    { d: 'M56 54l28 28-6 6-28-28Z', f: 'w' },
+    { d: 'M54 52l6 6-4 4-6-6Z', f: 'm' },
+    { d: `${circle(40, 38, 26)}${circle(40, 38, 20)}`, f: 'm', eo: true },
+    { d: circle(40, 38, 20), f: 'g' },
+    line('M28 28c4-6 10-8 14-8', 1.4),
+  ],
+  shovel: [
+    { d: 'M40 6h20v10H40Z', f: 'w', eo: true },
+    { d: rect(44, 9, 12, 4), f: 'd' },
+    { d: 'M47 16h6v46h-6Z', f: 'w' },
+    { d: 'M36 60h28v18c0 10-8 16-14 18-6-2-14-8-14-18Z', f: 'm' },
+    line('M50 64v24', 1.2),
+  ],
+  camera: [
+    { d: 'M66 24h14v10H66Z', f: 'm' },
+    { d: 'M22 28h8v6h-8Z', f: 'm' },
+    { d: 'M14 34h72v48H14Z', f: 'd' },
+    line('M14 42h72M14 74h72', 1.2),
+    { d: circle(50, 58, 16), f: 'm' },
+    { d: circle(50, 58, 10), f: 'g' },
+    { d: circle(46, 54, 3), f: 'p' },
+  ],
+  notebook: [
+    { d: 'M24 14h52v74H24Z', f: 'k' },
+    { d: 'M76 18h4v66h-4Z', f: 'p' },
+    { d: 'M24 14h8v74h-8Z', f: 'd' },
+    { d: 'M64 14v74', s: 'd', sw: 3 },
+    { d: 'M68 92l18-42 4 2-18 42Z', f: 'c' },
+    { d: 'M68 92l-2 6 6-4Z', f: 'd' },
+  ],
+  book: [
+    { d: 'M78 22h6v62h-6Z', f: 'p' },
+    line('M80 26v54', 1),
+    { d: 'M18 18h60v68H18Z', f: 'k' },
+    { d: 'M18 18h8v68h-8Z', f: 'd' },
+    { d: 'M48 34l8 18-8 18-8-18Z', f: 'm' },
+    { d: circle(48, 52, 4), f: 'd' },
+    { d: 'M70 18h8v8h-8ZM70 78h8v8h-8Z', f: 'm' },
+    { d: 'M72 46h14v12H72Z', f: 'm' },
+  ],
+  medkit: [
+    { d: 'M38 34V24h24v10', s: 'line', sw: 5 },
+    { d: 'M14 34h72v50H14Z', f: 'p' },
+    line('M14 42h72', 1.2),
+    { d: 'M44 46h12v10h10v12H56v10H44V68H34V56h10Z', f: 'b' },
+  ],
+  bandage: [
+    { d: 'M58 42h32l-2 6 2 6-2 6 2 6H58Z', f: 'p' },
+    line('M62 48h22M62 54h22M62 60h22', 0.8),
+    { d: `${circle(40, 54, 24)}${circle(40, 54, 8)}`, f: 'p', eo: true },
+    line(`${circle(40, 54, 16)}`, 1),
+    { d: circle(40, 54, 8), f: 'd' },
+    { d: 'M24 84h30', s: 'm', sw: 2.4 },
+    { d: 'M24 84c-6 0-6 6 0 6h24', s: 'm', sw: 2 },
+  ],
+  vial: [
+    { d: 'M43 10h14v12H43Z', f: 'w' },
+    { d: 'M44 22h12v14H44Z', f: 'g' },
+    { d: 'M38 36h24v48c0 4-24 4-24 0Z', f: 'g' },
+    { d: 'M38 58h24v26c0 4-24 4-24 0Z', f: 'c' },
+    { d: 'M40 60h20v14H40Z', f: 'p' },
+    line('M44 65h12M44 69h8', 1),
+  ],
+  flask: [
+    { d: 'M42 18h16v12H42Z', f: 'm' },
+    { d: 'M28 30h44c4 0 6 4 6 8v42c0 6-4 8-8 8H30c-4 0-8-2-8-8V38c0-4 2-8 6-8Z', f: 'm' },
+    { d: 'M30 40h40v38H30Z', f: 'k' },
+    line('M36 48c6-4 22-4 28 0', 1.2),
+  ],
+  map: [
+    { d: 'M14 24l24-6 24 6 24-6v60l-24 6-24-6-24 6Z', f: 'p' },
+    line('M38 18v60M62 24v60', 1.2),
+    { d: 'M22 70c8-20 22-10 28-24 6-12 20-4 26-16', s: 'b', sw: 2, dash: true },
+    { d: 'M72 26l8 8M80 26l-8 8', s: 'b', sw: 2.4 },
+    { d: 'M24 36l4-6 4 6M27 32l4 6 4-6', s: 'line', sw: 1 },
+  ],
+  key: [
+    { d: `${circle(28, 72, 14)}${circle(28, 72, 7)}`, f: 'm', eo: true },
+    { d: 'M36 62l44-44 4 4-44 44Z', f: 'm' },
+    { d: 'M72 30l8 8-4 4-8-8Z', f: 'm' },
+    { d: 'M62 40l6 6-4 4-6-6Z', f: 'm' },
+    { d: 'M20 64c4-2 8-2 10 0', s: 'line', sw: 1 },
+  ],
+  amulet: [
+    { d: 'M28 8c0 26 44 26 44 0', s: 'm', sw: 2, dash: true },
+    { d: 'M46 32h8v8h-8Z', f: 'm' },
+    { d: circle(50, 62, 24), f: 'm' },
+    { d: circle(50, 62, 18), f: 'd' },
+    { d: 'M34 62c8-12 24-12 32 0-8 12-24 12-32 0Z', f: 'p' },
+    { d: circle(50, 62, 5), f: 'f' },
+    { d: circle(50, 62, 2), f: 'd' },
+  ],
+  cross: [
+    { d: 'M44 12h12v22h16v12H56v44H44V46H28V34h16Z', f: 'm' },
+    line('M50 16v70M32 40h36', 0.8),
+  ],
+  chalk: [
+    { d: ellipse(50, 84, 40, 9), s: 'p', sw: 2, dash: true },
+    { d: 'M26 50c-2-14 6-20 10-22l6-6h16l6 6c4 2 12 8 10 22l-2 30c0 6-44 6-44 0Z', f: 'p' },
+    { d: 'M40 24c6 4 14 4 20 0', s: 'line', sw: 3 },
+    { d: 'M62 74l24-14 4 6-24 14Z', f: 'p' },
+    line('M40 52c6 2 12 2 20 0M38 62c8 2 16 2 24 0', 1),
+  ],
+  watch: [
+    { d: circle(50, 12, 6), s: 'm', sw: 3 },
+    { d: 'M45 18h10v8H45Z', f: 'm' },
+    { d: circle(50, 56, 30), f: 'm' },
+    { d: circle(50, 56, 24), f: 'p' },
+    line('M50 34v4M50 74v4M28 56h4M68 56h4', 1.2),
+    { d: 'M50 56V40M50 56l12 6', s: 'd', sw: 2.4 },
+    { d: circle(50, 56, 2), f: 'd' },
+  ],
+  backpack: [
+    { d: 'M42 18c0-10 16-10 16 0', s: 'line', sw: 3 },
+    { d: 'M24 26c0-8 52-8 52 0v58c0 4-52 4-52 0Z', f: 'k' },
+    { d: 'M24 26c0-8 52-8 52 0v24c0 6-52 6-52 0Z', f: 'w' },
+    { d: 'M36 46h6v12h-6ZM58 46h6v12h-6Z', f: 'm' },
+    { d: 'M32 62h36v18H32Z', f: 'k' },
+    line('M32 68h36', 1),
+  ],
+  dynamite: [
+    { d: 'M50 22c4-8 12-8 14-2 2 6 10 6 12-2', s: 'line', sw: 2 },
+    { d: 'M76 18l4-6 2 5 5-2-4 5 5 3-6 0Z', f: 'f' },
+    { d: 'M24 40h16v46H24Z', f: 'b' },
+    { d: 'M42 34h16v52H42Z', f: 'b' },
+    { d: 'M60 40h16v46H60Z', f: 'b' },
+    { d: 'M22 58h56v8H22Z', f: 'd' },
+    { d: 'M48 34v-8', s: 'line', sw: 2 },
+  ],
+} satisfies Record<string, Shape[]>
+
+export type ArtId = keyof typeof ARTS
+export const ART_IDS = Object.keys(ARTS) as ArtId[]

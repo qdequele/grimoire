@@ -1,6 +1,6 @@
 // Game screen UI patches (applied by extract-engine.mjs after the dice patches; each must match
-// exactly once): the scene flow's choices, the scene's documents, the ambiance screen's preview,
-// investigator sheets, a toolbar that stays on top. The new engine code is scripts/engine-ui/ui.engine.js
+// exactly once): the scene flow's choices, the scene's documents and items, the ambiance screen's
+// preview, investigator sheets and items (combat included), a toolbar that stays on top. The new engine code is scripts/engine-ui/ui.engine.js
 // (inserted before the first route()), its styles scripts/engine-ui/ui.css (appended to legacy.css).
 //
 // Like engine-dice.mjs, the patches target the engine as the earlier patches leave it, which is the
@@ -24,11 +24,37 @@ export const UI_PATCHES = [
     '${fx.map(f=>`<button class="chip sfx" ${f.attr} title="Jouer le son">◗ ${esc(f.n)}</button>`).join("")}</div>`;}else if(scrPrevHTML(s))h+=`<div class="chips scene-snd">${scrPrevHTML(s)}</div>`;',
     'the ambiance screen preview, also for scenes without sounds',
   ],
-  ['if(s.secsFirst)h+=secHTML(s.secs);', 'h+=hdRowHTML(s);if(s.secsFirst)h+=secHTML(s.secs);', 'the scene\'s documents under its sounds'],
+  ['if(s.secsFirst)h+=secHTML(s.secs);', 'h+=hdRowHTML(s)+itRowHTML(s);if(s.secsFirst)h+=secHTML(s.secs);', 'the scene\'s documents and items under its sounds'],
   [
     '<span class="nm">${esc(b.n)}</span>',
     '<button type="button" class="nm nm-sheet" data-sheet="${esc(s.cid)}" title="Fiche de présentation">${esc(b.n)}</button>',
     'an investigator\'s name opens their sheet',
+  ],
+  [
+    'return {esq:tot("Esquive"),atk:at};}',
+    'return {esq:tot("Esquive"),atk:withItemAttacks(c,at,imp)};}',
+    'an investigator\'s weapon cards are among their attacks',
+  ],
+  [
+    'if(t.dataset.dmg){doFormula(a[2],`${r.name} · ${a[0]}`);return;}',
+    'if(t.dataset.dmg){doFormula(a[2],`${r.name} · ${a[0]}`);return;}if(!itemFire(a))return;',
+    'firing a weapon card spends a round; an empty one doesn\'t fire',
+  ],
+  ['if(EMPALE.test(a[0]))', 'if(a[4]||EMPALE.test(a[0]))', 'weapon cards say themselves whether they impale'],
+  [
+    'const x=d100(B,M),L=level(x.r,a[1]);',
+    'const x=d100(B,M+itemPen(a)),L=itemJam(a,x.r)||level(x.r,a[1]);',
+    "a weapon's condition: penalty die on the attack, and a firearm jams from its malfunction value",
+  ],
+  [
+    'else{const f=rollFormula(a[2]);dmg=Math.max(0,f.tot);dd=f.det;}}',
+    'else{const f=rollFormula(a[2]);dmg=Math.max(0,f.tot);dd=f.det;}}if(hit)({dmg,dd}=itemDmg(a,dmg,dd));',
+    'a damaged weapon deals half damage',
+  ],
+  [
+    '<button class="a" data-atk="${i}" data-j="${j}">${esc(a[0])} ${a[1]} %</button>',
+    '<button class="a" data-atk="${i}" data-j="${j}">${esc(a[0])}${a[5]!=null?`<small class="itm-ammo">${esc(a[5])}/${esc(a[6])}</small>`:""}${a[7]?`<small class="itm-cond">${esc(a[7].label)}</small>`:""} ${a[1]} %</button>',
+    'rounds left and condition of a weapon card, on its attack button',
   ],
   [
     'const openOver=()=>["#npcDlg","#pick","#saveDlg","#gmMenu"]',

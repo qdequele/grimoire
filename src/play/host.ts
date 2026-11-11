@@ -24,6 +24,8 @@ export interface EngineGlobals {
   NPC_WORDS: string[]
   /** The story's documents, by id (see LegacyHandout). */
   HANDOUTS: Record<string, unknown>
+  /** The story's items, by id (see LegacyItem): listed in their scenes, given through PlayHost.giveItem. */
+  ITEMS: Record<string, unknown>
   // Rules content (private when available, neutral fallbacks otherwise)
   I18N: { ui: Record<string, string>; pat: Array<[string, string]>; sk: Record<string, string>; data: Record<string, unknown> }
   RULES: unknown[]
@@ -62,6 +64,29 @@ export interface EngineApi {
   setPhotos(p: Record<string, string>): void
   /** A roll made on a phone, as a Journal line (plain text, escaped by the engine) under Dés, Tests or Santé mentale. Saves. */
   logRoll(text: string, kind: 'de' | 'test' | 'san'): void
+  /** Account investigators' cards (src/items), by character id (every account investigator has a key). Not saved in the state. Re-renders. */
+  setItems(items: Record<string, EngineItem[]>): void
+}
+
+/** A held card as the engine shows it (investigator cards, combat). */
+export interface EngineItem {
+  id: string
+  /** Name, in the reader's language for catalogue cards. */
+  n: string
+  /** Kind (ItemKind). */
+  k: string
+  /** Uses left, and how many a full card holds (absent: none). */
+  uses?: number
+  cap?: number
+  /**
+   * A weapon: skill id, the investigator's value in it, damage, adds the damage bonus, impales, and
+   * its condition's effects (c, absent when clean): penalty dice, damage taken off and halved, the
+   * roll that jams it, out of order; its label for the attack button and the Journal.
+   */
+  w?: {
+    sk: string; v: number; dmg: string; db: boolean; imp: boolean
+    c?: { label: string; pen: number; minus: number; half: boolean; jam?: number; broken: boolean }
+  }
 }
 
 export interface PlayHost {
@@ -84,6 +109,12 @@ export interface PlayHost {
   showHandout?: (handoutId: string) => boolean
   /** Open an account investigator's full sheet above the game; false if the id isn't one. */
   openSheet?: (characterId: string) => boolean
+  /** Open an account investigator's item cards above the game; false if the id isn't one. */
+  openItems?: (characterId: string) => boolean
+  /** A use of a held card spent (−1, a shot in combat) or regained. */
+  useItem?: (itemId: string, delta: number) => void
+  /** Give one of the story's items (its id in the story) to an investigator: a dialog above the game. */
+  giveItem?: (storyItemId: string) => boolean
   /** The narrator's text generation (what claude.use("sample") gave in claude.ai). */
   sample?: (messages: SampleMessage[], opts?: SampleOptions) => Promise<{ text: string }>
 }

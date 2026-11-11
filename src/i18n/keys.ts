@@ -8,6 +8,9 @@ import {
 import { PLACE_LABEL, PRESET_LABEL, TIME_LABEL } from '@/screen/ambiance'
 import { LEVEL_LABEL } from '@/companion/rolls'
 import { KIND_LABEL, KIND_PLACEHOLDER, STATUS_LABEL } from '@/feedback/kinds'
+import { catalogTexts } from '@/items/catalog'
+import { CONDITION_LABEL, KIND_LABEL as ITEM_KIND_LABEL, UNIT_ONE, USE_UNITS } from '@/items/item'
+import { DRAFT_PROBLEMS } from '@/items/text'
 
 /** Texts that reach t() from data rather than from a t('…') literal in the code. */
 export function dataKeys(): string[] {
@@ -60,6 +63,10 @@ export function dataKeys(): string[] {
     'Lanceur de dés', 'Créer un investigateur', 'Fiche vierge', 'Scénarios',
     'Blessure grave', 'Inconscient', 'Mourant', 'Folie passagère', 'Folie durable',
     'Mouvement', 'Impact', 'Carrure', 'Arme', 'Valeur', 'Dégâts', 'Portée', 'Attaques', 'Munitions',
+    // Items (src/items/): the catalogue's cards, kinds, units ("{n} balle" / "{n} balles"), the new-card form's messages.
+    ...catalogTexts(), ...Object.values(ITEM_KIND_LABEL), ...USE_UNITS,
+    ...USE_UNITS.flatMap((u) => [`{n} ${UNIT_ONE[u]}`, `{n} ${u}`]),
+    ...DRAFT_PROBLEMS, 'Objets', ...Object.values(CONDITION_LABEL),
   ].filter(Boolean)
 }
 

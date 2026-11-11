@@ -1,4 +1,4 @@
-import { Dices, FileText, ScrollText, UserRound } from 'lucide-react'
+import { Dices, FileText, Layers, ScrollText, UserRound } from 'lucide-react'
 import type { ReactNode } from 'react'
 import { Link } from 'react-router'
 import { useT } from '@/i18n/t'
@@ -42,6 +42,9 @@ export function ToolsHub({ lang }: { lang: Lang }) {
         </ToolCard>
         <ToolCard kind="sheet" lang={lang} icon={<FileText />} title={t('Fiche d’investigateur vierge')}>
           {t('Deux pages A4 à remplir au crayon : caractéristiques, toutes les compétences avec leur valeur de base, armes, profil.')}
+        </ToolCard>
+        <ToolCard kind="cards" lang={lang} icon={<Layers />} title={t('Cartes d’objets')}>
+          {t('Près de cent objets des années 1920 en cartes illustrées, avec leurs règles : à imprimer neuf par page, ou à télécharger une par une.')}
         </ToolCard>
         <ToolCard kind="scenarios" lang={lang} icon={<ScrollText />} title={t('Scénarios gratuits')}>
           {t('Des histoires originales, complètes et sous licence libre, à lire, imprimer ou jouer dans Grimoire.')}

@@ -23,6 +23,7 @@ the-silent-light/
 | `acts` | yes | Ordered acts, each with ordered scenes. |
 | `npcs` | | People and creatures, with optional combat stats. |
 | `handouts` | | Documents given to players (text and/or image). |
+| `items` | | Objects the investigators find and keep, given as cards (weapons, keys, tools…). |
 | `pregens` | | Pre-generated investigators. |
 | `knowledge` | | "Who knows what" table: which skill helps with which need. |
 | `trackers` | | Counters shown in the side panel (ritual progress, nights, turns). |
@@ -69,6 +70,7 @@ A **scene** is one screen in the app.
 | `notes` | Extra reference blocks (`{ title, items[] }`) that don't fit a step: room contents, timelines. |
 | `npcs` | NPC ids shown in the "Scene NPCs" panel. |
 | `handouts` | Handout ids available in this scene. |
+| `items` | Item ids found in this scene: the keeper gives them from there. |
 | `rolls` | Quick roll buttons not tied to a step (damage, SAN). |
 | `ambience` | Up to 3 sound ids, played together as a loop. |
 | `sfx` | Sound-effect buttons for this scene. |
@@ -216,7 +218,7 @@ All are optional. Without `preset`, the app picks one from the scene's `ambience
 
 Everything except `id` and `name` is optional: a talking-only NPC can be just `name`, `role` and `knows`. Anything with `hp` and `attacks` can be dropped into combat.
 
-## 6. Handouts, pregens, knowledge, trackers
+## 6. Handouts, items, pregens, knowledge, trackers
 
 - **NPC table** (`npcTable`, story level): `{ ref, note, rows }`, one row per character as shown in the "PNJ et monstres" panel: name, short description, HP, DEX, attack, defence.
 - **Default party** (`defaultParty`): pregen ids suggested for a quick start.
@@ -225,6 +227,16 @@ Everything except `id` and `name` is optional: a talking-only NPC can be just `n
 
 
 - **Handout**: `{ id, title, text?, image?, scene? }` — shown to players full screen.
+- **Item**: `{ id, name, kind, art?, text?, weapon?, uses?, unit?, ammo?, bonus?, scene? }` — an object drawn as a card. The keeper gives it to an investigator during play; it then stays with them from one story to the next and shows on their player's phone.
+  - `kind`: `weapon`, `ammo`, `light`, `tool`, `medical`, `document`, `occult`, `gear` or `key` (the card's colour and default picture). `art` picks another of the app's drawings (see the schema's list).
+  - `name` (≤ 60 characters, no `< > & "`) and `text` (≤ 400, plain text printed on the card) are in the story's language.
+  - `weapon`: `{ skill, damage, db?, range?, rate?, malfunction?, impale? }`. `skill` is `firearms-handgun`, `firearms-rifle`, `fighting-brawl` or `throw`; `damage` is dice (`1D10`, `2D6+4`, bands by range `4D6/2D6/1D6`); `db` adds the wielder's damage bonus. A weapon card joins the investigator's attacks in the combat helper.
+  - `uses` (1–99) and `unit` (`balles`, `cartouches`, `charges`, `utilisations`, `doses`, `allumettes`, `bougies`, `plaques`, `gorgées`, `heures`): what the players spend (rounds in a weapon, doses, matches). `ammo` is a calibre: a weapon reloads from an `ammo` item with the same one.
+  - `bonus`: `{ skill, note? }`, a skill the item helps with; the keeper decides by how much.
+
+```json
+{ "id": "oil-store-key", "name": "Oil store key", "kind": "key", "text": "Opens the padlock of the oil store at the foot of the tower.", "scene": "widow" }
+```
 - **Pregen**: name, occupation, characteristics, hp/mp/san/luck, `skills` (id → value), attacks, background, important people.
 - **Knowledge**: `{ need, best, backup }` rows for the "Who knows what" tab.
 - **Tracker**: `{ id, label, max, unit, step, timer, help, scenes }` — e.g. a ritual needing 8 MP, a creature climbing 5 turns of stairs. The game screen has one tracker panel, shown for the whole game: it holds the tracker with id `ritual`, else the story's first tracker, so put the one the keeper needs at hand first. Other trackers are keeper reference for now, and `scenes` isn't used yet.

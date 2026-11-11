@@ -895,3 +895,146 @@ describe('companion: investigator photos', () => {
     expect(payload).toMatchObject({ characterId: g.ids[0] })
   })
 })
+
+describe('companion: items', () => {
+  const revolver: Json = { name: 'Revolver', kind: 'weapon', uses: 6, ammo: '.38', weapon: { skill: 'firearms-handgun', damage: '1D10' } }
+  const box: Json = { name: 'Box of .38', kind: 'ammo', uses: 20, ammo: '.38' }
+  const rope: Json = { name: 'Rope', kind: 'tool' }
+  const give = (characterId: string, card: Json, uses: number | null) =>
+    alice.client.from('character_items').insert({ character_id: characterId, card, uses }).select('id').single()
+
+  it('the keeper gives cards; only they read them; companion_open lists the party members\'', async () => {
+    const g = await newGame(alice, [{ name: 'One' }, { name: 'Two' }])
+    const gun = await give(g.ids[0], revolver, 6)
+    expect(gun.error).toBeNull()
+    expect((await give(g.ids[1], rope, null)).error).toBeNull()
+    expect((await bob.client.from('character_items').select('id')).data).toEqual([])
+    // Not on someone else's investigator.
+    expect((await alice.client.from('character_items').insert({ character_id: b.characterId, card: rope })).error).not.toBeNull()
+
+    const l = await link(alice, g.gameId)
+    const opened = (await anon.rpc('companion_open', { p_token: l.token })).data as unknown as { items: Array<{ id: string; characterId: string; uses: number | null; card: { name: string } }> }
+    expect(opened.items).toHaveLength(2)
+    expect(opened.items.find((i) => i.id === gun.data!.id)).toMatchObject({ characterId: g.ids[0], uses: 6, card: { name: 'Revolver' } })
+  })
+
+  it('cards and uses are checked: bad cards, uses out of bounds, uses on a card without any', async () => {
+    const g = await newGame(alice, [{ name: 'One' }])
+    const bad: Json[] = [
+      { name: '', kind: 'tool' },
+      { name: '<b>x</b>', kind: 'tool' },
+      { name: 'X', kind: 'spell' },
+      { name: 'X', kind: 'tool', uses: 0 },
+      { name: 'X', kind: 'tool', uses: 'six' },
+      { name: 'X'.repeat(61), kind: 'tool' },
+      { name: 'X', kind: 'tool', text: 'x'.repeat(4000) },
+      [],
+    ]
+    for (const card of bad) expect((await give(g.ids[0], card, null)).error, JSON.stringify(card).slice(0, 40)).not.toBeNull()
+    expect((await give(g.ids[0], revolver, 7)).error).not.toBeNull()
+    expect((await give(g.ids[0], revolver, null)).error).not.toBeNull()
+    expect((await give(g.ids[0], rope, 3)).error).not.toBeNull()
+  })
+
+  it('a phone spends and regains uses within the card; a personal link only its own', async () => {
+    const g = await newGame(alice, [{ name: 'One' }, { name: 'Two' }])
+    const gun = (await give(g.ids[0], revolver, 6)).data!.id
+    const other = (await give(g.ids[1], revolver, 6)).data!.id
+    const ropeId = (await give(g.ids[0], rope, null)).data!.id
+    const l = await link(alice, g.gameId, g.ids[0])
+    const use = (p_item: string, p_delta: number) => anon.rpc('companion_use_item', { p_token: l.token, p_item, p_delta })
+    expect((await use(gun, -1)).data).toBe(5)
+    expect((await use(gun, -10)).data).toBe(0)
+    expect((await use(gun, 50)).data).toBe(6)
+    expect((await use(gun, 100)).error?.message).toContain('bad_value')
+    expect((await use(ropeId, -1)).error?.message).toContain('bad_value')
+    expect((await use(other, -1)).error?.message).toContain('not_in_game')
+    // Someone else's item, or an item outside the game.
+    const outside = (await newGame(alice, [{ name: 'Out' }])).ids[0]
+    const outsideItem = (await give(outside, revolver, 6)).data!.id
+    expect((await use(outsideItem, -1)).error?.message).toContain('not_in_game')
+    await alice.client.rpc('revoke_table_link', { p_link: l.id })
+    expect((await use(gun, -1)).error?.message).toContain('link_invalid')
+  })
+
+  it('reloading moves rounds from the fullest matching box, up to the weapon\'s capacity', async () => {
+    const g = await newGame(alice, [{ name: 'One' }])
+    const gun = (await give(g.ids[0], revolver, 1)).data!.id
+    const small = (await give(g.ids[0], box, 3)).data!.id
+    const big = (await give(g.ids[0], box, 12)).data!.id
+    const other = (await give(g.ids[0], { name: 'Shells', kind: 'ammo', uses: 10, ammo: '12' }, 10)).data!.id
+    const l = await link(alice, g.gameId)
+    expect((await anon.rpc('companion_reload_item', { p_token: l.token, p_weapon: gun })).data).toBe(5)
+    const rows = (await alice.client.from('character_items').select('id, uses')).data!
+    const usesOf = (id: string) => rows.find((r) => r.id === id)?.uses
+    expect([usesOf(gun), usesOf(big), usesOf(small), usesOf(other)]).toEqual([6, 7, 3, 10])
+    // Full: nothing moves. Not a weapon: refused.
+    expect((await anon.rpc('companion_reload_item', { p_token: l.token, p_weapon: gun })).data).toBe(0)
+    expect((await anon.rpc('companion_reload_item', { p_token: l.token, p_weapon: big })).error?.message).toContain('bad_value')
+    // The keeper's own versions.
+    expect((await alice.client.rpc('use_item', { p_item: gun, p_delta: -6 })).data).toBe(0)
+    expect((await alice.client.rpc('reload_item', { p_weapon: gun })).data).toBe(6)
+    expect((await bob.client.rpc('use_item', { p_item: gun, p_delta: -1 })).error).not.toBeNull()
+  })
+
+  it("a weapon's condition: set by the keeper, weapons only, known values only, shown to phones", async () => {
+    const g = await newGame(alice, [{ name: 'One' }])
+    const gun = (await give(g.ids[0], revolver, 6)).data!.id
+    const ropeId = (await give(g.ids[0], rope, null)).data!.id
+    expect((await alice.client.from('character_items').update({ condition: 'rusty' }).eq('id', gun)).error).toBeNull()
+    expect((await alice.client.from('character_items').update({ condition: 'shiny' }).eq('id', gun)).error).not.toBeNull()
+    expect((await alice.client.from('character_items').update({ condition: 'dirty' }).eq('id', ropeId)).error).not.toBeNull()
+    const l = await link(alice, g.gameId)
+    const opened = (await anon.rpc('companion_open', { p_token: l.token })).data as unknown as { items: Array<{ id: string; condition: string }> }
+    expect(opened.items.find((i) => i.id === gun)?.condition).toBe('rusty')
+    expect(opened.items.find((i) => i.id === ropeId)?.condition).toBe('clean')
+    // Phones can't change it: no RPC does, and they can't write the table.
+    expect((await anon.from('character_items').update({ condition: 'clean' }).eq('id', gun)).error ?? 'no rows').toBeTruthy()
+    expect((await alice.client.from('character_items').select('condition').eq('id', gun).single()).data?.condition).toBe('rusty')
+  })
+
+  it('a document card carries up to 8,000 characters of text, and phones get it', async () => {
+    const g = await newGame(alice, [{ name: 'One' }])
+    const doc = (n: number): Json => ({ name: 'Letter', kind: 'document', document: 'é'.repeat(n) })
+    const ok = await give(g.ids[0], doc(8000), null)
+    expect(ok.error).toBeNull()
+    expect((await give(g.ids[0], doc(8001), null)).error).not.toBeNull()
+    const l = await link(alice, g.gameId)
+    const opened = (await anon.rpc('companion_open', { p_token: l.token })).data as unknown as { items: Array<{ id: string; card: { document?: string } }> }
+    expect(opened.items.find((i) => i.id === ok.data!.id)?.card.document).toHaveLength(8000)
+  })
+
+  it('at most 60 cards per investigator', async () => {
+    const g = await newGame(alice, [{ name: 'One' }])
+    const rows = Array.from({ length: 60 }, () => ({ character_id: g.ids[0], card: rope }))
+    expect((await alice.client.from('character_items').insert(rows)).error).toBeNull()
+    expect((await give(g.ids[0], rope, null)).error?.message).toContain('too_many_items')
+  })
+
+  it("anonymous visitors can't read or write items, nor call the internals", async () => {
+    const g = await newGame(alice, [{ name: 'One' }])
+    const gun = (await give(g.ids[0], revolver, 6)).data!.id
+    expect((await anon.from('character_items').select('id')).data ?? []).toEqual([])
+    expect((await anon.from('character_items').insert({ character_id: g.ids[0], card: rope })).error).not.toBeNull()
+    expect((await anon.rpc('use_item', { p_item: gun, p_delta: -1 })).error).not.toBeNull()
+    for (const fn of ['item_add_uses', 'item_reload', 'companion_item'] as const) {
+      const r = await anon.rpc(fn as 'use_item', {} as never)
+      expect(r.error, fn).not.toBeNull()
+    }
+  })
+
+  it("an item change is broadcast on the game's topic", async () => {
+    const g = await newGame(alice, [{ name: 'One' }])
+    const gun = (await give(g.ids[0], revolver, 6)).data!.id
+    const l = await link(alice, g.gameId)
+    const channel = (await alice.client.from('games').select('channel').eq('id', g.gameId).single()).data!.channel
+    const payload = await waitFor<Record<string, unknown>>(
+      (resolve) => listen(channel, 'items', (p) => resolve(p as Record<string, unknown>)),
+      async () => {
+        const { error } = await anon.rpc('companion_use_item', { p_token: l.token, p_item: gun, p_delta: -1 })
+        expect(error).toBeNull()
+      },
+    )
+    expect(payload).toMatchObject({ characterId: g.ids[0] })
+  })
+})
