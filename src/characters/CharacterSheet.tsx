@@ -3,8 +3,6 @@
 // keeper clicks an investigator's name there.
 import type { ReactNode } from 'react'
 import { skillName, useT, type T } from '@/i18n/t'
-import { CharacterItems } from '@/items/CharacterItems'
-import type { StoryItemChoice } from '@/items/GiveItemDialog'
 import { cn } from '@/lib/utils'
 import { CHARACTERISTIC_INFO, CHARACTERISTICS, creditTier, PROFILE_FIELDS } from '@/rules/d100'
 import type { CharacterRow } from './api'
@@ -32,12 +30,15 @@ function Section({ title, children, className }: { title: string; children: Reac
   )
 }
 
-export function CharacterSheet({ character: c, actions, headingLevel = 1, storyItems }: {
+export function CharacterSheet({ character: c, actions, headingLevel = 1, items }: {
   character: CharacterRow
   actions?: ReactNode
   headingLevel?: 1 | 2
-  /** The items of the story being played, to give from (game screen). */
-  storyItems?: StoryItemChoice[]
+  /**
+   * The investigator's item cards (CharacterItems), at the end. Passed in rather than imported: the
+   * public investigator generator shows this sheet and must not pull in the Supabase client.
+   */
+  items?: ReactNode
 }) {
   const t = useT()
   const d = c.data
@@ -150,8 +151,12 @@ export function CharacterSheet({ character: c, actions, headingLevel = 1, storyI
         </div>
       </div>
 
-      <span className="double-rule" />
-      <CharacterItems characterId={c.id} characterName={d.name} storyItems={storyItems} />
+      {items && (
+        <>
+          <span className="double-rule" />
+          {items}
+        </>
+      )}
     </article>
   )
 }

@@ -3,6 +3,7 @@ import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
 import { useT } from '@/i18n/t'
+import { CharacterItems } from '@/items/CharacterItems'
 import { useCharacter } from './api'
 import { CharacterSheet } from './CharacterSheet'
 
@@ -24,6 +25,7 @@ export function CharacterSheetPage() {
       <Link to="/characters" className="text-sm text-muted-foreground hover:text-gold">← {t('Investigateurs')}</Link>
       <CharacterSheet
         character={character.data}
+        items={<CharacterItems characterId={character.data.id} characterName={character.data.data.name} />}
         actions={<Button render={<Link to={`/characters/${character.data.id}/edit`} />} nativeButton={false}>{t('Modifier')}</Button>}
       />
     </div>

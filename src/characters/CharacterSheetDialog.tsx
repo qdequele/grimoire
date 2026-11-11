@@ -2,6 +2,7 @@ import { Button } from '@/components/ui/button'
 import { Dialog, DialogClose, DialogContent, DialogDescription, DialogTitle } from '@/components/ui/dialog'
 import { Skeleton } from '@/components/ui/skeleton'
 import { useT } from '@/i18n/t'
+import { CharacterItems } from '@/items/CharacterItems'
 import type { StoryItemChoice } from '@/items/GiveItemDialog'
 import { useCharacter } from './api'
 import { CharacterSheet } from './CharacterSheet'
@@ -22,7 +23,7 @@ export function CharacterSheetDialog({ characterId, onOpenChange, storyItems }: 
           <CharacterSheet
             character={character.data}
             headingLevel={2}
-            storyItems={storyItems}
+            items={<CharacterItems characterId={character.data.id} characterName={character.data.data.name} storyItems={storyItems} />}
             actions={<DialogClose render={<Button variant="outline" />}>{t('Fermer')}</DialogClose>}
           />
         ) : (
