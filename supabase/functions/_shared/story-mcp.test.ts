@@ -185,6 +185,23 @@ describe('applyEdits', () => {
     expect(JSON.stringify(back)).not.toContain('"letter"')
   })
 
+  it('puts and removes items, scrubbing scene references, and keeps the story valid', () => {
+    const s = sample()
+    const sceneId = firstScene(s).id
+    const item = { id: 'crypt-key', name: 'Crypt key', kind: 'key', text: 'Cold iron.', scene: sceneId }
+    const out = applyEdits(s, [
+      { op: 'put_item', item },
+      { op: 'put_scene', scene: { ...firstScene(s), items: ['crypt-key'] } },
+    ]) as Record<string, any> // eslint-disable-line @typescript-eslint/no-explicit-any
+    expect(out.items).toEqual([item])
+    expect(storySummary(out).items).toEqual([{ id: 'crypt-key', name: 'Crypt key' }])
+    expect(validate(out), JSON.stringify(validate.errors)).toBe(true)
+    const back = applyEdits(out, [{ op: 'remove_item', id: 'crypt-key' }]) as Record<string, unknown>
+    expect(JSON.stringify(back)).not.toContain('crypt-key')
+    expect(back).not.toHaveProperty('items')
+    expect(() => applyEdits(s, [{ op: 'remove_item', id: 'nope' }])).toThrow(ToolError)
+  })
+
   it('sets the overview and the allowed meta fields only', () => {
     const s = sample()
     const out = applyEdits(s, [

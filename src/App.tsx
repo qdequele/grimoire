@@ -7,6 +7,7 @@ import { OAuthConsentPage } from '@/auth/OAuthConsentPage'
 import { CharacterSheetPage } from '@/characters/CharacterSheetPage'
 import { CharactersPage } from '@/characters/CharactersPage'
 import { PlayersPage } from '@/characters/PlayersPage'
+import { ItemsPage } from '@/items/ItemsPage'
 import { CharacterWizardPage } from '@/characters/wizard/CharacterWizardPage'
 import { Toaster } from '@/components/ui/sonner'
 import { CompanionLayout } from '@/companion/CompanionLayout'
@@ -14,6 +15,7 @@ import { NewInvestigatorPage } from '@/companion/NewInvestigatorPage'
 import { Notebook } from '@/companion/Notebook'
 import { PickPage } from '@/companion/PickPage'
 import { DiceTab } from '@/companion/Dice'
+import { ItemsTab } from '@/companion/ItemsTab'
 import { ProfileTab, SheetPage, SheetTab } from '@/companion/SheetPage'
 import { FeedbackInboxPage } from '@/feedback/FeedbackInboxPage'
 import { GamePage } from '@/games/GamePage'
@@ -51,6 +53,7 @@ const STORY_TABS = [
 const INVESTIGATOR_TABS = [
   { to: '/characters', label: 'Investigateurs', end: true },
   { to: '/characters/joueurs', label: 'Joueurs' },
+  { to: '/characters/objets', label: 'Objets' },
 ]
 
 const queryClient = new QueryClient({ defaultOptions: { queries: { staleTime: 30_000 } } })
@@ -75,7 +78,11 @@ const router = createBrowserRouter([
   { path: '/screen-preview', lazy: () => import('@/screen/ScreenPreview').then((m) => ({ Component: m.ScreenPreview })) },
   // Dev only (never in a production build): the drawn décors, from query params.
   ...(import.meta.env.DEV
-    ? [{ path: '/dev/places', lazy: () => import('@/screen/PlacesGallery').then((m) => ({ Component: m.PlacesGallery })) }]
+    ? [
+        { path: '/dev/places', lazy: () => import('@/screen/PlacesGallery').then((m) => ({ Component: m.PlacesGallery })) },
+        { path: '/dev/items', lazy: () => import('@/items/ItemsGallery').then((m) => ({ Component: m.ItemsGallery })) },
+        { path: '/dev/items/compare', lazy: () => import('@/items/ItemsCompare').then((m) => ({ Component: m.ItemsCompare })) },
+      ]
     : []),
   // Player companion: public pages opened from a table link (no account).
   {
@@ -90,6 +97,7 @@ const router = createBrowserRouter([
         children: [
           { index: true, element: <SheetTab /> },
           { path: 'des', element: <DiceTab /> },
+          { path: 'objets', element: <ItemsTab /> },
           { path: 'carnet', element: <Notebook /> },
           { path: 'profil', element: <ProfileTab /> },
         ],
@@ -118,6 +126,7 @@ const router = createBrowserRouter([
         children: [
           { index: true, element: <CharactersPage /> },
           { path: 'joueurs', element: <PlayersPage /> },
+          { path: 'objets', element: <ItemsPage /> },
         ],
       },
       { path: 'characters/new', element: <CharacterWizardPage /> },

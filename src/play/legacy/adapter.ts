@@ -3,7 +3,7 @@
 // any other story pack (sample story, AI imports), filling the gaps the legacy shapes need.
 import { engineAmbience, engineSfx } from './sounds.ts'
 import type {
-  LegacyBeast, LegacyChip, LegacyHandout, LegacyPregen, LegacyRitual, LegacyScenario, LegacyScene, LegacySec, LegacyStep,
+  LegacyBeast, LegacyChip, LegacyHandout, LegacyItem, LegacyPregen, LegacyRitual, LegacyScenario, LegacyScene, LegacySec, LegacyStep,
 } from './types.ts'
 
 // Loose view of story.json: the engine only needs these fields.
@@ -13,7 +13,7 @@ interface Note { title: string; items: string[] }
 interface Scene {
   id: string; title: string; ref?: string; lead?: string; readAloud?: string[]; notes?: Note[]; notesFirst?: boolean
   flow?: Step[]; notesAfter?: Note[]; callout?: string; npcTable?: boolean; npcs?: string[]; rolls?: Roll[]
-  ambience?: string[]; sfx?: string[]; handouts?: string[]
+  ambience?: string[]; sfx?: string[]; handouts?: string[]; items?: string[]
 }
 interface Npc {
   id: string; name: string; kind?: string; role?: string; description?: string; personality?: string
@@ -30,6 +30,8 @@ export interface StoryForEngine {
   acts: Array<{ id: string; title: string; scenes: Scene[] }>
   npcs?: Npc[]
   handouts?: Array<{ id: string; title: string; text?: string; image?: string; scene?: string }>
+  /** Items given as cards (src/items): the engine only lists them; the app reads the cards from the story. */
+  items?: Array<{ id: string; name: string; kind: string; scene?: string }>
   npcTable?: { ref?: string; note?: string; rows: string[][] }
   pregens?: Pregen[]
   defaultParty?: string[]
@@ -60,6 +62,8 @@ export interface EngineData {
   NPC_WORDS: string[]
   /** The story's documents (new-app addition): title (plain text), text (engine HTML), has a picture. */
   HANDOUTS: Record<string, LegacyHandout>
+  /** The story's items (new-app addition), by id. */
+  ITEMS: Record<string, LegacyItem>
 }
 
 const CODE_TO_CHAR_FR: Record<string, string> = {
@@ -122,6 +126,8 @@ export function storyToEngine(story: StoryForEngine, skillLabel: SkillLabel): En
   const npcNames = Object.fromEntries((story.npcs ?? []).map((n) => [n.id, n.name]))
   const handouts = story.handouts ?? []
   const handoutTitles = Object.fromEntries(handouts.map((h) => [h.id, h.title]))
+  const items = (story.items ?? []).filter((x) => x && typeof x.id === 'string' && typeof x.name === 'string')
+  const itemNames = Object.fromEntries(items.map((x) => [x.id, x.name]))
   const html = (t: string | undefined) => (t === undefined ? undefined : toHtml(t, sceneTitles, npcNames, handoutTitles))
   const secs = (n: Note[] | undefined): LegacySec[] => (n ?? []).map((x) => ({ h: x.title, ul: x.items.map((i) => html(i)!) }))
 
@@ -167,6 +173,7 @@ export function storyToEngine(story: StoryForEngine, skillLabel: SkillLabel): En
       lang: en ? 'en' : undefined,
       // The scene's documents: listed by the scene, or naming it as theirs.
       hd: [...new Set([...(s.handouts ?? []), ...handouts.filter((h) => h.scene === s.id).map((h) => h.id)])].filter((id) => handoutTitles[id] !== undefined),
+      it: [...new Set([...(s.items ?? []), ...items.filter((x) => x.scene === s.id).map((x) => x.id)])].filter((id) => itemNames[id] !== undefined),
     })
   }
 
@@ -231,6 +238,7 @@ export function storyToEngine(story: StoryForEngine, skillLabel: SkillLabel): En
     WHO_NOTE: html(story.knowledgeNote) ?? '',
     NPC_WORDS: fighters.map((n) => n.name.split(/[\s,(]/)[0]).filter((w) => w.length > 2),
     HANDOUTS: Object.fromEntries(handouts.map((h) => [h.id, clean({ t: h.title, txt: html(h.text), img: h.image ? true : undefined })])),
+    ITEMS: Object.fromEntries(items.map((x) => [x.id, { t: x.name, k: String(x.kind) }])),
   }
 }
 

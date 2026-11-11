@@ -43,6 +43,19 @@ export const SCREEN_PRESETS: readonly string[] = screenEnum('preset')
 /** Time of day on the ambiance screen (day, dusk, night). */
 export const SCREEN_TIMES: readonly string[] = screenEnum('time')
 
+/** The allowed values of an item field, read from spec/story.schema.json ($defs.item). */
+function itemEnum(path: string[]): string[] {
+  let v: unknown = (STORY_SCHEMA as { $defs?: { item?: unknown } }).$defs?.item
+  for (const k of path) v = v && typeof v === 'object' ? (v as Record<string, unknown>)[k] : undefined
+  const values = (v as { enum?: unknown } | undefined)?.enum
+  return Array.isArray(values) ? values.filter((x): x is string => typeof x === 'string') : []
+}
+/** Item kinds (weapon, ammo, light…), illustrations, weapon skills and use units. */
+export const ITEM_KINDS: readonly string[] = itemEnum(['properties', 'kind'])
+export const ITEM_ARTS: readonly string[] = itemEnum(['properties', 'art'])
+export const ITEM_WEAPON_SKILLS: readonly string[] = itemEnum(['properties', 'weapon', 'properties', 'skill'])
+export const ITEM_UNITS: readonly string[] = itemEnum(['properties', 'unit'])
+
 export interface DraftRoll {
   type: (typeof ROLL_TYPES)[number]
   options: string[]
@@ -128,6 +141,33 @@ export interface DraftHandout {
   image?: string
 }
 
+/** An object the investigators can find and keep (a card): every field present, "" / 0 / false = absent. */
+export interface DraftItem {
+  id: string
+  name: string
+  /** One of ITEM_KINDS. */
+  kind: string
+  /** One of ITEM_ARTS, "" = the kind's picture. */
+  art: string
+  text: string
+  /** Scene id where it is found, or "". */
+  scene: string
+  /** A weapon: its skill (ITEM_WEAPON_SKILLS) and damage dice; "" when it isn't one. */
+  weaponSkill: string
+  damage: string
+  addsDamageBonus: boolean
+  range: string
+  rate: string
+  /** Uses a full item holds (rounds, doses…), 0 = none, and what they count (ITEM_UNITS). */
+  uses: number
+  unit: string
+  /** Calibre: weapons reload from ammunition with the same one. */
+  ammo: string
+  /** A skill it helps with (id), and how, or "". */
+  helpsSkill: string
+  helpsNote: string
+}
+
 export interface DraftOverview {
   secret: string
   steps: string[]
@@ -147,6 +187,7 @@ export interface ImportDraft {
   acts: DraftAct[]
   npcs: DraftNpc[]
   handouts: DraftHandout[]
+  items: DraftItem[]
 }
 
 // ------------------------------------------------------------------ JSON Schema for the model
@@ -243,6 +284,24 @@ export function importDraftSchema(sounds: { ambience: string[]; sfx: string[] })
     acts: arr(obj({ id, title: str(), scenes: arr(scene) }), 'Acts found in THESE pages only.'),
     npcs: arr(npc, 'NPCs and creatures first described in THESE pages.'),
     handouts: arr(obj({ id, title: str(), text, scene: str('Scene id where found, or "".') })),
+    items: arr(obj({
+      id,
+      name: str('Short name printed on the card (max 60 characters, no < > & ").'),
+      kind: { enum: [...ITEM_KINDS] },
+      art: { enum: ['', ...ITEM_ARTS], description: 'Picture on the card, or "" for the kind\'s.' },
+      text: str('One or two plain sentences printed on the card: what it does or what is said about it (max 400 characters).'),
+      scene: str('Scene id where it is found, or "".'),
+      weaponSkill: { enum: ['', ...ITEM_WEAPON_SKILLS], description: 'For a weapon: the skill it is used with, else "".' },
+      damage: str('For a weapon: damage dice, e.g. "1D8", "2D6+4", else "".'),
+      addsDamageBonus: { type: 'boolean', description: 'Melee or thrown weapon that adds the wielder\'s damage bonus.' },
+      range: str('For a weapon, e.g. "15 m" or "contact", else "".'),
+      rate: str('Attacks per round, e.g. "1" or "1 (3)", else "".'),
+      uses: int('Uses a full item holds (rounds in a gun, doses, charges), or 0.'),
+      unit: { enum: ['', ...ITEM_UNITS], description: 'What the uses count, or "".' },
+      ammo: str('Calibre, e.g. ".38": a gun reloads from ammunition with the same one; else "".'),
+      helpsSkill: str('Skill id the item helps with, or "".'),
+      helpsNote: str('How it helps, e.g. "bonus die to climb down", or "".'),
+    }), 'Objects worth keeping: a key, a weapon found or given, a talisman, a lamp the story needs. Only those that matter to the story.'),
   })
 }
 
@@ -350,6 +409,40 @@ function npc(v: Json): DraftNpc | null {
   }
 }
 
+/** A draft item, from the draft's shape or story.json's (weapon {…}, bonus {…}); null without id, name or a known kind. */
+function item(v: Json): DraftItem | null {
+  const itemId = id(v.id)
+  // Card names are put in HTML by the game screen: the characters it would have to escape are dropped.
+  const name = text(v.name, 60).replace(/[<>&"]/g, '').trim()
+  const kind = oneOf(v.kind, ITEM_KINDS, '')
+  if (!itemId || !name || !kind) return null
+  const w = isObj(v.weapon) ? v.weapon : {}
+  const bonus = isObj(v.bonus) ? v.bonus : {}
+  const weaponSkill = oneOf(v.weaponSkill ?? w.skill, ITEM_WEAPON_SKILLS, '')
+  // The dice expression in what was written ("1d10 dmg" → "1D10", "4D6 / 2D6 / 1D6" → "4D6/2D6/1D6").
+  const dice = text(v.damage ?? w.damage, 40).toUpperCase().match(/\d*D\d+(?:\s*[+-]\s*\d*D?\d+)*(?:\s*\/\s*\d*D\d+(?:\s*[+-]\s*\d*D?\d+)*)*/)
+  const damage = dice ? dice[0].replace(/\s+/g, '').slice(0, 24) : ''
+  const uses = toInt(v.uses, 0, 99)
+  return {
+    id: itemId,
+    name,
+    kind,
+    art: oneOf(v.art, ITEM_ARTS, ''),
+    text: text(v.text, 400),
+    scene: id(v.scene),
+    weaponSkill: weaponSkill && /\d/.test(damage) ? weaponSkill : '',
+    damage: weaponSkill && /\d/.test(damage) ? damage : '',
+    addsDamageBonus: (v.addsDamageBonus ?? w.db) === true,
+    range: text(v.range ?? w.range, 20).replace(/[<>&"]/g, ''),
+    rate: text(v.rate ?? w.rate, 12).replace(/[<>&"]/g, ''),
+    uses: uses > 0 ? uses : 0,
+    unit: uses > 0 ? oneOf(v.unit, ITEM_UNITS, '') : '',
+    ammo: text(v.ammo, 16).replace(/[^\p{L}\p{N} .-]/gu, ''),
+    helpsSkill: id(v.helpsSkill ?? bonus.skill),
+    helpsNote: text(v.helpsNote ?? bonus.note, 120).replace(/[<>&"]/g, ''),
+  }
+}
+
 /** Coerce a draft sent by a chat app into a well-typed ImportDraft: wrong types become "" / [], sizes are capped. */
 export function normalizeDraft(input: unknown, sounds = SOUND_IDS): ImportDraft {
   const d = isObj(input) ? input : {}
@@ -375,6 +468,7 @@ export function normalizeDraft(input: unknown, sounds = SOUND_IDS): ImportDraft 
     }),
     npcs: objs(d.npcs, 30).flatMap((n) => npc(n) ?? []),
     handouts: objs(d.handouts, 20).flatMap((h) => (id(h.id) ? [{ id: id(h.id), title: text(h.title, 160), text: text(h.text, 8000), scene: id(h.scene) }] : [])),
+    items: objs(d.items, 20).flatMap((x) => item(x) ?? []),
   }
 }
 
@@ -407,7 +501,7 @@ export function emptyDraft(): ImportDraft {
   return {
     title: '', summary: '', era: '', setting: '', duration: '',
     overview: { secret: '', steps: [], mustNotMiss: [], branches: [], ifStuck: [], keeperTips: [] },
-    acts: [], npcs: [], handouts: [],
+    acts: [], npcs: [], handouts: [], items: [],
   }
 }
 
@@ -447,6 +541,7 @@ export function mergeDraft(acc: ImportDraft, batch: ImportDraft): ImportDraft {
     })),
     npcs: mergeById(acc.npcs, batch.npcs, (a, b) => ({ ...a, ...b, stats: b.stats.length ? b.stats : a.stats })),
     handouts: mergeById(acc.handouts, batch.handouts, (_a, b) => b),
+    items: mergeById(acc.items ?? [], batch.items ?? [], (_a, b) => b),
   }
 }
 
@@ -458,12 +553,14 @@ export function draftContext(d: ImportDraft): string {
     .join('\n')
   const npcs = d.npcs.map((n) => `"${n.id}" (${n.name})`).join(', ')
   const handouts = d.handouts.map((h) => `"${h.id}"`).join(', ')
+  const items = (d.items ?? []).map((x) => `"${x.id}"`).join(', ')
   return [
     `Story so far: "${d.title}".`,
     'Acts and scenes already imported (reuse these ids; to continue a scene cut by a page break, output it again with the same id and its full content):',
     acts,
     `NPCs already imported: ${npcs || 'none'}.`,
     `Handouts already imported: ${handouts || 'none'}.`,
+    `Items already imported: ${items || 'none'}.`,
   ].join('\n')
 }
 
@@ -515,6 +612,33 @@ function toNpc(n: DraftNpc): Json {
     skills: Object.fromEntries(n.skills.map((s) => [s.id, s.value])),
     sanLoss: n.sanLoss,
     special: n.special,
+  })
+}
+
+/** A story item (spec §6) from a draft item. */
+function toItem(x: DraftItem): Json {
+  const firearm = x.weaponSkill.startsWith('firearms')
+  return compact({
+    id: x.id,
+    name: x.name,
+    kind: x.kind,
+    art: x.art,
+    text: x.text,
+    weapon: x.weaponSkill
+      ? compact({
+        skill: x.weaponSkill,
+        damage: x.damage,
+        db: x.addsDamageBonus && !firearm ? true : undefined,
+        range: x.range,
+        rate: x.rate,
+        impale: firearm ? true : undefined,
+      })
+      : undefined,
+    uses: x.uses > 0 ? x.uses : undefined,
+    unit: x.uses > 0 ? x.unit : '',
+    ammo: x.ammo,
+    bonus: x.helpsSkill ? compact({ skill: x.helpsSkill, note: x.helpsNote }) : undefined,
+    scene: x.scene,
   })
 }
 
@@ -596,5 +720,6 @@ export function draftToStory(d: ImportDraft, meta: StoryMetaInput): Json {
       })),
     npcs: d.npcs.map(toNpc),
     handouts: d.handouts.map((h) => compact({ id: h.id, title: h.title, text: h.text, image: h.image, scene: h.scene })),
+    items: (d.items ?? []).map(toItem),
   })
 }

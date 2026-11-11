@@ -1,5 +1,5 @@
 import { useQueryClient } from '@tanstack/react-query'
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { useNavigate, useParams } from 'react-router'
 import { characterKeys, useCharacters, type CharacterRow } from '@/characters/api'
 import { photoOr } from '@/characters/photo'
@@ -22,6 +22,11 @@ import { rollJournal } from '@/companion/rolls'
 import { parseScreen } from '@/screen/state'
 import { useT } from '@/i18n/t'
 import { CharacterSheetDialog } from '@/characters/CharacterSheetDialog'
+import { fetchItems, itemKeys } from '@/items/api'
+import { storyCards, storyDocuments, toEngineItem } from '@/items/engine'
+import type { StoryItemChoice } from '@/items/GiveItemDialog'
+import type { HeldItem } from '@/items/item'
+import { CharacterItemsDialog, GiveStoryItemDialog } from './ItemDialogs'
 import { PLACE_LABEL, PRESET_LABEL, TIME_LABEL } from '@/screen/ambiance'
 
 const SAVE_DELAY = 800
@@ -81,6 +86,8 @@ interface Live {
   onNotes: (characterId: string) => void
   /** Re-read this investigator's photo (`photo` hint). */
   onPhoto: (characterId: string) => void
+  /** Re-read this investigator's item cards (`items` hint). */
+  onItems: (characterId: string) => void
   /** After (re)subscribing, or a `member` hint: catch up on what happened while not listening. */
   catchUp: () => void
 }
@@ -104,6 +111,9 @@ export function GamePage() {
   const [screen, setScreen] = useState<ScreenControl | null>(null)
   // An account investigator's sheet, opened from their name on the game screen.
   const [sheetOf, setSheetOf] = useState<string | null>(null)
+  // An account investigator's item cards (the items button on their card), and a story item being given.
+  const [itemsOf, setItemsOf] = useState<string | null>(null)
+  const [giving, setGiving] = useState<string | null>(null)
   // The current translation, for the host functions (the game doesn't restart when the language changes).
   const tRef = useRef(t)
   useEffect(() => {
@@ -123,6 +133,16 @@ export function GamePage() {
   if (!start && game.data?.story && characters.data && !game.isFetching && !characters.isFetching) {
     setStart({ game: game.data, characters: characters.data })
   }
+  // The story's items, ready to give (the scene's items row, and "Donner un objet").
+  const storyItems = useMemo<StoryItemChoice[]>(() => {
+    const story = start?.game.story
+    if (!story) return []
+    return [...storyCards((story.content as { items?: unknown }).items), ...storyDocuments(story.content)].map((x) => ({ ...x, storyId: story.id }))
+  }, [start])
+  const storyItemsRef = useRef(storyItems)
+  useEffect(() => {
+    storyItemsRef.current = storyItems
+  }, [storyItems])
 
   useEffect(() => {
     if (!start?.game.story) return
@@ -153,6 +173,13 @@ export function GamePage() {
       photos = photo ? { ...rest, [characterId]: photo } : rest
     }
     for (const c of party) setPhoto(c.id, photoOr(c.photo))
+    // Account investigators' item cards, pushed to the engine (investigator cards, combat).
+    const held = new Map<string, HeldItem[]>()
+    const engineItems = () =>
+      Object.fromEntries([...accountIds].map((cid) => {
+        const data = party.find((c) => c.id === cid)?.data
+        return [cid, (held.get(cid) ?? []).map((h) => toEngineItem(tRef.current, h, data))]
+      }))
 
     // The engine API appears in the iframe once its script has run: queue calls until then.
     const queue: Array<(e: EngineApi) => void> = []
@@ -310,6 +337,7 @@ export function GamePage() {
           }
         })
         refreshNotes(characterId)
+        readItems([characterId])
       } catch (error) {
         joining.delete(characterId)
         console.error('New investigator load failed', error)
@@ -342,6 +370,15 @@ export function GamePage() {
         withEngine((e) => e.setPhotos(photos))
         void qc.invalidateQueries({ queryKey: characterKeys.all })
       })
+    }
+    const readItems = (ids: string[]) => {
+      fetchItems(ids)
+        .then((list) => {
+          if (disposed) return
+          for (const cid of ids) held.set(cid, list.filter((h) => h.characterId === cid))
+          withEngine((e) => e.setItems(engineItems()))
+        })
+        .catch((error) => console.error('Items load failed', error))
     }
     const readPoints = (characterId: string) => {
       const next = (pointsReads.get(characterId) ?? Promise.resolve()).then(async () => {
@@ -390,6 +427,7 @@ export function GamePage() {
       notebooks = notes
       withEngine((e) => e.setNotebooks(notebooks))
       withEngine((e) => e.setPhotos(photos))
+      readItems(ids)
 
       window.__grimoirePlay = {
         data: engineGlobals(story),
@@ -443,6 +481,19 @@ export function GamePage() {
           setSheetOf(characterId)
           return true
         },
+        openItems: (characterId) => {
+          if (!accountIds.has(characterId)) return false
+          setItemsOf(characterId)
+          return true
+        },
+        useItem: (itemId, delta) => {
+          void supabase.rpc('use_item', { p_item: itemId, p_delta: delta }).then(({ error }) => error && console.error('Item use failed', error))
+        },
+        giveItem: (storyItemId) => {
+          if (!storyItemsRef.current.some((x) => x.itemId === storyItemId)) return false
+          setGiving(storyItemId)
+          return true
+        },
         sample,
       }
       live.current = {
@@ -450,6 +501,11 @@ export function GamePage() {
         onPoints: readPoints,
         onNotes: (cid) => accountIds.has(cid) && refreshNotes(cid),
         onPhoto: (cid) => accountIds.has(cid) && readPhoto(cid),
+        onItems: (cid) => {
+          if (!accountIds.has(cid)) return
+          readItems([cid])
+          void qc.invalidateQueries({ queryKey: itemKeys.character(cid) })
+        },
         catchUp: () => void catchUp().catch((error) => console.error('Catch-up failed', error)),
       }
       setMembers(party.map(toMember))
@@ -503,6 +559,10 @@ export function GamePage() {
         const cid = characterIdOf(payload)
         if (cid) live.current?.onPhoto(cid)
       })
+      .on('broadcast', { event: 'items' }, ({ payload }) => {
+        const cid = characterIdOf(payload)
+        if (cid) live.current?.onItems(cid)
+      })
       // Only investigators listed in the game's party in the database join (catchUp reads it).
       .on('broadcast', { event: 'member' }, () => live.current?.catchUp())
       .on('broadcast', { event: 'rotate' }, () => void qc.invalidateQueries({ queryKey: gameKeys.one(id) }))
@@ -542,7 +602,9 @@ export function GamePage() {
     <>
       <iframe ref={iframe} src="/play.html" title={t('Partie')} className="fixed inset-0 h-svh w-full border-0" />
       <TableLinksDialog gameId={id} party={members} open={tableOpen} onOpenChange={setTableOpen} />
-      <CharacterSheetDialog characterId={sheetOf} onOpenChange={(open) => !open && setSheetOf(null)} />
+      <CharacterSheetDialog characterId={sheetOf} storyItems={storyItems} onOpenChange={(open) => !open && setSheetOf(null)} />
+      <CharacterItemsDialog member={members.find((m) => m.id === itemsOf) ?? null} storyItems={storyItems} onOpenChange={(open) => !open && setItemsOf(null)} />
+      <GiveStoryItemDialog item={storyItems.find((x) => x.itemId === giving) ?? null} party={members} onOpenChange={(open) => !open && setGiving(null)} />
       {screen && start?.game.story && (
         <ScreenDialog gameId={id} control={screen} story={screenStory(start.game.story)} open={screenOpen} onOpenChange={setScreenOpen} />
       )}

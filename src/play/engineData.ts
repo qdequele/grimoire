@@ -75,6 +75,14 @@ const APP_UI_EN: Record<string, string> = {
   Fermer: 'Close',
   'Fiche de présentation': 'Investigator sheet',
   "Document montré sur l'écran d'ambiance.": 'Document shown on the ambiance screen.',
+  // Items (scripts/engine-ui: investigator cards, the scene's story items, combat)
+  Objets: 'Items',
+  'Donner un objet': 'Give an item',
+  'Donner à un investigateur': 'Give to an investigator',
+  "Plus de munitions. Recharge l'arme depuis ses objets.": 'Out of ammunition. Reload the weapon from its items.',
+  'Arme enrayée': 'Weapon jammed',
+  'Donner à…': 'Give to…',
+  "Arme hors d'usage : elle ne peut pas servir.": 'Weapon out of order: it can’t be used.',
 }
 const I18N: EngineGlobals['I18N'] = {
   ...(PRIVATE.I18N ?? FALLBACK.I18N),
@@ -108,6 +116,7 @@ export function engineGlobals(story: StoryForEngine): EngineGlobals {
     RITUAL: e.RITUAL,
     NPC_WORDS: e.NPC_WORDS,
     HANDOUTS: e.HANDOUTS,
+    ITEMS: e.ITEMS,
   }
 }
 

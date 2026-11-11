@@ -82,6 +82,7 @@ export function LandingPage() {
     ['dice', t('Lanceur de dés'), t('Un d100 avec dés bonus et de pénalité, et tous les dés du D3 au D100.')],
     ['investigator', t('Créer un investigateur'), t('Pas à pas ou au hasard, avec la fiche prête à imprimer.')],
     ['sheet', t('Fiche d’investigateur vierge'), t('Deux pages A4 à remplir au crayon.')],
+    ['cards', t('Cartes d’objets'), t('Près de cent objets illustrés, à imprimer ou télécharger.')],
     ['scenarios', t('Scénarios gratuits'), t('Des histoires originales complètes, à lire, imprimer ou jouer.')],
   ]
 
@@ -226,7 +227,7 @@ export function LandingPage() {
 
         <section aria-labelledby="outils" className="flex scroll-mt-24 flex-col gap-10">
           <SectionTitle id="outils" eyebrow={t('Gratuit, sans compte')} title={t('Des outils pour ta prochaine partie')} />
-          <ul className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
+          <ul className="grid gap-6 sm:grid-cols-2 lg:grid-cols-5">
             {tools.map(([kind, title, text]) => (
               <li key={kind} className="flex">
                 <Link to={TOOL_PATHS[kind][t.lang]} className="group flex w-full flex-col gap-2 border border-border bg-card p-5 hover:border-gold/60">

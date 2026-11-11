@@ -30,7 +30,16 @@ function Section({ title, children, className }: { title: string; children: Reac
   )
 }
 
-export function CharacterSheet({ character: c, actions, headingLevel = 1 }: { character: CharacterRow; actions?: ReactNode; headingLevel?: 1 | 2 }) {
+export function CharacterSheet({ character: c, actions, headingLevel = 1, items }: {
+  character: CharacterRow
+  actions?: ReactNode
+  headingLevel?: 1 | 2
+  /**
+   * The investigator's item cards (CharacterItems), at the end. Passed in rather than imported: the
+   * public investigator generator shows this sheet and must not pull in the Supabase client.
+   */
+  items?: ReactNode
+}) {
   const t = useT()
   const d = c.data
   const progress = progressSummary(d)
@@ -141,6 +150,13 @@ export function CharacterSheet({ character: c, actions, headingLevel = 1 }: { ch
           )}
         </div>
       </div>
+
+      {items && (
+        <>
+          <span className="double-rule" />
+          {items}
+        </>
+      )}
     </article>
   )
 }

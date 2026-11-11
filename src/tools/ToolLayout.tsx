@@ -19,6 +19,7 @@ const NAV: [ToolKind, string][] = [
   ['investigator', 'Créer un investigateur'],
   ['sheet', 'Fiche vierge'],
   ['map', 'Plans'],
+  ['cards', 'Cartes d’objets'],
   ['scenarios', 'Scénarios'],
 ]
 

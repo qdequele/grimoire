@@ -93,6 +93,7 @@ interface StoryLike {
   acts: Array<{ id: string; title?: string; scenes: Array<Json & { id: string; title?: string }> }>
   npcs?: Array<Json & { id: string; name?: string }>
   handouts?: Array<Json & { id: string; title?: string }>
+  items?: Array<Json & { id: string; name?: string }>
   [key: string]: unknown
 }
 
@@ -101,7 +102,7 @@ const asStory = (content: unknown): StoryLike => {
   return { ...s, meta: isObj(s.meta) ? s.meta : {}, acts: Array.isArray(s.acts) ? s.acts : [] } as StoryLike
 }
 
-/** What a model needs to find its way in a story: meta, the secret, every act, scene, NPC and handout by id. */
+/** What a model needs to find its way in a story: meta, the secret, every act, scene, NPC, handout and item by id. */
 export function storySummary(content: unknown) {
   const s = asStory(content)
   const m = s.meta
@@ -115,6 +116,7 @@ export function storySummary(content: unknown) {
     acts: s.acts.map((a) => ({ id: a.id, title: a.title ?? '', scenes: a.scenes.map((x) => ({ id: x.id, title: x.title ?? '' })) })),
     npcs: (s.npcs ?? []).map((n) => ({ id: n.id, name: n.name ?? '' })),
     handouts: (s.handouts ?? []).map((h) => ({ id: h.id, title: h.title ?? '' })),
+    items: (s.items ?? []).map((x) => ({ id: x.id, name: x.name ?? '' })),
   }
 }
 
@@ -125,7 +127,7 @@ export type StoryPart = (typeof STORY_PARTS)[number]
 export function storyPart(content: unknown, part: StoryPart, sceneIds: string[] = []): Json {
   const s = asStory(content)
   if (part === 'all') return s as Json
-  if (part === 'npcs') return { npcs: s.npcs ?? [], handouts: s.handouts ?? [] }
+  if (part === 'npcs') return { npcs: s.npcs ?? [], handouts: s.handouts ?? [], items: s.items ?? [] }
   if (part === 'scenes') {
     const want = new Set(sceneIds)
     return {
@@ -142,7 +144,7 @@ export const sceneCount = (content: unknown) => asStory(content).acts.reduce((n,
 // ------------------------------------------------------------------ editing a story (story.json level)
 
 export const EDIT_OPS = [
-  'put_scene', 'remove_scene', 'set_screen', 'put_act', 'remove_act', 'put_npc', 'remove_npc', 'put_handout', 'remove_handout', 'set_overview', 'set_info',
+  'put_scene', 'remove_scene', 'set_screen', 'put_act', 'remove_act', 'put_npc', 'remove_npc', 'put_handout', 'remove_handout', 'put_item', 'remove_item', 'set_overview', 'set_info',
 ] as const
 export type EditOp = { op: (typeof EDIT_OPS)[number] } & Json
 
@@ -211,6 +213,7 @@ export function applyEdits(content: unknown, ops: unknown): Json {
           if (Array.isArray(sc.flow)) sc.flow = sc.flow.map((st) => (isObj(st) ? { ...st, goto: scrub(st.goto, gone) } : st))
         }
         for (const h of s.handouts ?? []) if (h.scene === gone) delete h.scene
+        for (const x of s.items ?? []) if (x.scene === gone) delete x.scene
         break
       }
       case 'set_screen': {
@@ -268,6 +271,18 @@ export function applyEdits(content: unknown, ops: unknown): Json {
         for (const sc of s.acts.flatMap((a) => a.scenes)) sc.handouts = scrub(sc.handouts, gone)
         break
       }
+      case 'put_item': {
+        const x = needObj(op.item, 'item', n)
+        s.items = putById(s.items ?? [], x, op.after)
+        break
+      }
+      case 'remove_item': {
+        const gone = needId(op.id, 'id', n)
+        if (!(s.items ?? []).some((x) => x.id === gone)) throw new ToolError('not_found', `ops[${n}]: item "${gone}" does not exist.`)
+        s.items = withoutId(s.items ?? [], gone)
+        for (const sc of s.acts.flatMap((a) => a.scenes)) sc.items = scrub(sc.items, gone)
+        break
+      }
       case 'set_overview': {
         if (!isObj(op.overview)) throw new ToolError('bad_request', `ops[${n}]: overview must be an object.`)
         s.overview = op.overview
@@ -285,6 +300,7 @@ export function applyEdits(content: unknown, ops: unknown): Json {
   // Lists left empty are dropped, as draftToStory does (the schema wants non-empty arrays there).
   if (s.npcs && !s.npcs.length) delete s.npcs
   if (s.handouts && !s.handouts.length) delete s.handouts
+  if (s.items && !s.items.length) delete s.items
   return s as Json
 }
 
@@ -462,14 +478,14 @@ You write the story; Grimoire checks it, saves it as a private story in the keep
 2. Agree on the brief with the keeper: language (fr or en), era, place, tone, threat, the central mystery, number of investigators, length, and content to avoid (lines and veils). Ask only for what they care about; choose the rest yourself and say what you chose.
 3. Write the OUTLINE: title, a spoiler-free pitch, the secret, the overview, the scenes grouped in acts (each with a short summary, its clues, NPC ids and next scene ids) and every NPC with a short description. Show it to the keeper as a readable list, not JSON, and revise it until they approve it.
 4. Call save_outline with the brief and the approved outline. It returns a creationId and the scene ids to write, in order. You may call save_outline again with the same creationId to replace the outline, but only before the first scene is written.
-5. Call write_scenes with 2 or 3 scenes at a time (${MCP_LIMITS.scenesPerCall} at most), in the order given by "next", until "remaining" is 0. Each call carries a draft: the acts holding these scenes (same act and scene ids as the outline), the full entry of every NPC who appears in them and is not detailed yet (personality, knows, stats, skills, attacks), and their handouts. Leave out what you have nothing for. The story is saved after every call, so the keeper can already open it.
+5. Call write_scenes with 2 or 3 scenes at a time (${MCP_LIMITS.scenesPerCall} at most), in the order given by "next", until "remaining" is 0. Each call carries a draft: the acts holding these scenes (same act and scene ids as the outline), the full entry of every NPC who appears in them and is not detailed yet (personality, knows, stats, skills, attacks), their handouts, and the items found there (objects the investigators keep: a key, a weapon, a talisman). Leave out what you have nothing for. The story is saved after every call, so the keeper can already open it.
 6. If a call returns validationErrors, fix those scenes by sending them again with the same ids in the next call. When "remaining" is 0, give the keeper the story's link.
 7. Then offer pictures: a background for the ambiance screen in two or three key scenes (when no built-in décor fits them) and a picture for the handouts that are papers, letters or maps. Draw only the ones the keeper wants, in SVG, with save_image (grimoire_guide topic "images").
 
 # Revising one of the keeper's stories
 
-1. list_my_stories, then get_story (part "summary" first: ids of every act, scene, NPC and handout; then the scenes or NPCs you need).
-2. edit_story with the "version" get_story returned and a list of operations. Scenes, NPCs and handouts are sent whole, in the story.json format of get_story (topic "format"): put_scene replaces the scene with the same id (or adds it to actId), put_npc and put_handout the same. remove_* also removes links to what is gone. set_screen changes only a scene's ambiance screen (décor, atmosphere and time of day, topic "sounds"). All operations apply or none do; the result must pass the format's schema.
+1. list_my_stories, then get_story (part "summary" first: ids of every act, scene, NPC, handout and item; then the scenes or NPCs you need).
+2. edit_story with the "version" get_story returned and a list of operations. Scenes, NPCs, handouts and items are sent whole, in the story.json format of get_story (topic "format"): put_scene replaces the scene with the same id (or adds it to actId), put_npc, put_handout and put_item the same. remove_* also removes links to what is gone. set_screen changes only a scene's ambiance screen (décor, atmosphere and time of day, topic "sounds"). All operations apply or none do; the result must pass the format's schema.
 3. On "conflict", the story changed since you read it: call get_story again and redo the edit on the new version.
 4. Pictures: save_image stores an SVG you draw as a scene's background or a handout's picture, replaces it, or removes it (topic "images"). get_story lists the story's pictures and where they are used. save_image and edit_story both return the new version: use it for the next call.
 
@@ -653,7 +669,7 @@ export function toolDefinitions(): ToolDef[] {
       name: 'get_story',
       title: 'Read a story',
       description:
-        'Read one of the keeper\'s stories in the story.json format. part "summary" (default): meta, overview and the ids of every act, scene, NPC and handout; "scenes" (all, or only sceneIds); "npcs" (NPCs and handouts); "all". Returns the version edit_story needs.',
+        'Read one of the keeper\'s stories in the story.json format. part "summary" (default): meta, overview and the ids of every act, scene, NPC, handout and item; "scenes" (all, or only sceneIds); "npcs" (NPCs, handouts and items); "all". Returns the version edit_story needs.',
       inputSchema: {
         type: 'object',
         properties: {
@@ -669,7 +685,7 @@ export function toolDefinitions(): ToolDef[] {
     {
       name: 'edit_story',
       title: 'Edit a story',
-      description: `Change one of the keeper's private stories (story.json format, see grimoire_guide "format"). Operations, applied in order, all or none: put_scene {scene, actId?, after?} adds or replaces a whole scene; remove_scene {id}; set_screen {id, screen: {place?, preset?, time?, image?}} sets a scene's ambiance screen ({} removes place, preset and time; a picture stays unless image is ""); put_act {act: {id, title}, after?}; remove_act {id} (empty acts only); put_npc {npc, after?}; remove_npc {id}; put_handout {handout, after?}; remove_handout {id}; set_overview {overview}; set_info {info: ${INFO_FIELDS.join(', ')}}. Needs the version from get_story.`,
+      description: `Change one of the keeper's private stories (story.json format, see grimoire_guide "format"). Operations, applied in order, all or none: put_scene {scene, actId?, after?} adds or replaces a whole scene; remove_scene {id}; set_screen {id, screen: {place?, preset?, time?, image?}} sets a scene's ambiance screen ({} removes place, preset and time; a picture stays unless image is ""); put_act {act: {id, title}, after?}; remove_act {id} (empty acts only); put_npc {npc, after?}; remove_npc {id}; put_handout {handout, after?}; remove_handout {id}; put_item {item, after?} (an object the investigators keep, as a card); remove_item {id}; set_overview {overview}; set_info {info: ${INFO_FIELDS.join(', ')}}. Needs the version from get_story.`,
       inputSchema: {
         type: 'object',
         properties: {
@@ -700,6 +716,7 @@ export function toolDefinitions(): ToolDef[] {
                 act: anyObject('put_act: { id, title }.'),
                 npc: anyObject('put_npc: the whole NPC, story.json format.'),
                 handout: anyObject('put_handout: the whole handout, story.json format.'),
+                item: anyObject('put_item: the whole item, story.json format (spec §6: id, name, kind, text, weapon, uses…).'),
                 overview: anyObject('set_overview: the whole overview, story.json format.'),
                 info: anyObject(`set_info: some of ${INFO_FIELDS.join(', ')}.`),
               },

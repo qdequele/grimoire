@@ -5,6 +5,7 @@ import { BlankSheetPage } from './BlankSheetPage'
 import { DiceRollerPage } from './DiceRollerPage'
 import { InvestigatorToolPage } from './InvestigatorToolPage'
 import { MapMakerPage } from './MapMakerPage'
+import { ItemCardsPage } from './ItemCardsPage'
 import { TOOL_PATHS, type ToolKind } from './pages'
 import { ScenarioListPage } from './scenarios/ScenarioListPage'
 import { ScenarioPage } from './scenarios/ScenarioPage'
@@ -20,6 +21,7 @@ const PAGES: Record<ToolKind, (props: { lang: Lang }) => ReactElement> = {
   investigator: InvestigatorToolPage,
   sheet: BlankSheetPage,
   map: MapMakerPage,
+  cards: ItemCardsPage,
   scenarios: ScenarioListPage,
 }
 
