@@ -18,6 +18,8 @@
     "e2e:decors": "playwright test --project=decors",
     "decor:shots": "node scripts/decor-shots.mjs",
     "decor:compare": "node scripts/decor-compare.mjs",
+    "items:arts": "node scripts/item-arts-quiver.mjs",
+    "items:ship": "node scripts/item-arts-ship.mjs",
     "spec:bundle": "node scripts/gen-spec-bundle.mjs",
     "db:seed-gen": "node scripts/gen-seed.mjs",
     "db:start": "supabase start",

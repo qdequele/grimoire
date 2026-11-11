@@ -930,9 +930,11 @@ html[data-skin="deco"] .hdc{border-radius:0;border-color:rgba(226,192,110,.35);f
 .itc{display:inline-flex;align-items:center;gap:5px;padding:3px 8px;background:var(--slab2);border:1px solid var(--line);border-left:3px solid var(--k,#9a7449);border-radius:4px;color:var(--bone);font:500 12px var(--f-ui,"IBM Plex Sans Condensed",sans-serif);cursor:pointer}
 .itc:hover,.itc:focus-visible{border-color:var(--gold);outline:none}
 .itc small{font-family:"IBM Plex Mono",monospace;color:var(--mute)}
+.itc .itc-cond{font:600 10px var(--f-ui,"IBM Plex Sans Condensed",sans-serif);letter-spacing:.06em;text-transform:uppercase;color:var(--blood,#c8553f)}
 .itc[data-kind="weapon"]{--k:#b8402f}.itc[data-kind="ammo"]{--k:#b98a35}.itc[data-kind="light"]{--k:#e0a63a}.itc[data-kind="tool"]{--k:#5f8197}
 .itc[data-kind="medical"]{--k:#5e9b64}.itc[data-kind="document"]{--k:#a89170}.itc[data-kind="occult"]{--k:#8160ad}.itc[data-kind="key"]{--k:#d4b45a}
 .itc-add{border-left-width:1px;color:var(--mute)}
 html[data-skin="deco"] .inv .itm-n,html[data-skin="deco"] .itc{border-radius:0;font-family:"Josefin Sans",sans-serif}
 /* Combat: rounds left in a weapon card */
 .atk .a .itm-ammo{margin-left:4px;font:500 11px "IBM Plex Mono",monospace;color:var(--mute)}
+.atk .a .itm-cond{margin-left:5px;padding:0 4px;border:1px solid currentColor;font:600 10px var(--f-ui,"IBM Plex Sans Condensed",sans-serif);letter-spacing:.08em;text-transform:uppercase;color:var(--blood,#c8553f)}

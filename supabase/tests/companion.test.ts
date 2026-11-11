@@ -977,6 +977,22 @@ describe('companion: items', () => {
     expect((await bob.client.rpc('use_item', { p_item: gun, p_delta: -1 })).error).not.toBeNull()
   })
 
+  it("a weapon's condition: set by the keeper, weapons only, known values only, shown to phones", async () => {
+    const g = await newGame(alice, [{ name: 'One' }])
+    const gun = (await give(g.ids[0], revolver, 6)).data!.id
+    const ropeId = (await give(g.ids[0], rope, null)).data!.id
+    expect((await alice.client.from('character_items').update({ condition: 'rusty' }).eq('id', gun)).error).toBeNull()
+    expect((await alice.client.from('character_items').update({ condition: 'shiny' }).eq('id', gun)).error).not.toBeNull()
+    expect((await alice.client.from('character_items').update({ condition: 'dirty' }).eq('id', ropeId)).error).not.toBeNull()
+    const l = await link(alice, g.gameId)
+    const opened = (await anon.rpc('companion_open', { p_token: l.token })).data as unknown as { items: Array<{ id: string; condition: string }> }
+    expect(opened.items.find((i) => i.id === gun)?.condition).toBe('rusty')
+    expect(opened.items.find((i) => i.id === ropeId)?.condition).toBe('clean')
+    // Phones can't change it: no RPC does, and they can't write the table.
+    expect((await anon.from('character_items').update({ condition: 'clean' }).eq('id', gun)).error ?? 'no rows').toBeTruthy()
+    expect((await alice.client.from('character_items').select('condition').eq('id', gun).single()).data?.condition).toBe('rusty')
+  })
+
   it('at most 60 cards per investigator', async () => {
     const g = await newGame(alice, [{ name: 'One' }])
     const rows = Array.from({ length: 60 }, () => ({ character_id: g.ids[0], card: rope }))

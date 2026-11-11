@@ -7,7 +7,7 @@ import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
 import { useT } from '@/i18n/t'
-import { useCharacterItems, useRemoveItem, useReloadItem, useUseItem } from './api'
+import { useCharacterItems, useRemoveItem, useReloadItem, useSetCondition, useUseItem } from './api'
 import { GiveItemDialog, type StoryItemChoice } from './GiveItemDialog'
 import { ITEM_LIMITS } from './item'
 import { ItemTile } from './ItemTile'
@@ -18,6 +18,7 @@ export function CharacterItems({ characterId, characterName, storyItems }: { cha
   const use = useUseItem()
   const reload = useReloadItem()
   const remove = useRemoveItem()
+  const setCondition = useSetCondition()
   const [giving, setGiving] = useState(false)
   const held = items.data ?? []
   const full = held.length >= ITEM_LIMITS.perCharacter
@@ -42,6 +43,7 @@ export function CharacterItems({ characterId, characterName, storyItems }: { cha
               held={held}
               actions={{
                 onUse: (i, delta) => use.mutate({ item: i, delta }, { onError: (e) => toast.error(e.message) }),
+                onCondition: (i, condition) => setCondition.mutate({ item: i, condition }, { onError: (e) => toast.error(e.message) }),
                 onReload: (i) =>
                   reload.mutate(i, {
                     onSuccess: (n) => (n ? toast.success(t.n(n, '{n} munition rechargée.', '{n} munitions rechargées.')) : toast(t('Rien à recharger.'))),

@@ -5,12 +5,15 @@ import { useState, type ReactNode } from 'react'
 import { Button } from '@/components/ui/button'
 import { useT } from '@/i18n/t'
 import { cn } from '@/lib/utils'
-import { ammoFor, reloadable, reloadPlan, type HeldItem } from './item'
+import { NativeSelect, NativeSelectOption } from '@/components/ui/native-select'
+import { ammoFor, CONDITION_LABEL, CONDITIONS, reloadable, reloadPlan, type Condition, type HeldItem } from './item'
 import { ItemCard } from './ItemCard'
 import { localCard, usesText } from './text'
 
 export interface ItemActions {
   onUse?: (item: HeldItem, delta: number) => void
+  /** The keeper sets a weapon's condition (phones only see it). */
+  onCondition?: (item: HeldItem, condition: Condition) => void
   onReload?: (item: HeldItem) => void
   onRemove?: (item: HeldItem) => Promise<unknown> | void
 }
@@ -25,7 +28,18 @@ export function ItemTile({ item, held, actions, className, extra }: { item: Held
 
   return (
     <li className={cn('flex flex-col gap-2', className)}>
-      <ItemCard card={item.card} uses={item.uses} source={item.source} />
+      <ItemCard card={item.card} uses={item.uses} source={item.source} condition={item.condition} />
+      {actions.onCondition && item.card.kind === 'weapon' && (
+        <NativeSelect
+          size="sm"
+          className="w-full"
+          value={item.condition}
+          aria-label={t('État de « {name} »', { name })}
+          onChange={(e) => actions.onCondition!(item, e.target.value as Condition)}
+        >
+          {CONDITIONS.map((c) => <NativeSelectOption key={c} value={c}>{t('État : {condition}', { condition: t(CONDITION_LABEL[c]) })}</NativeSelectOption>)}
+        </NativeSelect>
+      )}
       <div className="flex min-h-9 flex-wrap items-center justify-center gap-1">
         {max !== undefined && actions.onUse && (
           <>

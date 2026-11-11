@@ -1,5 +1,6 @@
 // "Donner un objet": the keeper picks a card from the catalogue or the story being played, or makes
 // one on the spot, and gives it to an investigator. The dialog stays open to give several.
+import { Search } from 'lucide-react'
 import { useMemo, useState } from 'react'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
@@ -19,6 +20,7 @@ import { ART_IDS, type ArtId } from './arts'
 import { CATALOG } from './catalog'
 import { ITEM_KINDS, ITEM_LIMITS, KIND_ART, KIND_LABEL, parseCard, USE_UNITS, WEAPON_SKILLS, type ItemCard as Card, type ItemKind, type UseUnit } from './item'
 import { ItemArt } from './ItemArt'
+import { searchCatalog } from './search'
 import { ItemCard } from './ItemCard'
 import { DRAFT_PROBLEMS, localCard } from './text'
 
@@ -226,11 +228,12 @@ export function GiveItemDialog({ open, onOpenChange, characterId, characterName,
   const give = useGiveItem()
   const [tab, setTab] = useState<Tab>(storyItems.length ? 'story' : 'catalog')
   const [kind, setKind] = useState<ItemKind | typeof ALL>(ALL)
+  const [query, setQuery] = useState('')
   const [pick, setPick] = useState<Pick | null>(null)
   const [draft, setDraft] = useState<Draft>(EMPTY)
   const made = useMemo(() => draftCard(draft), [draft])
 
-  const catalog = CATALOG.filter((c) => kind === ALL || c.card.kind === kind)
+  const catalog = useMemo(() => searchCatalog(t, query, kind === ALL ? undefined : kind), [t, query, kind])
   const chosen: { card: Card; gift: Parameters<typeof give.mutateAsync>[0] } | null =
     tab === 'new'
       ? made.card && { card: made.card, gift: { characterId, card: made.card } }
@@ -277,6 +280,25 @@ export function GiveItemDialog({ open, onOpenChange, characterId, characterName,
         <div className="-mx-1 min-h-0 flex-1 overflow-y-auto px-1 pb-1">
           {tab === 'catalog' && (
             <div className="flex flex-col gap-3">
+              <div className="relative max-w-md">
+                <Search className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground" aria-hidden="true" />
+                <Input
+                  type="search"
+                  autoFocus
+                  value={query}
+                  onChange={(e) => setQuery(e.target.value)}
+                  placeholder={t('Chercher un objet : revolver, lumière, grimper…')}
+                  aria-label={t('Chercher un objet')}
+                  className="pl-9"
+                  onKeyDown={(e) => {
+                    // Enter picks the first match: search, Enter, then "Donner".
+                    if (e.key === 'Enter' && catalog[0]) {
+                      e.preventDefault()
+                      setPick({ tab: 'catalog', id: catalog[0].id })
+                    }
+                  }}
+                />
+              </div>
               <div className="flex flex-wrap gap-1.5" role="group" aria-label={t('Type')}>
                 {[ALL, ...ITEM_KINDS.filter((k) => CATALOG.some((c) => c.card.kind === k))].map((k) => (
                   <Button key={k} size="xs" variant={kind === k ? 'default' : 'outline'} aria-pressed={kind === k} onClick={() => setKind(k as ItemKind | typeof ALL)}>
@@ -284,11 +306,15 @@ export function GiveItemDialog({ open, onOpenChange, characterId, characterName,
                   </Button>
                 ))}
               </div>
-              <CardPicker
-                cards={catalog.map((c) => ({ key: c.id, card: c.card, source: { kind: 'catalog', id: c.id } }))}
-                selected={pick?.tab === 'catalog' ? pick.id : null}
-                onSelect={(id) => setPick({ tab: 'catalog', id })}
-              />
+              {catalog.length ? (
+                <CardPicker
+                  cards={catalog.map((c) => ({ key: c.id, card: c.card, source: { kind: 'catalog', id: c.id } }))}
+                  selected={pick?.tab === 'catalog' ? pick.id : null}
+                  onSelect={(id) => setPick({ tab: 'catalog', id })}
+                />
+              ) : (
+                <p className="font-serif text-lg">{t('Aucune carte ne correspond.')}</p>
+              )}
             </div>
           )}
           {tab === 'story' && (

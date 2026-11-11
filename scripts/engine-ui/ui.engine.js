@@ -71,19 +71,28 @@ $("#invView").addEventListener("click",e=>{const b=e.target.closest("[data-sheet
 var ITEMS={};
 function itemsOf(cid){const v=ITEMS[cid];return Array.isArray(v)?v:[];}
 function itIcon(){return '<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="5" y="3" width="14" height="18" rx="1.5"/><path d="M12 8l2.5 4-2.5 4-2.5-4z"/></svg>';}
-/* A weapon card as an attack: [name, value, damage, item id, impales, rounds loaded, capacity]. */
-function itemAttacks(c,imp){return itemsOf(c.id).filter(x=>x.w).map(x=>{const d=String(x.w.dmg||"1D3").split("/")[0];
-  return [x.n,Number(x.w.v)||0,x.w.db&&imp?d+imp:d,x.id,!!x.w.imp,x.cap!=null?x.uses:null,x.cap];});}
+/* A weapon card as an attack: [name, value, damage, item id, impales, rounds loaded, capacity, condition].
+   The condition (x.w.c, from the app: absent when clean) takes its −n into the damage formula; the
+   rest is applied when rolling (itemPen, itemJam, itemDmg, itemFire). */
+function itemAttacks(c,imp){return itemsOf(c.id).filter(x=>x.w).map(x=>{const d=String(x.w.dmg||"1D3").split("/")[0];const k=x.w.c||null;
+  const minus=k&&Number(k.minus)>0?"-"+Math.round(Number(k.minus)):"";
+  return [x.n,Number(x.w.v)||0,(x.w.db&&imp?d+imp:d)+minus,x.id,!!x.w.imp,x.cap!=null?x.uses:null,x.cap,k];});}
+/* Penalty dice a weapon's condition adds to the attack roll. */
+function itemPen(a){const k=a[7];return k&&Number(k.pen)>0?Math.min(2,Math.round(Number(k.pen))):0;}
+/* A firearm that jams: its roll is at or above the condition's (or card's) malfunction value. */
+function itemJam(a,r){const k=a[7];return k&&k.jam&&r>=Number(k.jam)?["fail","Arme enrayée"]:null;}
+/* Damage after the condition: halved (rounded down) for a damaged weapon. */
+function itemDmg(a,dmg,dd){const k=a[7];if(!k||!k.half)return {dmg,dd};const h=Math.floor(dmg/2);return {dmg:h,dd:dd+" · "+k.label+" : "+dmg+" ÷ 2 = "+h};}
 /* The generic "Arme de poing" / "Fusil" attacks give way to the investigator's own firearms. */
 function withItemAttacks(c,at,imp){const it=itemAttacks(c,imp);if(!it.length)return at;
   const sks=new Set(itemsOf(c.id).filter(x=>x.w).map(x=>x.w.sk));
   return at.filter(a=>!(a[0]==="Arme de poing"&&sks.has("firearms-handgun"))&&!(a[0]==="Fusil"&&sks.has("firearms-rifle"))).concat(it);}
 /* Firing a weapon card: false (with a message) when it is empty. */
-function itemFire(a){if(!a[3])return true;let x=null;for(const k in ITEMS){x=itemsOf(k).find(i=>i.id===a[3]);if(x)break;}
+function itemFire(a){if(!a[3])return true;if(a[7]&&a[7].broken){toast("Arme hors d'usage : elle ne peut pas servir.");return false;}let x=null;for(const k in ITEMS){x=itemsOf(k).find(i=>i.id===a[3]);if(x)break;}
   if(!x||x.cap==null)return true;
   if(!(x.uses>0)){toast("Plus de munitions. Recharge l'arme depuis ses objets.");return false;}
   x.uses--;a[5]=x.uses;if(GRIMOIRE_HOST.useItem)GRIMOIRE_HOST.useItem(x.id,-1);return true;}
-function itChip(cid,x){return `<button type="button" class="itc" data-items="${esc(cid)}" data-kind="${esc(x.k)}">${itIcon()}<span>${esc(x.n)}</span>${x.cap!=null?`<small>${esc(x.uses)}/${esc(x.cap)}</small>`:""}</button>`;}
+function itChip(cid,x){return `<button type="button" class="itc" data-items="${esc(cid)}" data-kind="${esc(x.k)}">${itIcon()}<span>${esc(x.n)}</span>${x.cap!=null?`<small>${esc(x.uses)}/${esc(x.cap)}</small>`:""}${x.w&&x.w.c?`<small class="itc-cond">${esc(x.w.c.label)}</small>`:""}</button>`;}
 function fillItems(){document.querySelectorAll("#invView .inv").forEach(card=>{const t=card.querySelector("[data-tog]");if(!t)return;const cid=t.dataset.tog;
   card.querySelectorAll(".itm-n,.itm-row").forEach(e=>e.remove());if(!(cid in ITEMS))return;const xs=itemsOf(cid);
   const n=document.createElement("button");n.type="button";n.className="itm-n";n.dataset.items=cid;n.title="Objets";

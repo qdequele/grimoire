@@ -552,7 +552,7 @@ function renderCombat(){setTimeout(renderCtx,0);
             <button data-hp="${i}" data-d="-1" aria-label="Retirer 1 PV">−1</button><button data-hp="${i}" data-d="1" aria-label="Rendre 1 PV">+1</button>
             <input type="number" min="0" id="dm-${i}" aria-label="Dégâts à infliger à ${esc(r.name)}" placeholder="dég."><button data-hit="${i}">Infliger</button></div></div>
         <div class="side2">${esqv?`<button class="btn" data-esq="${i}">Esquive ${esqv}</button>`:`<span style="font-size:12px;color:var(--mute)">n'esquive pas</span>`}</div>
-        <div class="atk">${atk.map((a,j)=>`<button class="a" data-atk="${i}" data-j="${j}">${esc(a[0])}${a[5]!=null?`<small class="itm-ammo">${esc(a[5])}/${esc(a[6])}</small>`:""} ${a[1]} %</button><button class="dg" data-dmg="${i}" data-j="${j}" title="Lancer seulement les dégâts">${esc(a[2])}</button>`).join("")}</div>
+        <div class="atk">${atk.map((a,j)=>`<button class="a" data-atk="${i}" data-j="${j}">${esc(a[0])}${a[5]!=null?`<small class="itm-ammo">${esc(a[5])}/${esc(a[6])}</small>`:""}${a[7]?`<small class="itm-cond">${esc(a[7].label)}</small>`:""} ${a[1]} %</button><button class="dg" data-dmg="${i}" data-j="${j}" title="Lancer seulement les dégâts">${esc(a[2])}</button>`).join("")}</div>
         ${r.note?`<div class="note2">${esc(r.note)}</div>`:""}
       </div>`}).join("")}</div>
     <div class="note" style="margin-top:14px"><b>Esquiver</b> : l'attaquant doit faire un niveau supérieur, l'égalité protège. <b>Rendre les coups</b> : il faut un niveau supérieur à l'attaquant, l'égalité profite à l'attaquant. Après avoir esquivé ou rendu les coups une fois, toutes les autres attaques du round contre lui ont un dé bonus (pas avec les armes à feu). Une arme à feu prête agit à DEX + 50${T(9,"")}.</div>`;
@@ -595,8 +595,8 @@ $("#cbtBody").addEventListener("click",e=>{
     showRes(x.r,L[0],`Esquive · ${L[1]}`,`${r.name} · Esquive ${v} · ${x.det}`,`${r.name} esquive ${v} → ${x.r} ${L[1]}`,FXOF[L[0]]);return;}
   if(t.dataset.atk||t.dataset.dmg){const i=+(t.dataset.atk??t.dataset.dmg),r=R[i];const a=(r.type==="m"?r.atk:weaponsOf(charById(r.cid)).atk)[+t.dataset.j];
     if(t.dataset.dmg){doFormula(a[2],`${r.name} · ${a[0]}`);return;}if(!itemFire(a))return;
-    const x=d100(B,M),L=level(x.r,a[1]);const hit=!["fail","fumble"].includes(L[0]);
-    let dmg=null,dd="";if(hit){if(L[0]==="ext"){dmg=maxOf(a[2]);dd="dégâts max + impact max (réussite extrême)";if(a[4]||EMPALE.test(a[0])){const die=(a[2].match(/\d*D\d+/i)||["0"])[0];const x2=rollFormula(die);if(x2){dmg+=x2.tot;dd+=` + relance ${die} = ${x2.tot} (arme qui empale)`;}}}else{const f=rollFormula(a[2]);dmg=Math.max(0,f.tot);dd=f.det;}}
+    const x=d100(B,M+itemPen(a)),L=itemJam(a,x.r)||level(x.r,a[1]);const hit=!["fail","fumble"].includes(L[0]);
+    let dmg=null,dd="";if(hit){if(L[0]==="ext"){dmg=maxOf(a[2]);dd="dégâts max + impact max (réussite extrême)";if(a[4]||EMPALE.test(a[0])){const die=(a[2].match(/\d*D\d+/i)||["0"])[0];const x2=rollFormula(die);if(x2){dmg+=x2.tot;dd+=` + relance ${die} = ${x2.tot} (arme qui empale)`;}}}else{const f=rollFormula(a[2]);dmg=Math.max(0,f.tot);dd=f.det;}}if(hit)({dmg,dd}=itemDmg(a,dmg,dd));
     showRes(hit?`${dmg} dég.`:x.r,L[0],`${a[0]} · ${L[1]}${hit?` · jet ${x.r}`:""}`,`${r.name} · ${a[0]} ${a[1]} % · ${x.det}${hit?` · ${a[2]} = ${dd}`:""}${hit?" · Reporte les dégâts sur la cible avec « Infliger ».":""}`,
       `${r.name} ${a[0]} → ${x.r} ${L[1]}${hit?` · ${dmg} dégâts`:""}`,FXOF[L[0]]);}
 });
@@ -1815,19 +1815,28 @@ $("#invView").addEventListener("click",e=>{const b=e.target.closest("[data-sheet
 var ITEMS={};
 function itemsOf(cid){const v=ITEMS[cid];return Array.isArray(v)?v:[];}
 function itIcon(){return '<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="5" y="3" width="14" height="18" rx="1.5"/><path d="M12 8l2.5 4-2.5 4-2.5-4z"/></svg>';}
-/* A weapon card as an attack: [name, value, damage, item id, impales, rounds loaded, capacity]. */
-function itemAttacks(c,imp){return itemsOf(c.id).filter(x=>x.w).map(x=>{const d=String(x.w.dmg||"1D3").split("/")[0];
-  return [x.n,Number(x.w.v)||0,x.w.db&&imp?d+imp:d,x.id,!!x.w.imp,x.cap!=null?x.uses:null,x.cap];});}
+/* A weapon card as an attack: [name, value, damage, item id, impales, rounds loaded, capacity, condition].
+   The condition (x.w.c, from the app: absent when clean) takes its −n into the damage formula; the
+   rest is applied when rolling (itemPen, itemJam, itemDmg, itemFire). */
+function itemAttacks(c,imp){return itemsOf(c.id).filter(x=>x.w).map(x=>{const d=String(x.w.dmg||"1D3").split("/")[0];const k=x.w.c||null;
+  const minus=k&&Number(k.minus)>0?"-"+Math.round(Number(k.minus)):"";
+  return [x.n,Number(x.w.v)||0,(x.w.db&&imp?d+imp:d)+minus,x.id,!!x.w.imp,x.cap!=null?x.uses:null,x.cap,k];});}
+/* Penalty dice a weapon's condition adds to the attack roll. */
+function itemPen(a){const k=a[7];return k&&Number(k.pen)>0?Math.min(2,Math.round(Number(k.pen))):0;}
+/* A firearm that jams: its roll is at or above the condition's (or card's) malfunction value. */
+function itemJam(a,r){const k=a[7];return k&&k.jam&&r>=Number(k.jam)?["fail","Arme enrayée"]:null;}
+/* Damage after the condition: halved (rounded down) for a damaged weapon. */
+function itemDmg(a,dmg,dd){const k=a[7];if(!k||!k.half)return {dmg,dd};const h=Math.floor(dmg/2);return {dmg:h,dd:dd+" · "+k.label+" : "+dmg+" ÷ 2 = "+h};}
 /* The generic "Arme de poing" / "Fusil" attacks give way to the investigator's own firearms. */
 function withItemAttacks(c,at,imp){const it=itemAttacks(c,imp);if(!it.length)return at;
   const sks=new Set(itemsOf(c.id).filter(x=>x.w).map(x=>x.w.sk));
   return at.filter(a=>!(a[0]==="Arme de poing"&&sks.has("firearms-handgun"))&&!(a[0]==="Fusil"&&sks.has("firearms-rifle"))).concat(it);}
 /* Firing a weapon card: false (with a message) when it is empty. */
-function itemFire(a){if(!a[3])return true;let x=null;for(const k in ITEMS){x=itemsOf(k).find(i=>i.id===a[3]);if(x)break;}
+function itemFire(a){if(!a[3])return true;if(a[7]&&a[7].broken){toast("Arme hors d'usage : elle ne peut pas servir.");return false;}let x=null;for(const k in ITEMS){x=itemsOf(k).find(i=>i.id===a[3]);if(x)break;}
   if(!x||x.cap==null)return true;
   if(!(x.uses>0)){toast("Plus de munitions. Recharge l'arme depuis ses objets.");return false;}
   x.uses--;a[5]=x.uses;if(GRIMOIRE_HOST.useItem)GRIMOIRE_HOST.useItem(x.id,-1);return true;}
-function itChip(cid,x){return `<button type="button" class="itc" data-items="${esc(cid)}" data-kind="${esc(x.k)}">${itIcon()}<span>${esc(x.n)}</span>${x.cap!=null?`<small>${esc(x.uses)}/${esc(x.cap)}</small>`:""}</button>`;}
+function itChip(cid,x){return `<button type="button" class="itc" data-items="${esc(cid)}" data-kind="${esc(x.k)}">${itIcon()}<span>${esc(x.n)}</span>${x.cap!=null?`<small>${esc(x.uses)}/${esc(x.cap)}</small>`:""}${x.w&&x.w.c?`<small class="itc-cond">${esc(x.w.c.label)}</small>`:""}</button>`;}
 function fillItems(){document.querySelectorAll("#invView .inv").forEach(card=>{const t=card.querySelector("[data-tog]");if(!t)return;const cid=t.dataset.tog;
   card.querySelectorAll(".itm-n,.itm-row").forEach(e=>e.remove());if(!(cid in ITEMS))return;const xs=itemsOf(cid);
   const n=document.createElement("button");n.type="button";n.className="itm-n";n.dataset.items=cid;n.title="Objets";

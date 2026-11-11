@@ -1,7 +1,7 @@
 // Cards in words: catalogue texts in the reader's language, uses ("3 balles"), damage, and the
 // messages of the new-card form. Story and keeper texts stay as written.
 import type { T } from '@/i18n/t'
-import { UNIT_ONE, unitOf, type ItemCard as Card, type ItemSource } from './item'
+import { conditionEffects, UNIT_ONE, unitOf, type Condition, type ItemCard as Card, type ItemSource } from './item'
 
 /** A short stat ("contact", "1 ou 2") translated; numbers alone ("15 m", "1 (3)") stay as they are. */
 const words = (t: T, s: string) => (/\p{L}{2,}/u.test(s) ? t(s) : s)
@@ -38,3 +38,25 @@ export const DRAFT_PROBLEMS = [
   'Indique les dégâts de l’arme, par exemple 1D6 ou 2D6+4.',
   'Vérifie les valeurs de la carte.',
 ] as const
+
+/** Damage as a weapon in this condition deals it: "1D10 −1", "½ (1D6 + Impact)". */
+export function conditionDamageText(t: T, w: NonNullable<Card['weapon']>, card: Card, condition: Condition): string {
+  const e = conditionEffects(card, condition)
+  let d = damageText(t, w)
+  if (e.minus) d = `${d} −${e.minus}`
+  if (e.half) d = `½ (${d})`
+  return d
+}
+
+/** What a condition does, in a few words: "dé de malus · −1 aux dégâts · s'enraye sur 90+". */
+export function conditionNotes(t: T, card: Card, condition: Condition): string[] {
+  const e = conditionEffects(card, condition)
+  if (e.broken) return [t('ne peut pas attaquer')]
+  const notes: string[] = []
+  if (e.penalty) notes.push(t('dé de malus'))
+  if (e.minus) notes.push(t('−{n} aux dégâts', { n: e.minus }))
+  if (e.half) notes.push(t('dégâts divisés par 2'))
+  if (e.malfunction !== undefined && e.malfunction < (card.weapon?.malfunction ?? 100)) notes.push(t('s’enraye sur {n}+', { n: e.malfunction }))
+  return notes
+}
+

@@ -1,12 +1,14 @@
 // An item as a collectible card: name and damage on top, the illustration in its window, the item's
 // type, its attack or ability, rules text, uses left as pips, rarity and number at the bottom. Sized
 // by its container (container query units), so the same card fits a phone, a grid or a dialog.
+import { useState } from 'react'
 import { skillName, useT } from '@/i18n/t'
 import { cn } from '@/lib/utils'
 import { catalogNumber } from './catalog'
-import { artOf, KIND_LABEL, type ItemCard as Card, type ItemSource } from './item'
+import { artOf, CONDITION_LABEL, conditionEffects, KIND_LABEL, type Condition, type ItemCard as Card, type ItemSource } from './item'
 import { ItemArt } from './ItemArt'
-import { damageText, localCard, usesText } from './text'
+import { pictureOf } from './pictures'
+import { conditionDamageText, conditionNotes, localCard, usesText } from './text'
 import './items.css'
 
 function Pips({ card, uses }: { card: Card; uses: number }) {
@@ -36,9 +38,16 @@ export interface ItemCardProps {
   className?: string
   /** Heading level of the name (h3 in lists). */
   as?: 'h2' | 'h3' | 'h4'
+  /**
+   * A picture file instead of the card's own (the dev comparison page). By default a catalogue card
+   * shows its picture (pictures.ts), any other its line drawing; `null` forces the line drawing.
+   */
+  artSrc?: string | null
+  /** A held weapon's condition: a stamp on the picture, and the stats it changes. */
+  condition?: Condition
 }
 
-export function ItemCard({ card: raw, uses, source, className, as: H = 'h3' }: ItemCardProps) {
+export function ItemCard({ card: raw, uses, source, className, as: H = 'h3', artSrc, condition: rawCondition = 'clean' }: ItemCardProps) {
   const t = useT()
   const card = localCard(t, raw, source)
   const left = uses ?? card.uses
@@ -50,9 +59,22 @@ export function ItemCard({ card: raw, uses, source, className, as: H = 'h3' }: I
     card.ammo && (card.kind === 'ammo' || card.kind === 'weapon') ? t('calibre {ammo}', { ammo: card.ammo }) : '',
   ].filter(Boolean).join(' · ')
   const empty = left === 0
+  const picture = artSrc === null ? undefined : (artSrc ?? pictureOf(source))
+  // A picture that fails to load falls back to the line drawing.
+  const [broken, setBroken] = useState<string | null>(null)
+  const condition = w ? rawCondition : 'clean'
+  const effects = conditionEffects(card, condition)
+  const notes = condition === 'clean' ? [] : conditionNotes(t, card, condition)
+  const conditionText = condition === 'clean' ? '' : `${t(CONDITION_LABEL[condition])} : ${notes.join(' · ')}`
 
   return (
-    <article className={cn('icard', empty && 'is-empty', className)} data-kind={card.kind} aria-label={card.name}>
+    <article
+      className={cn('icard', empty && 'is-empty', className)}
+      data-kind={card.kind}
+      data-condition={condition === 'clean' ? undefined : condition}
+      aria-label={card.name}
+      aria-description={conditionText || undefined}
+    >
       <div className="icard-frame">
         <header className="icard-head">
           <span className="icard-gem" aria-hidden="true" />
@@ -66,7 +88,17 @@ export function ItemCard({ card: raw, uses, source, className, as: H = 'h3' }: I
           ) : null}
         </header>
         <div className="icard-window">
-          <ItemArt art={artOf(card)} className="icard-art" />
+          {picture && broken !== picture ? (
+            <img src={picture} alt="" className="icard-art icard-picture" loading="lazy" decoding="async" onError={() => setBroken(picture)} />
+          ) : (
+            <ItemArt art={artOf(card)} className="icard-art" />
+          )}
+          {condition !== 'clean' && (
+            <>
+              <span className="icard-wear" aria-hidden="true" />
+              <span className="icard-stamp">{t(CONDITION_LABEL[condition])}</span>
+            </>
+          )}
         </div>
         <p className="icard-strip">{strip}</p>
         <div className="icard-body">
@@ -74,9 +106,12 @@ export function ItemCard({ card: raw, uses, source, className, as: H = 'h3' }: I
             <div className="icard-move">
               <span className="icard-cost" aria-hidden="true" />
               <span className="icard-move-name">{skillName(t, w.skill)}</span>
-              <span className="icard-move-val">{damageText(t, w)}</span>
+              <span className={cn('icard-move-val', (effects.minus || effects.half) && 'is-worse')}>
+                {effects.broken ? '—' : conditionDamageText(t, w, card, condition)}
+              </span>
             </div>
           )}
+          {notes.length > 0 && <p className="icard-condition">{notes.join(' · ')}</p>}
           {w && (w.range || w.rate || w.malfunction) && (
             <dl className="icard-stats">
               {w.range && (
@@ -91,10 +126,10 @@ export function ItemCard({ card: raw, uses, source, className, as: H = 'h3' }: I
                   <dd>{w.rate}</dd>
                 </div>
               )}
-              {w.malfunction && (
+              {(effects.malfunction ?? w.malfunction) && (
                 <div>
                   <dt>{t('Panne')}</dt>
-                  <dd>{w.malfunction}</dd>
+                  <dd className={cn(effects.malfunction !== w.malfunction && 'is-worse')}>{effects.malfunction ?? w.malfunction}</dd>
                 </div>
               )}
             </dl>

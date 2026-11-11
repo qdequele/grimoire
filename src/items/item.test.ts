@@ -1,13 +1,16 @@
+import { readdirSync, readFileSync } from 'node:fs'
 import { describe, expect, it } from 'vitest'
 import storySchema from '../../spec/story.schema.json'
+import { sanitizeSvg } from '../../supabase/functions/_shared/svg-safe'
 import { currentT } from '@/i18n/t'
 import { ART_IDS, ARTS } from './arts'
-import { CATALOG, catalogNumber } from './catalog'
+import { CATALOG, CATALOG_BY_ID, catalogNumber } from './catalog'
 import { skillValue, storyCards, toEngineItem } from './engine'
-import { ITEM_KINDS, ITEM_LIMITS, USE_UNITS, WEAPON_SKILLS, ammoFor, asHeld, clampUses, parseCard, reloadPlan, sortHeld, type HeldItem, type ItemCard } from './item'
+import { ITEM_KINDS, ITEM_LIMITS, USE_UNITS, WEAPON_SKILLS, ammoFor, asHeld, clampUses, conditionDamage, conditionEffects, conditionOf, parseCard, reloadPlan, sortHeld, type HeldItem, type ItemCard } from './item'
+import { conditionDamageText, conditionNotes } from './text'
 
 const held = (id: string, card: ItemCard, uses: number | null, position = 0): HeldItem => ({
-  id, characterId: 'c1', card, uses, source: { kind: 'keeper' }, position, updatedAt: '',
+  id, characterId: 'c1', card, uses, condition: 'clean', source: { kind: 'keeper' }, position, updatedAt: '',
 })
 const revolver: ItemCard = { name: 'Revolver', kind: 'weapon', uses: 6, ammo: '.38', weapon: { skill: 'firearms-handgun', damage: '1D10' } }
 const box: ItemCard = { name: 'Box', kind: 'ammo', uses: 20, ammo: '.38' }
@@ -119,3 +122,64 @@ describe('the game screen', () => {
     expect(storyCards(undefined)).toEqual([])
   })
 })
+
+describe('the catalogue pictures (src/items/pictures, scripts/item-arts-ship.mjs)', () => {
+  const dir = new URL('./pictures/', import.meta.url)
+  const files = readdirSync(dir).filter((f) => f.endsWith('.svg'))
+
+  it('are each named after a catalogue card', () => {
+    for (const f of files) expect(CATALOG_BY_ID.has(f.slice(0, -4)), f).toBe(true)
+  })
+
+  it('pass the strict SVG check unchanged, and are trimmed (not a square sandbox placeholder)', () => {
+    for (const f of files) {
+      const svg = readFileSync(new URL(f, dir), 'utf8')
+      expect(sanitizeSvg(svg).svg, f).toBe(svg)
+      expect(svg, f).not.toContain('sandbox')
+      expect(svg.length, f).toBeLessThan(60_000)
+    }
+  })
+})
+
+describe("a weapon's condition", () => {
+  const knife: ItemCard = { name: 'Knife', kind: 'weapon', weapon: { skill: 'fighting-brawl', damage: '1D6', db: true } }
+  const gun = { ...revolver, weapon: { ...revolver.weapon!, malfunction: 100 } }
+
+  it('follows the keeper’s table', () => {
+    expect(conditionEffects(gun, 'clean')).toEqual({ penalty: 0, minus: 0, half: false, malfunction: 100, broken: false })
+    expect(conditionEffects(gun, 'dirty')).toEqual({ penalty: 0, minus: 0, half: false, malfunction: 95, broken: false })
+    expect(conditionEffects(knife, 'dirty')).toEqual({ penalty: 0, minus: 1, half: false, broken: false })
+    expect(conditionEffects(gun, 'rusty')).toEqual({ penalty: 1, minus: 1, half: false, malfunction: 90, broken: false })
+    expect(conditionEffects(knife, 'damaged')).toEqual({ penalty: 1, minus: 0, half: true, broken: false })
+    expect(conditionEffects(gun, 'broken').broken).toBe(true)
+    // A gun that already jams early keeps its own, worse value.
+    expect(conditionEffects({ ...gun, weapon: { ...gun.weapon, malfunction: 88 } }, 'dirty').malfunction).toBe(88)
+  })
+
+  it('changes the damage dealt, never below 0', () => {
+    expect(conditionDamage(7, conditionEffects(knife, 'dirty'))).toBe(6)
+    expect(conditionDamage(0, conditionEffects(knife, 'rusty'))).toBe(0)
+    expect(conditionDamage(7, conditionEffects(knife, 'damaged'))).toBe(3)
+  })
+
+  it('says it on the card', () => {
+    const t = currentT()
+    expect(conditionDamageText(t, knife.weapon!, knife, 'rusty')).toBe('1D6 + Impact −1')
+    expect(conditionDamageText(t, gun.weapon!, gun, 'damaged')).toBe('½ (1D10)')
+    expect(conditionNotes(t, gun, 'rusty')).toEqual(['dé de malus', '−1 aux dégâts', 's’enraye sur 90+'])
+    expect(conditionNotes(t, knife, 'broken')).toEqual(['ne peut pas attaquer'])
+  })
+
+  it('is only for weapons, and unknown values read as clean', () => {
+    expect(conditionOf(gun, 'rusty')).toBe('rusty')
+    expect(conditionOf(gun, 'shiny')).toBe('clean')
+    expect(conditionOf(box, 'rusty')).toBe('clean')
+  })
+
+  it('reaches the game screen only when it does something', () => {
+    const t = currentT()
+    expect(toEngineItem(t, { ...held('gun', gun, 6), condition: 'rusty' }, undefined).w?.c).toEqual({ label: 'Rouillée', pen: 1, minus: 1, half: false, jam: 90, broken: false })
+    expect(toEngineItem(t, held('gun', gun, 6), undefined).w?.c).toBeUndefined()
+  })
+})
+

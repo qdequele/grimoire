@@ -35,7 +35,7 @@ export function ItemsTab() {
               aria-label={localCard(t, item.card, item.source).name}
               onClick={() => setOpenId(item.id)}
             >
-              <ItemCard card={item.card} uses={item.uses} source={item.source} />
+              <ItemCard card={item.card} uses={item.uses} source={item.source} condition={item.condition} />
             </button>
             {item.uses != null && <p className="mt-1 text-center font-mono text-xs text-muted-foreground">{usesText(t, item.card, item.uses)}</p>}
           </li>

@@ -92,6 +92,72 @@ export interface ItemCard {
   rarity?: 1 | 2 | 3
 }
 
+/**
+ * A held weapon's condition (character_items.condition), set by the keeper. It belongs to that copy
+ * of the weapon, not to the card: the same revolver can be clean in one investigator's hands and
+ * rusty in another's.
+ */
+export const CONDITIONS = ['clean', 'dirty', 'rusty', 'damaged', 'broken'] as const
+export type Condition = (typeof CONDITIONS)[number]
+
+export const CONDITION_LABEL: Record<Condition, string> = {
+  clean: 'Propre',
+  dirty: 'Sale',
+  rusty: 'Rouillée',
+  damaged: 'Abîmée',
+  broken: 'Hors d’usage',
+}
+
+/** What a condition does to a weapon in play. */
+export interface WeaponEffects {
+  /** Penalty dice on the attack roll. */
+  penalty: number
+  /** Taken off the damage rolled (never below 0). */
+  minus: number
+  /** Damage rolled is halved (rounded down), after `minus`. */
+  half: boolean
+  /** A firearm's attack roll at or above this jams it (the card's own value at best). */
+  malfunction?: number
+  /** Can't attack at all. */
+  broken: boolean
+}
+
+export const isFirearm = (c: ItemCard) => !!c.weapon?.skill.startsWith('firearms')
+
+/**
+ * The rules of each condition (the keeper's table, shown on the card and applied by the combat helper):
+ * - sale: firearms jam from 95; blades, clubs and thrown weapons −1 damage;
+ * - rouillée: one penalty die, −1 damage; firearms jam from 90;
+ * - abîmée: one penalty die, half damage; firearms jam from 90;
+ * - hors d'usage: can't attack.
+ */
+export function conditionEffects(card: ItemCard, condition: Condition = 'clean'): WeaponEffects {
+  const firearm = isFirearm(card)
+  const jam = (n: number) => (firearm ? Math.min(card.weapon?.malfunction ?? 100, n) : undefined)
+  switch (condition) {
+    case 'dirty':
+      return firearm ? { penalty: 0, minus: 0, half: false, malfunction: jam(95), broken: false } : { penalty: 0, minus: 1, half: false, broken: false }
+    case 'rusty':
+      return { penalty: 1, minus: 1, half: false, malfunction: jam(90), broken: false }
+    case 'damaged':
+      return { penalty: 1, minus: 0, half: true, malfunction: jam(90), broken: false }
+    case 'broken':
+      return { penalty: 0, minus: 0, half: false, malfunction: card.weapon?.malfunction, broken: true }
+    default:
+      return { penalty: 0, minus: 0, half: false, malfunction: card.weapon?.malfunction, broken: false }
+  }
+}
+
+/** Damage after a condition: rolled `n`, then −minus (≥ 0), then halved (rounded down). */
+export const conditionDamage = (n: number, e: WeaponEffects) => {
+  const d = Math.max(0, n - e.minus)
+  return e.half ? Math.floor(d / 2) : d
+}
+
+/** A condition is only for weapons; anything else read from a row is clean. */
+export const conditionOf = (card: ItemCard, v: unknown): Condition =>
+  card.kind === 'weapon' ? (CONDITIONS.find((c) => c === v) ?? 'clean') : 'clean'
+
 /** Where a card came from. */
 export type ItemSource = { kind: 'catalog'; id: string } | { kind: 'story'; storyId: string; itemId: string } | { kind: 'keeper' }
 
@@ -102,6 +168,8 @@ export interface HeldItem {
   card: ItemCard
   /** Uses left, null when the card has none. */
   uses: number | null
+  /** A weapon's condition ('clean' for anything else). */
+  condition: Condition
   source: ItemSource
   position: number
   updatedAt: string
@@ -273,6 +341,7 @@ export function asHeld(row: Record<string, unknown>): HeldItem | null {
     characterId,
     card,
     uses: card.uses === undefined ? null : clampUses(card, n ?? card.uses),
+    condition: conditionOf(card, row.condition),
     source,
     position: typeof row.position === 'number' ? row.position : 0,
     updatedAt: typeof (row.updated_at ?? row.updatedAt) === 'string' ? String(row.updated_at ?? row.updatedAt) : '',

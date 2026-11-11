@@ -2,7 +2,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import type { Json } from '@/lib/database.types'
 import { supabase } from '@/lib/supabase'
-import { asHeld, fullUses, sortHeld, type HeldItem, type ItemCard } from './item'
+import { asHeld, fullUses, sortHeld, type Condition, type HeldItem, type ItemCard } from './item'
 
 export const itemKeys = {
   all: ['items'] as const,
@@ -114,3 +114,25 @@ export function useRemoveItem() {
     onSettled: () => qc.invalidateQueries({ queryKey: itemKeys.all }),
   })
 }
+
+/** A weapon's condition (keeper only). The card changes at once; rolled back if refused. */
+export function useSetCondition() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: async ({ item, condition }: { item: HeldItem; condition: Condition }) => {
+      const { error } = await supabase.from('character_items').update({ condition }).eq('id', item.id)
+      if (error) throw error
+    },
+    onMutate: ({ item, condition }) => {
+      const key = itemKeys.character(item.characterId)
+      const before = qc.getQueryData<HeldItem[]>(key)
+      if (before) qc.setQueryData<HeldItem[]>(key, before.map((h) => (h.id === item.id ? { ...h, condition } : h)))
+      return { before }
+    },
+    onError: (_e, { item }, ctx) => {
+      if (ctx?.before) qc.setQueryData(itemKeys.character(item.characterId), ctx.before)
+    },
+    onSettled: (_d, _e, { item }) => qc.invalidateQueries({ queryKey: itemKeys.character(item.characterId) }),
+  })
+}
+

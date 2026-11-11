@@ -80,6 +80,8 @@ const APP_UI_EN: Record<string, string> = {
   'Donner un objet': 'Give an item',
   'Donner à un investigateur': 'Give to an investigator',
   "Plus de munitions. Recharge l'arme depuis ses objets.": 'Out of ammunition. Reload the weapon from its items.',
+  'Arme enrayée': 'Weapon jammed',
+  "Arme hors d'usage : elle ne peut pas servir.": 'Weapon out of order: it can’t be used.',
 }
 const I18N: EngineGlobals['I18N'] = {
   ...(PRIVATE.I18N ?? FALLBACK.I18N),

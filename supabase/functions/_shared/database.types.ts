@@ -74,6 +74,7 @@ export type Database = {
           card: Json
           catalog_id: string | null
           character_id: string
+          condition: string
           created_at: string
           id: string
           owner_id: string
@@ -87,6 +88,7 @@ export type Database = {
           card: Json
           catalog_id?: string | null
           character_id: string
+          condition?: string
           created_at?: string
           id?: string
           owner_id?: string
@@ -100,6 +102,7 @@ export type Database = {
           card?: Json
           catalog_id?: string | null
           character_id?: string
+          condition?: string
           created_at?: string
           id?: string
           owner_id?: string
@@ -816,6 +819,7 @@ export type Database = {
           card: Json
           catalog_id: string | null
           character_id: string
+          condition: string
           created_at: string
           id: string
           owner_id: string

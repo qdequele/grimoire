@@ -42,9 +42,19 @@ export const UI_PATCHES = [
   ],
   ['if(EMPALE.test(a[0]))', 'if(a[4]||EMPALE.test(a[0]))', 'weapon cards say themselves whether they impale'],
   [
+    'const x=d100(B,M),L=level(x.r,a[1]);',
+    'const x=d100(B,M+itemPen(a)),L=itemJam(a,x.r)||level(x.r,a[1]);',
+    "a weapon's condition: penalty die on the attack, and a firearm jams from its malfunction value",
+  ],
+  [
+    'else{const f=rollFormula(a[2]);dmg=Math.max(0,f.tot);dd=f.det;}}',
+    'else{const f=rollFormula(a[2]);dmg=Math.max(0,f.tot);dd=f.det;}}if(hit)({dmg,dd}=itemDmg(a,dmg,dd));',
+    'a damaged weapon deals half damage',
+  ],
+  [
     '<button class="a" data-atk="${i}" data-j="${j}">${esc(a[0])} ${a[1]} %</button>',
-    '<button class="a" data-atk="${i}" data-j="${j}">${esc(a[0])}${a[5]!=null?`<small class="itm-ammo">${esc(a[5])}/${esc(a[6])}</small>`:""} ${a[1]} %</button>',
-    'rounds left in a weapon card, on its attack button',
+    '<button class="a" data-atk="${i}" data-j="${j}">${esc(a[0])}${a[5]!=null?`<small class="itm-ammo">${esc(a[5])}/${esc(a[6])}</small>`:""}${a[7]?`<small class="itm-cond">${esc(a[7].label)}</small>`:""} ${a[1]} %</button>',
+    'rounds left and condition of a weapon card, on its attack button',
   ],
   [
     'const openOver=()=>["#npcDlg","#pick","#saveDlg","#gmMenu"]',

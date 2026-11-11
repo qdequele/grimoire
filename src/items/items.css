@@ -132,6 +132,16 @@
   height: 92%;
   filter: drop-shadow(0 1.2cqi 1.2cqi rgb(0 0 0 / 0.55));
 }
+/* A drawn picture (pictures.ts): trimmed to the object, so it is centred by the window itself, with
+   the same margin for every card whatever its shape. */
+.icard-picture {
+  position: absolute;
+  inset: 7%;
+  width: 86%;
+  height: 86%;
+  object-fit: contain;
+  object-position: center;
+}
 
 /* Type line under the window, like a card's species strip. */
 .icard-strip {
@@ -241,6 +251,204 @@
 /* No uses left: the card dims, its illustration loses its colour. */
 .icard.is-empty .icard-window { filter: grayscale(0.85) brightness(0.7); }
 .icard.is-empty .icard-uses-n { color: var(--blood); }
+
+/* ------------------------------------------------------------ a weapon's condition */
+/* A stamp across the picture, a wear layer over it, and the stats it worsens in red. */
+.icard-stamp {
+  position: absolute;
+  right: 4%;
+  bottom: 8%;
+  padding: 0.6cqi 2.4cqi;
+  rotate: -8deg;
+  font-family: var(--f-ui);
+  font-size: 3.6cqi;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--stamp, #c8553f);
+  border: 0.6cqi double var(--stamp, #c8553f);
+  background: rgb(10 9 7 / 0.55);
+  box-shadow: 0 0 0 0.3cqi rgb(10 9 7 / 0.4);
+  mix-blend-mode: normal;
+}
+.icard-wear { position: absolute; inset: 0; pointer-events: none; }
+.icard[data-condition="dirty"] { --stamp: #a88a5c; }
+.icard[data-condition="dirty"] .icard-art { filter: saturate(0.7) brightness(0.82) drop-shadow(0 1.2cqi 1.2cqi rgb(0 0 0 / 0.55)); }
+.icard[data-condition="dirty"] .icard-wear {
+  background:
+    radial-gradient(18% 14% at 22% 30%, rgb(40 30 15 / 0.45), transparent 70%),
+    radial-gradient(22% 16% at 72% 64%, rgb(40 30 15 / 0.4), transparent 70%),
+    radial-gradient(12% 10% at 55% 22%, rgb(40 30 15 / 0.35), transparent 70%);
+  mix-blend-mode: multiply;
+}
+.icard[data-condition="rusty"] { --stamp: #c9772f; }
+.icard[data-condition="rusty"] .icard-art { filter: sepia(0.55) saturate(1.3) hue-rotate(-12deg) brightness(0.85) drop-shadow(0 1.2cqi 1.2cqi rgb(0 0 0 / 0.55)); }
+.icard[data-condition="rusty"] .icard-wear {
+  background:
+    radial-gradient(14% 10% at 30% 40%, rgb(150 70 20 / 0.55), transparent 70%),
+    radial-gradient(20% 12% at 68% 52%, rgb(130 60 20 / 0.5), transparent 70%),
+    radial-gradient(10% 8% at 48% 70%, rgb(160 80 25 / 0.5), transparent 70%);
+  mix-blend-mode: multiply;
+}
+.icard[data-condition="damaged"] { --stamp: #c8553f; }
+.icard[data-condition="damaged"] .icard-art { filter: saturate(0.75) brightness(0.8) drop-shadow(0 1.2cqi 1.2cqi rgb(0 0 0 / 0.55)); }
+.icard[data-condition="damaged"] .icard-wear {
+  /* Cracks across the picture. */
+  background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 160 96' preserveAspectRatio='none'%3E%3Cg fill='none' stroke='%2315110a' stroke-width='1.6' stroke-linejoin='round' opacity='.75'%3E%3Cpath d='M18 4l12 20-6 10 14 18-4 14 10 22M30 24l16-4M38 52l-14 8M110 2l-8 18 12 12-10 22 6 16-8 22M114 32l18-6M104 54l-16 6'/%3E%3C/g%3E%3C/svg%3E") center / 100% 100% no-repeat;
+}
+.icard[data-condition="broken"] { --stamp: #e6e1d4; }
+.icard[data-condition="broken"] .icard-art { filter: grayscale(1) brightness(0.55) drop-shadow(0 1.2cqi 1.2cqi rgb(0 0 0 / 0.55)); }
+.icard[data-condition="broken"] .icard-stamp { inset: 50% auto auto 50%; translate: -50% -50%; rotate: -14deg; font-size: 5cqi; border-color: #c8553f; }
+.icard[data-condition="broken"] .icard-wear { background: linear-gradient(transparent 46%, rgb(200 85 63 / 0.25) 46% 54%, transparent 54%); }
+.icard .is-worse { color: var(--blood); }
+.icard-condition {
+  margin-top: -0.6cqi;
+  font-size: 3.4cqi;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  color: color-mix(in srgb, var(--stamp, var(--blood)) 85%, var(--bone));
+}
+
+/* ------------------------------------------------------------ the back of a card */
+.icard-back {
+  container-type: inline-size;
+  aspect-ratio: 63 / 88;
+  width: 100%;
+  padding: 4.2cqi;
+  background:
+    repeating-radial-gradient(circle at 50% 120%, color-mix(in srgb, var(--gold) 16%, transparent) 0 1px, transparent 1px 7cqi),
+    radial-gradient(90% 60% at 50% 50%, color-mix(in srgb, var(--gold) 14%, var(--slab)), var(--ink));
+  border: 0.9cqi solid color-mix(in srgb, var(--gold) 85%, transparent);
+  box-shadow: inset 0 0 0 1.4cqi var(--ink), inset 0 0 0 1.75cqi color-mix(in srgb, var(--gold) 55%, transparent), 0 1.5cqi 5cqi rgb(0 0 0 / 0.45);
+}
+.icard-back-frame {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6cqi;
+  border: 0.5cqi solid color-mix(in srgb, var(--gold) 45%, transparent);
+  outline: 0.3cqi solid color-mix(in srgb, var(--gold) 25%, transparent);
+  outline-offset: -2.6cqi;
+}
+.icard-back-gem {
+  width: 22cqi;
+  height: 22cqi;
+  rotate: 45deg;
+  border: 0.8cqi solid var(--gold);
+  background: radial-gradient(circle, color-mix(in srgb, var(--gold) 60%, transparent) 0 18%, transparent 19%), repeating-conic-gradient(color-mix(in srgb, var(--gold) 28%, transparent) 0 10deg, transparent 10deg 20deg), var(--ink);
+  box-shadow: 0 0 0 2.4cqi var(--ink), 0 0 0 2.8cqi color-mix(in srgb, var(--gold) 55%, transparent);
+}
+.icard-back-name {
+  font-family: var(--f-disp);
+  font-size: 8cqi;
+  color: var(--gold);
+  letter-spacing: 0.08em;
+}
+:root[data-skin="classic"] .icard-back { border-radius: 4.5cqi; border-color: color-mix(in srgb, var(--verd) 55%, var(--line)); }
+:root[data-skin="classic"] .icard-back-frame { border-radius: 3cqi; border-color: color-mix(in srgb, var(--verd) 45%, transparent); }
+:root[data-skin="classic"] .icard-back-gem { rotate: 0deg; border-radius: 50%; border-color: var(--verd); }
+
+/* ------------------------------------------------------------ a card held up (CardViewer) */
+.iview-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  background: radial-gradient(circle at 50% 40%, rgb(0 0 0 / 0.55), rgb(0 0 0 / 0.88));
+  backdrop-filter: blur(3px);
+  transition: opacity 0.3s;
+}
+.iview-backdrop[data-starting-style], .iview-backdrop[data-ending-style] { opacity: 0; }
+.iview {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1.5rem;
+  padding: 3.5rem 1rem 1.5rem;
+  overflow-y: auto;
+  outline: none;
+}
+@media (min-width: 900px) {
+  .iview { flex-direction: row; gap: 3rem; }
+}
+.iview-stage {
+  display: grid;
+  place-items: center;
+  perspective: 1400px;
+  flex: none;
+}
+.iview-fly {
+  width: min(21rem, 78vw, calc((100svh - 9rem) * 63 / 88));
+  transform-style: preserve-3d;
+  will-change: transform;
+}
+.iview-tilt {
+  position: relative;
+  transform-style: preserve-3d;
+  transform: rotateX(var(--rx, 0deg)) rotateY(var(--ry, 0deg));
+  transition: transform 0.25s ease-out;
+}
+.iview-face {
+  position: relative;
+  backface-visibility: hidden;
+}
+.iview-face.is-back {
+  position: absolute;
+  inset: 0;
+  transform: rotateY(180deg);
+}
+/* Light caught by the card, following the pointer. */
+.iview-glare, .iview-holo {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  opacity: calc(var(--glare, 0) * 1);
+  transition: opacity 0.3s;
+}
+.iview-glare {
+  background: radial-gradient(circle at var(--gx, 50%) var(--gy, 50%), rgb(255 255 255 / 0.32), transparent 45%);
+  mix-blend-mode: overlay;
+}
+/* Rare cards shimmer like a holographic print. */
+.iview-holo { display: none; }
+.iview[data-rarity="3"] .iview-holo {
+  display: block;
+  background: linear-gradient(115deg, transparent 30%, rgb(255 150 180 / 0.5) 42%, rgb(255 235 150 / 0.5) 48%, rgb(150 255 215 / 0.5) 54%, rgb(150 190 255 / 0.5) 60%, transparent 72%);
+  background-size: 300% 300%;
+  background-position: var(--gx, 50%) var(--gy, 50%);
+  mix-blend-mode: soft-light;
+  opacity: calc(var(--glare, 0) * 0.45);
+}
+:root[data-skin="classic"] .iview-face, :root[data-skin="classic"] .iview-glare, :root[data-skin="classic"] .iview-holo { border-radius: 4.5cqi; }
+.iview-side {
+  width: min(22rem, 100%);
+  flex: none;
+}
+.iview-close { position: fixed; top: 1rem; right: 1rem; }
+.iview[data-starting-style] .iview-side, .iview[data-ending-style] .iview-side { opacity: 0; }
+.iview-side { transition: opacity 0.4s 0.2s; }
+
+/* A card in a grid: lifts under the pointer; hidden while it is held up. */
+.icard-pick {
+  display: block;
+  width: 100%;
+  border-radius: 0;
+  transition: transform 0.2s ease-out, filter 0.2s;
+  outline-offset: 3px;
+}
+.icard-pick:hover { transform: translateY(-4px) rotate(-0.6deg); filter: drop-shadow(0 10px 14px rgb(0 0 0 / 0.5)); }
+.icard-pick:focus-visible { outline: 2px solid var(--gold); }
+.icard-pick[data-lifted] { visibility: hidden; }
+
+@media (prefers-reduced-motion: reduce) {
+  .iview-tilt, .icard-pick { transition: none; transform: none; }
+  .icard-pick:hover { transform: none; }
+}
 
 @media print {
   .icard-frame { box-shadow: none; }

@@ -576,6 +576,60 @@ test('main menu: stories, investigators with their players, settings', async ({ 
   expect(await page.evaluate(() => localStorage.getItem('gardien-lang'))).toBe('en')
 })
 
+test('keeper browses the item cards, searches one, opens it and gives it to an investigator', async ({ page }) => {
+  test.setTimeout(90_000) // walks the creation wizard first
+  await signUp(page)
+  await page.goto('/characters/new')
+  await createJournalist(page, 'Iris Vane')
+
+  await page.goto('/characters')
+  await page.getByRole('link', { name: 'Objets', exact: true }).click()
+  await expect(page).toHaveURL(/\/characters\/objets$/)
+  await expect(page.getByText('43 cartes')).toBeVisible()
+
+  // The search reaches what a card helps with, not only its name.
+  await page.getByRole('searchbox', { name: 'Chercher un objet' }).fill('grimper')
+  await expect(page.getByText('1 carte', { exact: true })).toBeVisible()
+  await page.getByRole('button', { name: 'Corde de chanvre (15 m)' }).click()
+
+  // The card opens big, with "Donner à…" the keeper's investigators.
+  const view = page.getByRole('dialog', { name: 'Corde de chanvre (15 m)' })
+  await expect(view.getByRole('article', { name: 'Corde de chanvre (15 m)' })).toBeVisible()
+  await view.getByRole('button', { name: 'Donner « Corde de chanvre (15 m) » à Iris Vane' }).click()
+  await expect(page.getByText('Iris Vane reçoit « Corde de chanvre (15 m) ».')).toBeVisible()
+  await expect(view.getByText('1 objet', { exact: true })).toBeVisible()
+  await page.keyboard.press('Escape')
+  await expect(view).toBeHidden()
+  await expect(page.getByRole('button', { name: 'Corde de chanvre (15 m)' })).toBeFocused()
+
+  // It is on the investigator's sheet; their "Donner un objet" dialog searches too.
+  await page.goto('/characters')
+  await page.getByRole('link', { name: 'Iris Vane' }).click()
+  await expect(page.getByRole('article', { name: 'Corde de chanvre (15 m)' })).toBeVisible()
+  await page.getByRole('button', { name: 'Donner un objet' }).click()
+  const give = page.getByRole('dialog', { name: 'Donner un objet à Iris Vane' })
+  await give.getByRole('searchbox', { name: 'Chercher un objet' }).fill('lanterne')
+  await give.getByRole('searchbox', { name: 'Chercher un objet' }).press('Enter')
+  await give.getByRole('button', { name: 'Donner « Lanterne à pétrole »' }).click()
+  await expect(page.getByText('Iris Vane reçoit « Lanterne à pétrole ».')).toBeVisible()
+  await page.keyboard.press('Escape')
+  await expect(page.getByRole('heading', { name: 'Objets (2)' })).toBeVisible()
+
+  // A weapon's condition: the keeper sets it under the card, which then says what it does.
+  await page.getByRole('button', { name: 'Donner un objet' }).click()
+  await give.getByRole('searchbox', { name: 'Chercher un objet' }).fill('revolver')
+  await give.getByRole('searchbox', { name: 'Chercher un objet' }).press('Enter')
+  await give.getByRole('button', { name: 'Donner « Revolver .38 »' }).click()
+  await page.keyboard.press('Escape')
+  await page.getByRole('combobox', { name: 'État de « Revolver .38 »' }).selectOption('rusty')
+  const revolver = page.getByRole('article', { name: 'Revolver .38' })
+  await expect(revolver.getByText('Rouillée', { exact: true })).toBeVisible()
+  await expect(revolver.getByText('1D10 −1')).toBeVisible()
+  await expect(revolver.getByText('dé de malus · −1 aux dégâts · s’enraye sur 90+')).toBeVisible()
+  await page.reload()
+  await expect(page.getByRole('combobox', { name: 'État de « Revolver .38 »' })).toHaveValue('rusty')
+})
+
 test('keeper sends feedback from the account menu', async ({ page }) => {
   await signUp(page)
   await page.goto('/stories')

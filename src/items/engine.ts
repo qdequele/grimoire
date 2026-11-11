@@ -5,7 +5,7 @@ import type { CharacterData } from '@/characters/character'
 import type { T } from '@/i18n/t'
 import type { EngineItem } from '@/play/host'
 import { SKILL_BY_ID } from '@/rules/d100'
-import { parseCard, type HeldItem, type ItemCard } from './item'
+import { CONDITION_LABEL, conditionEffects, parseCard, type HeldItem, type ItemCard } from './item'
 import { localCard } from './text'
 
 /** The investigator's value in a skill: their sheet's, else the base (numeric bases only, which weapon skills have). */
@@ -24,8 +24,30 @@ export function toEngineItem(t: T, item: HeldItem, data: CharacterData | undefin
     k: c.kind,
     ...(c.uses !== undefined ? { uses: item.uses ?? c.uses, cap: c.uses } : {}),
     ...(c.weapon
-      ? { w: { sk: c.weapon.skill, v: skillValue(data, c.weapon.skill), dmg: c.weapon.damage, db: !!c.weapon.db, imp: !!c.weapon.impale } }
+      ? {
+        w: {
+          sk: c.weapon.skill,
+          v: skillValue(data, c.weapon.skill),
+          dmg: c.weapon.damage,
+          db: !!c.weapon.db,
+          imp: !!c.weapon.impale,
+          ...(item.condition !== 'clean' ? { c: engineCondition(t, item) } : {}),
+        },
+      }
       : {}),
+  }
+}
+
+/** A weapon's condition as the engine applies it (EngineItem.w.c). */
+function engineCondition(t: T, item: HeldItem) {
+  const e = conditionEffects(item.card, item.condition)
+  return {
+    label: t(CONDITION_LABEL[item.condition]),
+    pen: e.penalty,
+    minus: e.minus,
+    half: e.half,
+    ...(e.malfunction !== undefined ? { jam: e.malfunction } : {}),
+    broken: e.broken,
   }
 }
 

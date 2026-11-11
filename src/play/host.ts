@@ -78,8 +78,15 @@ export interface EngineItem {
   /** Uses left, and how many a full card holds (absent: none). */
   uses?: number
   cap?: number
-  /** A weapon: skill id, the investigator's value in it, damage, adds the damage bonus, impales. */
-  w?: { sk: string; v: number; dmg: string; db: boolean; imp: boolean }
+  /**
+   * A weapon: skill id, the investigator's value in it, damage, adds the damage bonus, impales, and
+   * its condition's effects (c, absent when clean): penalty dice, damage taken off and halved, the
+   * roll that jams it, out of order; its label for the attack button and the Journal.
+   */
+  w?: {
+    sk: string; v: number; dmg: string; db: boolean; imp: boolean
+    c?: { label: string; pen: number; minus: number; half: boolean; jam?: number; broken: boolean }
+  }
 }
 
 export interface PlayHost {

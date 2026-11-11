@@ -7,6 +7,7 @@ import { OAuthConsentPage } from '@/auth/OAuthConsentPage'
 import { CharacterSheetPage } from '@/characters/CharacterSheetPage'
 import { CharactersPage } from '@/characters/CharactersPage'
 import { PlayersPage } from '@/characters/PlayersPage'
+import { ItemsPage } from '@/items/ItemsPage'
 import { CharacterWizardPage } from '@/characters/wizard/CharacterWizardPage'
 import { Toaster } from '@/components/ui/sonner'
 import { CompanionLayout } from '@/companion/CompanionLayout'
@@ -50,6 +51,7 @@ const STORY_TABS = [
 const INVESTIGATOR_TABS = [
   { to: '/characters', label: 'Investigateurs', end: true },
   { to: '/characters/joueurs', label: 'Joueurs' },
+  { to: '/characters/objets', label: 'Objets' },
 ]
 
 const queryClient = new QueryClient({ defaultOptions: { queries: { staleTime: 30_000 } } })
@@ -77,6 +79,7 @@ const router = createBrowserRouter([
     ? [
         { path: '/dev/places', lazy: () => import('@/screen/PlacesGallery').then((m) => ({ Component: m.PlacesGallery })) },
         { path: '/dev/items', lazy: () => import('@/items/ItemsGallery').then((m) => ({ Component: m.ItemsGallery })) },
+        { path: '/dev/items/compare', lazy: () => import('@/items/ItemsCompare').then((m) => ({ Component: m.ItemsCompare })) },
       ]
     : []),
   // Player companion: public pages opened from a table link (no account).
@@ -120,6 +123,7 @@ const router = createBrowserRouter([
         children: [
           { index: true, element: <CharactersPage /> },
           { path: 'joueurs', element: <PlayersPage /> },
+          { path: 'objets', element: <ItemsPage /> },
         ],
       },
       { path: 'characters/new', element: <CharacterWizardPage /> },

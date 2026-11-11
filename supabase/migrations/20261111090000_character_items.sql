@@ -32,6 +32,9 @@ create table public.character_items (
   card          jsonb not null,
   -- Uses left; null exactly when the card has no uses.
   uses          int,
+  -- A weapon's condition, set by the keeper (src/items/item.ts, conditionEffects): clean, dirty
+  -- (sale), rusty (rouillée), damaged (abîmée) or broken (hors d'usage). Always clean for other items.
+  condition     text not null default 'clean',
   -- Where the card came from: a catalogue entry (its id), a story's item, or neither (the keeper's own).
   catalog_id    text,
   story_id      uuid references public.stories (id) on delete set null,
@@ -42,6 +45,9 @@ create table public.character_items (
   constraint character_items_card_check check (public.item_card_ok(card)),
   constraint character_items_uses_check check (
     case when card ? 'uses' then uses is not null and uses between 0 and (card ->> 'uses')::int else uses is null end
+  ),
+  constraint character_items_condition_check check (
+    condition in ('clean', 'dirty', 'rusty', 'damaged', 'broken') and (condition = 'clean' or card ->> 'kind' = 'weapon')
   ),
   constraint character_items_catalog_check check (catalog_id is null or catalog_id ~ '^[a-z0-9-]{1,60}$'),
   constraint character_items_story_item_check check (story_item is null or char_length(story_item) between 1 and 80),
@@ -259,6 +265,7 @@ begin
         'characterId', i.character_id,
         'card', i.card,
         'uses', i.uses,
+        'condition', i.condition,
         'catalogId', i.catalog_id,
         'storyId', i.story_id,
         'storyItem', i.story_item,
