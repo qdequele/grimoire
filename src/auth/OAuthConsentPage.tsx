@@ -69,7 +69,12 @@ export function OAuthConsentPage() {
               <div className="flex flex-col gap-2">
                 <p className="eyebrow">{t('Elle pourra')}</p>
                 <ul className="flex flex-col gap-1 font-serif">
-                  {[t('lire tes histoires privées ;'), t('créer des histoires et modifier tes histoires privées.')].map((line) => (
+                  {/* Keep in step with the connector's tools (supabase/functions/mcp) and the help page (src/legal/help.ts). */}
+                  {[
+                    t('lire tes histoires privées ;'),
+                    t('créer des histoires et modifier tes histoires privées ;'),
+                    t('lire, créer et modifier tes investigateurs, avec les prénoms de tes joueurs.'),
+                  ].map((line) => (
                     <li key={line} className="flex items-baseline gap-3">
                       <span aria-hidden="true" className="diamond" />
                       {line}
@@ -77,7 +82,7 @@ export function OAuthConsentPage() {
                   ))}
                 </ul>
                 <p className="text-sm text-muted-foreground">
-                  {t('Elle ne voit ni tes investigateurs, ni tes parties, ni ton mot de passe.')}
+                  {t('Elle ne voit jamais ton mot de passe.')}
                 </p>
               </div>
               <dl className="grid gap-x-4 gap-y-1 text-sm sm:grid-cols-[auto_1fr]">
