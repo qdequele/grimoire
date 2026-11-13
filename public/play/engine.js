@@ -94,7 +94,7 @@ window.addEventListener("hashchange",route);
 /* ---------- Accueil ---------- */
 function renderHome(){
   $("#scenList").innerHTML=SCENARIOS.map(s=>{const st=S.scen[s.id];const n=s.acts?scenesOf(s).length:0;const d=s.acts?Object.values(st.done).filter(Boolean).length:0;
-    return `<article class="scen"><div><h3>${s.t}</h3><div class="meta">${s.players} · ${s.length}</div></div>
+    return `<article class="scen"><div><h3>${esc(s.t)}</h3><div class="meta">${s.players} · ${s.length}</div></div>
       <div class="acts2"><span class="badge ${s.status}">${s.statusTxt}</span></div>
       <p>${s.desc}</p>
       ${s.acts?`<div class="prog" title="${d} scènes jouées sur ${n}"><i style="width:${n?d/n*100:0}%"></i></div>
@@ -143,7 +143,7 @@ function renderNav(){let k=0;const st=ST();ensureGroups();const multi=st.groups.
     </div>`}).join("")}
     <div class="gb">${st.groups.length<4?`<button data-split="1">Séparer en un nouveau groupe</button>`:""}</div>
     ${multi?`<p class="ghint">Le déroulé déplace le groupe suivi. Clique une tête pour la changer de groupe.</p>`:""}</div>`;
-  $("#nav").innerHTML=(st.mode==="combat"?`<div class="act"><button class="cbtbtn on" data-s="${st.scene}">← Revenir à la scène</button></div>`:"")+SC().acts.map(a=>`<div class="act"><h3>${a.name}</h3><ol>${a.scenes.map(s=>{k++;const hs=headsAt(s.id);return `<li><button data-s="${s.id}" class="${st.scene===s.id&&st.mode!=="combat"?"on":""} ${st.done[s.id]?"done":""}"><span class="n">${String(k).padStart(2,"0")}</span><span class="t">${s.t}</span>${hs?`<span class="heads">${hs}</span>`:""}</button></li>`}).join("")}</ol></div>`).join("");renderCtx();}
+  $("#nav").innerHTML=(st.mode==="combat"?`<div class="act"><button class="cbtbtn on" data-s="${st.scene}">← Revenir à la scène</button></div>`:"")+SC().acts.map(a=>`<div class="act"><h3>${a.name}</h3><ol>${a.scenes.map(s=>{k++;const hs=headsAt(s.id);return `<li><button data-s="${s.id}" class="${st.scene===s.id&&st.mode!=="combat"?"on":""} ${st.done[s.id]?"done":""}"><span class="n">${String(k).padStart(2,"0")}</span><span class="t">${esc(s.t)}</span>${hs?`<span class="heads">${hs}</span>`:""}</button></li>`}).join("")}</ol></div>`).join("");renderCtx();}
 $("#nav").addEventListener("click",e=>{const st=ST();
   if(e.target.closest("#cbtNav")){st.mode="combat";save();renderNav();renderCombat();if(innerWidth<761)$("#scene").scrollIntoView({behavior:"smooth"});return;}
   if(groupAct(e))return;
@@ -173,11 +173,11 @@ function ftParse(t){t=String(t).trim().replace(/\s+(?:or|vs\.?)\s+/g," ou ").rep
   t=t.replace(/Langues \(Latin\)/g,"Latin").replace(/\([^)]*\)/g,"").replace(/\s+contre\s+.*$/,"");
   return t.split(/,\s*puis\s+|,\s*|\s+ou\s+/).map(x=>x.trim()).filter(x=>x&&!(GRIMOIRE_DATA.NPC_WORDS||[]).some(w=>x.includes(w))).map(x=>["test",((()=>{try{return SK_EN2FR[x.toLowerCase()]}catch(e){return undefined}})())||x,""]);}
 function ftHTML(t){const ps=ftParse(t);return `<div class="ft"><span class="ft-i"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2.5 21 8v8l-9 5.5L3 16V8z"/><path d="M3 8l9 5.5L21 8M12 13.5v8"/><circle cx="12" cy="8" r="1.2" class="pip"/><circle cx="7.5" cy="14" r="1.1" class="pip"/><circle cx="16.5" cy="14" r="1.1" class="pip"/></svg></span>${ps.map(([k,l,v])=>`<button class="chip ftc ${k}" data-kind="${k}" data-label="${esc(l)}" data-val="${esc(v)}" title="Lancer pour un investigateur">${k==="san"?`SAN ${esc(v)}${l&&l!=="Santé mentale"?` · ${esc(l)}`:""}`:esc(l)}</button>`).join('<span class="ft-o">ou</span>')}</div>`;}
-function flowHTML0(fl){if(!fl||!fl.length)return "";return `<div class="sec flow"><ol class="flw">${fl.map(s=>`<li><div class="fh">${s.h}</div>${s.txt?`<p>${s.txt}</p>`:""}${s.test?ftHTML(s.test):""}${s.ok?`<div class="fb ok"><span class="lab">Réussi</span> ${s.ok}</div>`:""}${s.ko?`<div class="fb ko"><span class="lab">Raté</span> ${s.ko}</div>`:""}${s.fail?`<div class="fb fx">${s.fail}</div>`:""}${s.extra?`<p class="fe">${s.extra}</p>`:""}</li>`).join("")}</ol></div>`;}
-function secHTML(list){return (list||[]).map(x=>`<div class="sec"><h4>${x.h}</h4><ul>${x.ul.map(u=>`<li>${u}</li>`).join("")}</ul></div>`).join("");}
+function flowHTML0(fl){if(!fl||!fl.length)return "";return `<div class="sec flow"><ol class="flw">${fl.map(s=>`<li><div class="fh">${esc(s.h)}</div>${s.txt?`<p>${s.txt}</p>`:""}${s.test?ftHTML(s.test):""}${s.ok?`<div class="fb ok"><span class="lab">Réussi</span> ${s.ok}</div>`:""}${s.ko?`<div class="fb ko"><span class="lab">Raté</span> ${s.ko}</div>`:""}${s.fail?`<div class="fb fx">${s.fail}</div>`:""}${s.extra?`<p class="fe">${s.extra}</p>`:""}</li>`).join("")}</ol></div>`;}
+function secHTML(list){return (list||[]).map(x=>`<div class="sec"><h4>${esc(x.h)}</h4><ul>${x.ul.map(u=>`<li>${u}</li>`).join("")}</ul></div>`).join("");}
 function renderScene(){
   const sc=scenesOf(SC()),i=Math.max(0,sc.findIndex(s=>s.id===ST().scene)),s=sc[i];
-  let h=`<div class="scene-head"><h2>${s.t}</h2>${s.p?`<span class="page">Livret ${s.p}</span>`:""}</div><p class="lead">${s.lead||""}</p>`;
+  let h=`<div class="scene-head"><h2>${esc(s.t)}</h2>${s.p?`<span class="page">Livret ${esc(s.p)}</span>`:""}</div><p class="lead">${s.lead||""}</p>`;
   if(typeof AMB_FOR!=="undefined"&&(AMB_FOR[s.id]||SFX_FOR[s.id])){const fx=(SFX_FOR[s.id]||[]).map(id=>REC_FX[id]?{id,n:REC_FX[id].n,attr:`data-sfxplay="${id}"`}:(()=>{const o=slotOf2(id);return o?{id,n:SLOTS.find(x=>x[0]===id)[1],attr:`data-myplay="${o.id}"`}:null;})()).filter(Boolean);
     h+=`<div class="chips scene-snd">${scrPrevHTML(s)}${AMB_FOR[s.id]?`<button class="chip amb" data-ambset="${AMB_FOR[s.id].join(",")}">♪ Ambiance : ${AMB_FOR[s.id].map(i=>REC_AMB[i].n).join(" + ")}</button>`:""}${fx.map(f=>`<button class="chip sfx" ${f.attr} title="Jouer le son">◗ ${esc(f.n)}</button>`).join("")}</div>`;}else if(scrPrevHTML(s))h+=`<div class="chips scene-snd">${scrPrevHTML(s)}</div>`;
   if(s.chips&&s.chips.length&&(!s.flow||s.chips.some(c=>c[0]!=="test")))h+=`<div class="chips">${s.chips.filter(c=>!s.flow||c[0]!=="test").map(c=>`<button class="chip ${c[0]}" data-kind="${c[0]}" data-label="${esc(c[1])}" data-val="${esc(c[2])}">${c[0]==="san"?"SAN ":c[0]==="dmg"?"":"Test "}${esc(c[1])}${c[2]?` · ${esc(c[2])}`:""}</button>`).join("")}</div>`;
@@ -188,7 +188,7 @@ function renderScene(){
   if(s.note)h+=`<div class="note">${s.note}</div>`;
   if(s.table)h+=`<div class="tw"><table class="ref"><thead><tr><th>Personnage</th><th>PV</th><th>DEX</th><th>Attaque</th><th>Défense · SAN</th></tr></thead><tbody>${PROFILES.map(r=>`<tr><td><b>${r[0]}</b><br><span style="color:var(--mute);font-size:12px">${r[1]}</span></td><td class="num">${r[2]}</td><td class="num">${r[3]}</td><td>${r[4]}</td><td>${r[5]}</td></tr>`).join("")}</tbody></table></div><div class="note">Corps réanimés : à réduire en pièces, ou à faire franchir un seuil scellé (ils s'effondrent).</div>`;
   const prev=sc[i-1],next=sc[i+1];
-  h+=`<div class="scene-foot">${prev?`<button class="btn" data-go="${prev.id}">← ${prev.t}</button>`:""}<span class="spacer"></span><button class="btn" id="markDone">${ST().done[s.id]?"Marquée jouée ✓":"Marquer comme jouée"}</button>${next?`<button class="btn prim" data-go="${next.id}">${next.t} →</button>`:""}</div>`;
+  h+=`<div class="scene-foot">${prev?`<button class="btn" data-go="${prev.id}">← ${esc(prev.t)}</button>`:""}<span class="spacer"></span><button class="btn" id="markDone">${ST().done[s.id]?"Marquée jouée ✓":"Marquer comme jouée"}</button>${next?`<button class="btn prim" data-go="${next.id}">${esc(next.t)} →</button>`:""}</div>`;
   $("#scene").innerHTML=h;
 }
 $("#scene").addEventListener("click",e=>{
@@ -294,9 +294,9 @@ function renderInv(){setTimeout(renderCtx,0);
       ${open?`<div class="ibody"><div class="job">${esc(b.job)} · DEX ${esc(b.dex)}</div>
       <div class="stats">${st("pv","PV",b.pv)}${st("san","SAN")}${st("chance","CHANCE")}${st("pm","PM")}</div>
       ${ST().groups&&ST().groups.length>1?`<div class="row3"><span style="font-size:12px;color:var(--mute)">Groupe</span>${ST().groups.map(gg=>`<button class="gchip ${s.grp===gg.id?"on":""}" style="--gc:${GCOL[gg.col%4]}" data-setg="${i}" data-g="${gg.id}">${esc(gg.name)}</button>`).join("")}</div>`:""}
-      <div class="row3"><select id="st-${S.cur}-${s.cid}" data-i="${i}" aria-label="État de ${esc(b.n)}">${STATES.map(x=>`<option value="${x[0]}" ${x[0]===s.state?"selected":""}>${x[1]}</option>`).join("")}</select>
+      <div class="row3"><select id="st-${esc(S.cur)}-${s.cid}" data-i="${i}" aria-label="État de ${esc(b.n)}">${STATES.map(x=>`<option value="${x[0]}" ${x[0]===s.state?"selected":""}>${x[1]}</option>`).join("")}</select>
         <button class="btn" data-sant="${i}">Test SAN</button><button class="btn" data-luck="${i}">Chance</button></div>
-      <div class="skchips">${skillsOf(b).map(([n,v])=>`<button class="skc ${isChecked(b.id,n)?"on":""}" data-chk="${b.id}" data-sk="${esc(n)}" title="Cocher pour la phase d'amélioration">${esc(n)} ${esc(v)}</button>`).join("")}</div><details class="skmore" ${CHARS_K.some(k=>!carOf(b)[k])?"":""}><summary>Caractéristiques${CHARS_K.some(k=>!carOf(b)[k])?" (à compléter)":""}</summary><div class="carin">${CHARS_K.map(k=>`<label><span>${k}</span><input type="number" min="1" max="99" value="${esc(carOf(b)[k]||"")}" placeholder="?" data-carin="${b.id}|${k}" ${b.car&&b.car[k]?"disabled":""} aria-label="${k} de ${esc(b.n)}"></label>`).join("")}</div></details><details class="skmore"><summary>Autres compétences (valeurs de base)</summary><div class="skchips">${allSkillsOf(b).filter(x=>x[2]).map(([n,v])=>`<button class="skc ${isChecked(b.id,n)?"on":""}" data-chk="${b.id}" data-sk="${esc(n)}" title="Cocher pour la phase d'amélioration">${esc(n)} ${esc(v)}</button>`).join("")}</div></details><p class="skhint">Coche une compétence réussie pendant la partie : elle pourra progresser à la fin.</p><textarea id="nt-${S.cur}-${s.cid}" data-i="${i}" placeholder="Blessures, phobie, objets…">${esc(s.note)}</textarea>
+      <div class="skchips">${skillsOf(b).map(([n,v])=>`<button class="skc ${isChecked(b.id,n)?"on":""}" data-chk="${b.id}" data-sk="${esc(n)}" title="Cocher pour la phase d'amélioration">${esc(n)} ${esc(v)}</button>`).join("")}</div><details class="skmore" ${CHARS_K.some(k=>!carOf(b)[k])?"":""}><summary>Caractéristiques${CHARS_K.some(k=>!carOf(b)[k])?" (à compléter)":""}</summary><div class="carin">${CHARS_K.map(k=>`<label><span>${k}</span><input type="number" min="1" max="99" value="${esc(carOf(b)[k]||"")}" placeholder="?" data-carin="${b.id}|${k}" ${b.car&&b.car[k]?"disabled":""} aria-label="${k} de ${esc(b.n)}"></label>`).join("")}</div></details><details class="skmore"><summary>Autres compétences (valeurs de base)</summary><div class="skchips">${allSkillsOf(b).filter(x=>x[2]).map(([n,v])=>`<button class="skc ${isChecked(b.id,n)?"on":""}" data-chk="${b.id}" data-sk="${esc(n)}" title="Cocher pour la phase d'amélioration">${esc(n)} ${esc(v)}</button>`).join("")}</div></details><p class="skhint">Coche une compétence réussie pendant la partie : elle pourra progresser à la fin.</p><textarea id="nt-${esc(S.cur)}-${s.cid}" data-i="${i}" placeholder="Blessures, phobie, objets…">${esc(s.note)}</textarea>
 </div>`:""}
     </div>`}).join("")}</div>`;
 }
@@ -553,7 +553,7 @@ function renderCombat(){setTimeout(renderCtx,0);
             <input type="number" min="0" id="dm-${i}" aria-label="Dégâts à infliger à ${esc(r.name)}" placeholder="dég."><button data-hit="${i}">Infliger</button></div></div>
         <div class="side2">${esqv?`<button class="btn" data-esq="${i}">Esquive ${esqv}</button>`:`<span style="font-size:12px;color:var(--mute)">n'esquive pas</span>`}</div>
         <div class="atk">${atk.map((a,j)=>`<button class="a" data-atk="${i}" data-j="${j}">${esc(a[0])}${a[5]!=null?`<small class="itm-ammo">${esc(a[5])}/${esc(a[6])}</small>`:""}${a[7]?`<small class="itm-cond">${esc(a[7].label)}</small>`:""} ${a[1]} %</button><button class="dg" data-dmg="${i}" data-j="${j}" title="Lancer seulement les dégâts">${esc(a[2])}</button>`).join("")}</div>
-        ${r.note?`<div class="note2">${esc(r.note)}</div>`:""}
+        ${r.note?`<div class="note2">${esc(htmlText(r.note))}</div>`:""}
       </div>`}).join("")}</div>
     <div class="note" style="margin-top:14px"><b>Esquiver</b> : l'attaquant doit faire un niveau supérieur, l'égalité protège. <b>Rendre les coups</b> : il faut un niveau supérieur à l'attaquant, l'égalité profite à l'attaquant. Après avoir esquivé ou rendu les coups une fois, toutes les autres attaques du round contre lui ont un dé bonus (pas avec les armes à feu). Une arme à feu prête agit à DEX + 50${T(9,"")}.</div>`;
   }
@@ -1216,7 +1216,7 @@ function charCard(c){const pr=S.prog[c.id]||{};const sanNow=pr.san??c.san;const 
 renderHome=function(){
   $("#addPlayerZone").innerHTML=`<button class="btn prim" id="addPlayer">+ Ajouter un joueur</button>`;
   $("#scenList").innerHTML=SCENARIOS.map(s=>{const st=S.scen[s.id];const n=s.acts?scenesOf(s).length:0;const d=s.acts?Object.values(st.done).filter(Boolean).length:0;const live=inProgress(st);
-    return `<article class="scen"><div><h3>${s.t}</h3><div class="meta">${s.players} · ${s.length}</div></div>
+    return `<article class="scen"><div><h3>${esc(s.t)}</h3><div class="meta">${s.players} · ${s.length}</div></div>
       <div class="acts2"><span class="badge ${s.status}">${s.statusTxt}</span></div>
       <p>${s.desc}</p>
       ${s.acts?`${live?`<div class="prog" title="${d} scènes jouées sur ${n}"><i style="width:${n?d/n*100:0}%"></i></div>
@@ -1264,7 +1264,7 @@ function renderSetup(){const U=S.setup,sc=SCENARIOS.find(s=>s.id===U.scen);const
       ${free.length?`<optgroup label="Prétirés et fiches libres">${free.map(c=>`<option value="${c.id}" ${cur===c.id?"selected":""} ${dis(c)}>${esc(c.n)}</option>`).join("")}</optgroup>`:""}<option value="__new">+ Créer un nouveau personnage</option>`;};
   const iss=setupIssues();const n=Object.values(U.rows).filter(r=>r.on).length;
   $("#setupBody").innerHTML=`<p class="gm-eyebrow">${U.edit?"Modifier la partie":"Nouvelle partie"}</p>
-    <h2>${sc.t}</h2><p class="lead" style="font-style:normal">${sc.players} · ${sc.length}</p>
+    <h2>${esc(sc.t)}</h2><p class="lead" style="font-style:normal">${sc.players} · ${sc.length}</p>
     ${!U.edit&&inProgress(st)?`<div class="note">Une partie est déjà en cours sur ce scénario. La lancer à nouveau repart de zéro : sauvegarde-la d'abord depuis le menu de la partie si tu veux la garder.</div>`:""}
     <div class="sec"><h4>Qui joue ?</h4>
     ${S.players.length?`<div class="setlist">${S.players.map(p=>{const r=U.rows[p.id]||{};return `<div class="setrow ${r.on?"on":""}">
@@ -1423,7 +1423,7 @@ function renderMenu(){const L=liveGames(),last=L[0];const nChars=allChars().filt
 function uiLang(){try{return localStorage.getItem("gardien-lang")||"fr"}catch(e){return "fr"}}
 const scLangOK=s=>(s.lang||"fr")===uiLang();
 function renderStory(){$("#storyList").innerHTML=SCENARIOS.filter(scLangOK).map(s=>{const live=inProgress(S.scen[s.id]);
-  return `<article class="scen story ${s.acts?"":"off"}"><div><h3>${s.t}</h3><div class="meta">${s.players} · ${s.length}</div></div>
+  return `<article class="scen story ${s.acts?"":"off"}"><div><h3>${esc(s.t)}</h3><div class="meta">${s.players} · ${s.length}</div></div>
     <div class="acts2"><span class="badge ${s.status}">${s.statusTxt}</span></div><p>${s.desc}</p>
     <div class="scen-actions">${s.acts?`<button class="btn prim" data-newgame="${s.id}">Choisir cette histoire</button>${live?`<span class="mut">une partie est déjà en cours sur cette histoire</span>`:""}`:`<span class="mut">Envoie les pages du livret à Claude pour la préparer.</span>`}</div></article>`;}).join("");}
 function renderSavesAll(){
@@ -1751,12 +1751,16 @@ window.GRIMOIRE_ENGINE={
    choices of the step before it: shown under that step as lettered options (A, B, C), so the
    keeper sees at a glance what happens for each choice the players make.
    The engine renders a first time before this code runs: functions only here (hoisted), state in
-   `var`s (no temporal dead zone). */
+   `var`s (no temporal dead zone).
+   A step's title (h) is plain text from the story: escaped here. Its other texts, its condition
+   (br) included, are HTML the app made inert (toHtml in src/play/legacy/adapter.ts). */
+/* The text of some of that HTML (a <template> runs and loads nothing). */
+function htmlText(h){const t=document.createElement("template");t.innerHTML=String(h||"");return t.content.textContent;}
 function flowHTML(fl){if(!fl||!fl.length)return "";
   const body=s=>`${s.txt?`<p>${s.txt}</p>`:""}${s.test?ftHTML(s.test):""}${s.ok?`<div class="fb ok"><span class="lab">Réussi</span> ${s.ok}</div>`:""}${s.ko?`<div class="fb ko"><span class="lab">Raté</span> ${s.ko}</div>`:""}${s.fail?`<div class="fb fx">${s.fail}</div>`:""}${s.extra?`<p class="fe">${s.extra}</p>`:""}`;
   const groups=[];fl.forEach(s=>{if(s.br&&groups.length)groups[groups.length-1].br.push(s);else groups.push({s,br:[]});});
-  const choice=(b,j)=>`<li data-l="${String.fromCharCode(65+j%26)}"><div class="fh"><span class="br-if">${b.br}</span></div>${b.h&&b.h!==b.br?`<div class="br-t">${b.h}</div>`:""}${body(b)}</li>`;
-  return `<div class="sec flow"><ol class="flw">${groups.map(({s,br})=>`<li${br.length?' class="has-br"':""}><div class="fh">${s.h||s.br||""}</div>${body(s)}${br.length?`<div class="flb-l">Selon le choix des joueurs</div><ol class="flb">${br.map(choice).join("")}</ol>`:""}</li>`).join("")}</ol></div>`;}
+  const choice=(b,j)=>`<li data-l="${String.fromCharCode(65+j%26)}"><div class="fh"><span class="br-if">${b.br}</span></div>${b.h&&b.h!==htmlText(b.br)?`<div class="br-t">${esc(b.h)}</div>`:""}${body(b)}</li>`;
+  return `<div class="sec flow"><ol class="flw">${groups.map(({s,br})=>`<li${br.length?' class="has-br"':""}><div class="fh">${s.h?esc(s.h):s.br||""}</div>${body(s)}${br.length?`<div class="flb-l">Selon le choix des joueurs</div><ol class="flb">${br.map(choice).join("")}</ol>`:""}</li>`).join("")}</ol></div>`;}
 
 /* ---------- The ambiance screen's background for this scene ----------
    A small live preview (the TV's own drawing, /screen-preview in an iframe) next to the scene's

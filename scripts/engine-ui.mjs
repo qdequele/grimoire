@@ -1,19 +1,45 @@
 // Game screen UI patches (applied by extract-engine.mjs after the dice patches; each must match
-// exactly once): the scene flow's choices, the scene's documents and items, the ambiance screen's
-// preview, investigator sheets and items (combat included), a toolbar that stays on top. The new engine code is scripts/engine-ui/ui.engine.js
+// exactly once, or the number of times it says): the scene flow's choices, the scene's documents and
+// items, the ambiance screen's preview, investigator sheets and items (combat included), a toolbar
+// that stays on top, and the escaping of the story's plain texts where the engine writes them as HTML.
+// The new engine code is scripts/engine-ui/ui.engine.js
 // (inserted before the first route()), its styles scripts/engine-ui/ui.css (appended to legacy.css).
 //
-// Like engine-dice.mjs, the patches target the engine as the earlier patches leave it, which is the
-// current public/play/engine.js: node scripts/engine-ui.mjs --apply applies them to the generated files.
+// Like engine-dice.mjs, the patches target the engine as the earlier patches leave it:
+// node scripts/engine-ui.mjs --apply applies them to the generated files as they were before any UI
+// patch, which is their last commit without the "Grimoire UI" mark:
+//   git checkout 5cfde22 -- public/play/engine.js public/play/legacy.css && node scripts/engine-ui.mjs --apply
 import { readFileSync } from 'node:fs'
 
 const here = (f) => new URL(`./engine-ui/${f}`, import.meta.url)
 export const UI_JS = readFileSync(here('ui.engine.js'), 'utf8')
 export const UI_CSS = readFileSync(here('ui.css'), 'utf8')
 
-/** [from, to, why] */
+/** [from, to, why, times it must match (1 unless given: the engine declares a few functions twice)] */
 export const UI_PATCHES = [
   ['function flowHTML(fl){', 'function flowHTML0(fl){', 'the scene flow is drawn by ui.engine.js (choices under their step)'],
+  // Story text is untrusted (a shared pack, an AI import, the chat connector). Rich text reaches the
+  // engine already inert (toHtml in src/play/legacy/adapter.ts); titles stay plain text, which the
+  // engine also reads as text (Journal, narrator, toasts), so it escapes them where it writes HTML.
+  ['<h3>${s.t}</h3><div class="meta">', '<h3>${esc(s.t)}</h3><div class="meta">', 'story text: the story\'s title in the story lists', 3],
+  ['<h2>${sc.t}</h2>', '<h2>${esc(sc.t)}</h2>', 'story text: the story\'s title in the game setup'],
+  ['<span class="t">${s.t}</span>', '<span class="t">${esc(s.t)}</span>', 'story text: scene titles in the navigation'],
+  [
+    '<h2>${s.t}</h2>${s.p?`<span class="page">Livret ${s.p}</span>`:""}',
+    '<h2>${esc(s.t)}</h2>${s.p?`<span class="page">Livret ${esc(s.p)}</span>`:""}',
+    'story text: the scene\'s title and page reference',
+  ],
+  ['← ${prev.t}</button>', '← ${esc(prev.t)}</button>', 'story text: the previous scene\'s title'],
+  ['${next.t} →</button>', '${esc(next.t)} →</button>', 'story text: the next scene\'s title'],
+  ['<h4>${x.h}</h4>', '<h4>${esc(x.h)}</h4>', 'story text: the titles of a scene\'s notes'],
+  ['<div class="fh">${s.h}</div>', '<div class="fh">${esc(s.h)}</div>', 'story text: step titles in the original scene flow (no longer called)'],
+  [
+    '${r.note?`<div class="note2">${esc(r.note)}</div>`:""}',
+    '${r.note?`<div class="note2">${esc(htmlText(r.note))}</div>`:""}',
+    'story text: an opponent\'s note is HTML: its text in combat, not its source',
+  ],
+  ['id="st-${S.cur}-${s.cid}"', 'id="st-${esc(S.cur)}-${s.cid}"', 'story text: the story\'s id in an attribute (state select)'],
+  ['id="nt-${S.cur}-${s.cid}"', 'id="nt-${esc(S.cur)}-${s.cid}"', 'story text: the story\'s id in an attribute (note field)'],
   [
     'h+=`<div class="chips scene-snd">${AMB_FOR[s.id]?',
     'h+=`<div class="chips scene-snd">${scrPrevHTML(s)}${AMB_FOR[s.id]?',
@@ -68,10 +94,10 @@ const MARK = '/* Grimoire UI (scripts/engine-ui.mjs)'
 /** Applies the patches and inserts the new engine code (before the first route()). */
 export function applyUiPatches(js) {
   if (js.includes(MARK)) throw new Error('UI patches already applied')
-  for (const [from, to, why] of UI_PATCHES) {
+  for (const [from, to, why, times = 1] of UI_PATCHES) {
     const n = js.split(from).length - 1
-    if (n !== 1) throw new Error(`Patch "${why}" matched ${n} times`)
-    js = js.replace(from, () => to)
+    if (n !== times) throw new Error(`Patch "${why}" matched ${n} times, not ${times}`)
+    js = js.split(from).join(to)
   }
   const start = 'try{route()}catch(e){}'
   if (js.split(start).length !== 2) throw new Error('first route() not found')

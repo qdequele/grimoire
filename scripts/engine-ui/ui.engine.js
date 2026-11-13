@@ -7,12 +7,16 @@
    choices of the step before it: shown under that step as lettered options (A, B, C), so the
    keeper sees at a glance what happens for each choice the players make.
    The engine renders a first time before this code runs: functions only here (hoisted), state in
-   `var`s (no temporal dead zone). */
+   `var`s (no temporal dead zone).
+   A step's title (h) is plain text from the story: escaped here. Its other texts, its condition
+   (br) included, are HTML the app made inert (toHtml in src/play/legacy/adapter.ts). */
+/* The text of some of that HTML (a <template> runs and loads nothing). */
+function htmlText(h){const t=document.createElement("template");t.innerHTML=String(h||"");return t.content.textContent;}
 function flowHTML(fl){if(!fl||!fl.length)return "";
   const body=s=>`${s.txt?`<p>${s.txt}</p>`:""}${s.test?ftHTML(s.test):""}${s.ok?`<div class="fb ok"><span class="lab">Réussi</span> ${s.ok}</div>`:""}${s.ko?`<div class="fb ko"><span class="lab">Raté</span> ${s.ko}</div>`:""}${s.fail?`<div class="fb fx">${s.fail}</div>`:""}${s.extra?`<p class="fe">${s.extra}</p>`:""}`;
   const groups=[];fl.forEach(s=>{if(s.br&&groups.length)groups[groups.length-1].br.push(s);else groups.push({s,br:[]});});
-  const choice=(b,j)=>`<li data-l="${String.fromCharCode(65+j%26)}"><div class="fh"><span class="br-if">${b.br}</span></div>${b.h&&b.h!==b.br?`<div class="br-t">${b.h}</div>`:""}${body(b)}</li>`;
-  return `<div class="sec flow"><ol class="flw">${groups.map(({s,br})=>`<li${br.length?' class="has-br"':""}><div class="fh">${s.h||s.br||""}</div>${body(s)}${br.length?`<div class="flb-l">Selon le choix des joueurs</div><ol class="flb">${br.map(choice).join("")}</ol>`:""}</li>`).join("")}</ol></div>`;}
+  const choice=(b,j)=>`<li data-l="${String.fromCharCode(65+j%26)}"><div class="fh"><span class="br-if">${b.br}</span></div>${b.h&&b.h!==htmlText(b.br)?`<div class="br-t">${esc(b.h)}</div>`:""}${body(b)}</li>`;
+  return `<div class="sec flow"><ol class="flw">${groups.map(({s,br})=>`<li${br.length?' class="has-br"':""}><div class="fh">${s.h?esc(s.h):s.br||""}</div>${body(s)}${br.length?`<div class="flb-l">Selon le choix des joueurs</div><ol class="flb">${br.map(choice).join("")}</ol>`:""}</li>`).join("")}</ol></div>`;}
 
 /* ---------- The ambiance screen's background for this scene ----------
    A small live preview (the TV's own drawing, /screen-preview in an iframe) next to the scene's
