@@ -448,7 +448,7 @@ Before drawing a background, check the built-in décors (topic "sounds"): if the
 Anything else is refused with the reason, and nothing is saved.
 - One root <svg> with a viewBox, at most ${SVG_LIMITS.bytes / 1024} KB and ${SVG_LIMITS.elements} elements.
 - Elements: ${IMAGE_ELEMENTS}, and the filter primitives (feGaussianBlur, feTurbulence, feDisplacementMap, feColorMatrix, feComposite, feMerge, feOffset, feFlood…) except feImage.
-- Not allowed: scripts, event attributes (onload…), foreignObject, <image> and feImage, links (<a>), animation (animate, set…), DOCTYPE and entities, editor namespaces (inkscape, sodipodi), external URLs. href only as "#id" (use, textPath, gradients, patterns), url() only as url(#id). In <style> and style="": plain CSS, no @import, no @font-face, no backslashes.
+- Not allowed: scripts, event attributes (onload…), foreignObject, <image> and feImage, links (<a>), animation (animate, set…), DOCTYPE and entities, editor namespaces (inkscape, sodipodi), external URLs. href only as "#id" (use, textPath, gradients, patterns), url() only as url(#id). In <style> and style="": plain CSS, no @import, no @font-face, no backslashes, not even inside a CSS comment or a quoted string.
 
 ## Calling save_image
 

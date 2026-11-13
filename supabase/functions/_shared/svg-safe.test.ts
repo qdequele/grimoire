@@ -117,6 +117,19 @@ describe('sanitizeSvg: attacks are refused', () => {
     refused(wrap('<style>rect { fill: url/**/(http://evil.example/x) }</style>'), /url/)
   })
 
+  it('refuses CSS hidden between a string holding "/*" and one holding "*/"', () => {
+    // A browser reads "/*" inside quotes as a string, not as the start of a comment: what follows is live CSS.
+    refused(wrap('<style>x"/*"{} @import "https://evil.example/x.css"; y{font-family:"*/"}</style>'), /@import/)
+    refused(wrap('<style>x{font-family:"/*"} svg{background:url(https://evil.example/a.png)} y{font-family:"*/"}</style>'), /url/)
+    refused(wrap('<style>x{font-family:"/*"} @font-face{font-family:f;src:url(https://evil.example/f.woff)} y{font-family:"*/"}</style>'), /url|@font-face/)
+    refused(wrap('<style>x{font-family:"/*"} rect{fill:u\\72l(https://evil.example/x)} y{font-family:"*/"}</style>'), /backslash/)
+    refused(wrap('<style><![CDATA[x{font-family:"/*"} y::after{content:"<"} z{font-family:"*/"}]]></style>'), /"<"/)
+    // So a comment can't hold them either, and the message says so.
+    refused(wrap('<style>/* no @import here */ rect { fill: red }</style>'), /@import.*comment/)
+    // Plain comments stay fine.
+    expect(() => sanitizeSvg(wrap('<style>/* the sky */ rect { fill: url(#sky) } /* end */</style><linearGradient id="sky"/>'))).not.toThrow()
+  })
+
   it('refuses DOCTYPE, entities, processing instructions and other namespaces', () => {
     refused('<!DOCTYPE svg [<!ENTITY x "y">]><svg viewBox="0 0 1 1">&x;</svg>', /DOCTYPE/)
     refused('<?xml version="1.0"?><!DOCTYPE svg SYSTEM "file:///etc/passwd"><svg viewBox="0 0 1 1"/>', /DOCTYPE/)

@@ -131,21 +131,28 @@ export interface SafeSvg {
 const escText = (s: string) => s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
 const escAttr = (s: string) => escText(s).replace(/"/g, '&quot;')
 
-/**
- * CSS from a <style> element or a style attribute: plain declarations only. Anything that could load
- * something (url() other than url(#id), image-set, @import, @font-face…) or hide it (backslash escapes)
- * is refused.
- */
+// CSS from a <style> element or a style attribute: plain declarations only. Anything that could load
+// something (url() other than url(#id), image-set, @import, @font-face…) or hide it (backslash
+// escapes) is refused.
+//
+// It is checked twice: as written, and with comments read as spaces. For a browser a "/*" inside a
+// quoted string does not start a comment, so removing "comments" first would hide the live CSS
+// between a string holding "/*" and one holding "*/": the text as written shows everything a browser
+// can read. The copy without comments catches a word a comment cuts in two ("url/**/("). The price:
+// a comment or a string can't hold these words either, and the message says so.
 function checkCss(css: string, where: string) {
   if (/\/\*(?![\s\S]*?\*\/)/.test(css)) throw new SvgError(`${where}: unterminated CSS comment.`)
-  const plain = css.replace(/\/\*[\s\S]*?\*\//g, ' ').replace(LOCAL_URL, '')
-  if (/\\/.test(plain)) throw new SvgError(`${where}: backslash escapes are not allowed in CSS.`)
-  if (plain.includes('<')) throw new SvgError(`${where}: "<" is not allowed in CSS.`)
-  const bad = plain.match(/url\s*\(|image-set|image\s*\(|cross-fade|element\s*\(|\bsrc\s*\(|expression\s*\(|javascript|vbscript|-moz-binding|behavior\s*:/i)
-  if (bad) throw new SvgError(`${where}: "${bad[0]}" is not allowed in CSS. Only url(#id) can reference something, and only inside the file.`)
-  for (const m of plain.matchAll(/@([\w-]*)/g)) {
-    if (!['media', 'keyframes', '-webkit-keyframes', 'supports'].includes(m[1].toLowerCase())) {
-      throw new SvgError(`${where}: @${m[1]} is not allowed in CSS (no @import, @font-face: use generic font families such as serif or cursive).`)
+  const asWritten = css.replace(LOCAL_URL, '')
+  const withoutComments = css.replace(/\/\*[\s\S]*?\*\//g, ' ').replace(LOCAL_URL, '')
+  for (const [plain, hint] of [[withoutComments, ''], [asWritten, ' (in comments and quoted strings too: remove it there)']]) {
+    if (/\\/.test(plain)) throw new SvgError(`${where}: backslash escapes are not allowed in CSS${hint}.`)
+    if (plain.includes('<')) throw new SvgError(`${where}: "<" is not allowed in CSS${hint}.`)
+    const bad = plain.match(/url\s*\(|image-set|image\s*\(|cross-fade|element\s*\(|\bsrc\s*\(|expression\s*\(|javascript|vbscript|-moz-binding|behavior\s*:/i)
+    if (bad) throw new SvgError(`${where}: "${bad[0]}" is not allowed in CSS${hint}. Only url(#id) can reference something, and only inside the file.`)
+    for (const m of plain.matchAll(/@([\w-]*)/g)) {
+      if (!['media', 'keyframes', '-webkit-keyframes', 'supports'].includes(m[1].toLowerCase())) {
+        throw new SvgError(`${where}: @${m[1]} is not allowed in CSS${hint} (no @import, @font-face: use generic font families such as serif or cursive).`)
+      }
     }
   }
 }
