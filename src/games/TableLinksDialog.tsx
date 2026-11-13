@@ -119,7 +119,7 @@ export function TableLinksDialog({ gameId, party, open, onOpenChange }: {
           <DialogTitle className="font-heading text-2xl font-normal">{t('Liens des joueurs')}</DialogTitle>
           <span className="deco-rule" />
           <DialogDescription className="font-serif text-base text-muted-foreground">
-            {t('Les joueurs ouvrent un lien sur leur téléphone pour suivre leur investigateur.')}
+            {t('Les joueurs ouvrent un lien sur leur téléphone ou leur ordinateur pour suivre leur investigateur. En ligne, copie-le dans votre salon (Discord…).')}
           </DialogDescription>
           <DialogClose render={<Button variant="ghost" size="icon-sm" className="absolute top-3 right-3" aria-label={t('Fermer')} />}>
             <X />

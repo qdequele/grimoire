@@ -130,8 +130,11 @@ export function DiceTab() {
   const pending = roll.isPending
   const dice = pending ? freeDice(count, sides, null) : last?.kind === 'dice' ? freeDice(last.count, last.sides, last.results) : null
 
+  // Phone: one column. Computer (lg): the choice of dice on the left, the throw and the last rolls
+  // on the right (`contents` keeps the phone's order without the wrappers).
   return (
-    <div className="flex flex-col gap-5">
+    <div className="flex flex-col gap-5 lg:grid lg:grid-cols-2 lg:items-start lg:gap-8">
+      <div className="contents lg:flex lg:flex-col lg:gap-5">
       <section className="flex flex-col gap-2">
         <h2 className="eyebrow">{t('Dé')}</h2>
         <div role="radiogroup" aria-label={t('Dé')} className="grid grid-cols-4 gap-px border border-border bg-border">
@@ -167,6 +170,8 @@ export function DiceTab() {
         <Dices data-icon="inline-start" />
         {t('Lancer {dice}', { dice: diceFormula({ count, sides, modifier }) })}
       </Button>
+      </div>
+      <div className="contents lg:flex lg:flex-col lg:gap-5">
       {dice && <DiceTray dice={dice} throwKey={pending ? null : throwing.fresh} onSettled={throwing.onSettled} />}
       {throwing.revealed(last, pending) && <RollResult key={last.id} roll={last} />}
       <p className="text-center text-xs text-muted-foreground">{t('Le gardien voit le résultat sur son écran.')}</p>
@@ -189,6 +194,7 @@ export function DiceTab() {
           </ul>
         </section>
       )}
+      </div>
     </div>
   )
 }

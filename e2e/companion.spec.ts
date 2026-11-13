@@ -128,6 +128,28 @@ test('keeper shows the table link; a player picks an investigator and sees their
   await expect(phone.getByRole('heading', { name: 'Alpha', level: 1 })).toBeVisible()
 })
 
+test('on a computer (a table playing online), the sheet keeps its tabs in a side column', async ({ browser, baseURL }) => {
+  const { tableUrl } = await setUpTable(browser, baseURL)
+  const desk = await (await browser.newContext({ viewport: { width: 1280, height: 800 }, baseURL })).newPage()
+  watch(desk)
+  await pick(desk, tableUrl, 'Alpha')
+
+  // One tab list, beside the sheet (the phone's bottom bar is hidden)
+  const tabs = desk.getByRole('navigation', { name: 'Fiche' })
+  await expect(tabs.getByRole('link')).toHaveText(['Fiche', 'Dés', 'Objets', 'Carnet', 'Profil'])
+  const side = await tabs.boundingBox()
+  const skills = await desk.getByRole('heading', { name: 'Compétences' }).boundingBox()
+  expect(side && skills && side.x + side.width < skills.x).toBe(true)
+  await expect(desk.getByText('Clique sur une compétence pour savoir à quoi elle sert et la lancer.')).toBeVisible()
+
+  // Ctrl+Enter adds a note
+  await tabs.getByRole('link', { name: 'Carnet' }).click()
+  await desk.getByRole('textbox', { name: 'Écrire une note…' }).fill('Note du bureau')
+  await desk.getByRole('textbox', { name: 'Écrire une note…' }).press('Control+Enter')
+  await expect(desk.getByText('Note du bureau')).toBeVisible(LIVE)
+  await expect(desk.getByRole('textbox', { name: 'Écrire une note…' })).toHaveValue('')
+})
+
 test('SAN removed on the game screen shows on the phone, and HP changed on the phone shows on the game screen', async ({ browser, baseURL }) => {
   const { game, tableUrl, phone } = await setUpTable(browser, baseURL)
   await pick(phone, tableUrl, 'Alpha')

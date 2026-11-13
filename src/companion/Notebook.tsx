@@ -31,7 +31,7 @@ export function Notebook() {
   }
 
   return (
-    <div className="flex flex-col gap-5">
+    <div className="flex max-w-2xl flex-col gap-5">
       {view.party.length > 1 && (
         <section className="flex flex-col gap-2">
           <h2 className="eyebrow">{t('Lire les carnets')}</h2>
@@ -68,6 +68,13 @@ export function Notebook() {
             <Textarea
               value={draft}
               onChange={(e) => setDraft(e.target.value)}
+              onKeyDown={(e) => {
+                // On a keyboard, Ctrl+Enter (⌘+Enter on a Mac) adds the note.
+                if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) {
+                  e.preventDefault()
+                  submit()
+                }
+              }}
               placeholder={t('Écrire une note…')}
               aria-label={t('Écrire une note…')}
               maxLength={MAX_NOTE + 200}
