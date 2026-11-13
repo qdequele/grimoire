@@ -34,6 +34,31 @@ const junk = (p: string) =>
   p.split('/').some((part) => part.startsWith('.') || part === '__MACOSX' || part === '..' || part === '') ||
   /(^|\/)(Thumbs\.db|desktop\.ini)$/i.test(p)
 
+const isObj = (v: unknown): v is Record<string, unknown> => typeof v === 'object' && v !== null && !Array.isArray(v)
+const isName = (v: unknown) => typeof v === 'string' && v !== ''
+
+/**
+ * The shape every screen reads without checking (story list, story page, game screen): each act
+ * with an id, a title and a list of scenes, each scene with an id and a title. The finer schema
+ * rules stay warnings; a story saved without these would break the pages that list it.
+ */
+function actProblems(acts: unknown): string[] {
+  if (!Array.isArray(acts)) return ['Aucune scène.']
+  const problems: string[] = []
+  let scenes = 0
+  acts.forEach((act: unknown, i) => {
+    if (!isObj(act) || !isName(act.id) || typeof act.title !== 'string' || !Array.isArray(act.scenes)) {
+      problems.push(`Acte mal formé (id, title et scenes sont requis) : acts[${i}]`)
+      return
+    }
+    act.scenes.forEach((scene: unknown, j) => {
+      if (isObj(scene) && isName(scene.id) && typeof scene.title === 'string') scenes++
+      else problems.push(`Scène mal formée (id et title sont requis) : acts[${i}].scenes[${j}]`)
+    })
+  })
+  return problems.length || scenes ? problems.slice(0, 10) : ['Aucune scène.']
+}
+
 const ajv = new Ajv2020({ allErrors: true, strict: false })
 const validateStory = ajv.compile(storySchema)
 
@@ -69,8 +94,7 @@ export function readPack(entries: Array<{ path: string; data: Uint8Array }>): Re
   if (typeof meta.id !== 'string' || !meta.id) errors.push('meta.id manquant.')
   if (typeof meta.title !== 'string' || !meta.title.trim()) errors.push('meta.title manquant.')
   if (typeof meta.lang !== 'string' || !meta.lang) errors.push('meta.lang manquant.')
-  const acts = story.acts as Array<{ scenes?: unknown[] }> | undefined
-  if (!Array.isArray(acts) || !acts.some((a) => Array.isArray(a?.scenes) && a.scenes.length)) errors.push('Aucune scène.')
+  errors.push(...actProblems(story.acts))
 
   if (!validateStory(story)) {
     for (const e of (validateStory.errors ?? []).slice(0, 20)) warnings.push(`${e.instancePath || '/'} ${e.message ?? ''}`.trim())

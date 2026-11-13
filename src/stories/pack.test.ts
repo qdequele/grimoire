@@ -43,6 +43,26 @@ describe('readPack', () => {
     expect(r.errors).toEqual(expect.arrayContaining(['meta.title manquant.', 'Aucune scène.']))
   })
 
+  it('refuses a story whose acts or scenes lack what every screen reads', () => {
+    const base = { format: 'grimoire-story/1', meta: { id: 'x', title: 'X', lang: 'fr' } }
+    const scene = { id: 's1', title: 'S' }
+    const read = (acts: unknown) => readPack([entry('story.json', JSON.stringify({ ...base, acts }))])
+    const badAct = (at: string) => [`Acte mal formé (id, title et scenes sont requis) : ${at}`]
+    const badScene = (at: string) => [`Scène mal formée (id et title sont requis) : ${at}`]
+    // One good act is not enough: the list and the story page read every act's scenes.
+    const noScenes = read([{ id: 'a1', title: 'I', scenes: [scene] }, { id: 'a2', title: 'II' }])
+    expect(noScenes.story).toBeNull()
+    expect(noScenes.errors).toEqual(badAct('acts[1]'))
+    expect(read([{ id: 'a1', title: 'I', scenes: [scene] }, null]).errors).toEqual(badAct('acts[1]'))
+    expect(read([{ title: 'I', scenes: [scene] }]).errors).toEqual(badAct('acts[0]'))
+    expect(read([{ id: 'a1', title: 'I', scenes: [scene, { id: 's2' }] }]).errors).toEqual(badScene('acts[0].scenes[1]'))
+    expect(read([{ id: 'a1', title: 'I', scenes: [scene, 'oops'] }]).errors).toEqual(badScene('acts[0].scenes[1]'))
+    // An act may still be empty, as long as the story has a scene somewhere.
+    const emptyAct = read([{ id: 'a1', title: 'I', scenes: [scene] }, { id: 'a2', title: 'II', scenes: [] }])
+    expect(emptyAct.errors).toEqual([])
+    expect(emptyAct.story).not.toBeNull()
+  })
+
   it('imports with warnings when only the finer schema rules are broken', () => {
     const story = JSON.parse(sample.toString())
     story.acts[0].scenes[0].mood = 'stormy'

@@ -51,6 +51,7 @@ export function dataKeys(): string[] {
     'story.json n’est pas un JSON valide.',
     'format doit valoir "grimoire-story/1".',
     'meta.id manquant.', 'meta.title manquant.', 'meta.lang manquant.', 'Aucune scène.',
+    'Acte mal formé (id, title et scenes sont requis)', 'Scène mal formée (id et title sont requis)',
     'Ignoré (hors du dossier de l’histoire)',
     'Archive .zip illisible.',
     'Import impossible.', 'Suggestion impossible.',

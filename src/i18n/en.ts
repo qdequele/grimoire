@@ -546,6 +546,8 @@ export const EN: Record<string, string> = {
   'meta.title manquant.': 'meta.title missing.',
   'meta.lang manquant.': 'meta.lang missing.',
   'Aucune scène.': 'No scenes.',
+  'Acte mal formé (id, title et scenes sont requis)': 'Malformed act (id, title and scenes are required)',
+  'Scène mal formée (id et title sont requis)': 'Malformed scene (id and title are required)',
   'Ignoré (hors du dossier de l’histoire)': 'Skipped (outside the story folder)',
   'Archive .zip illisible.': 'Unreadable .zip archive.',
 

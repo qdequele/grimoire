@@ -39,7 +39,23 @@ export const storyKeys = {
   one: (id: string) => [...storyKeys.all, 'one', id] as const,
 }
 
-const asStory = (row: Tables<'stories'>): StoryRow => ({ ...row, content: row.content as unknown as StoryContent })
+const isObj = (v: unknown): v is Record<string, unknown> => typeof v === 'object' && v !== null && !Array.isArray(v)
+
+/**
+ * A saved story as the screens read it: `acts` is always a list of acts, each with its list of
+ * scenes. Stories saved before the pack import checked that (or changed by hand) may lack them;
+ * without this the story list and the story page would fail on them, with no way to delete them.
+ */
+export function storyContent(content: unknown): StoryContent {
+  const story = (isObj(content) ? content : {}) as Record<string, unknown>
+  const acts = (Array.isArray(story.acts) ? story.acts : []).filter(isObj).map((act) => ({
+    ...act,
+    scenes: (Array.isArray(act.scenes) ? act.scenes : []).filter(isObj),
+  }))
+  return { ...story, acts } as unknown as StoryContent
+}
+
+const asStory = (row: Tables<'stories'>): StoryRow => ({ ...row, content: storyContent(row.content) })
 
 export function useMarketplaceStories() {
   return useQuery({
