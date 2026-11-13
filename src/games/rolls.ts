@@ -4,41 +4,69 @@ import { asRoll, type Roll } from '@/companion/rolls'
 import { supabase } from '@/lib/supabase'
 
 const PAGE = 20
+/** A game keeps its 100 newest rolls (companion_roll_prune). */
+const KEPT = 100
+/**
+ * How far back each read looks again. `created_at` is the time of the insert, not of the commit: a
+ * roll stamped before the newest one seen can become readable after it (two players tapping together).
+ */
+const OVERLAP_MS = 5000
 
 /**
- * Shows every new roll of the game once, in order. Call the returned function on each `roll` hint and
- * after each (re)subscribe: the first call only notes the newest roll (older ones aren't shown), later
- * ones show what came since, including rolls made while the channel was down. Reads run one at a time.
+ * Shows every new roll of the game once. Call the returned function on each `roll` hint and after
+ * each (re)subscribe: the first call only notes the rolls already there (they aren't shown), later
+ * ones show what came since, oldest first, including rolls made while the channel was down. A roll
+ * that commits late is shown when it appears, after later-stamped ones. Reads run one at a time.
  */
 export function rollFeed(gameId: string, show: (roll: Roll) => void): () => void {
   // created_at of the newest roll already seen; null until the first catch-up.
   let since: string | null = null
+  // Ids already shown or there at the start: reads overlap, each roll shows once.
   const seen = new Set<string>()
   let queue: Promise<void> = Promise.resolve()
   const run = (fn: () => Promise<void>) => {
     queue = queue.then(fn).catch(() => undefined)
   }
+  const note = (row: { id: string; created_at: string }) => {
+    seen.add(row.id)
+    if (since === null || row.created_at > since) since = row.created_at
+  }
+  /** Rows older than the overlap can't come back: forget the oldest ids beyond what a game keeps. */
+  const trim = () => {
+    for (const id of seen) {
+      if (seen.size <= 2 * KEPT) break
+      seen.delete(id)
+    }
+  }
 
   const baseline = async () => {
     const { data, error } = await supabase
-      .from('game_rolls').select('created_at').eq('game_id', gameId).order('created_at', { ascending: false }).limit(1)
+      .from('game_rolls').select('id, created_at').eq('game_id', gameId).order('created_at', { ascending: false }).limit(KEPT)
     if (error) return
-    since = data[0]?.created_at ?? new Date(0).toISOString()
+    since = new Date(0).toISOString()
+    data.forEach(note)
   }
 
   const readNew = async () => {
     if (since === null) return baseline()
-    const { data, error } = await supabase
-      .from('game_rolls').select('*').eq('game_id', gameId).gt('created_at', since)
-      .order('created_at', { ascending: true }).limit(PAGE)
-    if (error) return
-    for (const row of data) {
-      since = row.created_at
-      if (seen.has(row.id)) continue
-      seen.add(row.id)
-      const roll = asRoll(row)
-      if (roll) show(roll)
+    let from = new Date(Math.max(0, Date.parse(since) - OVERLAP_MS)).toISOString()
+    for (;;) {
+      const { data, error } = await supabase
+        .from('game_rolls').select('*').eq('game_id', gameId).gte('created_at', from)
+        .order('created_at', { ascending: true }).limit(PAGE)
+      if (error) return
+      for (const row of data) {
+        if (seen.has(row.id)) continue
+        note(row)
+        const roll = asRoll(row)
+        if (roll) show(roll)
+      }
+      // A full page: there may be more. The next one starts at this one's last row (seen, so skipped).
+      const last = data.at(-1)?.created_at
+      if (data.length < PAGE || !last || last === from) break
+      from = last
     }
+    trim()
   }
 
   return () => run(readNew)
