@@ -147,6 +147,60 @@ export const sceneCount = (content: unknown) => asStory(content).acts.reduce((n,
 export const FINISHED_WITH_ERRORS =
   'Every scene is written, so write_scenes takes nothing more for this story, but it still has format errors (validationErrors). Fix them with get_story and edit_story (put_scene, put_npc… in the story.json format), then give the keeper the link.'
 
+// ------------------------------------------------------------------ schema errors an edit adds
+
+/** One error of the story schema: where (a JSON pointer, as Ajv's instancePath) and what. */
+export interface SchemaIssue {
+  path: string
+  message: string
+}
+
+export const issueText = (e: SchemaIssue) => `${e.path || '/'} ${e.message}`.trim()
+
+/**
+ * What an issue is about, wherever it sits: positions in lists are replaced by the item's id (and
+ * what comes before a named item is dropped), so "/npcs/4/name" is the same error after an NPC was
+ * inserted or removed before it, or a scene moved to another act. Items without an id count as "*".
+ */
+function issueKey(story: unknown, issue: SchemaIssue): string {
+  let node: unknown = story
+  let key: string[] = []
+  let list = ''
+  for (const raw of issue.path.split('/').slice(1)) {
+    const part = raw.replace(/~1/g, '/').replace(/~0/g, '~')
+    const parent = node
+    node = Array.isArray(parent) ? parent[Number(part)] : isObj(parent) ? parent[part] : undefined
+    if (!Array.isArray(parent)) {
+      key.push(part)
+      list = part
+    } else if (isObj(node) && typeof node.id === 'string') {
+      key = [`${list}[${node.id}]`]
+    } else {
+      key.push('*')
+    }
+  }
+  return `${key.join('/')} ${issue.message}`
+}
+
+/**
+ * The schema errors the edited story has and the story before did not (it may already have some:
+ * stories converted from books, creations saved with validation errors). Counted per error, not as a
+ * total: mending one error doesn't pay for adding another. `was` and `now` are the full lists.
+ */
+export function addedSchemaIssues(before: unknown, was: SchemaIssue[], after: unknown, now: SchemaIssue[]): SchemaIssue[] {
+  const had = new Map<string, number>()
+  for (const e of was) {
+    const k = issueKey(before, e)
+    had.set(k, (had.get(k) ?? 0) + 1)
+  }
+  return now.filter((e) => {
+    const k = issueKey(after, e)
+    const left = had.get(k) ?? 0
+    if (left) had.set(k, left - 1)
+    return !left
+  })
+}
+
 // ------------------------------------------------------------------ editing a story (story.json level)
 
 export const EDIT_OPS = [

@@ -481,4 +481,19 @@ describe('mcp: a story with format errors', () => {
     storyId = last.storyId
     expect((await call(erin, 'write_scenes', { creationId, draft: draftFor([['act-2', 'cellar']], { npcs: [millerNpc] }) })).error).toMatch(/^finished: .*edit_story/)
   })
+
+  it('refuses an edit that replaces one format error with another', async () => {
+    const { npcs, version } = await call(erin, 'get_story', { storyId, part: 'npcs' })
+    const miller = npcs.find((n: { id: string }) => n.id === 'miller')
+    const mended = { ...miller, attacks: [{ ...miller.attacks[0], damage: '1D3' }] }
+    // One error before, one after: still a new one.
+    const swap = await call(erin, 'edit_story', { storyId, version, ops: [{ op: 'put_npc', npc: mended }, { op: 'put_npc', npc: { id: 'stranger', name: 42 } }] })
+    expect(swap.error).toMatch(/^invalid_story: [\s\S]*name must be string/)
+    expect(swap.error).not.toMatch(/damage/)
+    // The error the story already had doesn't block other edits, and mending it works.
+    const other = await call(erin, 'edit_story', { storyId, version, ops: [{ op: 'put_npc', npc: { id: 'stranger', name: 'A stranger' } }] })
+    expect(other.validationErrors.join('\n')).toMatch(/damage/)
+    const fixed = await call(erin, 'edit_story', { storyId, version: other.version, ops: [{ op: 'put_npc', npc: mended }] })
+    expect(fixed.validationErrors).toEqual([])
+  })
 })

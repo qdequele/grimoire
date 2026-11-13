@@ -38,6 +38,7 @@ import {
   writtenSceneIds,
 } from '../_shared/story-create.ts'
 import {
+  addedSchemaIssues,
   applyEdits,
   attachImage,
   detachImage,
@@ -46,6 +47,7 @@ import {
   GUIDE_TOPICS,
   guideText,
   imageUses,
+  issueText,
   MCP_LIMITS,
   normalizeDraft,
   parseImageRequest,
@@ -56,6 +58,7 @@ import {
   toolDefinitions,
   usesImage,
   type GuideTopic,
+  type SchemaIssue,
   type StoryPart,
 } from '../_shared/story-mcp.ts'
 import { choicesOf, investigatorSheet, investigatorView, parseInvestigator, type ParsedInvestigator } from '../_shared/investigator.ts'
@@ -83,8 +86,19 @@ const CORS = {
 
 const ajv = new Ajv2020({ allErrors: true, strict: false })
 const validateStory = ajv.compile(STORY_SCHEMA)
-const schemaErrors = (story: unknown) =>
-  validateStory(story) ? [] : (validateStory.errors ?? []).slice(0, 50).map((e) => `${e.instancePath || '/'} ${e.message ?? ''}`.trim())
+/** Schema errors listed in an answer or a message. */
+const ERRORS_SHOWN = 50
+/** Every schema error of a story (copied: Ajv reuses its list at the next validation). */
+const schemaIssues = (story: unknown): SchemaIssue[] =>
+  validateStory(story)
+    ? []
+    : (validateStory.errors ?? []).map((e) => ({
+        path: e.instancePath,
+        // Ajv's message for an extra property doesn't name it.
+        message: `${e.message ?? ''}${typeof e.params?.additionalProperty === 'string' ? `: ${e.params.additionalProperty}` : ''}`,
+      }))
+const shown = (issues: SchemaIssue[]) => issues.slice(0, ERRORS_SHOWN).map(issueText)
+const schemaErrors = (story: unknown) => shown(schemaIssues(story))
 
 type Db = SupabaseClient<Database>
 type CreationRow = Database['public']['Tables']['story_creations']['Row']
@@ -342,14 +356,19 @@ async function storyToEdit(ctx: Ctx, args: Record<string, unknown>) {
   return { current, version }
 }
 
-/** The edited story must not have more schema errors than before (it may already have some). */
+/**
+ * The edited story must not have a schema error the story didn't have (it may already have some).
+ * Compared error by error on the full lists, not by their number: an edit that mends one error and
+ * adds another is refused, and so is any bad edit to a story with more errors than are shown.
+ */
 function refuseNewSchemaErrors(before: unknown, story: unknown) {
-  const was = schemaErrors(before)
-  const validationErrors = schemaErrors(story)
-  if (validationErrors.length > was.length) {
-    throw new ToolError('invalid_story', `The edit doesn't fit the story format (nothing was changed):\n${validationErrors.filter((e) => !was.includes(e)).join('\n')}`)
+  const now = schemaIssues(story)
+  const added = addedSchemaIssues(before, schemaIssues(before), story, now)
+  if (added.length) {
+    const more = added.length > ERRORS_SHOWN ? `\n… and ${added.length - ERRORS_SHOWN} more.` : ''
+    throw new ToolError('invalid_story', `The edit doesn't fit the story format (nothing was changed):\n${shown(added).join('\n')}${more}`)
   }
-  return validationErrors
+  return shown(now)
 }
 
 async function editStory(ctx: Ctx, args: Record<string, unknown>) {
