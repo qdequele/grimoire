@@ -16,6 +16,7 @@ import { gameKeys, useGame, type GameRow, type GameState } from './api'
 import { TableLinksDialog, type TableMember } from './TableLinksDialog'
 import { ScreenControl, screenStory } from './screen'
 import { ScreenDialog } from './ScreenDialog'
+import { engineQueue, gameView, inOrder } from './live'
 import { rollFeed } from './rolls'
 import { showRollToast } from './RollToast'
 import { rollJournal } from '@/companion/rolls'
@@ -181,27 +182,13 @@ export function GamePage() {
         return [cid, (held.get(cid) ?? []).map((h) => toEngineItem(tRef.current, h, data))]
       }))
 
-    // The engine API appears in the iframe once its script has run: queue calls until then.
-    const queue: Array<(e: EngineApi) => void> = []
-    const engine = () => iframe.current?.contentWindow?.GRIMOIRE_ENGINE
-    const run = (fn: (e: EngineApi) => void, e: EngineApi) => {
-      try {
-        fn(e)
-      } catch (error) {
-        console.error('Live update failed', error)
-      }
-    }
-    const withEngine = (fn: (e: EngineApi) => void) => {
-      const e = engine()
-      if (e && !queue.length) run(fn, e)
-      else queue.push(fn)
-    }
-    const poll = setInterval(() => {
-      const e = engine()
-      if (!e) return
-      clearInterval(poll)
-      for (const fn of queue.splice(0)) run(fn, e)
-    }, ENGINE_POLL)
+    // The engine API appears in the iframe once its script has run: calls wait until then.
+    const calls = engineQueue<EngineApi>(
+      () => iframe.current?.contentWindow?.GRIMOIRE_ENGINE,
+      ENGINE_POLL,
+      (error) => console.error('Live update failed', error),
+    )
+    const withEngine = calls.run
 
     let timer: ReturnType<typeof setTimeout> | undefined
     let pending: LegacyState | null = null
@@ -371,14 +358,16 @@ export function GamePage() {
         void qc.invalidateQueries({ queryKey: characterKeys.all })
       })
     }
+    // One read at a time, in the order of the hints: a slow early answer can't replace a later one
+    // (three shots in a row are three hints, and the last count must win).
+    const itemReads = inOrder((error) => console.error('Items load failed', error))
     const readItems = (ids: string[]) => {
-      fetchItems(ids)
-        .then((list) => {
-          if (disposed) return
-          for (const cid of ids) held.set(cid, list.filter((h) => h.characterId === cid))
-          withEngine((e) => e.setItems(engineItems()))
-        })
-        .catch((error) => console.error('Items load failed', error))
+      itemReads(async () => {
+        const list = await fetchItems(ids)
+        if (disposed) return
+        for (const cid of ids) held.set(cid, list.filter((h) => h.characterId === cid))
+        withEngine((e) => e.setItems(engineItems()))
+      })
     }
     const readPoints = (characterId: string) => {
       const next = (pointsReads.get(characterId) ?? Promise.resolve()).then(async () => {
@@ -516,7 +505,7 @@ export function GamePage() {
 
     return () => {
       disposed = true
-      clearInterval(poll)
+      calls.stop()
       window.removeEventListener('pagehide', onHide)
       onHide()
       live.current = null
@@ -577,21 +566,23 @@ export function GamePage() {
     }
   }, [ready, channel, id, qc, t])
 
-  if (game.error) {
+  // A running game stays on screen whatever a background refetch of the game answers (gameView).
+  const view = gameView({ error: !!game.error, noStory: !!game.data && !game.data.story, started: !!start, ready })
+  if (view === 'missing') {
     return (
       <Alert variant="destructive" className="m-8 w-auto">
         <AlertDescription>{t('Partie introuvable.')}</AlertDescription>
       </Alert>
     )
   }
-  if (game.data && !game.data.story) {
+  if (view === 'no-story') {
     return (
       <Alert variant="destructive" className="m-8 w-auto">
         <AlertDescription>{t("L'histoire de cette partie n'est plus disponible.")}</AlertDescription>
       </Alert>
     )
   }
-  if (!ready || !id) {
+  if (view === 'loading' || !id) {
     return (
       <div className="flex min-h-svh items-center justify-center">
         <Spinner />
