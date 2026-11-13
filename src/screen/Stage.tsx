@@ -5,6 +5,7 @@ import { Hearth } from './Hearth'
 import { Particles } from './Particles'
 import { PhotoLights } from './PhotoLights'
 import { Place } from './Places'
+import { addsLayer, needsLoad, type Drawn } from './stageLoad'
 import { sceneKey, type ScreenHandout, type ScreenScene } from './state'
 import './screen.css'
 
@@ -183,16 +184,18 @@ export function Stage({ scene, handout }: { scene: ScreenScene | null; handout: 
   const [layers, setLayers] = useState<Layer[]>([])
   const seq = useRef(0)
   const key = sceneKey(scene)
-  const added = useRef<string | null>(null)
+  const drawn = useRef<Drawn | null>(null)
 
   useEffect(() => {
-    // The same background re-sent (refetch, new signature): nothing to redraw.
-    if (added.current === key) return
-    let cancelled = false
     const url = scene?.image?.url
+    // The same background re-sent is not redrawn, unless its picture failed and a fresh URL comes (needsLoad).
+    if (!needsLoad(drawn.current, key, url)) return
+    let cancelled = false
     void preload(url).then((ok) => {
       if (cancelled) return
-      added.current = key
+      const add = addsLayer(drawn.current, key, ok)
+      drawn.current = { key, url, ok }
+      if (!add) return
       const id = ++seq.current
       // Keep at most the layer being covered and the new one.
       setLayers((ls) => [...ls.slice(-1), { id, key, scene, url: ok && url ? url : null }])
