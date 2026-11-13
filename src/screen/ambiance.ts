@@ -247,14 +247,17 @@ export const PLACE_PRESET: Record<PlaceId, PresetId> = {
 /**
  * Words in a scene's title (or id) → place, French and English, accents ignored. Most specific first:
  * "La crypte de l'église" is a crypt, "La bibliothèque du manoir" a library.
+ * Only words that name the place whatever the sentence: none that is also an everyday word once accents are
+ * gone ("mais" for "maïs", "fair", "train" as in "en train de", "deck", "pit"). An entry of several words
+ * must be found in that order: "mine" alone is also "it is mine", so a mine needs its article.
  */
 const PLACE_WORDS: Array<[PlaceId, string[]]> = [
-  ['fair', ['foraine', 'foire', 'cirque', 'manege', 'carnaval', 'fair', 'fairground', 'funfair', 'carnival', 'circus']],
-  ['station', ['gare', 'train', 'wagon', 'locomotive', 'station', 'railway', 'platform', 'depot']],
-  ['ship', ['navire', 'bateau', 'paquebot', 'cargo', 'goelette', 'ship', 'boat', 'steamer', 'liner', 'deck', 'schooner', 'freighter']],
+  ['fair', ['foraine', 'foire', 'cirque', 'manege', 'carnaval', 'fairground', 'funfair', 'carnival', 'circus']],
+  ['station', ['gare', 'wagon', 'locomotive', 'station', 'railway', 'platform', 'depot']],
+  ['ship', ['navire', 'bateau', 'paquebot', 'cargo', 'goelette', 'ship', 'boat', 'steamer', 'liner', 'schooner', 'freighter']],
   ['museum', ['musee', 'exposition', 'museum', 'exhibit', 'exhibition']],
   ['asylum', ['asile', 'sanatorium', 'hopital', 'clinique', 'hospice', 'asylum', 'hospital', 'clinic', 'infirmary', 'madhouse']],
-  ['mine', ['mine', 'mines', 'puits', 'houillere', 'charbonnage', 'mineshaft', 'colliery', 'pit']],
+  ['mine', ['la mine', 'une mine', 'vieille mine', 'the mine', 'old mine', 'coal mine', 'gold mine', 'mines', 'puits', 'houillere', 'charbonnage', 'mineshaft', 'colliery']],
   ['cavern', ['grotte', 'grottes', 'caverne', 'cavernes', 'gouffre', 'grotto', 'cavern', 'caverns', 'sinkhole']],
   ['crypt', ['crypte', 'caveau', 'catacombe', 'catacombes', 'souterrain', 'souterrains', 'cave', 'crypt', 'vault', 'catacomb', 'catacombs', 'cellar', 'tunnel', 'tunnels']],
   ['library', ['bibliotheque', 'archives', 'librairie', 'library', 'archive', 'study', 'bookshop']],
@@ -266,20 +269,25 @@ const PLACE_WORDS: Array<[PlaceId, string[]]> = [
   ['dig', ['fouilles', 'fouille', 'desert', 'dunes', 'oasis', 'excavation', 'dig']],
   ['mountain', ['montagne', 'montagnes', 'sommet', 'refuge', 'chalet', 'glacier', 'mountain', 'mountains', 'peak', 'summit']],
   ['swamp', ['marais', 'marecage', 'marecages', 'bayou', 'tourbiere', 'swamp', 'marsh', 'bog', 'fen']],
-  ['farm', ['ferme', 'grange', 'champ', 'champs', 'mais', 'moulin', 'farm', 'barn', 'field', 'fields', 'cornfield', 'windmill', 'farmhouse']],
+  ['farm', ['ferme', 'grange', 'champ', 'champs', 'moulin', 'farm', 'barn', 'field', 'fields', 'cornfield', 'windmill', 'farmhouse']],
   ['moor', ['lande', 'landes', 'menhir', 'menhirs', 'dolmen', 'cromlech', 'moor', 'moors', 'heath', 'megalith', 'megaliths']],
   ['forest', ['foret', 'bois', 'sous-bois', 'clairiere', 'forest', 'woods', 'wood', 'clearing', 'grove']],
   ['manor', ['manoir', 'demeure', 'villa', 'manor', 'mansion', 'estate']],
   ['street', ['rue', 'ruelle', 'avenue', 'boulevard', 'quartier', 'faubourg', 'street', 'alley', 'lane', 'downtown']],
 ]
 
-const words = (text: string): Set<string> =>
-  new Set(text.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().split(/[^a-z-]+/).flatMap((w) => [w, ...w.split('-')]))
+const plain = (text: string): string => text.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase()
+
+const words = (text: string): Set<string> => new Set(plain(text).split(/[^a-z-]+/).flatMap((w) => [w, ...w.split('-')]))
 
 /** The place a scene's title (or id) names, or null. */
 export function placeFromText(...texts: Array<string | undefined>): PlaceId | null {
-  const found = words(texts.filter(Boolean).join(' '))
-  return PLACE_WORDS.find(([, ws]) => ws.some((w) => found.has(w)))?.[0] ?? null
+  const text = texts.filter(Boolean).join(' ')
+  const found = words(text)
+  // For the entries of several words: the text as its words in order (an id's hyphens separate words too).
+  const sentence = ` ${plain(text).split(/[^a-z]+/).join(' ')} `
+  const named = (w: string) => (w.includes(' ') ? sentence.includes(` ${w} `) : found.has(w))
+  return PLACE_WORDS.find(([, ws]) => ws.some(named))?.[0] ?? null
 }
 
 /** Library ambience id → file in public/sons (the engine's recordings). */

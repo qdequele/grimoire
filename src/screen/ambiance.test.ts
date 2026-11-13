@@ -133,6 +133,34 @@ describe('places (drawn décors)', () => {
     expect(placeFromText('Woodward')).toBeNull()
   })
 
+  it('everyday words are not places', () => {
+    // "mais" (but) is not "maïs" (corn) once accents are ignored.
+    expect(placeFromText('Tard, mais pas trop tard')).toBeNull()
+    expect(placeFromText('Mais qui est-ce ?')).toBeNull()
+    expect(placeFromText('A Fair Trade')).toBeNull()
+    expect(placeFromText(undefined, 'the-fair-deal')).toBeNull()
+    expect(placeFromText('En train de mentir')).toBeNull()
+    expect(placeFromText('The next day on deck')).toBeNull()
+    expect(placeFromText('The pit of the stomach')).toBeNull()
+    expect(placeFromText('What is yours is mine')).toBeNull()
+    expect(placeFromText(undefined, 'yours-and-mine')).toBeNull()
+    expect(sceneAmbiance(story({ title: 'Tard, mais pas trop tard' }), 's', [])).toMatchObject({ place: null, preset: 'fog' })
+  })
+
+  it('a mine is named with its article, or by another word', () => {
+    expect(placeFromText('Dans la mine')).toBe('mine')
+    expect(placeFromText('The old mine')).toBe('mine')
+    expect(placeFromText(undefined, 'the-mine')).toBe('mine')
+    expect(placeFromText('Les mines du nord')).toBe('mine')
+    expect(placeFromText('Down the mineshaft')).toBe('mine')
+    // The other words of these places still find them.
+    expect(placeFromText('Le champ de maïs')).toBe('farm')
+    expect(placeFromText('La fête foraine')).toBe('fair')
+    expect(placeFromText('The night train station')).toBe('station')
+    expect(placeFromText('Le wagon de queue')).toBe('station')
+    expect(placeFromText('On the steamer')).toBe('ship')
+  })
+
   it("the scene's screen.place first, then its title; the place's preset when the sounds say nothing", () => {
     expect(sceneAmbiance(story({ title: 'La bibliothèque' }), 's', [])).toMatchObject({ place: 'library', preset: 'candle' })
     expect(sceneAmbiance(story({ title: 'La bibliothèque', ambience: ['storm'] }), 's', [])).toMatchObject({ place: 'library', preset: 'storm' })
