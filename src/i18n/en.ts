@@ -551,6 +551,7 @@ export const EN: Record<string, string> = {
   'Ignoré (hors du dossier de l’histoire)': 'Skipped (outside the story folder)',
   'Nom de fichier refusé (lettres sans accent, chiffres, espaces et - _ . ( ) seulement)': 'File name refused (unaccented letters, digits, spaces and - _ . ( ) only)',
   'Fichier trop lourd (50 Mo au plus)': 'File too large (50 MB at most)',
+  'Plusieurs de tes histoires portent cet identifiant (garde-en une seule, puis réimporte)': 'Several of your stories have this identifier (keep only one, then import again)',
   'Archive .zip illisible.': 'Unreadable .zip archive.',
 
   // ---------------------------------------------------------------- AI profile help (function messages)

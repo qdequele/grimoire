@@ -2,7 +2,7 @@ import { describe, expect, it, vi } from 'vitest'
 
 // CI runs the unit tests without Supabase keys: the real client throws at import.
 vi.mock('@/lib/supabase', () => ({ supabase: {}, supabaseUrl: '', supabaseAnonKey: '' }))
-const { importPack, sceneCount, storyContent } = await import('./api')
+const { copyMetaId, existingStory, importPack, sceneCount, storyContent } = await import('./api')
 type PackStore = import('./api').PackStore
 type Row = Awaited<ReturnType<PackStore['insert']>>
 
@@ -49,6 +49,42 @@ function fakeStore(rows: Row[] = [], objects: string[] = [], failAt?: string) {
 
 const file = (path: string) => ({ path, data: new Uint8Array([1]), type: 'image/png' })
 const storyOf = (title: string) => ({ format: 'grimoire-story/1', meta: { ...meta, title }, acts: [] })
+
+describe('pack re-import: finding the story to replace', () => {
+  const saved = { id: 'old' }
+
+  it('finds the keeper’s story, or none', () => {
+    expect(existingStory({ data: [saved], error: null }, 'x')).toBe(saved)
+    expect(existingStory({ data: [], error: null }, 'x')).toBeNull()
+  })
+
+  it('fails when the lookup failed, instead of importing a duplicate', () => {
+    expect(() => existingStory({ data: null, error: new Error('network') }, 'x')).toThrow('network')
+  })
+
+  it('fails when several stories share the identifier, instead of adding one more', () => {
+    expect(() => existingStory({ data: [saved, { ...saved, id: 'other' }], error: null }, 'x'))
+      .toThrow('Plusieurs de tes histoires portent cet identifiant (garde-en une seule, puis réimporte) : x')
+  })
+
+  it('imports nothing when the lookup fails', async () => {
+    const { store, state } = fakeStore()
+    store.find = async () => { throw new Error('network') }
+    await expect(importPack(store, 'keeper', storyOf('New'), [file('images/a.png')])).rejects.toThrow('network')
+    expect(state.rows).toEqual([])
+    expect([...state.objects]).toEqual([])
+  })
+})
+
+describe('copyMetaId', () => {
+  it('gives each copy of a story its own identifier, valid in story.json', () => {
+    const first = copyMetaId('the-story')
+    const second = copyMetaId('the-story')
+    expect(first).not.toBe(second)
+    for (const id of [first, second]) expect(id).toMatch(/^the-story-copy-[a-z0-9]{8}$/)
+    expect(copyMetaId('the-story', 'ABCDEF12-3456')).toBe('the-story-copy-abcdef12')
+  })
+})
 
 describe('importPack', () => {
   it('creates a private story with its files', async () => {

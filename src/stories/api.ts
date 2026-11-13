@@ -102,6 +102,14 @@ export function useStory(id: string | undefined) {
   })
 }
 
+/**
+ * The meta.id of a copy: its own for every copy, since a pack import finds the story to replace
+ * by meta.id. Lowercase letters, digits and dashes, as story.json's ids must be.
+ */
+export function copyMetaId(id: string, unique: string = crypto.randomUUID()): string {
+  return `${id}-copy-${unique.toLowerCase().replace(/[^a-z0-9]/g, '').slice(0, 8)}`
+}
+
 /** Copy a marketplace story into the user's private stories so they can change it. */
 export function useCopyStory() {
   const qc = useQueryClient()
@@ -110,7 +118,7 @@ export function useCopyStory() {
     mutationFn: async (story: StoryRow) => {
       const content: StoryContent = {
         ...story.content,
-        meta: { ...story.content.meta, id: `${story.content.meta.id}-copy` },
+        meta: { ...story.content.meta, id: copyMetaId(story.content.meta.id) },
       }
       const { data, error } = await supabase
         .from('stories')
@@ -166,7 +174,7 @@ export function useImportPack() {
 
 /** What a pack import reads and writes: the keeper's stories and their Storage folders. */
 export interface PackStore {
-  /** The keeper's story with this meta.id, if any. */
+  /** The keeper's story with this meta.id, if any; throws when the lookup fails or finds several (`existingStory`). */
   find(owner: string, metaId: string): Promise<Tables<'stories'> | null>
   insert(owner: string, content: Json): Promise<Tables<'stories'>>
   setContent(id: string, content: Json): Promise<Tables<'stories'>>
@@ -177,11 +185,21 @@ export interface PackStore {
   deletePack: typeof deletePack
 }
 
+/**
+ * The story a pack import replaces, from the lookup's answer. A failed lookup and several stories
+ * with the same meta.id (nothing in the database forbids it) both stop the import: treating them
+ * as "no such story" would add a duplicate while the list announced a replacement.
+ */
+export function existingStory<Row>(found: { data: Row[] | null; error: Error | { message: string } | null }, metaId: string): Row | null {
+  if (found.error) throw found.error instanceof Error ? found.error : new Error(found.error.message)
+  const rows = found.data ?? []
+  if (rows.length > 1) throw new Error(`Plusieurs de tes histoires portent cet identifiant (garde-en une seule, puis réimporte) : ${metaId}`)
+  return rows[0] ?? null
+}
+
 const packStore: PackStore = {
-  find: async (owner, metaId) => {
-    const { data } = await supabase.from('stories').select('*').eq('owner_id', owner).eq('content->meta->>id', metaId).maybeSingle()
-    return data
-  },
+  find: async (owner, metaId) =>
+    existingStory(await supabase.from('stories').select('*').eq('owner_id', owner).eq('content->meta->>id', metaId).limit(2), metaId),
   insert: async (owner, content) => {
     const { data, error } = await supabase.from('stories').insert({ owner_id: owner, visibility: 'private', content }).select('*').single()
     if (error) throw error
