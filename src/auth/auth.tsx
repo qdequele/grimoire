@@ -4,6 +4,7 @@ import { createContext, useContext, useEffect, useState, type ReactNode } from '
 import { supabase, type Tables } from '@/lib/supabase'
 import { useLang } from '@/settings/lang'
 import { followAccount } from './account'
+import { forgetOAuthError } from './oauth'
 
 interface AuthState {
   session: Session | null
@@ -21,6 +22,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const follow = (session: Session | null) => {
       // Nothing of one account stays for the next (cached data, drafts): see followAccount.
       followAccount(session?.user.id ?? null, queryClient)
+      // Signed in: an error Google sent back earlier in this visit is no longer news.
+      if (session) forgetOAuthError()
       setState({ session, ready: true })
     }
     supabase.auth.getSession().then(({ data }) => follow(data.session))

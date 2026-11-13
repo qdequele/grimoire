@@ -1,7 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 vi.mock('@/lib/supabase', () => ({ supabase: {}, supabaseUrl: '', supabaseAnonKey: '' }))
-const { forgetNext, rememberNext, rememberedNext } = await import('./oauth')
+const { forgetNext, oauthFailedIn, rememberNext, rememberedNext } = await import('./oauth')
 
 describe('page to return to after sign-in', () => {
   beforeEach(() => {
@@ -34,5 +34,45 @@ describe('page to return to after sign-in', () => {
       localStorage.setItem('grimoire-after-login', JSON.stringify({ next, at: 1_000 }))
       expect(rememberedNext(1_000)).toBeNull()
     }
+  })
+})
+
+describe('error sent back in the return address', () => {
+  afterEach(() => {
+    vi.unstubAllGlobals()
+    vi.restoreAllMocks()
+  })
+
+  it('is recognised in the query or the hash, by its error code', () => {
+    expect(oauthFailedIn('https://grimoire.example/?error=access_denied&error_description=Cancelled')).toBe(true)
+    expect(oauthFailedIn('https://grimoire.example/#error=access_denied&error_code=otp_expired&error_description=Expired')).toBe(true)
+    expect(oauthFailedIn('https://grimoire.example/?error_code=bad_oauth_state')).toBe(true)
+    expect(oauthFailedIn('https://grimoire.example/')).toBe(false)
+    expect(oauthFailedIn('https://grimoire.example/login?next=%2Fsettings')).toBe(false)
+  })
+
+  it('never takes a message to show from the address', () => {
+    expect(oauthFailedIn('https://grimoire.example/?error_description=Account%20suspended%3A%20write%20to%20x%40evil.example')).toBe(false)
+  })
+
+  /** The app starting at this address (the module reads it once). */
+  const startAt = async (href: string) => {
+    vi.resetModules()
+    vi.stubGlobal('window', { location: { href } })
+    vi.spyOn(console, 'warn').mockImplementation(() => {})
+    return import('./oauth')
+  }
+
+  it('is kept until the login page has shown it, then forgotten for the rest of the visit', async () => {
+    const oauth = await startAt('https://grimoire.example/?error=access_denied&error_description=Cancelled%20by%20user')
+    expect(oauth.returnedOAuthError()).toBe(true)
+    expect(oauth.returnedOAuthError()).toBe(true)
+    oauth.forgetOAuthError()
+    expect(oauth.returnedOAuthError()).toBe(false)
+  })
+
+  it('has nothing to show on an ordinary visit', async () => {
+    const oauth = await startAt('https://grimoire.example/')
+    expect(oauth.returnedOAuthError()).toBe(false)
   })
 })

@@ -119,7 +119,12 @@ test('the Google button follows the provider being enabled in Supabase Auth', as
   // Back from Google with an error (e.g. cancelled): shown on the login page.
   await page.goto('/?error=access_denied&error_description=Cancelled%20by%20user')
   await expect(page).toHaveURL(/\/login$/)
-  await expect(page.getByText('Cancelled by user')).toBeVisible()
+  // In the app's own words: the address's text is never shown (anyone can write an address).
+  await expect(page.getByText('La connexion a échoué ou a été annulée. Réessaie.')).toBeVisible()
+  await expect(page.getByText('Cancelled by user')).toHaveCount(0)
+  await page.goto('/?error_description=Cancelled%20by%20user')
+  await expect(page.getByRole('link', { name: 'Créer un compte' }).first()).toBeVisible()
+  await expect(page.getByText('Cancelled by user')).toHaveCount(0)
 })
 
 test('keeper creates an investigator, then plays a marketplace story', async ({ page }) => {
