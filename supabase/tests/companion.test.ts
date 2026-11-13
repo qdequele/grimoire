@@ -469,10 +469,90 @@ describe('companion: create an investigator and broadcast', () => {
     expect(ok.error).toBeNull()
     const ch = (await alice.client.from('characters').select('data').eq('id', ok.data as unknown as string).single()).data!
     const data = ch.data as Record<string, unknown>
-    expect(data).toMatchObject({ name: 'Valid', hp: 5, damageBonus: '+1D4', characteristics: { DEX: 70 }, creation: { step: 3 } })
+    expect(data).toMatchObject({ name: 'Valid', hp: 5, damageBonus: '+1D4', characteristics: { DEX: 70 } })
+    // The wizard's state is rebuilt too: what it doesn't know is left out.
+    expect(data.creation).toEqual({ name: 'Valid' })
     expect(data).not.toHaveProperty('progress')
     const pts = (await alice.client.from('game_points').select('pv').eq('character_id', ok.data as unknown as string).single()).data!
     expect(pts.pv).toBe(5)
+  })
+
+  it("the wizard's state (`creation`) is checked field by field, like the sheet", async () => {
+    const g = await newGame(alice, [{ name: 'One' }])
+    const l = await link(alice, g.gameId)
+    const create = (creation: Json) => anon.rpc('companion_create_character', { p_token: l.token, p_data: { name: 'X', creation }, p_player_name: '' })
+    const picked = { occupationSkills: ['art-craft'] }
+    const hostile: Json[] = [
+      { name: '<img src=x onerror=1>' },
+      { name: 'A & B' },
+      { name: 'Say "hi"' },
+      { name: 5 },
+      { name: 'n'.repeat(81) },
+      { occupation: 7 },
+      { occupation: 'o'.repeat(201) },
+      { age: 'old' },
+      { playerId: 5 },
+      { playerId: '<b>' },
+      { link: 5 },
+      { link: 'l'.repeat(201) },
+      { luck: 'lots' },
+      { rolled: 'yes' },
+      { characteristics: [50] },
+      { characteristics: { DEX: 'x' } },
+      { characteristics: { DEX: 100 } },
+      { characteristics: { HACK: 50 } },
+      { occupationSkills: 'art-craft' },
+      { occupationSkills: [5] },
+      { occupationSkills: ['<img src=x>'] },
+      { occupationSkills: ['Spot'] },
+      { occupationSkills: Array.from({ length: 101 }, (_, i) => `s${i}`) },
+      { personalInterests: [['listen']] },
+      { personalInterests: ['a&b'] },
+      { occupationValues: ['art-craft'] },
+      { occupationValues: { 'art-craft': '70' } },
+      { occupationValues: { '<b>': 70 } },
+      { ...picked, specialties: ['x'] },
+      { ...picked, specialties: { 'art-craft': 5 } },
+      { ...picked, specialties: { 'art-craft': '<svg onload=1>' } },
+      { ...picked, specialties: { 'art-craft': 'a&b' } },
+      { ...picked, specialties: { 'art-craft': '"q"' } },
+      { ...picked, specialties: { 'art-craft': 's'.repeat(41) } },
+      { personalInterests: ['listen'], specialties: { listen: 'x>' } },
+      { profile: ['x'] },
+      { profile: { traits: 5 } },
+      { profile: { traits: 'p'.repeat(2001) } },
+      { profile: { '<b>': 'x' } },
+    ]
+    for (const creation of hostile) {
+      const r = await create(creation)
+      expect(r.error?.message, JSON.stringify(creation).slice(0, 80)).toContain('bad_value')
+    }
+
+    // What the phone's wizard really sends is kept as it was, so the keeper reopens it.
+    const draft = {
+      name: " Ada O'Brien ", occupation: 'journalist', age: 200, playerId: '', link: 'Cousin of the "old" man & co',
+      characteristics: { STR: 50, CON: 60, SIZ: 40, DEX: 70, APP: 50, INT: 80, POW: 60, EDU: 90 },
+      luck: 45, rolled: false,
+      occupationSkills: ['art-craft', 'library-use', 'history', 'language-own', 'psychology', 'fast-talk', 'science-2', 'listen'],
+      occupationValues: { 'art-craft': 70, 'library-use': 60, 'credit-rating': 40 },
+      personalInterests: ['spot-hidden', 'firearms-handgun', 'language-other', 'dodge'],
+      specialties: { 'art-craft': "Peinture à l'huile", 'science-2': '', 'language-other': 's'.repeat(40) },
+      profile: { description: 'Tall, "quiet" & kind', traits: 'p'.repeat(2000), ideology: '' },
+    }
+    const ok = await create(draft)
+    expect(ok.error).toBeNull()
+    const kept = (await alice.client.from('characters').select('data').eq('id', ok.data as unknown as string).single()).data!
+    expect((kept.data as Record<string, unknown>).creation).toEqual(draft)
+
+    // Keys the wizard doesn't have, and specialties of skills that aren't picked (the wizard never
+    // reads them), are left out, whatever they hold.
+    const extra = await create({ ...draft, step: 3, specialties: { ...draft.specialties, survival: '<b>' }, more: { '<i>': '<u>' } })
+    expect(extra.error).toBeNull()
+    const cleaned = (await alice.client.from('characters').select('data').eq('id', extra.data as unknown as string).single()).data!
+    expect((cleaned.data as Record<string, unknown>).creation).toEqual(draft)
+
+    // A partial state is fine: the app fills what is missing.
+    expect((await create({})).error).toBeNull()
   })
 
   it('skill keys must have the app shape, and names carry no HTML characters', async () => {
