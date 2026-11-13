@@ -43,15 +43,27 @@ export function clampPoints(p: Points, maxHp: number): Points {
   return { pv: clamp(p.pv, maxHp), san: clamp(p.san, 99), chance: clamp(p.chance, 99), pm: clamp(p.pm, 99) }
 }
 
+/** Values the server takes as whole numbers within 0..99 (characteristics, skills). */
+const clampAll = <K extends string>(values: Partial<Record<K, number>>): Partial<Record<K, number>> =>
+  Object.fromEntries(
+    (Object.entries(values) as Array<[K, number | undefined]>)
+      .filter((e): e is [K, number] => typeof e[1] === 'number')
+      .map(([k, v]) => [k, clamp(v, 99)]),
+  ) as Partial<Record<K, number>>
+
 /**
- * The wizard's sheet as companion_create_character accepts it: skills within 0..99 (a personal
- * interest can push a skill past 99), age within 0..150.
+ * The wizard's sheet as companion_create_character accepts it: characteristics and skills as whole
+ * numbers within 0..99 (a rolled characteristic is typed freely; a personal interest can push a skill
+ * past 99), age within 0..150. The wizard's draft kept with the sheet gets the same characteristics,
+ * so reopening it shows what was saved.
  */
 export function companionSheet(data: CharacterData): CharacterData {
   return {
     ...data,
     ...(data.age === undefined ? {} : { age: Math.min(150, Math.max(0, Math.round(data.age))) }),
-    skills: Object.fromEntries(Object.entries(data.skills ?? {}).map(([k, v]) => [k, clamp(v, 99)])),
+    characteristics: clampAll(data.characteristics ?? {}),
+    skills: clampAll(data.skills ?? {}) as Record<string, number>,
+    ...(data.creation ? { creation: { ...data.creation, characteristics: clampAll(data.creation.characteristics ?? {}) } } : {}),
   }
 }
 
