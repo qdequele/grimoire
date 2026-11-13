@@ -8,7 +8,7 @@ import { skillName, useT, type T } from '@/i18n/t'
 import { cn } from '@/lib/utils'
 import type { Points } from '@/play/companion'
 import { CHARACTERISTIC_INFO, CHARACTERISTICS, PROFILE_FIELDS, SKILL_BY_ID } from '@/rules/d100'
-import { Masthead } from '@/theme/Masthead'
+import { Masthead, SkinToggle } from '@/theme/Masthead'
 import { pointsOf, rememberCharacter, useSetPhoto, useSetPoints, type CompanionMember } from './api'
 import { useCompanionContext, type CompanionContext } from './CompanionLayout'
 import type { PickState } from './PickPage'
@@ -46,12 +46,12 @@ export function SheetPage() {
   if (view.focus && view.focus !== characterId) return <Navigate to={`/t/${token}/c/${view.focus}`} replace />
   if (!member) {
     return (
-      <>
+      <div className="flex flex-col gap-6 lg:mx-auto lg:w-full lg:max-w-lg">
         <Masthead compact eyebrow={view.game.title || t('À la table')} title="Grimoire" />
         <span className="double-rule" />
         <p role="alert" className="text-center font-serif text-xl">{t("Cet investigateur n'est plus dans la partie.")}</p>
         {!view.focus && <ChangeLink token={token} />}
-      </>
+      </div>
     )
   }
 
@@ -59,33 +59,46 @@ export function SheetPage() {
   const subtitle = [d.occupation, d.age ? t('{n} ans', { n: d.age }) : ''].filter(Boolean).join(' · ')
   return (
     <>
-      <header className="flex flex-col items-center gap-2">
-        <button
-          type="button"
-          className="group relative rounded-full focus-visible:ring-2 focus-visible:ring-gold focus-visible:outline-none"
-          aria-label={member.photo ? t('Changer la photo de {name}', { name: d.name }) : t('Ajouter une photo de {name}', { name: d.name })}
-          onClick={() => setPhotoOpen(true)}
-        >
-          <Avatar name={d.name} photo={member.photo} className="size-20 text-2xl group-hover:border-foreground" />
-          <span aria-hidden="true" className="absolute -right-1 -bottom-1 grid size-7 place-items-center rounded-full border border-gold bg-background text-gold">
-            <Camera className="size-3.5" />
-          </span>
-        </button>
-        <Masthead compact eyebrow={view.game.title || t('À la table')} title={d.name} subtitle={subtitle || undefined} />
-        <p
-          className={cn(
-            'flex h-4 items-center gap-1.5 text-[0.625rem] font-semibold tracking-[0.14em] text-emerald-400 uppercase transition-opacity',
-            !live && 'opacity-0',
-          )}
-          aria-hidden={!live}
-        >
-          <span aria-hidden="true" className="size-1.5 rounded-full bg-current" />
-          {t('En direct avec le gardien')}
-        </p>
-      </header>
-      <span className="double-rule" />
-      <Outlet context={{ ...ctx, member } satisfies SheetContext} />
-      {!view.focus && <ChangeLink token={token} />}
+      {/* Phone: one column, tabs at the bottom. Computer (lg): the investigator and the tabs in a
+          side column that stays put, the tab's content beside it. */}
+      <div className="flex flex-col gap-6 lg:grid lg:grid-cols-[16rem_minmax(0,1fr)] lg:items-start lg:gap-12">
+        <aside className="flex flex-col gap-6 lg:sticky lg:top-10">
+          <header className="flex flex-col items-center gap-2">
+            <button
+              type="button"
+              className="group relative rounded-full focus-visible:ring-2 focus-visible:ring-gold focus-visible:outline-none"
+              aria-label={member.photo ? t('Changer la photo de {name}', { name: d.name }) : t('Ajouter une photo de {name}', { name: d.name })}
+              onClick={() => setPhotoOpen(true)}
+            >
+              <Avatar name={d.name} photo={member.photo} className="size-20 text-2xl group-hover:border-foreground lg:size-24" />
+              <span aria-hidden="true" className="absolute -right-1 -bottom-1 grid size-7 place-items-center rounded-full border border-gold bg-background text-gold">
+                <Camera className="size-3.5" />
+              </span>
+            </button>
+            <Masthead compact eyebrow={view.game.title || t('À la table')} title={d.name} subtitle={subtitle || undefined} />
+            <p
+              className={cn(
+                'flex h-4 items-center gap-1.5 text-[0.625rem] font-semibold tracking-[0.14em] text-emerald-400 uppercase transition-opacity',
+                !live && 'opacity-0',
+              )}
+              aria-hidden={!live}
+            >
+              <span aria-hidden="true" className="size-1.5 rounded-full bg-current" />
+              {t('En direct avec le gardien')}
+            </p>
+          </header>
+          <span className="double-rule" />
+          <SideTabs />
+          <div className="hidden flex-col items-center gap-4 lg:flex">
+            {!view.focus && <ChangeLink token={token} />}
+            <SkinToggle />
+          </div>
+        </aside>
+        <div className="flex min-w-0 flex-col gap-6">
+          <Outlet context={{ ...ctx, member } satisfies SheetContext} />
+          {!view.focus && <ChangeLink token={token} className="lg:hidden" />}
+        </div>
+      </div>
       <PhotoDialog
         name={d.name}
         photo={member.photo}
@@ -95,7 +108,7 @@ export function SheetPage() {
       />
       <nav
         aria-label={t('Fiche')}
-        className="fixed inset-x-0 bottom-0 z-10 border-t border-border bg-background/95 backdrop-blur"
+        className="fixed inset-x-0 bottom-0 z-10 border-t border-border bg-background/95 backdrop-blur lg:hidden"
       >
         <div className="mx-auto flex max-w-lg justify-around">
           {TABS.map((tab) => (
@@ -119,13 +132,44 @@ export function SheetPage() {
   )
 }
 
-function ChangeLink({ token }: { token: string }) {
+/** The tabs on a computer: a legacy diamond-bullet menu in the side column. */
+function SideTabs() {
+  const t = useT()
+  return (
+    <nav aria-label={t('Fiche')} className="hidden lg:block">
+      <ul className="flex flex-col gap-3">
+        {TABS.map((tab) => (
+          <li key={tab.label}>
+            <NavLink to={tab.to} end={tab.end} className="group flex items-center gap-3">
+              {({ isActive }) => (
+                <>
+                  <span
+                    aria-hidden="true"
+                    className={cn('size-2.5 shrink-0 rotate-45 border border-gold/50 group-hover:bg-gold', isActive && 'bg-gold')}
+                  />
+                  <span className={cn('font-heading text-2xl leading-tight group-hover:text-gold', isActive && 'text-gold')}>
+                    {t(tab.label)}
+                  </span>
+                </>
+              )}
+            </NavLink>
+          </li>
+        ))}
+      </ul>
+    </nav>
+  )
+}
+
+function ChangeLink({ token, className }: { token: string; className?: string }) {
   const t = useT()
   return (
     <Link
       to={`/t/${token}`}
       state={{ pick: true } satisfies PickState}
-      className="mx-auto text-xs tracking-[0.2em] text-muted-foreground uppercase underline underline-offset-4 hover:text-foreground"
+      className={cn(
+        'mx-auto text-xs tracking-[0.2em] text-muted-foreground uppercase underline underline-offset-4 hover:text-foreground',
+        className,
+      )}
     >
       {t("Changer d'investigateur")}
     </Link>
@@ -232,6 +276,8 @@ export function SheetTab() {
       <RollDialog target={rolling} onClose={() => setRolling(null)} />
       <StatTiles member={member} onRoll={setRolling} />
 
+      {/* Computer: characteristics in a narrow column beside the skills. */}
+      <div className="flex flex-col gap-6 lg:grid lg:grid-cols-[17rem_minmax(0,1fr)] lg:items-start lg:gap-8">
       {(chars.length > 0 || derived.length > 0) && (
         <section className="flex flex-col gap-2">
           <h2 className="eyebrow">{t('Caractéristiques')}</h2>
@@ -269,7 +315,8 @@ export function SheetTab() {
             <h2 className="eyebrow">{t('Compétences')}</h2>
             <span className="text-[0.625rem] tracking-[0.1em] text-muted-foreground uppercase">{t('ordinaire · majeure · extrême')}</span>
           </div>
-          <p className="text-xs text-muted-foreground">{t('Touche une compétence pour savoir à quoi elle sert et la lancer.')}</p>
+          <p className="text-xs text-muted-foreground pointer-fine:hidden">{t('Touche une compétence pour savoir à quoi elle sert et la lancer.')}</p>
+          <p className="hidden text-xs text-muted-foreground pointer-fine:block">{t('Clique sur une compétence pour savoir à quoi elle sert et la lancer.')}</p>
           <ul>
             {rows.map((r) => {
               const [id, specialty] = r.key.split(/:(.*)/)
@@ -307,6 +354,7 @@ export function SheetTab() {
           </ul>
         </section>
       )}
+      </div>
     </div>
   )
 }
@@ -322,7 +370,7 @@ export function ProfileTab() {
   ].filter((f) => f.text)
 
   return (
-    <div className="flex flex-col gap-5">
+    <div className="flex max-w-2xl flex-col gap-5">
       {member.player && <p className="text-center text-sm text-muted-foreground">{t('Joué par {name}', { name: member.player })}</p>}
       {fields.length ? (
         fields.map((f) => (

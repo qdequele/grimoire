@@ -1,9 +1,10 @@
 import { RotateCw } from 'lucide-react'
 import { useEffect, type ReactNode } from 'react'
-import { Outlet, useLocation, useOutletContext, useParams } from 'react-router'
+import { Outlet, useLocation, useMatch, useOutletContext, useParams } from 'react-router'
 import { Button } from '@/components/ui/button'
 import { Spinner } from '@/components/ui/spinner'
 import { useT } from '@/i18n/t'
+import { cn } from '@/lib/utils'
 import { Masthead, SkinToggle } from '@/theme/Masthead'
 import { forgetCharacter, useCompanion, useCompanionLive, type CompanionView } from './api'
 
@@ -45,9 +46,18 @@ function useManifest() {
   }, [pathname])
 }
 
-function Shell({ children }: { children: ReactNode }) {
+/**
+ * Phone-width column. `wide`: an investigator's sheet, which on a computer (players at an online
+ * table, the voice chat in another window) spreads over two columns instead.
+ */
+function Shell({ children, wide }: { children: ReactNode; wide?: boolean }) {
   return (
-    <div className="mx-auto flex min-h-svh w-full max-w-lg flex-col px-4 pt-6 pb-24 sm:pt-10">
+    <div
+      className={cn(
+        'mx-auto flex min-h-svh w-full max-w-lg flex-col px-4 pt-6 pb-24 sm:pt-10',
+        wide && 'lg:max-w-6xl lg:px-8 lg:pb-10',
+      )}
+    >
       <main className="flex flex-1 flex-col gap-6">{children}</main>
     </div>
   )
@@ -71,6 +81,7 @@ export function CompanionLayout() {
   const { token = '' } = useParams()
   const q = useCompanion(token)
   const live = useCompanionLive(token, q.data?.game.channel || undefined)
+  const sheet = useMatch('/t/:token/c/:characterId/*') !== null
   useManifest()
 
   const invalid = q.error?.code === 'link_invalid'
@@ -98,9 +109,10 @@ export function CompanionLayout() {
   }
 
   return (
-    <Shell>
+    <Shell wide={sheet}>
       <Outlet context={{ token, view: q.data, live } satisfies CompanionContext} />
-      <footer className="mt-auto flex justify-center pt-6">
+      {/* On a computer the sheet's side column carries the skin toggle. */}
+      <footer className={cn('mt-auto flex justify-center pt-6', sheet && 'lg:hidden')}>
         <SkinToggle />
       </footer>
     </Shell>

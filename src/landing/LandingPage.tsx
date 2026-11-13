@@ -74,7 +74,7 @@ export function LandingPage() {
   const steps: [string, string][] = [
     [t('Choisis une histoire'), t('Dans la bibliothèque, parmi tes propres histoires, ou écris-en une nouvelle avec l’IA.')],
     [t('Crée les investigateurs'), t('Un assistant pas à pas : caractéristiques, occupation, compétences, profil.')],
-    [t('Invite la table'), t('Un QR code par joueur. Ils ouvrent leur fiche sur leur téléphone, sans compte.')],
+    [t('Invite la table'), t('Un QR code ou un lien par joueur. Ils ouvrent leur fiche sur leur téléphone ou leur ordinateur, sans compte : autour de la table ou en ligne.')],
     [t('Joue'), t('Scène après scène, Grimoire tient les règles, les points et le journal. Toi, tu racontes.')],
   ]
 
