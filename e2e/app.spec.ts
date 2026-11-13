@@ -685,7 +685,8 @@ test('keeper sends feedback from the account menu', async ({ page }) => {
   await page.getByRole('menuitem', { name: 'Donner mon avis' }).click()
   const dialog = page.getByRole('dialog', { name: 'Donner mon avis' })
   await expect(dialog.getByRole('button', { name: 'Envoyer' })).toBeDisabled()
-  await dialog.getByText('Un problème').click()
+  // The label alone: the dialog's description starts with the same words.
+  await dialog.getByText('Un problème', { exact: true }).click()
   await expect(dialog.getByRole('radio', { name: 'Un problème' })).toBeChecked()
   await dialog.getByRole('textbox', { name: 'Ton message' }).fill('The fog never lifts.')
   await dialog.getByRole('button', { name: 'Envoyer' }).click()
