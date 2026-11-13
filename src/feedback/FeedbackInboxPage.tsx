@@ -16,6 +16,7 @@ import {
   type FeedbackStatus, type InboxRow,
 } from './api'
 import { FEEDBACK_KINDS, KIND_LABEL, STATUS_LABEL, type FeedbackKind } from './kinds'
+import { isAppPage } from './pageLink'
 
 const ALL = 'tous'
 
@@ -53,7 +54,10 @@ function FeedbackItem({ row }: { row: InboxRow }) {
         {row.page && (
           <>
             <dt className="eyebrow text-[0.625rem]">{t('Page')}</dt>
-            <dd className="font-mono break-all"><Link to={row.page} className="hover:text-gold">{row.page}</Link></dd>
+            {/* The sender wrote it: a link only when it stays on this site, plain text otherwise. */}
+            <dd className="font-mono break-all">
+              {isAppPage(row.page) ? <Link to={row.page} className="hover:text-gold">{row.page}</Link> : row.page}
+            </dd>
           </>
         )}
         {row.lang && (
