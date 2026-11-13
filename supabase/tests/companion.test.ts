@@ -321,16 +321,26 @@ describe('companion RPCs (anonymous)', () => {
 
 // ------------------------------------------------------------------ create from a link, live broadcast
 // ------------------------------------------------------------------ live helpers
+// The broadcast gets its own 10 s, counted once the channel is subscribed (`listen` has 5 s for that):
+// on a cold stack the first subscription or the first delivery can take seconds. With the test's
+// set-up this stays under the 20 s test timeout.
+const BROADCAST_MS = 10_000
+
 async function waitFor<T>(subscribe: (resolve: (v: T) => void) => Promise<() => Promise<void>>, act: () => Promise<void>): Promise<T> {
   let off: () => Promise<void> = async () => {}
+  let timer: ReturnType<typeof setTimeout> | undefined
   try {
     return await new Promise<T>((resolve, reject) => {
-      const timer = setTimeout(() => reject(new Error('no broadcast within 5 s')), 5000)
-      subscribe((v) => { clearTimeout(timer); resolve(v) })
-        .then((o) => { off = o; return act() })
+      subscribe(resolve)
+        .then((o) => {
+          off = o
+          timer = setTimeout(() => reject(new Error(`no broadcast within ${BROADCAST_MS / 1000} s`)), BROADCAST_MS)
+          return act()
+        })
         .catch(reject)
     })
   } finally {
+    clearTimeout(timer)
     await off()
   }
 }
