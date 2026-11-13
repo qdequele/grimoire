@@ -129,7 +129,7 @@ export function GamePage() {
   }, [characters.data])
 
   // Start once, from fresh data: a cached game could miss investigators who joined from a phone.
-  // Later refetches (after every save) don't restart the game: the data it started from is kept.
+  // Later refetches (window focus, a revoked link) don't restart the game: the data it started from is kept.
   const [start, setStart] = useState<{ game: GameRow; characters: CharacterRow[] } | null>(null)
   if (!start && game.data?.story && characters.data && !game.isFetching && !characters.isFetching) {
     setStart({ game: game.data, characters: characters.data })
@@ -252,8 +252,12 @@ export function GamePage() {
       void supabase
         .rpc('save_game_state', { p_game: g.id, p_state: state as unknown as Json, p_removed: removed })
         .then(({ error }) => {
-          if (error) console.error('Game save failed', error)
-          else qc.invalidateQueries({ queryKey: gameKeys.all })
+          if (error) return console.error('Game save failed', error)
+          // The running game never reads its own row again (it keeps what it started from): mark it
+          // stale without downloading the state just sent and the story with it. The home list is
+          // refetched where it is shown (after "Quitter"), else when it next is.
+          void qc.invalidateQueries({ queryKey: gameKeys.one(g.id), refetchType: 'none' })
+          void qc.invalidateQueries({ queryKey: [...gameKeys.all, 'mine'] })
         })
     }
 
