@@ -11,7 +11,7 @@ import { NativeSelect, NativeSelectOption } from '@/components/ui/native-select'
 import { Skeleton } from '@/components/ui/skeleton'
 import { useT } from '@/i18n/t'
 import { cn } from '@/lib/utils'
-import { findScene, isPlace, isPreset, isTime, LOOKS, PLACE_LABEL, PLACES, PRESET_LABEL, PRESETS, TIME_LABEL, TIMES } from '@/screen/ambiance'
+import { findScene, isPlace, isPreset, isTime, LOOKS, PLACE_LABEL, PLACES, PRESET_LABEL, PRESETS, sceneImages, TIME_LABEL, TIMES } from '@/screen/ambiance'
 import type { ImageRef, ScreenHandout } from '@/screen/state'
 import {
   listUploads, packImage, storyHandout, screenUrl, uploadPicture, useCreateScreenLink, useReplaceScreenLink, useScreenLink,
@@ -34,8 +34,9 @@ function storyItems(story: ScreenStory, sceneId: string | undefined): { scene: I
     ;(inScene.has(h.id) || (sceneId && h.scene === sceneId) ? out.scene : out.other).push({ label: h.title, handout })
   }
   for (const s of story.content.acts.flatMap((a) => a.scenes)) {
-    for (const img of s.images ?? []) {
-      const image = packImage(story, img.src)
+    // With their path in the pack (`images/…`, written either way in the story); the key keeps the story's spelling.
+    for (const img of sceneImages(s, story.files)) {
+      const image = packImage(story, img.path)
       if (!image) continue
       const title = img.caption ?? ''
       ;(s.id === sceneId ? out.scene : out.other).push({ label: title || img.src.replace(/^images\//, ''), handout: { key: `image:${img.src}`, title, image } })

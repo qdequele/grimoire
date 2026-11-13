@@ -3,7 +3,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import type { Json } from '@/lib/database.types'
 import { supabase, type Tables } from '@/lib/supabase'
-import { findScene, sceneAmbiance, type StoryForScreen } from '@/screen/ambiance'
+import { findScene, packImagePath, sceneAmbiance, type StoryForScreen } from '@/screen/ambiance'
 import { previewParams } from '@/screen/preview'
 import {
   imagesOf, INITIAL_SCREEN, sameScreen, screenReducer, toScreenScene,
@@ -106,11 +106,7 @@ export const screenStory = (story: { id: string; owner_id: string | null; pack_f
   files: story.pack_files,
 })
 
-/** A handout's picture in the pack: the spec says "relative path in images/", written either way. */
-export const handoutImagePath = (image: string | undefined): string | undefined =>
-  image ? (image.startsWith('images/') ? image : `images/${image}`) : undefined
-
-/** A picture of the story pack, if the pack really has it. */
+/** A picture of the story pack, if the pack really has it (`path` as `packImagePath` gives it). */
 export const packImage = (story: ScreenStory, path: string | undefined): ImageRef | null =>
   path && story.files.includes(path) ? { bucket: 'story-packs', path: `${story.folder}/${path}` } : null
 
@@ -118,7 +114,7 @@ export const packImage = (story: ScreenStory, path: string | undefined): ImageRe
 export function storyHandout(story: ScreenStory, id: string): ScreenHandout | null {
   const h = story.content.handouts?.find((x) => x.id === id)
   if (!h) return null
-  const image = packImage(story, handoutImagePath(h.image))
+  const image = packImage(story, packImagePath(h.image))
   if (!image && !h.text) return null
   return { key: `handout:${h.id}`, title: h.title, ...(h.text ? { text: h.text } : {}), image }
 }

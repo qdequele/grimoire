@@ -367,10 +367,26 @@ export const findScene = (story: StoryForScreen, sceneId: string | undefined): S
   sceneId ? story.acts.flatMap((a) => a.scenes).find((s) => s.id === sceneId) : undefined
 
 /**
+ * A picture's path in the story pack. The spec says "relative path in images/" for a scene's background,
+ * its images and a handout's picture, and stories write it with or without the folder: both are the same file.
+ */
+export const packImagePath = (image: string | undefined): string | undefined =>
+  image ? (image.startsWith('images/') ? image : `images/${image}`) : undefined
+
+/** A scene's own pictures that the pack really has, each with its path in the pack. */
+export function sceneImages(scene: StoryScene | undefined, packFiles: readonly string[]): Array<NonNullable<StoryScene['images']>[number] & { path: string }> {
+  return (scene?.images ?? []).flatMap((i) => {
+    const path = packImagePath(i.src)
+    return path && packFiles.includes(path) ? [{ ...i, path }] : []
+  })
+}
+
+/**
  * A scene's ambiance: its `screen` field first, then what its sounds, images and title say
  * (a title naming a place gives its décor, and that place's preset when the sounds name none; the time of day
  * comes from words in the title, else from day or night sounds).
- * Only pictures the pack really has are used (`packFiles`), so a missing file never shows a broken image;
+ * Only pictures the pack really has are used (`packFiles`), so a missing file never shows a broken image
+ * (a path written without `images/` is the same file: `packImagePath`);
  * scene images are used only when marked `keeperOnly: false` (the spec's default keeps them from players).
  */
 export function sceneAmbiance(story: StoryForScreen, sceneId: string | undefined, packFiles: readonly string[]): SceneAmbiance {
@@ -380,8 +396,9 @@ export function sceneAmbiance(story: StoryForScreen, sceneId: string | undefined
   const place = isPlace(scene?.screen?.place) ? scene.screen.place : scene ? placeFromText(scene.title, scene.id) : null
   const preset = isPreset(scene?.screen?.preset) ? scene.screen.preset
     : (soundsPreset(scene?.ambience) ?? (place ? PLACE_PRESET[place] : 'fog'))
-  const shared = scene?.images?.find((i) => i.keeperOnly === false && has(i.src))?.src
-  const image = has(scene?.screen?.image) ? scene.screen.image : (shared ?? null)
+  const shared = sceneImages(scene, packFiles).find((i) => i.keeperOnly === false)?.path
+  const background = packImagePath(scene?.screen?.image)
+  const image = has(background) ? background : (shared ?? null)
   const time = isTime(scene?.screen?.time) ? scene.screen.time : scene ? (timeFromText(scene.title, scene.id) ?? timeFromSounds(scene.ambience)) : null
   return { preset, image, sounds: (scene?.ambience ?? []).slice(0, 3), fire: asFire(scene?.screen?.fire), place, time }
 }
