@@ -13,6 +13,7 @@ import { useCharacters, useSetCharacterPhoto, type CharacterRow } from './api'
 import { Avatar } from './Avatar'
 import { NotebookDialog } from './NotebookDialog'
 import { PhotoDialog } from './PhotoDialog'
+import { PregensLink } from './pregens/PregensPage'
 import { useNoteCounts } from './notes'
 
 export function CharactersPage() {
@@ -35,10 +36,13 @@ export function CharactersPage() {
     <section className="flex flex-col gap-6">
       <header className="flex flex-wrap items-center justify-between gap-4">
         <p className="text-muted-foreground">{t("Ils gardent leur progression d'une histoire à l'autre.")}</p>
-        <Button render={<Link to="/characters/new" />} nativeButton={false}>
-          <UserPlus data-icon="inline-start" />
-          {t('Nouvel investigateur')}
-        </Button>
+        <div className="flex flex-wrap gap-2">
+          <PregensLink />
+          <Button render={<Link to="/characters/new" />} nativeButton={false}>
+            <UserPlus data-icon="inline-start" />
+            {t('Nouvel investigateur')}
+          </Button>
+        </div>
       </header>
 
       {error && (
@@ -52,10 +56,11 @@ export function CharactersPage() {
           <EmptyHeader>
             <EmptyMedia variant="icon"><Users /></EmptyMedia>
             <EmptyTitle>{t('Aucun investigateur')}</EmptyTitle>
-            <EmptyDescription>{t('Crée les investigateurs de tes joueurs avant de lancer une histoire.')}</EmptyDescription>
+            <EmptyDescription>{t('Crée les investigateurs de tes joueurs, ou choisis des prétirés, avant de lancer une histoire.')}</EmptyDescription>
           </EmptyHeader>
-          <EmptyContent>
+          <EmptyContent className="flex-row flex-wrap justify-center">
             <Button render={<Link to="/characters/new" />} nativeButton={false}>{t('Créer un investigateur')}</Button>
+            <PregensLink />
           </EmptyContent>
         </Empty>
       )}

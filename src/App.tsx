@@ -7,6 +7,7 @@ import { OAuthConsentPage } from '@/auth/OAuthConsentPage'
 import { CharacterSheetPage } from '@/characters/CharacterSheetPage'
 import { CharactersPage } from '@/characters/CharactersPage'
 import { PlayersPage } from '@/characters/PlayersPage'
+import { PregensPage } from '@/characters/pregens/PregensPage'
 import { ItemsPage } from '@/items/ItemsPage'
 import { CharacterWizardPage } from '@/characters/wizard/CharacterWizardPage'
 import { Toaster } from '@/components/ui/sonner'
@@ -54,6 +55,7 @@ const INVESTIGATOR_TABS = [
   { to: '/characters', label: 'Investigateurs', end: true },
   { to: '/characters/joueurs', label: 'Joueurs' },
   { to: '/characters/objets', label: 'Objets' },
+  { to: '/characters/pretires', label: 'Prétirés' },
 ]
 
 const queryClient = new QueryClient({ defaultOptions: { queries: { staleTime: 30_000 } } })
@@ -127,6 +129,7 @@ const router = createBrowserRouter([
           { index: true, element: <CharactersPage /> },
           { path: 'joueurs', element: <PlayersPage /> },
           { path: 'objets', element: <ItemsPage /> },
+          { path: 'pretires', element: <PregensPage /> },
         ],
       },
       { path: 'characters/new', element: <CharacterWizardPage /> },

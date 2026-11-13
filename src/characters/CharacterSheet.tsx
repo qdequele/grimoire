@@ -30,8 +30,10 @@ function Section({ title, children, className }: { title: string; children: Reac
   )
 }
 
-export function CharacterSheet({ character: c, actions, headingLevel = 1, items }: {
+export function CharacterSheet({ character: c, actions, headingLevel = 1, items, portrait }: {
   character: CharacterRow
+  /** A picture to show when the investigator has no photo (a pre-generated investigator's portrait). */
+  portrait?: string | null
   actions?: ReactNode
   headingLevel?: 1 | 2
   /**
@@ -59,7 +61,7 @@ export function CharacterSheet({ character: c, actions, headingLevel = 1, items 
   return (
     <article className="flex flex-col gap-7">
       <header className="flex flex-col gap-5 sm:flex-row sm:items-center">
-        <Avatar name={d.name} photo={c.photo} className="size-28 shrink-0 text-3xl" />
+        <Avatar name={d.name} photo={c.photo} url={portrait} className="size-28 shrink-0 text-3xl" />
         <div className="flex min-w-0 flex-1 flex-col gap-1.5">
           <p className="eyebrow">{t("Fiche d'investigateur")}</p>
           <Heading className="font-heading text-4xl leading-tight text-gold">{d.name}</Heading>

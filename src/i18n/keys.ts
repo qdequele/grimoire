@@ -12,12 +12,14 @@ import { BRUSHES, MAP_KIND_LABEL } from '@/maps/editor/labels'
 import { catalogTexts } from '@/items/catalog'
 import { CONDITION_LABEL, KIND_LABEL as ITEM_KIND_LABEL, UNIT_ONE, USE_UNITS } from '@/items/item'
 import { DRAFT_PROBLEMS } from '@/items/text'
+import { pregenSpecialties } from '@/characters/pregens/pregens'
 
 /** Texts that reach t() from data rather than from a t('…') literal in the code. */
 export function dataKeys(): string[] {
   return [
     ...SKILLS.flatMap((s) => [`compétence:${s.label}`, s.what]),
     'compétence:Sciences', // "Sciences (autre)" with a specialty
+    ...pregenSpecialties(),
     ...OCCUPATIONS.flatMap((o) => [o.label, o.hint ?? '', ...Object.values(o.specialties ?? {})]),
     ...Object.values(CHARACTERISTIC_INFO).flatMap((c) => [c.short, c.name, c.what]),
     ...PROFILE_FIELDS.flatMap((f) => [f.label, f.placeholder]),
@@ -36,7 +38,7 @@ export function dataKeys(): string[] {
     'Décris le lieu en une phrase au moins.', 'Description trop longue (1500 caractères au plus).', 'Plan impossible. Réessaie.', // map action
     'Art déco', 'Classique', // SKIN_LABEL (theme/skin.ts touches the DOM on import)
     // Labels passed as props, then translated by the component (Section, NameForm, Stat, nav).
-    'Histoires', 'Bibliothèque', 'Mes histoires', 'Importer', 'Investigateurs', 'Joueurs', 'Réglages',
+    'Histoires', 'Bibliothèque', 'Mes histoires', 'Importer', 'Investigateurs', 'Joueurs', 'Prétirés', 'Réglages',
     'Renommer', 'Ajouter un joueur', 'PV', 'Chance', 'PM', '{label} : {detail}',
     'SAN', 'Fiche', 'Dés', 'Carnet', // companion stat tiles and sheet tabs
     ...Object.values(LEVEL_LABEL), 'Réussite', 'Majeure', 'Extrême', // companion rolls
