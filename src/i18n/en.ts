@@ -549,6 +549,8 @@ export const EN: Record<string, string> = {
   'Acte mal formé (id, title et scenes sont requis)': 'Malformed act (id, title and scenes are required)',
   'Scène mal formée (id et title sont requis)': 'Malformed scene (id and title are required)',
   'Ignoré (hors du dossier de l’histoire)': 'Skipped (outside the story folder)',
+  'Nom de fichier refusé (lettres sans accent, chiffres, espaces et - _ . ( ) seulement)': 'File name refused (unaccented letters, digits, spaces and - _ . ( ) only)',
+  'Fichier trop lourd (50 Mo au plus)': 'File too large (50 MB at most)',
   'Archive .zip illisible.': 'Unreadable .zip archive.',
 
   // ---------------------------------------------------------------- AI profile help (function messages)

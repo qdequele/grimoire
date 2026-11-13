@@ -34,6 +34,17 @@ const junk = (p: string) =>
   p.split('/').some((part) => part.startsWith('.') || part === '__MACOSX' || part === '..' || part === '') ||
   /(^|\/)(Thumbs\.db|desktop\.ini)$/i.test(p)
 
+/**
+ * The object names Supabase Storage accepts: storage-api's own rule (VALID_OBJECT_KEY in its
+ * src/storage/limits.ts, read from v1.88.0, the version the local stack runs), which refuses
+ * accented letters, # [ ] % ~ and the like with "Invalid key". Without "?", which the rule
+ * allows but the client puts unencoded in the request address, where it would cut the name short.
+ */
+const STORAGE_PATH = /^[A-Za-z0-9_/!.*'() &$=@;:+,-]+$/
+
+/** The story-packs bucket's `file_size_limit` (migration 20261104210000_story_packs.sql). */
+export const PACK_FILE_MAX_BYTES = 52428800
+
 const isObj = (v: unknown): v is Record<string, unknown> => typeof v === 'object' && v !== null && !Array.isArray(v)
 const isName = (v: unknown) => typeof v === 'string' && v !== ''
 
@@ -108,6 +119,10 @@ export function readPack(entries: Array<{ path: string; data: Uint8Array }>): Re
       continue
     }
     const path = e.path.slice(root.length)
+    // Refused here, before anything is saved: Storage would refuse them in the middle of the
+    // import. Not renamed: story.json refers to these files by name.
+    if (!STORAGE_PATH.test(path)) errors.push(`Nom de fichier refusé (lettres sans accent, chiffres, espaces et - _ . ( ) seulement) : ${path}`)
+    else if (e.data.length > PACK_FILE_MAX_BYTES) errors.push(`Fichier trop lourd (50 Mo au plus) : ${path}`)
     files.push({ path, data: e.data, type: mimeOf(path) })
   }
   return { story: errors.length ? null : story, files, errors, warnings }
