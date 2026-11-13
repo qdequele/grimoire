@@ -53,9 +53,9 @@ const STORY_TABS = [
 ]
 const INVESTIGATOR_TABS = [
   { to: '/characters', label: 'Investigateurs', end: true },
+  { to: '/characters/mine', label: 'Mes personnages' },
   { to: '/characters/joueurs', label: 'Joueurs' },
   { to: '/characters/objets', label: 'Objets' },
-  { to: '/characters/pretires', label: 'Prétirés' },
 ]
 
 const queryClient = new QueryClient({ defaultOptions: { queries: { staleTime: 30_000 } } })
@@ -126,10 +126,11 @@ const router = createBrowserRouter([
         path: 'characters',
         element: <Section title="Investigateurs" tabs={INVESTIGATOR_TABS} />,
         children: [
-          { index: true, element: <CharactersPage /> },
+          { index: true, element: <PregensPage /> },
+          { path: 'mine', element: <CharactersPage /> },
           { path: 'joueurs', element: <PlayersPage /> },
           { path: 'objets', element: <ItemsPage /> },
-          { path: 'pretires', element: <PregensPage /> },
+          { path: 'pretires', element: <Moved to="/characters" /> },
         ],
       },
       { path: 'characters/new', element: <CharacterWizardPage /> },

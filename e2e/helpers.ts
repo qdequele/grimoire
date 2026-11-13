@@ -83,6 +83,6 @@ export async function createJournalist(page: Page, name: string, player: string 
   await expect(page.getByText('Tout est prêt')).toBeVisible()
   await page.getByRole('button', { name: 'Enregistrer le personnage' }).click()
   // Saved: the wizard leaves. Navigating away earlier would cancel the save.
-  await expect(page).toHaveURL(options.savedUrl ?? /\/characters(\/joueurs)?$/)
+  await expect(page).toHaveURL(options.savedUrl ?? /\/characters\/(mine|joueurs)$/)
   if (!options.savedUrl) await expect(page.getByText(name, { exact: true }).first()).toBeVisible()
 }

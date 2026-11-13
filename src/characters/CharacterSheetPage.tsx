@@ -22,7 +22,7 @@ export function CharacterSheetPage() {
   if (!character.data) return <Skeleton className="h-96" />
   return (
     <div className="flex flex-col gap-6">
-      <Link to="/characters" className="text-sm text-muted-foreground hover:text-gold">← {t('Investigateurs')}</Link>
+      <Link to="/characters/mine" className="text-sm text-muted-foreground hover:text-gold">← {t('Mes personnages')}</Link>
       <CharacterSheet
         character={character.data}
         items={<CharacterItems characterId={character.data.id} characterName={character.data.data.name} />}

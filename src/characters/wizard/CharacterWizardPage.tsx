@@ -23,7 +23,7 @@ function DeleteAction({ id }: { id: string }) {
       {t('Supprimer ce personnage ?')}
       <Button
         variant="destructive" size="sm" disabled={remove.isPending}
-        onClick={async () => { await remove.mutateAsync(id); toast.success(t('Investigateur supprimé.')); navigate('/characters') }}
+        onClick={async () => { await remove.mutateAsync(id); toast.success(t('Investigateur supprimé.')); navigate('/characters/mine') }}
       >
         {t('Oui')}
       </Button>
@@ -61,7 +61,7 @@ export function CharacterWizardPage() {
       await save.mutateAsync({ id: editing ? id : undefined, data: { ...toCharacterData(draft), ...(progress ? { progress } : {}) }, playerId: draft.playerId || null })
       if (!editing) saveLocalDraft(draftKey, null)
       toast.success(t('{name} est enregistré.', { name: draft.name.trim() }))
-      navigate(forPlayer ? '/characters/joueurs' : editing ? `/characters/${id}` : '/characters')
+      navigate(forPlayer ? '/characters/joueurs' : editing ? `/characters/${id}` : '/characters/mine')
     } catch (e) {
       toast.error(t((e as Error).message))
     }

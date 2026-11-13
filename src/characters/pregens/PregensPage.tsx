@@ -1,4 +1,4 @@
-// Investigateurs → Prétirés (/characters/pretires): twelve ready-made 1920s investigators. A keeper
+// Investigateurs, first tab (/characters): twelve ready-made 1920s investigators. A keeper
 // reads one's sheet and adds it to their account, where it becomes an ordinary investigator.
 import { BookOpen, Check, UserPlus } from 'lucide-react'
 import { useState } from 'react'
@@ -37,7 +37,7 @@ export function PregensPage() {
       { pregen: p, lang },
       {
         onSuccess: (row) => {
-          toast.success(t('{name} rejoint tes investigateurs.', { name: p.name }), {
+          toast.success(t('{name} rejoint tes personnages.', { name: p.name }), {
             action: { label: t('Voir la fiche'), onClick: () => navigate(`/characters/${row.id}`) },
           })
         },
@@ -51,7 +51,7 @@ export function PregensPage() {
       return (
         <Button size={size} variant="ghost" className="relative z-10" render={<Link to={`/characters/${copy.id}`} />} nativeButton={false}>
           <Check data-icon="inline-start" />
-          {t('Dans tes investigateurs')}
+          {t('Dans tes personnages')}
         </Button>
       )
     }
@@ -61,7 +61,7 @@ export function PregensPage() {
         variant={size === 'xs' ? 'outline' : 'default'}
         className="relative z-10"
         disabled={add.isPending && add.variables?.pregen.id === p.id}
-        aria-label={t('Ajouter {name} à mes investigateurs', { name: p.name })}
+        aria-label={t('Ajouter {name} à mes personnages', { name: p.name })}
         onClick={() => addOne(p)}
       >
         <UserPlus data-icon="inline-start" />
@@ -131,13 +131,13 @@ export function PregensPage() {
   )
 }
 
-/** "Prétirés" link for the Investigateurs page. */
+/** Link from "Mes personnages" to the ready-made investigators. */
 export function PregensLink({ className }: { className?: string }) {
   const t = useT()
   return (
-    <Button variant="outline" className={className} render={<Link to="/characters/pretires" />} nativeButton={false}>
+    <Button variant="outline" className={className} render={<Link to="/characters" />} nativeButton={false}>
       <BookOpen data-icon="inline-start" />
-      {t('Choisir un prétiré')}
+      {t('Investigateurs prêts à jouer')}
     </Button>
   )
 }

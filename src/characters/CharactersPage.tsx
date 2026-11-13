@@ -56,7 +56,7 @@ export function CharactersPage() {
           <EmptyHeader>
             <EmptyMedia variant="icon"><Users /></EmptyMedia>
             <EmptyTitle>{t('Aucun investigateur')}</EmptyTitle>
-            <EmptyDescription>{t('Crée les investigateurs de tes joueurs, ou choisis des prétirés, avant de lancer une histoire.')}</EmptyDescription>
+            <EmptyDescription>{t('Crée les investigateurs de tes joueurs, ou choisis-en parmi ceux prêts à jouer, avant de lancer une histoire.')}</EmptyDescription>
           </EmptyHeader>
           <EmptyContent className="flex-row flex-wrap justify-center">
             <Button render={<Link to="/characters/new" />} nativeButton={false}>{t('Créer un investigateur')}</Button>

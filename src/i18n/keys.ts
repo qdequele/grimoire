@@ -38,7 +38,7 @@ export function dataKeys(): string[] {
     'Décris le lieu en une phrase au moins.', 'Description trop longue (1500 caractères au plus).', 'Plan impossible. Réessaie.', // map action
     'Art déco', 'Classique', // SKIN_LABEL (theme/skin.ts touches the DOM on import)
     // Labels passed as props, then translated by the component (Section, NameForm, Stat, nav).
-    'Histoires', 'Bibliothèque', 'Mes histoires', 'Importer', 'Investigateurs', 'Joueurs', 'Prétirés', 'Réglages',
+    'Histoires', 'Bibliothèque', 'Mes histoires', 'Importer', 'Investigateurs', 'Mes personnages', 'Joueurs', 'Réglages',
     'Renommer', 'Ajouter un joueur', 'PV', 'Chance', 'PM', '{label} : {detail}',
     'SAN', 'Fiche', 'Dés', 'Carnet', // companion stat tiles and sheet tabs
     ...Object.values(LEVEL_LABEL), 'Réussite', 'Majeure', 'Extrême', // companion rolls
