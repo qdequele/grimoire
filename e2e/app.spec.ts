@@ -153,6 +153,41 @@ test('keeper creates an investigator, then plays a marketplace story', async ({ 
   await expect(page.getByRole('link', { name: /Reprendre la partie/ })).toBeVisible()
 })
 
+test('keeper adds a ready-made investigator, which then opens in the wizard like their own', async ({ page }) => {
+  await signUp(page)
+  // Investigateurs opens on the ready-made ones; the keeper's own are under "Mes personnages"
+  await page.goto('/characters')
+  const tabs = page.getByRole('navigation', { name: 'Investigateurs' })
+  await expect(tabs.getByRole('link')).toHaveText(['Investigateurs', 'Mes personnages', 'Joueurs', 'Objets'])
+  await tabs.getByRole('link', { name: 'Mes personnages' }).click()
+  await page.getByRole('button', { name: 'Investigateurs prêts à jouer' }).first().click()
+  await expect(page).toHaveURL(/\/characters$/)
+  const cards = page.getByRole('listitem').filter({ has: page.getByRole('button', { name: /^Ajouter .+ à mes personnages$/ }) })
+  await expect(cards).toHaveCount(12)
+
+  // The sheet opens before adding; adding from it turns the button into a link to the keeper's copy
+  const first = cards.first()
+  const name = (await first.getByRole('heading').or(first.locator('[data-slot="card-title"]')).first().textContent())!.trim()
+  await first.locator('[data-slot="card-title"] button').click()
+  const sheet = page.getByRole('dialog')
+  await expect(sheet.getByRole('heading', { name, level: 2 })).toBeVisible()
+  await expect(sheet.getByRole('heading', { name: 'Compétences' })).toBeVisible()
+  await sheet.getByRole('button', { name: `Ajouter ${name} à mes personnages` }).click()
+  await sheet.getByRole('button', { name: 'Dans tes personnages' }).click()
+  await expect(page).toHaveURL(/\/characters\/[\w-]+$/)
+  await expect(page.getByRole('heading', { name, level: 1 })).toBeVisible()
+
+  // An ordinary investigator now: listed, and its wizard reopens with every step done
+  await page.goto('/characters/mine')
+  await expect(page.getByRole('link', { name, exact: true })).toBeVisible()
+  // …with its portrait as its photo
+  const card = page.locator('[data-slot="card"]').filter({ has: page.getByRole('link', { name, exact: true }) })
+  await expect(card.locator('img')).toHaveAttribute('src', /^data:image\/jpeg;base64,/)
+  await page.getByRole('link', { name, exact: true }).click()
+  await page.goto(`${page.url()}/edit?etape=7`)
+  await expect(page.getByRole('button', { name: /Enregistrer/ })).toBeEnabled()
+})
+
 test('creation draft survives a reload, and editing reopens the wizard', async ({ page }) => {
   test.setTimeout(90_000) // long flow: wizard, then game(s)
   await signUp(page)
@@ -527,7 +562,7 @@ test('main menu: stories, investigators with their players, settings', async ({ 
   // Histoires: library, my stories, import
   await menu.getByRole('link', { name: /^Histoires/ }).click()
   const storyTabs = page.getByRole('navigation', { name: 'Histoires' })
-  await expect(storyTabs.getByRole('link')).toHaveText(['Bibliothèque', 'Mes histoires', 'Créer', 'Importer'])
+  await expect(storyTabs.getByRole('link')).toHaveText(['Bibliothèque', 'Mes histoires', 'Créer', 'Importer', 'Plans'])
   await expect(storyTabs.getByRole('link', { name: 'Mes histoires' })).toHaveAttribute('aria-current', 'page')
   await storyTabs.getByRole('link', { name: 'Importer' }).click()
   await expect(page.getByRole('tab', { name: 'Packs Grimoire' })).toBeVisible()
@@ -558,7 +593,7 @@ test('main menu: stories, investigators with their players, settings', async ({ 
   await jo.getByRole('button', { name: 'Renommer' }).click()
   const joanna = page.getByRole('article', { name: 'Joanna' })
   await expect(joanna).toBeVisible()
-  await page.getByRole('navigation', { name: 'Investigateurs' }).getByRole('link', { name: 'Investigateurs' }).click()
+  await page.getByRole('navigation', { name: 'Investigateurs' }).getByRole('link', { name: 'Mes personnages' }).click()
   await expect(page.getByText('joué par Joanna')).toBeVisible()
   await page.getByRole('navigation', { name: 'Investigateurs' }).getByRole('link', { name: 'Joueurs' }).click()
   await joanna.getByRole('button', { name: 'Retirer' }).click()
@@ -603,7 +638,7 @@ test('keeper browses the item cards, searches one, opens it and gives it to an i
   await expect(page.getByRole('button', { name: 'Corde de chanvre (15 m)' })).toBeFocused()
 
   // It is on the investigator's sheet; their "Donner un objet" dialog searches too.
-  await page.goto('/characters')
+  await page.goto('/characters/mine')
   await page.getByRole('link', { name: 'Iris Vane' }).click()
   await expect(page.getByRole('article', { name: 'Corde de chanvre (15 m)' })).toBeVisible()
   await page.getByRole('button', { name: 'Donner un objet' }).click()
@@ -678,7 +713,7 @@ test('the whole app follows the language chosen in settings', async ({ page }) =
   await expect(menu.getByRole('link')).toHaveText([/^New game/, /^Stories/, /^Investigators/, /^Settings/])
 
   await menu.getByRole('link', { name: /^Stories/ }).click()
-  await expect(page.getByRole('navigation', { name: 'Stories' }).getByRole('link')).toHaveText(['Library', 'My stories', 'Create', 'Import'])
+  await expect(page.getByRole('navigation', { name: 'Stories' }).getByRole('link')).toHaveText(['Library', 'My stories', 'Create', 'Import', 'Maps'])
   await page.getByRole('link', { name: 'Library' }).click()
   await page.getByRole('link', { name: 'The Silent Light' }).click()
   await expect(page.getByRole('button', { name: 'Start the game' })).toBeVisible()

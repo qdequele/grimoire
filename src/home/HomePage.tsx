@@ -54,7 +54,7 @@ export function HomePage() {
             meta={[t('bibliothèque'), stories.data && t.n(stories.data.length, '{n} histoire personnelle', '{n} histoires personnelles'), t('import')].filter(Boolean).join(' · ')}
           />
           <MenuItem
-            to="/characters"
+            to="/characters/mine"
             label={t('Investigateurs')}
             meta={characters.data && players.data ? `${t.n(characters.data.length, '{n} investigateur', '{n} investigateurs')} · ${t.n(players.data.length, '{n} joueur', '{n} joueurs')}` : undefined}
           />

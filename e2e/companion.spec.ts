@@ -195,7 +195,7 @@ test('a note written on the phone appears on the investigator card of the game s
   await expect(notebook.locator('.cnote')).toContainText('First note from the phone')
 
   // Investigateurs page: the card's notebook, where the keeper edits and deletes notes
-  await keeper.goto('/characters')
+  await keeper.goto('/characters/mine')
   await keeper.getByRole('button', { name: 'Carnet (1)' }).click()
   const dialog = keeper.getByRole('dialog', { name: 'Alpha' })
   const notes = dialog.getByRole('list', { name: 'Notes' }).getByRole('listitem')
@@ -539,7 +539,7 @@ test('the keeper gives item cards from the game screen; the phone fires and relo
   await expect(chip('Boîte de balles .38')).toContainText('19/20', LIVE)
 
   // The cards belong to the investigator: they are on their sheet, outside any game.
-  await keeper.goto('/characters')
+  await keeper.goto('/characters/mine')
   await keeper.getByRole('link', { name: /Alpha/ }).first().click()
   await expect(keeper.getByRole('heading', { name: 'Objets (2)' })).toBeVisible()
   await expect(keeper.getByRole('article', { name: 'Revolver .38' })).toBeVisible()

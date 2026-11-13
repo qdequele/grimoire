@@ -7,6 +7,7 @@ import { OAuthConsentPage } from '@/auth/OAuthConsentPage'
 import { CharacterSheetPage } from '@/characters/CharacterSheetPage'
 import { CharactersPage } from '@/characters/CharactersPage'
 import { PlayersPage } from '@/characters/PlayersPage'
+import { PregensPage } from '@/characters/pregens/PregensPage'
 import { ItemsPage } from '@/items/ItemsPage'
 import { CharacterWizardPage } from '@/characters/wizard/CharacterWizardPage'
 import { Toaster } from '@/components/ui/sonner'
@@ -52,6 +53,7 @@ const STORY_TABS = [
 ]
 const INVESTIGATOR_TABS = [
   { to: '/characters', label: 'Investigateurs', end: true },
+  { to: '/characters/mine', label: 'Mes personnages' },
   { to: '/characters/joueurs', label: 'Joueurs' },
   { to: '/characters/objets', label: 'Objets' },
 ]
@@ -124,9 +126,11 @@ const router = createBrowserRouter([
         path: 'characters',
         element: <Section title="Investigateurs" tabs={INVESTIGATOR_TABS} />,
         children: [
-          { index: true, element: <CharactersPage /> },
+          { index: true, element: <PregensPage /> },
+          { path: 'mine', element: <CharactersPage /> },
           { path: 'joueurs', element: <PlayersPage /> },
           { path: 'objets', element: <ItemsPage /> },
+          { path: 'pretires', element: <Moved to="/characters" /> },
         ],
       },
       { path: 'characters/new', element: <CharacterWizardPage /> },
