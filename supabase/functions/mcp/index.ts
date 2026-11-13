@@ -113,7 +113,9 @@ async function isAdmin(ctx: Ctx) {
 async function loadCreation(ctx: Ctx, id: unknown): Promise<CreationRow> {
   if (!str(id)) throw new ToolError('bad_request', 'creationId is required.')
   const { data } = await ctx.admin.from('story_creations').select('*').eq('id', str(id)).maybeSingle()
-  if (!data || data.owner_id !== ctx.userId) throw new ToolError('not_found', 'No creation with this id. Start one with save_outline.')
+  // The website creator's creations are not the connector's: it must not replace their outline or
+  // write their scenes (and create-story doesn't write the connector's). Answered like a missing id.
+  if (!data || data.owner_id !== ctx.userId || data.source !== 'mcp') throw new ToolError('not_found', 'No creation with this id. Start one with save_outline.')
   return data
 }
 
@@ -232,10 +234,11 @@ async function listMyStories(ctx: Ctx) {
     .order('updated_at', { ascending: false })
     .limit(100)
   if (error) throw error
-  // Creations not finished yet: their story can't be edited, write_scenes continues them.
+  // Creations not finished yet: their story can't be edited; write_scenes continues the connector's
+  // own (the website creator's are finished on the website).
   const { data: open } = await ctx.admin
     .from('story_creations')
-    .select('id, status, story_id, outline, updated_at')
+    .select('id, status, story_id, outline, updated_at, source')
     .eq('owner_id', ctx.userId)
     .in('status', ['outlined', 'writing'])
     .order('updated_at', { ascending: false })
@@ -243,7 +246,7 @@ async function listMyStories(ctx: Ctx) {
   const writing = new Set((open ?? []).map((c) => c.story_id).filter(Boolean))
   return {
     stories: (data ?? []).map((s) => ({ id: s.id, title: s.title, lang: s.lang, summary: s.summary, updatedAt: s.updated_at, beingWritten: writing.has(s.id), url: storyUrl(s.id) })),
-    unfinishedCreations: (open ?? []).map((c) => ({
+    unfinishedCreations: (open ?? []).filter((c) => c.source === 'mcp').map((c) => ({
       creationId: c.id,
       title: (c.outline as { title?: string } | null)?.title ?? '',
       status: c.status,
@@ -267,10 +270,10 @@ async function loadOwnStory(ctx: Ctx, storyId: unknown) {
   return data
 }
 
-/** A creation still writing this story: its next batch would overwrite an edit. */
+/** A creation still writing this story (the connector's or the website creator's): its next batch would overwrite an edit. */
 async function creationWriting(ctx: Ctx, storyId: string) {
-  const { data } = await ctx.admin.from('story_creations').select('id').eq('story_id', storyId).in('status', ['outlined', 'writing']).limit(1)
-  return data?.[0]?.id as string | undefined
+  const { data } = await ctx.admin.from('story_creations').select('id, source').eq('story_id', storyId).in('status', ['outlined', 'writing']).limit(1)
+  return data?.[0]
 }
 
 async function getStory(ctx: Ctx, args: Record<string, unknown>) {
@@ -282,7 +285,7 @@ async function getStory(ctx: Ctx, args: Record<string, unknown>) {
     storyId: story.id,
     version: story.updated_at,
     url: storyUrl(story.id),
-    ...(writing ? { beingWrittenBy: writing } : {}),
+    ...(writing ? { beingWrittenBy: writing.source === 'mcp' ? writing.id : 'the story creator on the Grimoire website' } : {}),
     ...storyPart(story.content, part, sceneIds),
     // Pictures in the pack (save_image) and where the story uses them.
     images: imageUses(story.content, story.pack_files),
@@ -316,7 +319,14 @@ async function storyToEdit(ctx: Ctx, args: Record<string, unknown>) {
   const current = await loadOwnStory(ctx, args.storyId)
   if (current.updated_at !== version) throw new ToolError('conflict', CONFLICT)
   const writing = await creationWriting(ctx, current.id)
-  if (writing) throw new ToolError('busy', `A creation is still writing this story (${writing}). Finish it with write_scenes first.`)
+  if (writing) {
+    throw new ToolError(
+      'busy',
+      writing.source === 'mcp'
+        ? `A creation is still writing this story (${writing.id}). Finish it with write_scenes first.`
+        : 'The story creator on the Grimoire website is still writing this story: the keeper finishes it there first.',
+    )
+  }
   return { current, version }
 }
 

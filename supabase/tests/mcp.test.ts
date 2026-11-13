@@ -427,3 +427,34 @@ describe('mcp: limits', () => {
     expect((await call(dora, 'save_image', { storyId: crypto.randomUUID(), version: 'x', name: 'late.svg', attach: { scene: 'a' } })).error).toMatch(/^not_found/)
   })
 })
+
+describe('mcp: creations of the website creator', () => {
+  it('are not the connector\'s to write or re-outline', async () => {
+    const eve = await keeper()
+    const { data: web, error } = await service
+      .from('story_creations')
+      .insert({ owner_id: eve.id, brief, outline: FAKE_OUTLINE, status: 'outlined', source: 'web', outline_count: 1 })
+      .select('id, updated_at')
+      .single()
+    expect(error).toBeNull()
+    expect((await call(eve, 'write_scenes', { creationId: web!.id, draft: draftFor([['act-1', 'arrival']]) })).error).toMatch(/^not_found/)
+    expect((await call(eve, 'save_outline', { creationId: web!.id, brief, outline: { ...FAKE_OUTLINE, title: 'Another Mill' } })).error).toMatch(/^not_found/)
+    const { data: row } = await service.from('story_creations').select('status, source, story_id, draft, outline_count, updated_at, outline').eq('id', web!.id).single()
+    expect(row).toMatchObject({ status: 'outlined', source: 'web', story_id: null, draft: null, outline_count: 1, updated_at: web!.updated_at, outline: { title: FAKE_OUTLINE.title } })
+
+    // Once the website is writing its story: the connector shows it as being written, offers nothing to
+    // continue with write_scenes, and says where it is finished.
+    const { data: story } = await eve.db
+      .from('stories')
+      .insert({ owner_id: eve.id, visibility: 'private', content: { format: 'grimoire-story/1', meta: { id: 'web-mill', title: 'A Mill', lang: 'en', license: 'private' }, acts: [] } })
+      .select('id, updated_at')
+      .single()
+    await service.from('story_creations').update({ status: 'writing', story_id: story!.id }).eq('id', web!.id)
+    const list = await call(eve, 'list_my_stories')
+    expect(list.stories).toEqual([expect.objectContaining({ id: story!.id, beingWritten: true })])
+    expect(list.unfinishedCreations).toEqual([])
+    const edit = await call(eve, 'edit_story', { storyId: story!.id, version: story!.updated_at, ops: [{ op: 'set_info', info: { title: 'Mine' } }] })
+    expect(edit.error).toMatch(/^busy: .*website/)
+    expect(edit.error).not.toMatch(/write_scenes/)
+  })
+})
