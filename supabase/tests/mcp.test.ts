@@ -414,4 +414,16 @@ describe('mcp: limits', () => {
     })
     expect(res.status).toBe(413)
   })
+
+  it('checks the daily limits before reading a picture', async () => {
+    const dora = await keeper()
+    // Same value as the function's default MCP_IMAGES_DAILY_LIMIT: this keeper has drawn today's pictures.
+    const { error } = await service.from('ai_usage').insert(Array.from({ length: 100 }, () => ({ owner_id: dora.id, kind: 'mcp-edit', input_tokens: 10, output_tokens: 0 })))
+    expect(error).toBeNull()
+    // An SVG the check would refuse: the limit answers first, the SVG is never read.
+    const res = await call(dora, 'save_image', { storyId: crypto.randomUUID(), version: 'x', name: 'late.svg', svg: '<svg viewBox="0 0 1 1"><script/></svg>' })
+    expect(res.error).toMatch(/^quota_exceeded: .*pictures/)
+    // Attaching a stored picture draws nothing: not held back by the picture limit.
+    expect((await call(dora, 'save_image', { storyId: crypto.randomUUID(), version: 'x', name: 'late.svg', attach: { scene: 'a' } })).error).toMatch(/^not_found/)
+  })
 })

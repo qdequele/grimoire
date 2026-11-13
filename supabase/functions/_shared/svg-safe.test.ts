@@ -172,6 +172,34 @@ describe('sanitizeSvg: attacks are refused', () => {
     refused(wrap(`<defs>${body}</defs>`), /expands/)
   })
 
+  it('refuses long reference chains with a message, not a crash', () => {
+    const hops = 9000
+    const uses = Array.from({ length: hops }, (_, n) => `<use id="u${n}" href="#u${n + 1}"/>`).join('')
+    refused(wrap(`<defs>${uses}<rect id="u${hops}"/></defs>`), /expands|chain/)
+    // Gradients inheriting from one another draw nothing more, so only the chain's length stops them.
+    const gradients = Array.from({ length: 6500 }, (_, n) => `<linearGradient id="g${n}" href="#g${n + 1}"/>`).join('')
+    refused(wrap(`<defs>${gradients}<linearGradient id="g6500"/></defs>`), /chain/)
+    // A short chain is fine.
+    expect(() => sanitizeSvg(wrap('<linearGradient id="a" href="#b"/><linearGradient id="b" href="#c"/><linearGradient id="c"/>'))).not.toThrow()
+  })
+
+  it('reads a large file of one element per line quickly', () => {
+    // Line numbers used to be counted from the top of the file for every element: about 4 s for this one.
+    // Measured against the same elements on one line, so a busy machine doesn't change the verdict.
+    const time = (svg: string) => {
+      const start = performance.now()
+      sanitizeSvg(svg)
+      return performance.now() - start
+    }
+    const oneLine = Math.max(time(wrap('<rect/>'.repeat(19_000))), time(wrap('<rect/>'.repeat(19_000))))
+    const manyLines = Math.min(time(wrap(`\n${'<rect/>\n'.repeat(19_000)}`)), time(wrap(`\n${'<rect/>\n'.repeat(19_000)}`)))
+    expect(manyLines).toBeLessThan(oneLine * 10 + 50)
+    // The line numbers are still right.
+    refused(wrap(`\n${'<rect/>\n'.repeat(500)}<script/>\n`), /^line 502: <script>/)
+    refused(`<svg viewBox="0 0 1 1">\n<g>\n<rect/>\n</svg>`, /^line 4: <\/svg> closes <g> \(opened line 2\)/)
+    refused(`<svg viewBox="0 0 1 1">\n\n<text>a & b</text></svg>`, /^line 3/)
+  })
+
   it('refuses files that are too large or too deep', () => {
     refused(wrap(`<path d="M0 0 ${'L1 1 '.repeat(SVG_LIMITS.bytes / 5)}"/>`), /KB/)
     refused(wrap('<g>'.repeat(SVG_LIMITS.depth + 1) + '</g>'.repeat(SVG_LIMITS.depth + 1)), /nested/)

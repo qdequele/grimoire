@@ -364,6 +364,8 @@ async function editStory(ctx: Ctx, args: Record<string, unknown>) {
 async function saveImage(ctx: Ctx, args: Record<string, unknown>) {
   if (!str(args.version)) throw new ToolError('bad_request', 'version is required (from get_story).')
   const req = parseImageRequest(args)
+  // Before the SVG is read: checking a large one costs CPU, which a keeper over the limit doesn't get.
+  await checkEditQuota(ctx, req.svg !== undefined)
   let safe: ReturnType<typeof sanitizeSvg> | null = null
   if (req.svg !== undefined) {
     try {
@@ -373,7 +375,6 @@ async function saveImage(ctx: Ctx, args: Record<string, unknown>) {
       throw e
     }
   }
-  await checkEditQuota(ctx, !!safe)
   const { current, version } = await storyToEdit(ctx, args)
 
   const files = current.pack_files

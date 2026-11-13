@@ -19,6 +19,8 @@ export const SVG_LIMITS = {
   depth: 48,
   /** Elements drawn once every <use> is expanded (guards against exponential <use> chains). */
   rendered: 100_000,
+  /** References followed one inside another (a <use> of a <use>…, a gradient inheriting from a gradient…). */
+  chain: 1000,
 } as const
 
 /** A refused SVG: the message says what is wrong and where. */
@@ -194,7 +196,20 @@ export function sanitizeSvg(input: unknown): SafeSvg {
   if (CONTROL.test(src)) throw new SvgError('The SVG holds control characters.')
 
   let i = 0
-  const lineAt = (pos: number) => src.slice(0, pos).split('\n').length
+  // Where each line break is, found once: the line of a position is then a binary search, not a
+  // count from the top of the file for every element (which made large files quadratic).
+  const breaks: number[] = []
+  for (let at = src.indexOf('\n'); at !== -1; at = src.indexOf('\n', at + 1)) breaks.push(at)
+  const lineAt = (pos: number) => {
+    let lo = 0
+    let hi = breaks.length
+    while (lo < hi) {
+      const mid = (lo + hi) >> 1
+      if (breaks[mid] < pos) lo = mid + 1
+      else hi = mid
+    }
+    return lo + 1
+  }
   const at = () => `line ${lineAt(i)}`
   const fail = (msg: string): never => {
     throw new SvgError(`${at()}: ${msg}`)
@@ -370,22 +385,25 @@ export function sanitizeSvg(input: unknown): SafeSvg {
   }
   const counts = new Map<SvgNode, number>()
   const visiting = new Set<SvgNode>()
-  const rendered = (n: SvgNode): number => {
+  // `depth`: how far down this walk is (nesting and references together). Bounded, so a very long
+  // chain is refused with a message instead of overflowing the stack.
+  const rendered = (n: SvgNode, depth: number): number => {
     const known = counts.get(n)
     if (known !== undefined) return known
     if (visiting.has(n)) throw new SvgError(`line ${n.line}: <${n.name}> is part of a reference loop.`)
+    if (depth > SVG_LIMITS.chain) throw new SvgError(`line ${n.line}: <${n.name}> ends a chain of more than ${SVG_LIMITS.chain} references (href to an element that itself has an href…): simplify it.`)
     visiting.add(n)
     let total = 1
-    for (const c of n.children) if (typeof c !== 'string') total += rendered(c)
+    for (const c of n.children) if (typeof c !== 'string') total += rendered(c, depth + 1)
     const t = target(n)
-    if (t && n.name === 'use') total += rendered(t)
-    else if (t) rendered(t) // gradients, patterns, filters inheriting from another: check for loops
+    if (t && n.name === 'use') total += rendered(t, depth + 1)
+    else if (t) rendered(t, depth + 1) // gradients, patterns, filters inheriting from another: check for loops
     visiting.delete(n)
     if (total > SVG_LIMITS.rendered) throw new SvgError(`The drawing expands to more than ${SVG_LIMITS.rendered} elements through <use>: simplify it.`)
     counts.set(n, total)
     return total
   }
-  rendered(root)
+  rendered(root, 0)
 
   // The root: a viewBox, and the namespaces an image/svg+xml file needs.
   const vbRaw = root.attrs.find(([k]) => k === 'viewBox')?.[1]
