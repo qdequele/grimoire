@@ -800,7 +800,11 @@ export const STAMP_LIST: readonly Stamp[] = [...BUILDING, ...MORE_BUILDING, ...U
 
 export type StampId = string
 
-export const STAMPS: Readonly<Record<StampId, Stamp>> = Object.fromEntries(STAMP_LIST.map((s) => [s.id, s]))
+/**
+ * Stamps by id. Without a prototype: ids come from files and model answers, and "constructor" or
+ * "toString" must be unknown stamps like any other, for `in` and for a plain lookup alike.
+ */
+export const STAMPS: Readonly<Record<StampId, Stamp>> = Object.assign(Object.create(null) as Record<StampId, Stamp>, Object.fromEntries(STAMP_LIST.map((s) => [s.id, s])))
 
 /** The stamps a kind of map offers, its own first. */
 export const stampsFor = (kind: MapKind): Stamp[] => [...STAMP_LIST.filter((s) => s.kinds[0] === kind), ...STAMP_LIST.filter((s) => s.kinds[0] !== kind && s.kinds.includes(kind)), ...STAMP_LIST.filter((s) => !s.kinds.includes(kind))]
