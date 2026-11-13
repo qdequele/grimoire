@@ -559,6 +559,7 @@ export const EN: Record<string, string> = {
   'Impossible de joindre le serveur.': 'Cannot reach the server.',
   'Réessayer': 'Try again',
   'Connexion impossible. Réessaie.': 'Connection failed. Try again.',
+  'Le scénario n’a pas pu être chargé. Vérifie ta connexion, puis réessaie.': 'The scenario could not be loaded. Check your connection, then try again.',
   'Modification refusée par le serveur.': 'The server refused the change.',
   'À la table': 'At the table',
   'Qui êtes-vous ?': 'Who are you?',

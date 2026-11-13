@@ -58,6 +58,24 @@ test('blank sheet and scenarios: printable pages, linked from the tools hub', as
   await expect(page.getByRole('button', { name: /Imprimer le scénario|Print the scenario/ })).toBeVisible()
 })
 
+test('a scenario whose file fails to load says so and loads on a retry', async ({ page }) => {
+  await page.goto('/scenarios')
+  const href = await page.getByRole('link', { name: /Lire le scénario/ }).first().getAttribute('href')
+  // A direct visit (a search result) on a bad connection: the story's own file doesn't arrive.
+  let down = true
+  await page.route('**/stories/*/story.json*', (route) => (down ? route.abort() : route.continue()))
+  await page.goto(href!)
+  const failed = page.getByRole('alert').filter({ has: page.getByRole('button', { name: /Réessayer|Try again/ }) })
+  await expect(failed).toBeVisible()
+  // The rest of the page is alive: the app started without the story.
+  await expect(page.getByRole('navigation', { name: 'Outils gratuits' }).first()).toBeVisible()
+
+  down = false
+  await failed.getByRole('button').click()
+  await expect(page.locator('#secret')).toBeVisible()
+  await expect(page.getByRole('button', { name: /Imprimer le scénario|Print the scenario/ })).toBeVisible()
+})
+
 test('landing page links to the free tools', async ({ page }) => {
   await page.goto('/')
   await page.getByRole('link', { name: /Lanceur de dés|Dice roller/ }).first().click()
