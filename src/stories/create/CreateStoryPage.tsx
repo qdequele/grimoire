@@ -15,42 +15,12 @@ import { tMsg, useT } from '@/i18n/t'
 import { functionErrorMessage } from '@/lib/functions'
 import { cn } from '@/lib/utils'
 import { useLang } from '@/settings/lang'
+import { useAuth } from '@/auth/auth'
 import { useCompleteOutline, useCreation, useDrawSceneMap, useCreationsThisMonth, useSuggestIdeas, useWriteOutline, useWriteScenes } from './api'
+import { browserStore, creationLost, loadSaved, saveState, type Saved } from './creator'
 import { briefSchema, emptyBrief, LENGTHS, outlineHasDetails, sceneTotal, THREATS, TONES, type Brief, type IdeaField, type Outline } from './brief'
 import { OutlineReview } from './OutlineReview'
 import { MoodStep, MysteryStep, SettingStep, TableStep, type QuestionProps } from './steps'
-
-// The creator's progress, kept per browser so a reload (or coming back later) doesn't lose it.
-const STORE_KEY = 'grimoire-story-creator'
-
-interface Saved {
-  brief: Brief
-  creationId: string | null
-  outline: Outline | null
-  outlinesLeft: number | null
-}
-
-function load(): Saved | null {
-  try {
-    const raw = localStorage.getItem(STORE_KEY)
-    if (raw) {
-      const s = JSON.parse(raw) as Saved
-      if (briefSchema.safeParse(s.brief).success) return s
-    }
-  } catch {
-    /* unavailable or corrupt: start fresh */
-  }
-  return null
-}
-
-function save(s: Saved | null) {
-  try {
-    if (s) localStorage.setItem(STORE_KEY, JSON.stringify(s))
-    else localStorage.removeItem(STORE_KEY)
-  } catch {
-    /* not remembered, that's fine */
-  }
-}
 
 const QUESTION_STEPS: Array<{ title: string; Component: ComponentType<QuestionProps> }> = [
   { title: 'Cadre', Component: SettingStep },
@@ -69,11 +39,19 @@ type Phase =
   | { kind: 'error'; message: string; written: number; total: number; storyId: string | null }
 
 export function CreateStoryPage() {
+  const userId = useAuth().session?.user.id
+  // Keyed on the account: the page keeps one keeper's progress (creator.ts) and never another's.
+  return userId ? <Creator key={userId} userId={userId} /> : null
+}
+
+function Creator({ userId }: { userId: string }) {
   const t = useT()
   const navigate = useNavigate()
   const [params, setParams] = useSearchParams()
   const step = Math.min(STEPS.length - 1, Math.max(0, Number(params.get('etape') ?? 1) - 1))
-  const [initial] = useState(load)
+  // The creator's progress, kept in the browser so a reload (or coming back later) doesn't lose it.
+  const [initial] = useState(() => loadSaved(browserStore, userId))
+  const save = (s: Saved | null) => saveState(browserStore, userId, s)
   const form = useForm<Brief>({ resolver: zodResolver(briefSchema), defaultValues: initial?.brief ?? emptyBrief(useLang.getState().lang) })
   const [creationId, setCreationId] = useState<string | null>(initial?.creationId ?? null)
   const [outline, setOutline] = useState<Outline | null>(initial?.outline ?? null)
@@ -95,8 +73,16 @@ export function CreateStoryPage() {
   // Remember everything the keeper did, answers included.
   const brief = useWatch({ control: form.control }) as Brief
   useEffect(() => {
-    save({ brief, creationId, outline, outlinesLeft })
-  }, [brief, creationId, outline, outlinesLeft])
+    saveState(browserStore, userId, { brief, creationId, outline, outlinesLeft })
+  }, [userId, brief, creationId, outline, outlinesLeft])
+
+  // A saved creation this account can't read (deleted since): every call with its id would be
+  // refused. The plan goes with it; the answers stay.
+  if (creationLost(creationId, server)) {
+    setCreationId(null)
+    setOutline(null)
+    setOutlinesLeft(null)
+  }
 
   // Leaving the page stops the writing loop after the current batch (it can be resumed).
   useEffect(() => () => { stopped.current = true }, [])
