@@ -458,3 +458,27 @@ describe('mcp: creations of the website creator', () => {
     expect(edit.error).not.toMatch(/write_scenes/)
   })
 })
+
+describe('mcp: a story with format errors', () => {
+  let erin: Keeper
+  let storyId: string
+  // The draft takes any text as dice; the story format doesn't take these.
+  const brute = { ...millerNpc, attacks: [{ name: 'Fist', skill: 50, damage: '1d3+DB', note: '' }] }
+
+  it('says how to fix the errors left once the last scene is written', async () => {
+    erin = await keeper()
+    const { creationId } = await call(erin, 'save_outline', { brief, outline: FAKE_OUTLINE })
+    const first = await call(erin, 'write_scenes', { creationId, draft: draftFor([['act-1', 'arrival'], ['act-1', 'mill']], { npcs: [brute] }) })
+    // Scenes remain: the next write_scenes call can still fix them.
+    expect(first.remaining).toBe(1)
+    expect(first.validationErrors.join('\n')).toMatch(/damage/)
+    expect(first.note).toBeUndefined()
+    const last = await call(erin, 'write_scenes', { creationId, draft: draftFor([['act-2', 'cellar']]) })
+    expect(last.remaining).toBe(0)
+    expect(last.validationErrors.join('\n')).toMatch(/damage/)
+    // write_scenes is closed now: the answer names the tools that still can.
+    expect(last.note).toMatch(/get_story.*edit_story/)
+    storyId = last.storyId
+    expect((await call(erin, 'write_scenes', { creationId, draft: draftFor([['act-2', 'cellar']], { npcs: [millerNpc] }) })).error).toMatch(/^finished: .*edit_story/)
+  })
+})

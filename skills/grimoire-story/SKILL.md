@@ -18,6 +18,7 @@ If the Grimoire tools are not available, tell the user to add the connector firs
 
 - Write the outline first and show it as a readable list: title, pitch, the secret in two or three sentences, then each act and its scenes with one line each, then the NPCs. Wait for the keeper's go-ahead or changes.
 - Only then call `save_outline`, and `write_scenes` two or three scenes at a time, in the order it gives. Don't paste the scenes in the chat: say briefly what you wrote and how many remain.
+- If an answer lists `validationErrors`, fix them in the next `write_scenes` call while scenes remain; once the last scene is written, with `get_story` and `edit_story`.
 - Every story is original: invent places, people, entities and books. Names from published games or fiction are refused by the tools.
 - Respect what the keeper asked to avoid, completely.
 - Objects that matter (a key, a found weapon, a talisman, a lamp the ending needs) can be story **items**: the keeper gives them as cards during play and the investigators keep them. Two or three per story at most, each with the scene where it is found (topic `format`, §6).

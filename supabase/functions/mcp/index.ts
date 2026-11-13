@@ -41,6 +41,7 @@ import {
   applyEdits,
   attachImage,
   detachImage,
+  FINISHED_WITH_ERRORS,
   forbiddenNamesIn,
   GUIDE_TOPICS,
   guideText,
@@ -222,7 +223,18 @@ async function writeScenes(ctx: Ctx, args: Record<string, unknown>) {
     })
     .eq('id', row.id)
   if (error) throw error
-  return { creationId: row.id, storyId, url: storyUrl(storyId), written, total, remaining, next: nextBatch(outline, draft, NEXT_BATCH), validationErrors }
+  return {
+    creationId: row.id,
+    storyId,
+    url: storyUrl(storyId),
+    written,
+    total,
+    remaining,
+    next: nextBatch(outline, draft, NEXT_BATCH),
+    validationErrors,
+    // The creation is closed now: these errors can't be fixed by sending the scenes again.
+    ...(!remaining && validationErrors.length ? { note: FINISHED_WITH_ERRORS } : {}),
+  }
 }
 
 async function listMyStories(ctx: Ctx) {

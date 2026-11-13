@@ -141,6 +141,12 @@ export function storyPart(content: unknown, part: StoryPart, sceneIds: string[] 
 
 export const sceneCount = (content: unknown) => asStory(content).acts.reduce((n, a) => n + a.scenes.length, 0)
 
+// ------------------------------------------------------------------ messages of write_scenes
+
+/** With the last scene's answer, when the finished story still has schema errors. */
+export const FINISHED_WITH_ERRORS =
+  'Every scene is written, so write_scenes takes nothing more for this story, but it still has format errors (validationErrors). Fix them with get_story and edit_story (put_scene, put_npc… in the story.json format), then give the keeper the link.'
+
 // ------------------------------------------------------------------ editing a story (story.json level)
 
 export const EDIT_OPS = [
@@ -479,7 +485,7 @@ You write the story; Grimoire checks it, saves it as a private story in the keep
 3. Write the OUTLINE: title, a spoiler-free pitch, the secret, the overview, the scenes grouped in acts (each with a short summary, its clues, NPC ids and next scene ids) and every NPC with a short description. Show it to the keeper as a readable list, not JSON, and revise it until they approve it.
 4. Call save_outline with the brief and the approved outline. It returns a creationId and the scene ids to write, in order. You may call save_outline again with the same creationId to replace the outline, but only before the first scene is written.
 5. Call write_scenes with 2 or 3 scenes at a time (${MCP_LIMITS.scenesPerCall} at most), in the order given by "next", until "remaining" is 0. Each call carries a draft: the acts holding these scenes (same act and scene ids as the outline), the full entry of every NPC who appears in them and is not detailed yet (personality, knows, stats, skills, attacks), their handouts, and the items found there (objects the investigators keep: a key, a weapon, a talisman). Leave out what you have nothing for. The story is saved after every call, so the keeper can already open it.
-6. If a call returns validationErrors, fix those scenes by sending them again with the same ids in the next call. When "remaining" is 0, give the keeper the story's link.
+6. If a call returns validationErrors while scenes remain, fix them by sending those scenes or NPCs again with the same ids in the next write_scenes call. When "remaining" is 0 the creation is closed and write_scenes takes nothing more: errors still listed then are fixed with get_story and edit_story (put_scene, put_npc… in the story.json format, topic "format"). Then give the keeper the story's link.
 7. Then offer pictures: a background for the ambiance screen in two or three key scenes (when no built-in décor fits them) and a picture for the handouts that are papers, letters or maps. Draw only the ones the keeper wants, in SVG, with save_image (grimoire_guide topic "images").
 
 # Revising one of the keeper's stories
@@ -649,7 +655,7 @@ export function toolDefinitions(): ToolDef[] {
     {
       name: 'write_scenes',
       title: 'Write scenes',
-      description: `Write the next scenes of a creation in full (${MCP_LIMITS.scenesPerCall} at most per call, 2 or 3 is best), with the NPCs and handouts they need. The story is saved after every call. Returns how many scenes remain, the next ids to write and any validation errors to fix.`,
+      description: `Write the next scenes of a creation in full (${MCP_LIMITS.scenesPerCall} at most per call, 2 or 3 is best), with the NPCs and handouts they need. The story is saved after every call. Returns how many scenes remain, the next ids to write and any validation errors: fix them in the next call, or with get_story and edit_story once no scene remains.`,
       inputSchema: {
         type: 'object',
         properties: { creationId: { type: 'string' }, draft },

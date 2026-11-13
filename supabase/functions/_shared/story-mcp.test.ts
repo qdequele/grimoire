@@ -8,6 +8,7 @@ import {
   attachImage,
   detachImage,
   EDIT_OPS,
+  FINISHED_WITH_ERRORS,
   forbiddenNamesIn,
   GUIDE_TOPICS,
   guideText,
@@ -344,6 +345,15 @@ describe('guide and tools', () => {
     for (const topic of GUIDE_TOPICS) expect(guideText(topic).length).toBeGreaterThan(200)
     expect(guideText('example')).toContain(JSON.stringify(SAMPLE_STORY, null, 1))
     expect(SERVER_INSTRUCTIONS).toContain('grimoire_guide')
+  })
+
+  it('says where validation errors are fixed once write_scenes is closed', () => {
+    const step = guideText('workflow').split('\n').find((l) => l.includes('validationErrors'))!
+    // While scenes remain: the next write_scenes call. After the last one: edit_story, in the story.json format.
+    expect(step).toMatch(/while scenes remain.*next write_scenes call/)
+    expect(step).toMatch(/"remaining" is 0.*get_story and edit_story.*story\.json/)
+    expect(toolDefinitions().find((t) => t.name === 'write_scenes')!.description).toMatch(/edit_story/)
+    expect(FINISHED_WITH_ERRORS).toMatch(/get_story and edit_story/)
   })
 
   it('names every tool the guide mentions, with valid JSON Schemas and annotations', () => {
