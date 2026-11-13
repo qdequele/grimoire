@@ -11,6 +11,8 @@ const server = {
   /** Writes waiting for `release()` or `refuse()`, oldest first. */
   held: [] as Array<(accept: boolean) => void>,
   opens: 0,
+  /** companion_open fails (no network). */
+  down: false,
 }
 const CHARACTER = 'c1'
 
@@ -30,7 +32,7 @@ function open() {
 vi.mock('@/lib/supabase', () => ({
   supabase: {
     rpc: (name: string, args: { p_field: keyof Points; p_value: number }) => {
-      if (name === 'companion_open') return Promise.resolve({ data: open(), error: null })
+      if (name === 'companion_open') return Promise.resolve(server.down ? { data: null, error: { message: 'Failed to fetch' } } : { data: open(), error: null })
       if (name !== 'companion_set_point') return Promise.resolve({ data: null, error: { message: 'unexpected' } })
       server.sent.push({ field: args.p_field, value: args.p_value })
       // The write is committed when the test releases it.
@@ -55,7 +57,7 @@ vi.mock('@tanstack/react-query', async (original) => ({
 
 const { toast } = await import('sonner')
 const api = await import('./api')
-const { companionKeys, endTap, pointsOf, startTap, tapTarget, undoTap, withTaps } = api
+const { afterTaps, applyPointsHint, companionKeys, endTap, pointsOf, receivePoints, startTap, tapTarget, undoTap, withTaps } = api
 // With useQuery and useMutation mocked above, the hooks only hand back their options.
 const companionOptions = api.useCompanion as unknown as (token: string) => QueryObserverOptions
 const setPointsOptions = api.useSetPoints as unknown as (token: string) => MutationObserverOptions<void, Error, Tap>
@@ -84,6 +86,9 @@ async function phone() {
     tap: (field: keyof Points, delta: number) => void taps.mutate({ characterId: CHARACTER, field, delta }).catch(() => undefined),
     shown: () => { const v = view(); const p = pointsOf(v, v.party[0]); return { pv: p.pv, san: p.san, chance: p.chance, pm: p.pm } },
     refetch: () => client.invalidateQueries({ queryKey: companionKeys.one(TOKEN) }),
+    /** A `points` broadcast reaching this phone: from the server's trigger, or from anyone holding a link. */
+    broadcast: (points: Partial<Points>, updatedAt = new Date().toISOString()) =>
+      receivePoints(client, TOKEN, { characterId: CHARACTER, ...server.points, ...points, checks: [], source: 'keeper', updatedAt }),
   }
 }
 
@@ -93,6 +98,7 @@ afterEach(() => {
   server.sent = []
   server.held = []
   server.opens = 0
+  server.down = false
   vi.mocked(toast.error).mockClear()
 })
 
@@ -190,6 +196,7 @@ describe('the tap book', () => {
     points: [{ characterId: 'a', pv: 10, san: 47, chance: 50, pm: 9, ...points, checks: ['Esquive'], source: 'keeper', updatedAt: 'T' }],
     notes: [],
     items: [],
+    hinted: [],
   })
   const tap = (field: keyof Points, delta: number): Tap => ({ characterId: 'a', field, delta })
 
@@ -241,3 +248,153 @@ describe('the tap book', () => {
     expect(withTaps(fresh, 'other', book)).toBe(fresh)
   })
 })
+
+describe('points broadcasts on a public topic', () => {
+  it('a forged payload is shown at most: the next tap asks the server and builds on its value', async () => {
+    const p = await phone()
+    // Someone holding another link sends zeros for this investigator.
+    p.broadcast({ pv: 0, san: 0, chance: 0, pm: 0 })
+    expect(p.shown().san).toBe(0)
+    p.tap('san', 1)
+    await settle()
+    expect(server.sent).toEqual([{ field: 'san', value: 48 }])
+    await release()
+    expect(server.points.san).toBe(48)
+    expect(p.shown()).toEqual({ pv: 10, san: 48, chance: 50, pm: 9 })
+    p.stop()
+  })
+
+  it('a payload stamped in the future is ignored, so it cannot hide the real ones after it', async () => {
+    const p = await phone()
+    p.broadcast({ san: 0 }, '2999-01-01T00:00:00.000Z')
+    expect(p.shown().san).toBe(47)
+    server.points = { ...server.points, san: 45 } // the keeper, for real
+    p.broadcast({})
+    expect(p.shown().san).toBe(45)
+    p.stop()
+  })
+
+  it('a keeper change shows at once, and a tap on it starts from the server value', async () => {
+    const p = await phone()
+    server.points = { ...server.points, pv: 5 }
+    p.broadcast({})
+    expect(p.shown().pv).toBe(5)
+    expect(server.opens).toBe(1) // no refetch for a points event
+    p.tap('pv', -1)
+    await settle()
+    expect(server.sent).toEqual([{ field: 'pv', value: 4 }])
+    await release()
+    expect(p.shown().pv).toBe(4)
+    p.stop()
+  })
+
+  it('a keeper change to another field while taps are queued is read before that field is tapped', async () => {
+    const p = await phone()
+    p.tap('pv', -1)
+    await settle()
+    server.points = { ...server.points, san: 40 }
+    p.broadcast({})
+    expect(p.shown()).toMatchObject({ pv: 9, san: 40 })
+    p.tap('san', -1)
+    await settle()
+    await release() // pv 9
+    await release() // san
+    expect(server.sent).toEqual([{ field: 'pv', value: 9 }, { field: 'san', value: 39 }])
+    expect(p.shown()).toMatchObject({ pv: 9, san: 39 })
+    p.stop()
+  })
+
+  it('without a broadcast a tap costs no extra read', async () => {
+    const p = await phone()
+    p.tap('pv', -1)
+    await settle()
+    expect(server.sent).toHaveLength(1)
+    expect(server.opens).toBe(1)
+    await release()
+    expect(server.opens).toBe(2) // the refetch after the last tap
+    p.stop()
+  })
+
+  it('when the server cannot be asked, the tap is refused rather than built on the broadcast', async () => {
+    const p = await phone()
+    p.broadcast({ san: 0 })
+    server.down = true
+    p.tap('san', 1)
+    await settle()
+    expect(server.sent).toEqual([])
+    expect(toast.error).toHaveBeenCalledTimes(1)
+    server.down = false
+    p.tap('san', 1)
+    await settle()
+    expect(server.sent).toEqual([{ field: 'san', value: 48 }])
+    await release()
+    p.stop()
+  })
+})
+
+describe('applyPointsHint', () => {
+  const NOW = Date.parse('2026-06-01T12:00:00.000Z')
+  const at = (ms: number) => new Date(NOW + ms).toISOString()
+  const view: View = {
+    game: { id: 'g', channel: 'c', title: '' },
+    focus: null,
+    canCreate: false,
+    party: [{ id: 'a', data: { name: 'A', characteristics: {}, skills: {}, hp: 12 }, player: null, photo: null }],
+    points: [{ characterId: 'a', pv: 10, san: 47, chance: 50, pm: 9, checks: [], source: 'keeper', updatedAt: at(-60_000) }],
+    notes: [],
+    items: [],
+    hinted: [],
+  }
+  const payload = (over: Record<string, unknown> = {}) => ({ characterId: 'a', pv: 8, san: 47, chance: 50, pm: 9, checks: [], source: 'keeper', updatedAt: at(0), ...over })
+
+  it('shows the payload, clamped, and marks the investigator as not confirmed by the server', () => {
+    const next = applyPointsHint(view, payload({ pv: 40, san: -3 }), NOW)!
+    expect(next.points[0]).toMatchObject({ pv: 12, san: 0, chance: 50, pm: 9 })
+    expect(next.hinted).toEqual(['a'])
+    expect(applyPointsHint(next, payload({ updatedAt: at(1000) }), NOW)!.hinted).toEqual(['a'])
+  })
+
+  it('ignores payloads stamped later than now plus a small skew, or with no readable time', () => {
+    expect(applyPointsHint(view, payload({ updatedAt: at(60_000) }), NOW)).not.toBeNull()
+    expect(applyPointsHint(view, payload({ updatedAt: at(10 * 60_000) }), NOW)).toBeNull()
+    expect(applyPointsHint(view, payload({ updatedAt: '2999-01-01T00:00:00Z' }), NOW)).toBeNull()
+    expect(applyPointsHint(view, payload({ updatedAt: 'soon' }), NOW)).toBeNull()
+  })
+
+  it('ignores a payload older than what is shown, a stranger, a malformed one', () => {
+    expect(applyPointsHint(view, payload({ updatedAt: at(-120_000) }), NOW)).toBeNull()
+    expect(applyPointsHint(view, payload({ characterId: 'zz' }), NOW)).toBeNull()
+    expect(applyPointsHint(view, payload({ pv: 'many' }), NOW)).toBeNull()
+    expect(applyPointsHint(view, null, NOW)).toBeNull()
+  })
+
+  it('mid-taps: keeps what the tapped fields show and drops echoes of this phone', () => {
+    const taps = { base: { pv: 10, san: 47, chance: 50, pm: 9 }, maxHp: 12, shown: { pv: 8 }, running: 2, unsure: false }
+    expect(applyPointsHint(view, payload({ pv: 9, source: 'phone' }), NOW, taps)).toBeNull()
+    expect(applyPointsHint(view, payload({ pv: 3, san: 40 }), NOW, taps)!.points[0]).toMatchObject({ pv: 8, san: 40 })
+  })
+})
+
+describe('afterTaps', () => {
+  const view: View = {
+    game: { id: 'g', channel: 'c', title: '' },
+    focus: null,
+    canCreate: false,
+    party: [{ id: 'a', data: { name: 'A', characteristics: {}, skills: {}, hp: 12 }, player: null, photo: null }],
+    points: [{ characterId: 'a', pv: 1, san: 1, chance: 50, pm: 9, checks: [], source: 'phone', updatedAt: 'T' }],
+    notes: [],
+    items: [],
+    hinted: [],
+  }
+
+  it('shows what the server accepted', () => {
+    const next = afterTaps(view, 'a', { pv: 9 }, false)
+    expect(next.points[0]).toMatchObject({ pv: 9, san: 1 })
+    expect(next.hinted).toEqual([])
+  })
+
+  it('keeps the investigator marked when a broadcast came in after the last read of the server', () => {
+    expect(afterTaps(view, 'a', { pv: 9 }, true).hinted).toEqual(['a'])
+  })
+})
+

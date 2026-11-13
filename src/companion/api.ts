@@ -32,6 +32,12 @@ export interface CompanionView {
   notes: CompanionNote[]
   /** The party's items, in display order. */
   items: HeldItem[]
+  /**
+   * Investigators whose shown points come from a `points` broadcast since the server was last read.
+   * Anyone with a link can send on the topic, so these values are for display only: a tap reads the
+   * server before it builds on them.
+   */
+  hinted: string[]
 }
 
 export type CompanionErrorCode = 'link_invalid' | 'not_in_game' | 'bad_value' | 'party_full' | 'network'
@@ -141,6 +147,7 @@ function asView(raw: unknown): CompanionView {
       .map((n) => ({ id: n.id as string, characterId: n.characterId as string, body: str(n.body), createdAt: str(n.createdAt) }))
       .sort((a, b) => b.createdAt.localeCompare(a.createdAt)),
     items: sortHeld(objects(r.items).map(asHeld).filter((h): h is HeldItem => !!h)),
+    hinted: [],
   }
 }
 
@@ -234,6 +241,8 @@ export interface Taps {
   shown: Partial<Points>
   /** Taps not settled. */
   running: number
+  /** `base` may hold a broadcast's values, or miss a change one announced: read the server before sending. */
+  unsure: boolean
 }
 export type TapBook = Map<string, Taps>
 
@@ -250,7 +259,13 @@ export function startTap(book: TapBook, key: string, view: CompanionView | undef
     const member = view?.party.find((m) => m.id === tap.characterId)
     if (!member) return null
     const cur = pointsOf(view, member)
-    taps = { base: { pv: cur.pv, san: cur.san, chance: cur.chance, pm: cur.pm }, maxHp: member.data.hp ?? 10, shown: {}, running: 0 }
+    taps = {
+      base: { pv: cur.pv, san: cur.san, chance: cur.chance, pm: cur.pm },
+      maxHp: member.data.hp ?? 10,
+      shown: {},
+      running: 0,
+      unsure: view?.hinted.includes(tap.characterId) ?? false,
+    }
     book.set(key, taps)
   }
   taps.running += 1
@@ -293,6 +308,15 @@ function patchFields(view: CompanionView, characterId: string, values: Partial<P
   return patchPoints(view, { ...pointsOf(view, member), ...values, source: 'phone' })
 }
 
+/**
+ * The view once an investigator's last tap is through: the tapped fields show what the server accepted.
+ * `unsure`: a broadcast came in after the server was last read, so the next tap reads it again.
+ */
+export function afterTaps(view: CompanionView, characterId: string, accepted: Partial<Points>, unsure: boolean): CompanionView {
+  const next = patchFields(view, characterId, accepted)
+  return unsure && !next.hinted.includes(characterId) ? { ...next, hinted: [...next.hinted, characterId] } : next
+}
+
 /** A view from the server, with what the running taps show on top (other fields are the server's). */
 export function withTaps(view: CompanionView, token: string, book: TapBook): CompanionView {
   let out = view
@@ -307,7 +331,8 @@ export function withTaps(view: CompanionView, token: string, book: TapBook): Com
  * One tap on an investigator's HP / SAN / Luck / MP. The sheet changes at once (only that field); a
  * refused tap is taken back with a toast. Taps are queued per investigator and each sends only its
  * field, so a keeper change to another field is never undone. What a tap sends comes from the tap
- * book (the last value the server accepted, plus the tap), never from the cache.
+ * book (the last value the server accepted, plus the tap), never from the cache; when the sheet shows
+ * a broadcast's values, the tap first reads the server's.
  */
 export function useSetPoints(token: string) {
   const qc = useQueryClient()
@@ -318,6 +343,22 @@ export function useSetPoints(token: string) {
       enqueue(tapKey(token, characterId), async () => {
         const taps = tapBook.get(tapKey(token, characterId))
         if (!taps) throw new CompanionError('not_in_game')
+        if (taps.unsure) {
+          // No write of this investigator is in flight here (one at a time): the answer is current.
+          taps.unsure = false
+          try {
+            const fresh = await openView(token)
+            const member = fresh.party.find((m) => m.id === characterId)
+            if (!member) throw new CompanionError('not_in_game')
+            const cur = pointsOf(fresh, member)
+            taps.base = { pv: cur.pv, san: cur.san, chance: cur.chance, pm: cur.pm }
+            taps.maxHp = member.data.hp ?? 10
+            qc.setQueryData<CompanionView>(key, withTaps(fresh, token, tapBook))
+          } catch (e) {
+            taps.unsure = true
+            throw e
+          }
+        }
         const value = tapTarget(taps, field, delta)
         await call(() => supabase.rpc('companion_set_point', { p_token: token, p_character: characterId, p_field: field, p_value: value }))
         taps.base = { ...taps.base, [field]: value }
@@ -338,11 +379,12 @@ export function useSetPoints(token: string) {
       onWriteError(qc, token, e)
     },
     onSettled: (_d, _e, { characterId }, ctx) => {
+      const unsure = tapBook.get(tapKey(token, characterId))?.unsure === true
       const accepted = ctx?.applied != null ? endTap(tapBook, tapKey(token, characterId)) : {}
       if (!accepted) return
       // The investigator's last tap is through: show what the server accepted, then fetch its values.
       const view = qc.getQueryData<CompanionView>(key)
-      if (view) qc.setQueryData<CompanionView>(key, patchFields(view, characterId, accepted))
+      if (view) qc.setQueryData<CompanionView>(key, afterTaps(view, characterId, accepted, unsure))
       void qc.invalidateQueries({ queryKey: key })
     },
   })
@@ -479,10 +521,49 @@ export function useRollDice(token: string) {
 
 // ------------------------------------------------------------------ live
 
+/** A phone's clock may run a little behind the server's: a payload stamped further ahead is not the server's. */
+export const HINT_SKEW_MS = 2 * 60_000
+
 /**
- * Listens to the game's channel: `points` (keeper or phone) go straight into the cache, clamped to
- * what the server accepts (anyone with a link can send on this public topic; writes are re-checked
- * by the RPCs), `notes`, `member`, `photo` and `items` refetch. Returns true while subscribed (the "live" badge).
+ * A `points` broadcast applied to the view, for display only, or null when it is to be ignored. The
+ * topic is public, so nothing in the payload is trusted: values are clamped, the investigator is
+ * marked `hinted` (taps then read the server instead of building on these values), and a payload
+ * stamped later than now plus a small skew is dropped, or it would hide every real one after it.
+ */
+export function applyPointsHint(view: CompanionView, payload: unknown, now: number, taps?: Taps): CompanionView | null {
+  if (!payload || typeof payload !== 'object') return null
+  const row = asPointsRow(payload as Record<string, unknown>)
+  if (!row) return null
+  // Echoes of our own taps in flight would undo the taps made since: the refetch after the last one settles it.
+  if (row.source === 'phone' && taps) return null
+  const member = view.party.find((m) => m.id === row.characterId)
+  if (!member) return null
+  const stamp = Date.parse(row.updatedAt)
+  if (!(stamp <= now + HINT_SKEW_MS)) return null
+  const current = view.points.find((p) => p.characterId === row.characterId)
+  if (current?.updatedAt && stamp < Date.parse(current.updatedAt)) return null
+  // A keeper change arriving mid-taps keeps what the tapped fields show (it may predate them).
+  const next = patchPoints(view, { ...row, ...clampPoints(row, member.data.hp ?? 10), ...taps?.shown })
+  return next.hinted.includes(row.characterId) ? next : { ...next, hinted: [...next.hinted, row.characterId] }
+}
+
+/** What the channel's `points` handler does with a payload. */
+export function receivePoints(qc: QueryClient, token: string, payload: unknown, now = Date.now()): void {
+  const key = companionKeys.one(token)
+  const view = qc.getQueryData<CompanionView>(key)
+  if (!view || !payload || typeof payload !== 'object') return
+  const taps = tapBook.get(tapKey(token, String((payload as { characterId?: unknown }).characterId)))
+  const next = applyPointsHint(view, payload, now, taps)
+  if (!next) return
+  // Taps already queued were counted on older values: the next one reads the server first.
+  if (taps) taps.unsure = true
+  qc.setQueryData<CompanionView>(key, next)
+}
+
+/**
+ * Listens to the game's channel: `points` (keeper or phone) are shown at once but never written back
+ * (`applyPointsHint`: anyone with a link can send on this public topic), `notes`, `member`, `photo`
+ * and `items` refetch. Returns true while subscribed (the "live" badge).
  * A revoke sends `rotate` on the old topic before moving the game: refetching gives a still-valid
  * link the new channel (this hook resubscribes) and a revoked one the invalid-link state.
  */
@@ -494,21 +575,7 @@ export function useCompanionLive(token: string, channel: string | undefined): bo
     const key = companionKeys.one(token)
     const ch = supabase
       .channel(`companion:${channel}`)
-      .on('broadcast', { event: 'points' }, ({ payload }) => {
-        const row = asPointsRow((payload ?? {}) as Record<string, unknown>)
-        if (!row) return
-        const taps = tapBook.get(tapKey(token, row.characterId))
-        // Echoes of our own taps in flight would undo the taps made since: the refetch after the last one settles it.
-        if (row.source === 'phone' && taps) return
-        const view = qc.getQueryData<CompanionView>(key)
-        const member = view?.party.find((m) => m.id === row.characterId)
-        if (!view || !member) return
-        const current = view.points.find((p) => p.characterId === row.characterId)
-        if (current?.updatedAt && row.updatedAt && Date.parse(row.updatedAt) < Date.parse(current.updatedAt)) return
-        // A keeper change arriving mid-taps keeps what the tapped fields show (it may predate them).
-        const merged = { ...row, ...clampPoints(row, member.data.hp ?? 10), ...taps?.shown }
-        qc.setQueryData<CompanionView>(key, patchPoints(view, merged))
-      })
+      .on('broadcast', { event: 'points' }, ({ payload }) => receivePoints(qc, token, payload))
       .on('broadcast', { event: 'notes' }, () => void qc.invalidateQueries({ queryKey: key }))
       .on('broadcast', { event: 'member' }, () => void qc.invalidateQueries({ queryKey: key }))
       .on('broadcast', { event: 'photo' }, () => void qc.invalidateQueries({ queryKey: key }))
