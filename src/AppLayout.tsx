@@ -114,7 +114,7 @@ export function AppLayout() {
       </div>
     )
   }
-  if (!session) return isHome && !returnedOAuthError() ?<LandingPage /> : <ToLogin />
+  if (!session) return isHome && !returnedOAuthError() ? <LandingPage /> : <ToLogin />
   // Back from Google or the sign-up confirmation e-mail, which return to the root: on to the page
   // that sent the keeper to /login (the OAuth consent page, for a chat app waiting on it).
   const resume = isHome ? rememberedNext() : null

@@ -1,3 +1,4 @@
+import { AuthApiError, AuthRetryableFetchError } from '@supabase/supabase-js'
 import { QueryClient } from '@tanstack/react-query'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { KEEPER_DRAFT_KEY } from '@/characters/wizard/host'
@@ -13,8 +14,8 @@ describe('what one account leaves in the browser for the next', () => {
   /** A tab: its own module state (what it last saw), sharing the browser's storage. */
   const openTab = async () => {
     vi.resetModules()
-    const [{ followAccount }, oauth] = await Promise.all([import('./account'), import('./oauth')])
-    return { followAccount, ...oauth }
+    const [account, oauth] = await Promise.all([import('./account'), import('./oauth')])
+    return { ...account, ...oauth }
   }
 
   beforeEach(() => {
@@ -89,6 +90,60 @@ describe('what one account leaves in the browser for the next', () => {
     tab.followAccount('keeper-b', cache)
     expect(store.get(KEEPER_DRAFT_KEY)).toBe(DRAFT)
     expect(tab.rememberedNext()).toBe('/oauth/consent?authorization_id=abc')
+  })
+
+  // Start-up with an expired access token while offline, or while Supabase answers 502/503/504:
+  // Auth reports no session and an error, but keeps the session: the keeper is still signed in.
+  describe('a session that could not be checked at start-up', () => {
+    const offline = new AuthRetryableFetchError('Failed to fetch', 0)
+    const unsureStartUp = async () => {
+      await asKeeperA()
+      const tab = await openTab()
+      tab.rememberNext('/stories/story-1')
+      tab.followSession('getSession', null, cache, offline)
+      tab.followSession('INITIAL_SESSION', null, cache)
+      return tab
+    }
+
+    it('is not a sign-out: the keeper finds the draft, the page to return to and the data again', async () => {
+      const tab = await unsureStartUp()
+      expect(cache.getQueryData(STORY)).toEqual({ secret: 'private to A' })
+      expect(store.get(KEEPER_DRAFT_KEY)).toBe(DRAFT)
+      expect(tab.rememberedNext()).toBe('/stories/story-1')
+
+      tab.followSession('TOKEN_REFRESHED', 'keeper-a', cache)
+      const reloaded = await openTab()
+      reloaded.followSession('getSession', 'keeper-a', cache, null)
+      expect(cache.getQueryData(STORY)).toEqual({ secret: 'private to A' })
+      expect(store.get(KEEPER_DRAFT_KEY)).toBe(DRAFT)
+      expect(reloaded.rememberedNext()).toBe('/stories/story-1')
+    })
+
+    it('still leaves nothing for another account signing in afterwards', async () => {
+      const tab = await unsureStartUp()
+      tab.followSession('SIGNED_IN', 'keeper-b', cache)
+      expect(cache.getQueryData(STORY)).toBeUndefined()
+      expect(store.has(KEEPER_DRAFT_KEY)).toBe(false)
+      expect(tab.rememberedNext()).toBeNull()
+    })
+
+    it.each([
+      ['no error', null],
+      ['a session Auth refused', new AuthApiError('Invalid Refresh Token', 400, 'refresh_token_not_found')],
+    ])('but no session with %s is a sign-out', async (_name, error) => {
+      await asKeeperA()
+      const tab = await openTab()
+      tab.followSession('getSession', null, cache, error)
+      expect(cache.getQueryData(STORY)).toBeUndefined()
+      expect(store.has(KEEPER_DRAFT_KEY)).toBe(false)
+    })
+
+    it('a sign-out event is one too, whatever came before', async () => {
+      const tab = await unsureStartUp()
+      tab.followSession('SIGNED_OUT', null, cache)
+      expect(cache.getQueryData(STORY)).toBeUndefined()
+      expect(store.has(KEEPER_DRAFT_KEY)).toBe(false)
+    })
   })
 
   it('still works when the browser refuses storage', async () => {

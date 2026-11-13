@@ -14,7 +14,7 @@ import { Epigraph, Masthead, SkinToggle } from '@/theme/Masthead'
 import { useT, type T } from '@/i18n/t'
 import { LegalLinks } from '@/legal/LegalPage'
 import { useAuth } from './auth'
-import { forgetNext, forgetOAuthError, rememberNext,rememberedNext, returnedOAuthError, signInWithGoogle, useGoogleEnabled } from './oauth'
+import { forgetNext, forgetOAuthError, rememberNext, rememberedNext, returnedOAuthError, signInWithGoogle, useGoogleEnabled } from './oauth'
 
 const makeSchema = (t: T) =>
   z.object({

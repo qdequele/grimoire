@@ -1,3 +1,4 @@
+import { isAuthRetryableFetchError, type AuthChangeEvent } from '@supabase/supabase-js'
 import type { QueryClient } from '@tanstack/react-query'
 import { KEEPER_DRAFT_KEY } from '@/characters/wizard/host'
 import { forgetNext } from './oauth'
@@ -21,8 +22,8 @@ function storedAccount(): string | null {
 }
 
 /**
- * Called with every session the app learns of (start-up, sign-in, token refresh, sign-out; null:
- * signed out). When the account that was signed in is gone (signed out, session ended, also while
+ * Called (through followSession) with every session the app learns of (start-up, sign-in, token
+ * refresh, sign-out; null: signed out). When the account that was signed in is gone (signed out, session ended, also while
  * the site was closed) or another one takes its place, empties what the first one left.
  *
  * Signing in from a signed-out browser empties nothing: the public investigator tool writes its
@@ -46,4 +47,28 @@ export function followAccount(userId: string | null, queryClient: QueryClient): 
   } catch {
     // Storage blocked: nothing was kept there either.
   }
+}
+
+/** Where the app learnt of a session: the start-up read (`getSession`, with its error) or an Auth event. */
+export type SessionSource = AuthChangeEvent | 'getSession'
+
+/**
+ * Whether "no session" from this source means the account is really gone. Not at start-up when the
+ * session could not be checked: with an expired access token and no network (or Supabase answering
+ * 502/503/504), Auth reports no session and a retryable error but keeps the session, and the keeper
+ * is signed in again at the next load. `INITIAL_SESSION` carries no error, so `getSession` decides.
+ */
+export function accountGone(source: SessionSource, error?: unknown): boolean {
+  if (source === 'getSession') return !isAuthRetryableFetchError(error)
+  return source !== 'INITIAL_SESSION'
+}
+
+/**
+ * What `AuthProvider` calls with every session it learns of: `followAccount`, except for a missing
+ * session that is no sign-out (`accountGone`). The stored account id then stays, so the same keeper
+ * coming back keeps everything and another account signing in still gets nothing.
+ */
+export function followSession(source: SessionSource, userId: string | null, queryClient: QueryClient, error?: unknown): void {
+  if (userId === null && !accountGone(source, error)) return
+  followAccount(userId, queryClient)
 }
