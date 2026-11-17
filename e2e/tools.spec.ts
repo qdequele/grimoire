@@ -155,6 +155,35 @@ test('map maker: rooms, a door, a bed, a secret room, the players’ copy', asyn
   await expect(page.getByRole('heading', { level: 1 })).toHaveText('A map maker for roleplaying games')
 })
 
+test('map maker: a width typed digit by digit resizes the map once, without cutting it on the way', async ({ page }) => {
+  await page.goto('/outils/generateur-de-plans')
+  await page.getByRole('button', { name: 'Plan au hasard' }).click()
+  const drawing = page.getByTestId('map-drawing')
+  const width = page.getByLabel('Largeur')
+  const before = await width.inputValue()
+  const picture = await drawing.innerHTML()
+
+  // Real keystrokes: "4" alone is below the smallest map, and must not be applied.
+  await width.selectText()
+  await width.pressSequentially('48')
+  await width.press('Enter')
+  await expect(width).toHaveValue('48')
+  await expect.poll(() => drawing.innerHTML()).not.toBe(picture)
+
+  // Back to the first width: nothing was lost in between.
+  await width.selectText()
+  await width.pressSequentially(before)
+  await page.getByLabel('Titre', { exact: true }).focus()
+  await expect(width).toHaveValue(before)
+  await expect.poll(() => drawing.innerHTML()).toBe(picture)
+
+  // Out of range or empty: the field comes back to a size the map can have.
+  await width.selectText()
+  await width.pressSequentially('3')
+  await width.press('Enter')
+  await expect(width).toHaveValue('6')
+})
+
 test('item cards: search, open a card, download it as PNG, print a sheet; in English too', async ({ page }) => {
   await page.goto('/outils/cartes-objets')
   await expect(page.getByRole('heading', { level: 1 })).toHaveText('Cartes d’objets à imprimer')
