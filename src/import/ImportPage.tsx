@@ -3,6 +3,7 @@ import { FileUp, ImagePlus, X } from 'lucide-react'
 import { useMemo, useRef, useState } from 'react'
 import { Link, useSearchParams } from 'react-router'
 import { PackImport } from './PackImport'
+import { importBatches, resumeFrom, type ImportResume } from './resume'
 import { useAuth } from '@/auth/auth'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { Button } from '@/components/ui/button'
@@ -61,42 +62,60 @@ export function ImportPage() {
   const [title, setTitle] = useState('')
   const [lang, setLang] = useState<'fr' | 'en'>(useLang.getState().lang)
   const [phase, setPhase] = useState<Phase>({ kind: 'idle' })
+  // An import that stopped after some batches: the next run goes on with it. While it is pending
+  // the pages, title and language stay as they were (page numbers must keep pointing at the same
+  // files). Kept in memory only: a reload forgets it.
+  const [resume, setResume] = useState<ImportResume | null>(null)
+  const running = phase.kind === 'running'
+  const locked = running || !!resume
   const previews = useMemo(() => files.map((f) => URL.createObjectURL(f)), [files])
 
   function addFiles(list: FileList | null) {
-    if (!list) return
+    if (!list || locked) return
     const images = [...list].filter((f) => ACCEPTED.includes(f.type))
     setFiles((prev) => [...prev, ...images].slice(0, MAX_PAGES))
   }
 
-  async function run() {
+  /** Imports the selected pages; with `from`, goes on with that interrupted import instead of starting a new one. */
+  async function run(from: ImportResume | null) {
     const userId = session!.user.id
     const folder = `${userId}/${crypto.randomUUID()}`
-    const total = files.length
-    let importId: string | undefined
-    let storyId: string | null = null
+    const total = from?.total ?? files.length
+    const importTitle = from?.title ?? title
+    const importLang = from?.lang ?? lang
+    let importId = from?.importId
+    let storyId = from?.storyId ?? null
     let validationErrors: string[] = []
-    setPhase({ kind: 'running', done: 0, total, storyId })
+    let done = from?.done ?? 0
+    setResume(null)
+    setPhase({ kind: 'running', done, total, storyId })
     const paths: string[] = []
     try {
-      // Upload everything first, in page order. The function deletes each batch once read.
-      for (const [i, file] of files.entries()) {
+      if (from) {
+        // The server may have saved a batch whose answer never came back: go on from its count.
+        const { data } = await supabase.from('story_imports').select('page_count, story_id').eq('id', from.importId).maybeSingle()
+        done = resumeFrom(from.done, data?.page_count, total)
+        storyId = data?.story_id ?? storyId
+        setPhase({ kind: 'running', done, total, storyId })
+      }
+      // Upload the pages still to convert, in page order. The function deletes each batch once read.
+      for (const [i, file] of files.slice(done).entries()) {
         const ext = file.type.split('/')[1] ?? 'png'
-        const path = `${folder}/${String(i + 1).padStart(3, '0')}.${ext}`
+        const path = `${folder}/${String(done + i + 1).padStart(3, '0')}.${ext}`
         const { error } = await supabase.storage.from('import-pages').upload(path, file, { contentType: file.type })
         if (error) throw error
         paths.push(path)
       }
-      for (let i = 0; i < paths.length; i += PAGES_PER_CALL) {
-        const batch = paths.slice(i, i + PAGES_PER_CALL)
+      for (const batch of importBatches(paths, done, PAGES_PER_CALL)) {
         const { data, error } = await supabase.functions.invoke<ImportResponse>('import-story', {
-          body: { importId, pagePaths: batch, firstPage: i + 1, totalPages: total, lang, title: title || undefined },
+          body: { importId, pagePaths: batch.pagePaths, firstPage: batch.firstPage, totalPages: total, lang: importLang, title: importTitle || undefined },
         })
         if (error) throw error
         importId = data!.importId
         storyId = data!.storyId
         validationErrors = data!.validationErrors
-        setPhase({ kind: 'running', done: i + batch.length, total, storyId })
+        done = batch.firstPage - 1 + batch.pagePaths.length
+        setPhase({ kind: 'running', done, total, storyId })
         qc.invalidateQueries({ queryKey: storyKeys.all })
       }
       setPhase({ kind: 'done', storyId, validationErrors })
@@ -104,14 +123,14 @@ export function ImportPage() {
     } catch (e) {
       // Pages not reached yet are still in storage: remove them, book pages are never kept.
       if (paths.length) await supabase.storage.from('import-pages').remove(paths)
+      // Some pages are converted: the next run continues this import (same story, nothing counted twice).
+      if (importId && done > 0) setResume({ importId, done, total, storyId, title: importTitle, lang: importLang })
       setPhase({ kind: 'error', message: await functionErrorMessage(e, 'Import impossible.'), storyId })
     } finally {
       qc.invalidateQueries({ queryKey: ['imports'] })
       qc.invalidateQueries({ queryKey: storyKeys.all })
     }
   }
-
-  const running = phase.kind === 'running'
 
   return (
     <section className="flex w-full max-w-3xl flex-col gap-6">
@@ -153,7 +172,7 @@ export function ImportPage() {
             >
               <ImagePlus className="text-muted-foreground" />
               <p className="text-sm text-muted-foreground">{t('Dépose les images ici, ou')}</p>
-              <Button type="button" variant="outline" onClick={() => inputRef.current?.click()} disabled={running}>
+              <Button type="button" variant="outline" onClick={() => inputRef.current?.click()} disabled={locked}>
                 {t('Choisir des images')}
               </Button>
               <input
@@ -182,7 +201,7 @@ export function ImportPage() {
                       variant="secondary"
                       className="absolute top-1 right-1"
                       aria-label={t('Retirer la page {n}', { n: i + 1 })}
-                      disabled={running}
+                      disabled={locked}
                       onClick={() => setFiles((prev) => prev.filter((_, j) => j !== i))}
                     >
                       <X />
@@ -196,24 +215,43 @@ export function ImportPage() {
             <div className="grid gap-4 sm:grid-cols-[1fr_auto]">
               <Field>
                 <FieldLabel htmlFor="title">{t('Titre')}</FieldLabel>
-                <Input id="title" value={title} onChange={(e) => setTitle(e.target.value)} placeholder={t('Facultatif')} />
+                <Input id="title" value={title} onChange={(e) => setTitle(e.target.value)} placeholder={t('Facultatif')} disabled={!!resume} />
               </Field>
               <Field>
                 <FieldLabel>{t("Langue de l'histoire")}</FieldLabel>
                 <Tabs value={lang} onValueChange={(v) => setLang(v as 'fr' | 'en')}>
                   <TabsList>
-                    <TabsTrigger value="fr">Français</TabsTrigger>
-                    <TabsTrigger value="en">English</TabsTrigger>
+                    <TabsTrigger value="fr" disabled={!!resume}>Français</TabsTrigger>
+                    <TabsTrigger value="en" disabled={!!resume}>English</TabsTrigger>
                   </TabsList>
                 </Tabs>
                 <FieldDescription>{t('Les textes sont écrits dans cette langue.')}</FieldDescription>
               </Field>
             </div>
 
-            <Button onClick={run} disabled={!files.length || running}>
-              {running ? <Spinner data-icon="inline-start" /> : <FileUp data-icon="inline-start" />}
-              {files.length ? t.n(files.length, 'Importer {n} page', 'Importer {n} pages') : t('Importer les pages')}
-            </Button>
+            {resume ? (
+              <div className="flex flex-wrap gap-3">
+                <Button onClick={() => run(resume)}>
+                  <FileUp data-icon="inline-start" />
+                  {t('Reprendre à la page {n}', { n: resume.done + 1 })}
+                </Button>
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => {
+                    setResume(null)
+                    setPhase({ kind: 'idle' })
+                  }}
+                >
+                  {t('Recommencer à zéro')}
+                </Button>
+              </div>
+            ) : (
+              <Button onClick={() => run(null)} disabled={!files.length || running}>
+                {running ? <Spinner data-icon="inline-start" /> : <FileUp data-icon="inline-start" />}
+                {files.length ? t.n(files.length, 'Importer {n} page', 'Importer {n} pages') : t('Importer les pages')}
+              </Button>
+            )}
           </FieldGroup>
         </CardContent>
       </Card>
@@ -248,6 +286,15 @@ export function ImportPage() {
           <AlertTitle>{t("L'import s'est arrêté")}</AlertTitle>
           <AlertDescription className="flex flex-col gap-2">
             <span>{t(phase.message)}</span>
+            {resume && (
+              <span>
+                {t.n(
+                  resume.done,
+                  'La première page est convertie. « Reprendre » continue cet import sans la refaire ni la recompter.',
+                  'Les {n} premières pages sont converties. « Reprendre » continue cet import sans les refaire ni les recompter.',
+                )}
+              </span>
+            )}
             {phase.storyId && (
               <Link to={`/stories/${phase.storyId}`} className="underline underline-offset-4">
                 {t('Voir ce qui a déjà été importé')}

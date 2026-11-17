@@ -846,6 +846,40 @@ test.describe('AI features (fake Claude API)', () => {
     await expect(page.getByText('Import privé')).toBeVisible()
   })
 
+  test('an import that stopped half-way resumes where it was, in the same story', async ({ page }) => {
+    test.setTimeout(120_000) // three function calls
+    await signUp(page)
+    await page.goto('/stories/import')
+    await page.getByRole('tab', { name: 'Pages scannées (IA)' }).click()
+    // The second call fails as if the function had been cut at its deadline
+    const calls: Array<Record<string, unknown>> = []
+    await page.route('**/functions/v1/import-story', async (route) => {
+      calls.push(route.request().postDataJSON())
+      if (calls.length === 2) {
+        await route.fulfill({ status: 504, contentType: 'application/json', body: JSON.stringify({ error: { code: 'timeout', message: 'L’IA a mis trop de temps à répondre. Réessaie.' } }) })
+      } else await route.continue()
+    })
+    const png = Buffer.from([137, 80, 78, 71, 13, 10, 26, 10])
+    await page.getByTestId('page-input').setInputFiles([1, 2, 3, 4].map((n) => ({ name: `page-${n}.png`, mimeType: 'image/png', buffer: png })))
+    await page.getByRole('tab', { name: 'English' }).click()
+    await page.getByRole('button', { name: 'Importer 4 pages' }).click()
+
+    await expect(page.getByText("L'import s'est arrêté")).toBeVisible({ timeout: 60_000 })
+    await page.getByRole('button', { name: 'Reprendre à la page 3' }).click()
+    await expect(page.getByText('Import terminé')).toBeVisible({ timeout: 60_000 })
+
+    // Only pages 3-4 were sent again, to the same import: pages 1-2 are neither converted nor counted twice
+    expect(calls).toHaveLength(3)
+    const [first, , resumed] = calls
+    expect(first).toMatchObject({ firstPage: 1, totalPages: 4 })
+    expect(first.importId).toBeUndefined()
+    expect(resumed).toMatchObject({ firstPage: 3, totalPages: 4, lang: 'en' })
+    expect(resumed.importId).toEqual(expect.any(String))
+    expect(resumed.pagePaths).toHaveLength(2)
+    // Counted once each: pages 1-2 and 3-4
+    await expect(page.getByText(/4 pages importées ce mois-ci/)).toBeVisible()
+  })
+
   test('keeper creates an original story from the questionnaire', async ({ page }) => {
     await signUp(page)
     await page.getByRole('link', { name: /^Histoires/ }).click()
