@@ -328,7 +328,7 @@ test('game screen: the original engine runs a story, rolls, saves to the account
 
   // Progression is the investigator's: written in this game…
   const frame = () => page.frames().find((f) => f.url().includes('play.html'))!
-  const progressSaved = page.waitForResponse((r) => r.request().method() === 'PATCH' && r.url().includes('/rest/v1/characters'))
+  const progressSaved = page.waitForResponse((r) => r.url().includes('/rest/v1/rpc/save_character_progress') && r.ok())
   await frame().evaluate(() => {
     const g = eval as (s: string) => unknown
     const S = g('S') as { chars: Array<{ id: string }> }
