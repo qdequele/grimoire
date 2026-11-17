@@ -26,6 +26,7 @@ import {
   ToolError,
   toolDefinitions,
   usesImage,
+  WRITE_CONFLICT,
   type SchemaIssue,
 } from './story-mcp'
 import { sanitizeSvg } from './svg-safe'
@@ -413,6 +414,12 @@ describe('guide and tools', () => {
     expect(step).toMatch(/"remaining" is 0.*get_story and edit_story.*story\.json/)
     expect(toolDefinitions().find((t) => t.name === 'write_scenes')!.description).toMatch(/edit_story/)
     expect(FINISHED_WITH_ERRORS).toMatch(/get_story and edit_story/)
+  })
+
+  it('tells the model to send write_scenes calls one at a time', () => {
+    expect(guideText('workflow')).toMatch(/One call at a time, never in parallel/)
+    expect(toolDefinitions().find((t) => t.name === 'write_scenes')!.description).toMatch(/One call at a time/)
+    expect(WRITE_CONFLICT).toMatch(/one call at a time/)
   })
 
   it('names every tool the guide mentions, with valid JSON Schemas and annotations', () => {

@@ -28,6 +28,8 @@ import type { Database, Json } from '../_shared/database.types.ts'
 import { STORY_SCHEMA } from '../_shared/spec-bundle.ts'
 import {
   createdStory,
+  type StoryBrief,
+  type StoryOutline,
   nextBatch,
   orderLikeOutline,
   outlineScenes,
@@ -57,6 +59,7 @@ import {
   ToolError,
   toolDefinitions,
   usesImage,
+  WRITE_CONFLICT,
   type GuideTopic,
   type SchemaIssue,
   type StoryPart,
@@ -119,6 +122,8 @@ const since = (unit: 'month' | 'day') => {
 const storyUrl = (id: string) => `${APP_URL}/stories/${id}`
 const characterUrl = (id: string) => `${APP_URL}/characters/${id}`
 const str = (v: unknown) => (typeof v === 'string' ? v.trim() : '')
+/** A new updated_at for a row, never the one it has (two writes in the same millisecond). */
+const laterThan = (previous: string) => new Date(Math.max(Date.now(), Date.parse(previous) + 1)).toISOString()
 
 async function isAdmin(ctx: Ctx) {
   const { data } = await ctx.admin.from('profiles').select('is_admin').eq('id', ctx.userId).single()
@@ -220,23 +225,35 @@ async function writeScenes(ctx: Ctx, args: Record<string, unknown>) {
   refuseForbidden(story)
   refuseTooBig(story)
   const validationErrors = schemaErrors(story)
-  const storyId = await saveStory(ctx.db, ctx.userId, target.storyId, story)
-
   const total = outlineScenes(outline).length
   const written = writtenSceneIds(draft).size
   const remaining = total - written
-  const { error } = await ctx.admin
+
+  // The draft first, and only onto the creation as this call read it. Calls for one creation that
+  // arrive together all read the same row: one of them gets it, the others are refused here, before
+  // anything of theirs is saved (they used to overwrite each other's scenes, and each made a story).
+  const { data: kept, error } = await ctx.admin
     .from('story_creations')
-    .update({
-      status: remaining ? 'writing' : 'succeeded',
-      draft: draft as unknown as Json,
-      story_id: storyId,
-      error: null,
-      updated_at: new Date().toISOString(),
-      finished_at: remaining ? null : new Date().toISOString(),
-    })
+    .update({ status: 'writing', draft: draft as unknown as Json, error: null, updated_at: laterThan(row.updated_at) })
     .eq('id', row.id)
+    .eq('updated_at', row.updated_at)
+    .select('updated_at')
   if (error) throw error
+  if (!kept?.length) throw new ToolError('conflict', WRITE_CONFLICT)
+  const version = kept[0].updated_at
+
+  // Then the story, which is that draft in the story format.
+  const storyId = await saveCreationStory(ctx, { id: row.id, version, outline, brief }, target.storyId, story)
+  if (!remaining) {
+    // Closed only once the story is saved, so a failed save can be sent again. If a later call has
+    // changed the draft since, closing is its job.
+    const { error: closeError } = await ctx.admin
+      .from('story_creations')
+      .update({ status: 'succeeded', finished_at: new Date().toISOString() })
+      .eq('id', row.id)
+      .eq('updated_at', version)
+    if (closeError) throw closeError
+  }
   return {
     creationId: row.id,
     storyId,
@@ -249,6 +266,57 @@ async function writeScenes(ctx: Ctx, args: Record<string, unknown>) {
     // The creation is closed now: these errors can't be fixed by sending the scenes again.
     ...(!remaining && validationErrors.length ? { note: FINISHED_WITH_ERRORS } : {}),
   }
+}
+
+/** Remove a story this call inserted and its pack's story.json (another call gave the creation its story first). */
+async function dropStory(ctx: Ctx, storyId: string) {
+  const { error } = await ctx.db.from('stories').delete().eq('id', storyId).eq('owner_id', ctx.userId)
+  if (error) throw error
+  const { error: fileError } = await ctx.db.storage.from(PACK_BUCKET).remove([`${ctx.userId}/${storyId}/story.json`])
+  if (fileError) console.error('story pack remove failed', fileError)
+}
+
+/**
+ * Save the story of a creation whose draft this call just committed (as `version`). Returns its id.
+ *
+ * A call that starts after that commit can overlap this save. Two things keep them right:
+ * - a creation gets one story: the new story is given to the creation only while it has none, and a
+ *   call that finds one there removes the story it inserted and writes the creation's;
+ * - the story ends as the newest draft: after saving, the creation is read again, and if its draft
+ *   has changed (a later call, whose own save may have landed before this one), the story is written
+ *   again from that draft.
+ */
+async function saveCreationStory(
+  ctx: Ctx,
+  creation: { id: string; version: string; outline: StoryOutline; brief: StoryBrief },
+  storyId: string | null,
+  story: unknown,
+): Promise<string> {
+  let id = storyId
+  let version = creation.version
+  if (id) {
+    await saveStory(ctx.db, ctx.userId, id, story)
+  } else {
+    const inserted = await saveStory(ctx.db, ctx.userId, null, story)
+    const { data, error } = await ctx.admin.from('story_creations').update({ story_id: inserted }).eq('id', creation.id).is('story_id', null).select('id')
+    if (error) throw error
+    if (data?.length) id = inserted
+    else await dropStory(ctx, inserted)
+  }
+  for (let turn = 0; turn < 5; turn++) {
+    const { data: latest, error } = await ctx.admin.from('story_creations').select('draft, story_id, updated_at').eq('id', creation.id).single()
+    if (error) throw error
+    if (id && latest.story_id === id && latest.updated_at === version) return id
+    // The creation's story (not the one this call wrote, or not at this draft): write it from the newest draft.
+    const target = await existingStory(ctx.db, latest.story_id, storyMetaId(creation.outline.title, creation.id))
+    // No story any more: the keeper deleted it meanwhile. The draft is kept; the next call starts a new story.
+    if (!target.storyId || !latest.draft) throw new ToolError('conflict', WRITE_CONFLICT)
+    id = target.storyId
+    version = latest.updated_at
+    await saveStory(ctx.db, ctx.userId, id, createdStory(latest.draft as unknown as ImportDraft, creation.outline, creation.brief, target.metaId))
+  }
+  if (!id) throw new ToolError('conflict', WRITE_CONFLICT)
+  return id
 }
 
 async function listMyStories(ctx: Ctx) {

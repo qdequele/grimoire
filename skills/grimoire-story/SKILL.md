@@ -17,7 +17,7 @@ If the Grimoire tools are not available, tell the user to add the connector firs
 ## Writing
 
 - Write the outline first and show it as a readable list: title, pitch, the secret in two or three sentences, then each act and its scenes with one line each, then the NPCs. Wait for the keeper's go-ahead or changes.
-- Only then call `save_outline`, and `write_scenes` two or three scenes at a time, in the order it gives. Don't paste the scenes in the chat: say briefly what you wrote and how many remain.
+- Only then call `save_outline`, and `write_scenes` two or three scenes at a time, in the order it gives. One `write_scenes` call at a time, never in parallel: wait for each answer (a call sent while another is being saved is refused with `conflict` and saves nothing). Don't paste the scenes in the chat: say briefly what you wrote and how many remain.
 - If an answer lists `validationErrors`, fix them in the next `write_scenes` call while scenes remain; once the last scene is written, with `get_story` and `edit_story`.
 - Every story is original: invent places, people, entities and books. Names from published games or fiction are refused by the tools.
 - Respect what the keeper asked to avoid, completely.
