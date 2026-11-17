@@ -20,7 +20,8 @@
 //   - "scene-map":       once every scene is written, draws the map of the next scene that asked for
 //                        one (draft mapKind, at most STORY_MAPS_PER_STORY): the players' and the
 //                        keeper's copies as SVG in the pack, two handouts of that scene. The browser
-//                        calls it until `remaining` is 0. Part of the creation, not the map quota.
+//                        calls it until `remaining` is 0. Part of the creation, not the map quota:
+//                        counted per creation (map_attempts), at most twice STORY_MAPS_PER_STORY calls.
 //
 // Every call must end before the Edge Function's wall-clock limit (150 s): that is why the outline
 // takes two calls, scenes go one at a time, the writing is done by Sonnet, and each Claude call is
@@ -40,7 +41,7 @@ import { STORY_SCHEMA } from '../_shared/spec-bundle.ts'
 import { forbiddenNamesIn } from '../_shared/story-mcp.ts'
 import { monthStart, recordUsage, refusedUpstream, releaseUsage, reserveUsage, type UsageKind } from '../_shared/ai-usage.ts'
 import { existingStory, savePackFile, saveStory } from '../_shared/story-save.ts'
-import { mapFiles, sceneMapRequest, scenesWithoutMap, withSceneMap } from '../_shared/story-maps.ts'
+import { mapFiles, sceneMapRequest, scenesWithoutMap, STORY_MAPS_PER_STORY, withSceneMap } from '../_shared/story-maps.ts'
 import { renderMap } from '../_shared/maps/render.ts'
 import { sanitizeSvg } from '../_shared/svg-safe.ts'
 import { mapSchema, mapSystemPrompt, mapUserPrompt, parseMapRequest, type MapRequest } from '../_shared/map-prompt.ts'
@@ -74,6 +75,8 @@ const MONTHLY_LIMIT = Number(Deno.env.get('STORY_CREATE_MONTHLY_LIMIT') ?? 10)
 const OUTLINES_PER_STORY = Number(Deno.env.get('STORY_OUTLINES_PER_STORY') ?? 5)
 /** "outline-details" calls per creation: one per outline, and as many retries after a timeout. */
 const DETAILS_PER_STORY = Number(Deno.env.get('STORY_DETAILS_PER_STORY') ?? 2 * OUTLINES_PER_STORY)
+/** "scene-map" calls per creation: one per map, and as many retries after a failure. */
+const MAP_ATTEMPTS_PER_STORY = 2 * STORY_MAPS_PER_STORY
 const SCENES_PER_CALL = Number(Deno.env.get('STORY_SCENES_PER_CALL') ?? 1)
 const IDEAS_MONTHLY_LIMIT = Number(Deno.env.get('STORY_IDEAS_MONTHLY_LIMIT') ?? 50)
 const MAP_MONTHLY_LIMIT = Number(Deno.env.get('MAP_MONTHLY_LIMIT') ?? 30)
@@ -199,11 +202,11 @@ async function loadCreation(admin: Admin, id: unknown, userId: string): Promise<
  * several requests that read the same value, one goes on and the others are told to try again.
  * Admins have no limit; their calls are still counted.
  */
-async function takeSlot(admin: Admin, userId: string, row: CreationRow, counter: 'details_count', limit: number, refusal: Failure) {
+async function takeSlot(admin: Admin, userId: string, row: CreationRow, counter: 'details_count' | 'map_attempts', limit: number, refusal: Failure) {
   if (row[counter] >= limit && !(await isAdmin(admin, userId))) throw refusal
   const { data, error } = await admin
     .from('story_creations')
-    .update({ details_count: row.details_count + 1 })
+    .update(counter === 'details_count' ? { details_count: row.details_count + 1 } : { map_attempts: row.map_attempts + 1 })
     .eq('id', row.id)
     .eq(counter, row[counter])
     .select('id')
@@ -430,9 +433,11 @@ async function sceneMap(apiKey: string, deadline: number, admin: Admin, userId: 
 
   const scene = todo[0]
   const lang = brief.lang === 'en' ? 'en' : 'fr'
-  const { map: doc, problems, usage } = await composeMap(apiKey, deadline, sceneMapRequest(scene, lang))
+  // Nothing to draw on: checked before Claude is paid for a map.
   const target = await existingStory(admin, row.story_id, storyMetaId(outline.title, row.id))
   if (!target.storyId) throw new Failure(404, 'not_found', 'Histoire introuvable.')
+  await takeSlot(admin, userId, row, 'map_attempts', MAP_ATTEMPTS_PER_STORY, new Failure(429, 'too_many_maps', 'Trop d’essais pour les plans de cette histoire. Elle est prête sans eux.'))
+  const { map: doc, problems, usage } = await composeMap(apiKey, deadline, sceneMapRequest(scene, lang))
   const files = mapFiles(scene.id)
   // The renderer's output always passes sanitizeSvg (a unit test checks it); checked again before it is stored.
   await savePackFile(admin, userId, target.storyId, files.players.image, sanitizeSvg(renderMap(doc, { audience: 'players', lang })).svg, 'image/svg+xml')

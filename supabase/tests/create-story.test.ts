@@ -177,6 +177,26 @@ describe('create-story', () => {
     expect(acts.map((x) => [x.id, x.scenes.map((s) => s.id)])).toEqual([['act-1', ['arrival', 'mill']], ['act-2', ['cellar']]])
   })
 
+  it('counts the map attempts of a creation: calls at once and failed answers included', async () => {
+    const { data: rows } = await user.from('story_creations').select('id').eq('status', 'succeeded').order('created_at', { ascending: false }).limit(1)
+    const creationId = rows![0].id
+    // One attempt left (twice the maps a story may have). Four calls at once: Claude is called once.
+    await service.from('story_creations').update({ map_attempts: 5 }).eq('id', creationId)
+    const before = callsAsking('ground')
+    fake.text = 'not a map' // the answer can't be read: the attempt is spent all the same
+    const statuses = (await burst(4, { action: 'scene-map', creationId })).map((r) => r.status).sort()
+    expect(callsAsking('ground') - before).toBe(1)
+    expect(statuses[3]).toBe(502)
+    expect(statuses.slice(0, 3).every((s) => s === 409 || s === 429)).toBe(true)
+    // Used up: refused before Claude is called
+    const over = await invoke({ action: 'scene-map', creationId })
+    expect([over.status, over.body.error?.code]).toEqual([429, 'too_many_maps'])
+    expect(callsAsking('ground') - before).toBe(1)
+    const { data: row } = await service.from('story_creations').select('map_attempts').eq('id', creationId).single()
+    expect(row).toEqual({ map_attempts: 6 })
+    await service.from('story_creations').update({ map_attempts: 0 }).eq('id', creationId)
+  })
+
   it('draws the maps the scenes asked for once every scene is written: two pictures and two handouts', async () => {
     const { data: rows } = await user.from('story_creations').select('id, story_id').eq('status', 'succeeded').order('created_at', { ascending: false }).limit(1) // the long story: its cellar asks for a map
     const creationId = rows![0].id
