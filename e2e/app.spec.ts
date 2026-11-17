@@ -921,4 +921,33 @@ test.describe('AI features (fake Claude API)', () => {
     await expect(page.getByRole('link', { name: 'Mill of Silence' })).toBeVisible()
     await expect(page.getByText('Création privée')).toBeVisible()
   })
+
+  test('completing a plan whose second call failed keeps the keeper’s edits', async ({ page }) => {
+    test.setTimeout(120_000) // outline, scenes and maps through the functions
+    await signUp(page)
+    // The outline's second call (clues, links) fails once, as on a timeout.
+    let failed = false
+    await page.route('**/functions/v1/create-story', async (route) => {
+      const body = route.request().method() === 'POST' ? route.request().postDataJSON() as { action?: string } | null : null
+      if (!failed && body?.action === 'outline-details') {
+        failed = true
+        return route.fulfill({ status: 504, contentType: 'application/json', body: JSON.stringify({ error: 'timeout', message: 'Réessaie.' }) })
+      }
+      return route.continue()
+    })
+    await page.goto('/stories/create?etape=5')
+    await page.getByRole('button', { name: 'Écrire le plan' }).click()
+    await expect(page.getByRole('button', { name: 'Compléter le plan' })).toBeVisible({ timeout: 60_000 })
+
+    // The frame is there and editable: rename, drop a scene, then ask for the rest.
+    await page.getByLabel('Titre', { exact: true }).fill('Mill of Silence')
+    await page.getByRole('button', { name: 'Retirer la scène 3' }).click()
+    await page.getByRole('button', { name: 'Compléter le plan' }).click()
+
+    await expect(page.getByText('A ribbon')).toBeVisible({ timeout: 60_000 })
+    await expect(page.getByRole('button', { name: 'Compléter le plan' })).toHaveCount(0)
+    await expect(page.getByLabel('Titre', { exact: true })).toHaveValue('Mill of Silence')
+    await expect(page.getByRole('button', { name: "Écrire l'histoire (2 scènes)" })).toBeVisible()
+  })
+
 })

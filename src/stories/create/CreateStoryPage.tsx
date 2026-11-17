@@ -136,10 +136,14 @@ function Creator({ userId }: { userId: string }) {
     }
   }
 
-  /** The outline's second call (clues, links, overview). On failure the frame stays, with a button to retry. */
-  async function addDetails(id: string) {
+  /**
+   * The outline's second call (clues, links, overview). On failure the frame stays, editable, with a
+   * button to retry; that retry sends the frame as the keeper left it, so the details are added to
+   * the edited frame (the server keeps its titles, summaries and scene list).
+   */
+  async function addDetails(id: string, edited?: Outline) {
     try {
-      const res = await completeOutline.mutateAsync({ creationId: id })
+      const res = await completeOutline.mutateAsync({ creationId: id, outline: edited })
       setOutline(res.outline)
     } catch (e) {
       toast.error(tMsg(t, await functionErrorMessage(e, 'Plan incomplet. Réessaie avec « Compléter le plan ».')))
@@ -277,7 +281,7 @@ function Creator({ userId }: { userId: string }) {
                 )}
                 <div className="flex flex-wrap items-center gap-2">
                   {outline && creationId && !outlineHasDetails(outline) && !completeOutline.isPending && (
-                    <Button onClick={() => addDetails(creationId)} disabled={busy}>
+                    <Button onClick={() => addDetails(creationId, outline)} disabled={busy}>
                       <ScrollText data-icon="inline-start" />
                       {t('Compléter le plan')}
                     </Button>
