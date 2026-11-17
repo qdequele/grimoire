@@ -1127,4 +1127,30 @@ describe('companion: items', () => {
     )
     expect(payload).toMatchObject({ characterId: g.ids[0] })
   })
+
+  it('a use spent says which item and how many are left; a use that changes nothing says nothing; other changes only name the investigator', async () => {
+    const g = await newGame(alice, [{ name: 'One' }])
+    const gun = (await give(g.ids[0], revolver, 6)).data!.id
+    const l = await link(alice, g.gameId)
+    const channel = (await alice.client.from('games').select('channel').eq('id', g.gameId).single()).data!.channel
+    const seen: Array<Record<string, unknown>> = []
+    const off = await listen(channel, 'items', (p) => seen.push(p as Record<string, unknown>))
+    try {
+      const use = (p_delta: number) => anon.rpc('companion_use_item', { p_token: l.token, p_item: gun, p_delta })
+      expect((await use(1)).data).toBe(6) // already full: the row is written, nothing changes
+      expect((await use(-1)).data).toBe(5)
+      expect((await alice.client.from('character_items').update({ condition: 'dirty' }).eq('id', gun)).error).toBeNull()
+      for (let i = 0; i < 50 && seen.length < 2; i++) await new Promise((r) => setTimeout(r, 100))
+      await new Promise((r) => setTimeout(r, 500)) // a third hint would have come by now
+      expect(seen).toHaveLength(2)
+      expect(seen[0]).toMatchObject({ characterId: g.ids[0], itemId: gun, uses: 5 })
+      const row = (await alice.client.from('character_items').select('updated_at').eq('id', gun).single()).data!
+      expect(Date.parse(String(seen[0].updatedAt))).toBeLessThanOrEqual(Date.parse(row.updated_at))
+      expect(seen[1]).toMatchObject({ characterId: g.ids[0] })
+      expect(seen[1]).not.toHaveProperty('itemId')
+      expect(seen[1]).not.toHaveProperty('uses')
+    } finally {
+      await off()
+    }
+  })
 })

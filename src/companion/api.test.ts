@@ -13,8 +13,12 @@ const server = {
   opens: 0,
   /** companion_open fails (no network). */
   down: false,
+  /** Rounds left in the investigator's one item (a six-shot weapon). */
+  rounds: 6,
 }
 const CHARACTER = 'c1'
+const ITEM = 'i1'
+const ITEM_TIME = '2026-01-01T00:00:00.000Z'
 
 function open() {
   server.opens += 1
@@ -25,14 +29,22 @@ function open() {
     party: [{ id: CHARACTER, data: { name: 'X', characteristics: {}, skills: {}, hp: 12 }, player: null, photo: null }],
     points: [{ characterId: CHARACTER, ...server.points, checks: [], source: 'keeper', updatedAt: '2026-01-01T00:00:00.000Z' }],
     notes: [],
-    items: [],
+    items: [{ id: ITEM, characterId: CHARACTER, card: { name: 'Six-shot', kind: 'weapon', uses: 6 }, uses: server.rounds, condition: 'clean', position: 0, updatedAt: ITEM_TIME }],
   }
 }
 
 vi.mock('@/lib/supabase', () => ({
   supabase: {
-    rpc: (name: string, args: { p_field: keyof Points; p_value: number }) => {
+    rpc: (name: string, args: { p_field: keyof Points; p_value: number; p_delta: number }) => {
       if (name === 'companion_open') return Promise.resolve(server.down ? { data: null, error: { message: 'Failed to fetch' } } : { data: open(), error: null })
+      if (name === 'companion_use_item') {
+        return new Promise((resolve) => {
+          server.held.push(() => {
+            server.rounds = Math.max(0, Math.min(6, server.rounds + args.p_delta))
+            resolve({ data: server.rounds, error: null })
+          })
+        })
+      }
       if (name !== 'companion_set_point') return Promise.resolve({ data: null, error: { message: 'unexpected' } })
       server.sent.push({ field: args.p_field, value: args.p_value })
       // The write is committed when the test releases it.
@@ -57,10 +69,12 @@ vi.mock('@tanstack/react-query', async (original) => ({
 
 const { toast } = await import('sonner')
 const api = await import('./api')
-const { afterTaps, applyPointsHint, companionKeys, endTap, pointsOf, receivePoints, startTap, tapTarget, undoTap, withTaps } = api
+const { afterTaps, applyItemHint, applyPointsHint, companionKeys, endTap, pointsOf, receiveItems, receivePoints, startTap, tapTarget, undoTap, withTaps } = api
 // With useQuery and useMutation mocked above, the hooks only hand back their options.
 const companionOptions = api.useCompanion as unknown as (token: string) => QueryObserverOptions
 const setPointsOptions = api.useSetPoints as unknown as (token: string) => MutationObserverOptions<void, Error, Tap>
+type Use = { item: View['items'][number]; delta: number }
+const spendOptions = api.useUseItem as unknown as (token: string) => MutationObserverOptions<number, Error, Use>
 type View = import('./api').CompanionView
 type Tap = import('./api').PointTap
 type TapBook = import('./api').TapBook
@@ -81,11 +95,16 @@ async function phone() {
   await settle()
   const taps = new MutationObserver(client, setPointsOptions(TOKEN))
   const view = () => client.getQueryData<View>(companionKeys.one(TOKEN))!
+  const uses = new MutationObserver(client, spendOptions(TOKEN))
   return {
     stop,
     tap: (field: keyof Points, delta: number) => void taps.mutate({ characterId: CHARACTER, field, delta }).catch(() => undefined),
     shown: () => { const v = view(); const p = pointsOf(v, v.party[0]); return { pv: p.pv, san: p.san, chance: p.chance, pm: p.pm } },
     refetch: () => client.invalidateQueries({ queryKey: companionKeys.one(TOKEN) }),
+    rounds: () => view().items[0].uses,
+    fire: () => void uses.mutate({ item: view().items[0], delta: -1 }).catch(() => undefined),
+    /** An `items` broadcast reaching this phone. */
+    itemsHint: (payload: Record<string, unknown>) => receiveItems(client, TOKEN, { characterId: CHARACTER, ...payload }),
     /** A `points` broadcast reaching this phone: from the server's trigger, or from anyone holding a link. */
     broadcast: (points: Partial<Points>, updatedAt = new Date().toISOString()) =>
       receivePoints(client, TOKEN, { characterId: CHARACTER, ...server.points, ...points, checks: [], source: 'keeper', updatedAt }),
@@ -99,6 +118,7 @@ afterEach(() => {
   server.held = []
   server.opens = 0
   server.down = false
+  server.rounds = 6
   vi.mocked(toast.error).mockClear()
 })
 
@@ -395,6 +415,89 @@ describe('afterTaps', () => {
 
   it('keeps the investigator marked when a broadcast came in after the last read of the server', () => {
     expect(afterTaps(view, 'a', { pv: 9 }, true).hinted).toEqual(['a'])
+  })
+})
+
+describe('item uses on a phone', () => {
+  it('a use spent elsewhere is shown from the hint, without reading the whole view again', async () => {
+    const p = await phone()
+    p.itemsHint({ itemId: ITEM, uses: 4, updatedAt: new Date().toISOString() })
+    await settle()
+    expect(p.rounds()).toBe(4)
+    expect(server.opens).toBe(1)
+    p.stop()
+  })
+
+  it('any other items hint reads the view again', async () => {
+    const p = await phone()
+    server.rounds = 2
+    p.itemsHint({})
+    await settle()
+    expect(server.opens).toBe(2)
+    expect(p.rounds()).toBe(2)
+    p.stop()
+  })
+
+  it('shots fired in a row read the view once, after the last; their echoes change nothing meanwhile', async () => {
+    const p = await phone()
+    p.fire()
+    p.fire()
+    await settle()
+    expect(p.rounds()).toBe(4)
+    await release()
+    // The server's hint for the first shot, while the second is still on its way.
+    p.itemsHint({ itemId: ITEM, uses: 5, updatedAt: new Date().toISOString() })
+    await settle()
+    expect(p.rounds()).toBe(4)
+    expect(server.opens).toBe(1)
+    await release()
+    expect(server.opens).toBe(2)
+    expect(p.rounds()).toBe(4)
+    p.stop()
+  })
+})
+
+describe('applyItemHint', () => {
+  const NOW = Date.parse('2026-06-01T12:00:00.000Z')
+  const at = (ms: number) => new Date(NOW + ms).toISOString()
+  const held = (id: string, over: Partial<View['items'][number]> = {}): View['items'][number] => ({
+    id, characterId: 'a', card: { name: 'Six-shot', kind: 'weapon', uses: 6 }, uses: 6, condition: 'clean', source: { kind: 'keeper' }, position: 0, updatedAt: at(-60_000), ...over,
+  })
+  const view: View = {
+    game: { id: 'g', channel: 'c', title: '' },
+    focus: null,
+    canCreate: false,
+    party: [{ id: 'a', data: { name: 'A', characteristics: {}, skills: {} }, player: null, photo: null }],
+    points: [],
+    notes: [],
+    items: [held('gun'), held('rope', { card: { name: 'Rope', kind: 'tool' }, uses: null })],
+    hinted: [],
+  }
+  const hint = (over: Record<string, unknown> = {}) => ({ characterId: 'a', itemId: 'gun', uses: 5, updatedAt: at(0), ...over })
+  const patched = (r: ReturnType<typeof applyItemHint>) => (r && r !== 'refetch' ? r.items[0] : r)
+
+  it('shows the uses left, within the card, and remembers the time', () => {
+    expect(patched(applyItemHint(view, hint(), NOW, false))).toMatchObject({ id: 'gun', uses: 5, updatedAt: at(0) })
+    expect(patched(applyItemHint(view, hint({ uses: 99 }), NOW, false))).toMatchObject({ uses: 6 })
+    expect(patched(applyItemHint(view, hint({ uses: -4 }), NOW, false))).toMatchObject({ uses: 0 })
+  })
+
+  it('ignores a hint older than what is shown, and the echoes of uses this phone is still sending', () => {
+    expect(applyItemHint(view, hint({ updatedAt: at(-120_000) }), NOW, false)).toBeNull()
+    expect(applyItemHint(view, hint(), NOW, true)).toBeNull()
+  })
+
+  it('asks for the view again when the hint is not a plain count for a card it knows', () => {
+    expect(applyItemHint(view, { characterId: 'a' }, NOW, false)).toBe('refetch')
+    expect(applyItemHint(view, null, NOW, false)).toBe('refetch')
+    expect(applyItemHint(view, hint({ itemId: 'new' }), NOW, false)).toBe('refetch')
+    expect(applyItemHint(view, hint({ characterId: 'b' }), NOW, false)).toBe('refetch')
+    expect(applyItemHint(view, hint({ itemId: 'rope' }), NOW, false)).toBe('refetch')
+    expect(applyItemHint(view, hint({ uses: 2.5 }), NOW, false)).toBe('refetch')
+    expect(applyItemHint(view, hint({ uses: '5' }), NOW, false)).toBe('refetch')
+    // A time the server cannot have sent: read the server rather than trust it.
+    expect(applyItemHint(view, hint({ updatedAt: '2999-01-01T00:00:00Z' }), NOW, false)).toBe('refetch')
+    expect(applyItemHint(view, hint({ updatedAt: undefined }), NOW, false)).toBe('refetch')
   })
 })
 

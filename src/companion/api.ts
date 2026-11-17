@@ -5,7 +5,7 @@ import { toast } from 'sonner'
 import type { CharacterData } from '@/characters/character'
 import { photoOr } from '@/characters/photo'
 import { currentT } from '@/i18n/t'
-import { asHeld, sortHeld, type HeldItem } from '@/items/item'
+import { asHeld, clampUses, sortHeld, type HeldItem } from '@/items/item'
 import type { Json } from '@/lib/database.types'
 import { supabase } from '@/lib/supabase'
 import type { Points, PointsRow } from '@/play/companion'
@@ -444,11 +444,18 @@ export function useCreateCharacter(token: string) {
 
 // ------------------------------------------------------------------ items
 
-function patchItem(view: CompanionView, id: string, uses: number): CompanionView {
-  return { ...view, items: view.items.map((i) => (i.id === id ? { ...i, uses } : i)) }
+function patchItem(view: CompanionView, id: string, uses: number, updatedAt?: string): CompanionView {
+  return { ...view, items: view.items.map((i) => (i.id === id ? { ...i, uses, ...(updatedAt === undefined ? {} : { updatedAt }) } : i)) }
 }
 
-/** A use spent (−1) or regained (+1). The card changes at once; the server's count wins. */
+// Uses of an item this phone has sent and not heard back about.
+const itemTaps = new Map<string, number>()
+const itemKey = (token: string, id: string) => `${token}:${id}`
+
+/**
+ * A use spent (−1) or regained (+1). The card changes at once; the server's count wins: the view is
+ * read again once, after the item's last queued use (not after each).
+ */
 export function useUseItem(token: string) {
   const qc = useQueryClient()
   const key = companionKeys.one(token)
@@ -456,6 +463,7 @@ export function useUseItem(token: string) {
     mutationFn: ({ item, delta }) =>
       enqueue(`${token}:item:${item.id}`, () => call(() => supabase.rpc('companion_use_item', { p_token: token, p_item: item.id, p_delta: delta }))),
     onMutate: async ({ item, delta }) => {
+      itemTaps.set(itemKey(token, item.id), (itemTaps.get(itemKey(token, item.id)) ?? 0) + 1)
       await qc.cancelQueries({ queryKey: key })
       const view = qc.getQueryData<CompanionView>(key)
       const cur = view?.items.find((i) => i.id === item.id)
@@ -469,7 +477,12 @@ export function useUseItem(token: string) {
       if (view && ctx?.before != null) qc.setQueryData<CompanionView>(key, patchItem(view, item.id, ctx.before))
       onWriteError(qc, token, e)
     },
-    onSettled: () => qc.invalidateQueries({ queryKey: key }),
+    onSettled: (_d, _e, { item }) => {
+      const left = (itemTaps.get(itemKey(token, item.id)) ?? 1) - 1
+      if (left > 0) return void itemTaps.set(itemKey(token, item.id), left)
+      itemTaps.delete(itemKey(token, item.id))
+      void qc.invalidateQueries({ queryKey: key })
+    },
   })
 }
 
@@ -561,9 +574,40 @@ export function receivePoints(qc: QueryClient, token: string, payload: unknown, 
 }
 
 /**
+ * An `items` broadcast: the view with the item's new count when the hint carries one for a card this
+ * phone knows (the server sends `{ characterId, itemId, uses, updatedAt }` when only the uses changed),
+ * 'refetch' for anything else (a card given, taken, edited, or a hint it cannot place), null to ignore
+ * it (older than what is shown, or `busy`: the echo of uses this phone is still sending). The topic is
+ * public: the count is clamped to the card and only shown, uses are spent with a delta the server applies.
+ */
+export function applyItemHint(view: CompanionView, payload: unknown, now: number, busy: boolean): CompanionView | 'refetch' | null {
+  if (!payload || typeof payload !== 'object') return 'refetch'
+  const p = payload as Record<string, unknown>
+  const item = typeof p.itemId === 'string' ? view.items.find((i) => i.id === p.itemId) : undefined
+  if (!item || item.characterId !== p.characterId || item.uses === null) return 'refetch'
+  if (typeof p.uses !== 'number' || !Number.isInteger(p.uses)) return 'refetch'
+  const uses = clampUses(item.card, p.uses)
+  const stamp = typeof p.updatedAt === 'string' ? Date.parse(p.updatedAt) : NaN
+  if (uses === null || !(stamp <= now + HINT_SKEW_MS)) return 'refetch'
+  if (busy) return null
+  if (item.updatedAt && stamp < Date.parse(item.updatedAt)) return null
+  return patchItem(view, item.id, uses, p.updatedAt as string)
+}
+
+/** What the channel's `items` handler does with a payload. */
+export function receiveItems(qc: QueryClient, token: string, payload: unknown, now = Date.now()): void {
+  const key = companionKeys.one(token)
+  const view = qc.getQueryData<CompanionView>(key)
+  const itemId = payload && typeof payload === 'object' ? (payload as { itemId?: unknown }).itemId : undefined
+  const next = view ? applyItemHint(view, payload, now, typeof itemId === 'string' && itemTaps.has(itemKey(token, itemId))) : 'refetch'
+  if (next === 'refetch') void qc.invalidateQueries({ queryKey: key })
+  else if (next) qc.setQueryData<CompanionView>(key, next)
+}
+
+/**
  * Listens to the game's channel: `points` (keeper or phone) are shown at once but never written back
- * (`applyPointsHint`: anyone with a link can send on this public topic), `notes`, `member`, `photo`
- * and `items` refetch. Returns true while subscribed (the "live" badge).
+ * (`applyPointsHint`: anyone with a link can send on this public topic), a use spent on an item is
+ * shown from its hint (`applyItemHint`), `notes`, `member`, `photo` and other `items` hints refetch. Returns true while subscribed (the "live" badge).
  * A revoke sends `rotate` on the old topic before moving the game: refetching gives a still-valid
  * link the new channel (this hook resubscribes) and a revoked one the invalid-link state.
  */
@@ -579,7 +623,7 @@ export function useCompanionLive(token: string, channel: string | undefined): bo
       .on('broadcast', { event: 'notes' }, () => void qc.invalidateQueries({ queryKey: key }))
       .on('broadcast', { event: 'member' }, () => void qc.invalidateQueries({ queryKey: key }))
       .on('broadcast', { event: 'photo' }, () => void qc.invalidateQueries({ queryKey: key }))
-      .on('broadcast', { event: 'items' }, () => void qc.invalidateQueries({ queryKey: key }))
+      .on('broadcast', { event: 'items' }, ({ payload }) => receiveItems(qc, token, payload))
       .on('broadcast', { event: 'rotate' }, () => void qc.invalidateQueries({ queryKey: key }))
       .subscribe((status) => {
         setLive(status === 'SUBSCRIBED')
