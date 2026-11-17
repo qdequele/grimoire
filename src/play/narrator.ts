@@ -30,10 +30,12 @@ const URL_ = import.meta.env.VITE_SUPABASE_URL as string
 const ANON = import.meta.env.VITE_SUPABASE_ANON_KEY as string
 
 /** HTTP error from the function → the narrator's error codes. */
-function httpError(status: number, body: { error?: { code?: string; message?: string } }): SampleError {
+export function httpError(status: number, body: { error?: { code?: string; message?: string } }): SampleError {
   const message = body.error?.message ?? 'Réponse interrompue.'
   if (status === 401) return new SampleError('session_expired', message)
-  if (status === 503) return new SampleError('sampling_disabled', message)
+  // 503 is "no narrator on this server", which switches the narrator off, except `unavailable`
+  // (the usage row could not be written): that one passes, and the keeper may ask again.
+  if (status === 503 && body.error?.code !== 'unavailable') return new SampleError('sampling_disabled', message)
   if (body.error?.code === 'quota_exceeded') return new SampleError('quota', message, message)
   if (status === 429) return new SampleError('rate_limited', message)
   return new SampleError('error', message)

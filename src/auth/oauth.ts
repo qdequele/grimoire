@@ -25,17 +25,35 @@ export async function signInWithGoogle(next = '/') {
   rememberNext(next)
   return supabase.auth.signInWithOAuth({ provider: 'google', options: { redirectTo: window.location.origin } })
 }
-/** An error the provider or Auth sent back in the return address (`?error_description=…` or
- *  `#error_description=…`), e.g. the keeper cancelled on Google's page. */
-export function oauthErrorFromUrl(href: string): string | null {
+/**
+ * Whether the provider or Auth sent an error back in the return address (`?error=…` or `#error=…`,
+ * with `error_code` and `error_description`), e.g. the keeper cancelled on Google's page, or a
+ * confirmation link has expired. Only that it failed: anyone can write an address, so its
+ * `error_description` is never shown on the page (the login page says it in its own words).
+ */
+export function oauthFailedIn(href: string): boolean {
   const url = new URL(href)
   const hash = new URLSearchParams(url.hash.replace(/^#/, ''))
-  return url.searchParams.get('error_description') ?? hash.get('error_description')
+  return [url.searchParams, hash].some((p) => !!p.get('error') || !!p.get('error_code'))
 }
 
-/** Read once at start-up: with an error, the router sends signed-out visitors from `/` (where Google
- *  brings them back) to `/login`, dropping the query and hash on the way. */
-export const returnedOAuthError = typeof window === 'undefined' ? null : oauthErrorFromUrl(window.location.href)
+// Read once at start-up: with an error, the router sends signed-out visitors from `/` (where Google
+// brings them back) to `/login`, dropping the query and hash on the way.
+let oauthFailed = false
+if (typeof window !== 'undefined' && oauthFailedIn(window.location.href)) {
+  oauthFailed = true
+  // What Auth said, for whoever is setting sign-in up (a return address missing from the allow-list…).
+  const url = new URL(window.location.href)
+  console.warn('Sign-in error returned in the address:', url.search, url.hash)
+}
+
+/** True from start-up until the keeper tries again or is signed in (forgetOAuthError). */
+export const returnedOAuthError = (): boolean => oauthFailed
+
+/** The error has been shown and acted on: "/" is the landing page again, and /login starts clean. */
+export function forgetOAuthError() {
+  oauthFailed = false
+}
 
 // Google sign-in and the sign-up confirmation e-mail come back to the site's root, not to the page
 // that sent the keeper to /login (?next=). The OAuth consent page needs that return: a chat app

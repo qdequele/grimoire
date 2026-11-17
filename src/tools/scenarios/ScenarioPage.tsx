@@ -410,14 +410,26 @@ export function ScenarioPage() {
   const [story, setStory] = useState(() => storyIfLoaded(id))
   const current = story?.meta.id === id ? story : storyIfLoaded(id)
 
+  // The story is its own file: on a bad connection it may not arrive. Say so and offer to try again.
+  const [failedId, setFailedId] = useState<string | null>(null)
+  const failed = failedId === id
+
   useEffect(() => {
-    if (!current && storyExists(id)) void preloadStory(id).then(setStory)
-  }, [id, current])
+    if (current || failed || !storyExists(id)) return
+    let gone = false
+    preloadStory(id).then(
+      (s) => !gone && setStory(s),
+      () => !gone && setFailedId(id),
+    )
+    return () => {
+      gone = true
+    }
+  }, [id, current, failed])
 
   if (!current) {
     return (
       <ToolLayout lang="fr" pitch={false}>
-        {storyExists(id) ? <p className="text-muted-foreground">…</p> : <NotFound />}
+        {!storyExists(id) ? <NotFound /> : failed ? <LoadFailed retry={() => setFailedId(null)} /> : <p className="text-muted-foreground">…</p>}
       </ToolLayout>
     )
   }
@@ -425,6 +437,16 @@ export function ScenarioPage() {
     <ToolLayout lang={langOf(current)}>
       <Story story={current} />
     </ToolLayout>
+  )
+}
+
+function LoadFailed({ retry }: { retry: () => void }) {
+  const t = useT()
+  return (
+    <div role="alert" className="flex flex-col items-start gap-4">
+      <p>{t('Le scénario n’a pas pu être chargé. Vérifie ta connexion, puis réessaie.')}</p>
+      <Button variant="outline" onClick={retry}>{t('Réessayer')}</Button>
+    </div>
   )
 }
 

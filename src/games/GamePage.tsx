@@ -1,4 +1,5 @@
 import { useQueryClient } from '@tanstack/react-query'
+import { toast } from 'sonner'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { useNavigate, useParams } from 'react-router'
 import { characterKeys, useCharacters, type CharacterRow } from '@/characters/api'
@@ -7,7 +8,7 @@ import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Spinner } from '@/components/ui/spinner'
 import type { Json } from '@/lib/database.types'
 import { supabase, type Tables } from '@/lib/supabase'
-import { addMissingMembers, applyPoints, diffPoints, keeperEchoAction, partyIds, pointsFromState, type PointsRow } from '@/play/companion'
+import { addMissingMembers, applyPoints, partyIds, pointsFromState, type PointsRow } from '@/play/companion'
 import type { StoryForEngine } from '@/play/legacy/adapter'
 import { engineGlobals, freshState, toLegacyCharacter, withAccountProgress } from '@/play/engineData'
 import type { EngineApi, LegacyState, NotebookEntry } from '@/play/host'
@@ -16,6 +17,8 @@ import { gameKeys, useGame, type GameRow, type GameState } from './api'
 import { TableLinksDialog, type TableMember } from './TableLinksDialog'
 import { ScreenControl, screenStory } from './screen'
 import { ScreenDialog } from './ScreenDialog'
+import { engineQueue, gameView, inOrder } from './live'
+import { keeperPatch, mergeRow, POINT_FIELDS, type PointField, type PointsWithChecks } from './points'
 import { rollFeed } from './rolls'
 import { showRollToast } from './RollToast'
 import { rollJournal } from '@/companion/rolls'
@@ -128,7 +131,7 @@ export function GamePage() {
   }, [characters.data])
 
   // Start once, from fresh data: a cached game could miss investigators who joined from a phone.
-  // Later refetches (after every save) don't restart the game: the data it started from is kept.
+  // Later refetches (window focus, a revoked link) don't restart the game: the data it started from is kept.
   const [start, setStart] = useState<{ game: GameRow; characters: CharacterRow[] } | null>(null)
   if (!start && game.data?.story && characters.data && !game.isFetching && !characters.isFetching) {
     setStart({ game: game.data, characters: characters.data })
@@ -159,12 +162,16 @@ export function GamePage() {
     const sceneOf = (S: LegacyState) => ((S.scen ?? {}) as Record<string, { scene?: string } | undefined>)[storyId]?.scene
     const toMember = (c: CharacterRow): TableMember => ({ id: c.id, name: c.data.name, player: c.player?.name ?? undefined, photo: c.photo })
 
-    // Points last written to (or received from) game_points, per account investigator.
+    // What game_points is known to hold (read from it, or sent to it), per account investigator.
     let lastWritten: Tracked = new Map()
-    // Investigators whose phone values were applied since our last keeper write (see keeperEchoAction).
-    const phoneSinceWrite = new Set<string>()
-    // Newest game_points update seen per investigator, to catch up after (re)subscribing.
+    // Investigators who have a game_points row: their writes carry only the fields that changed.
+    const inTable = new Set<string>()
+    // Keeper writes on their way, per investigator: a row read meanwhile is older for these fields.
+    const sending = new Map<string, PointField[]>()
+    // updated_at (the server's) of the newest row handled per investigator: an older read is dropped.
     const seen = new Map<string, string>()
+    // The engine's state at its last save (or load): where its current values are read.
+    let latest: LegacyState | null = null
     let notebooks: Record<string, NotebookEntry[]> = {}
     // Account investigators' photos (the round heads), kept out of the engine's saved state.
     let photos: Record<string, string> = {}
@@ -181,27 +188,13 @@ export function GamePage() {
         return [cid, (held.get(cid) ?? []).map((h) => toEngineItem(tRef.current, h, data))]
       }))
 
-    // The engine API appears in the iframe once its script has run: queue calls until then.
-    const queue: Array<(e: EngineApi) => void> = []
-    const engine = () => iframe.current?.contentWindow?.GRIMOIRE_ENGINE
-    const run = (fn: (e: EngineApi) => void, e: EngineApi) => {
-      try {
-        fn(e)
-      } catch (error) {
-        console.error('Live update failed', error)
-      }
-    }
-    const withEngine = (fn: (e: EngineApi) => void) => {
-      const e = engine()
-      if (e && !queue.length) run(fn, e)
-      else queue.push(fn)
-    }
-    const poll = setInterval(() => {
-      const e = engine()
-      if (!e) return
-      clearInterval(poll)
-      for (const fn of queue.splice(0)) run(fn, e)
-    }, ENGINE_POLL)
+    // The engine API appears in the iframe once its script has run: calls wait until then.
+    const calls = engineQueue<EngineApi>(
+      () => iframe.current?.contentWindow?.GRIMOIRE_ENGINE,
+      ENGINE_POLL,
+      (error) => console.error('Live update failed', error),
+    )
+    const withEngine = calls.run
 
     let timer: ReturnType<typeof setTimeout> | undefined
     let pending: LegacyState | null = null
@@ -214,10 +207,10 @@ export function GamePage() {
         const json = JSON.stringify(progress)
         if (written.get(c.id) === json) continue
         written.set(c.id, json)
+        // The progress key only, written on the server: the rest of the sheet may have been
+        // corrected since the game started (the wizard in another tab, the MCP connector).
         void supabase
-          .from('characters')
-          .update({ data: { ...c.data, progress } as unknown as Json })
-          .eq('id', c.id)
+          .rpc('save_character_progress', { p_character: c.id, p_progress: progress as unknown as Json })
           .then(({ error }) => error && console.error('Progress save failed', error))
       }
     }
@@ -226,23 +219,45 @@ export function GamePage() {
       const ids = new Set(partyIds(legacy, storyId, accountIds))
       return new Map([...pointsFromState(legacy, storyId)].filter(([cid]) => ids.has(cid)))
     }
-    /** Keeper values to game_points. updated_at is the server's (trigger): client clocks drift. */
-    const upsertPoints = (rows: ReturnType<typeof diffPoints>) => {
-      if (!rows.length) return
-      for (const r of rows) phoneSinceWrite.delete(r.characterId)
+    /**
+     * Keeper values to game_points: only the fields the keeper changed (an upsert sets the columns it
+     * is given), so a phone's change to another field at the same moment stays. updated_at is the
+     * server's (trigger): client clocks drift.
+     */
+    const sendPoints = (cid: string, patch: NonNullable<ReturnType<typeof keeperPatch>>, before: PointsWithChecks | undefined) => {
+      const fields = POINT_FIELDS.filter((f) => patch[f] !== undefined)
+      sending.set(cid, [...(sending.get(cid) ?? []), ...fields])
       void supabase
         .from('game_points')
-        .upsert(rows.map((p) => ({
-          game_id: g.id, character_id: p.characterId, pv: p.pv, san: p.san, chance: p.chance, pm: p.pm,
-          checks: p.checks, source: 'keeper',
-        })))
-        .then(({ error }) => error && console.error('Points save failed', error))
+        .upsert({ game_id: g.id, character_id: cid, ...patch, source: 'keeper' })
+        .then(({ error }) => {
+          const left = [...(sending.get(cid) ?? [])]
+          for (const f of fields) left.splice(left.indexOf(f), 1)
+          sending.set(cid, left)
+          if (error) {
+            console.error('Points save failed', error)
+            // Not written: the table still holds what it held, so the next save sends these again.
+            const held = lastWritten.get(cid)
+            if (!before) lastWritten.delete(cid)
+            else if (held) {
+              for (const f of fields) if (held[f] === patch[f]) held[f] = before[f]
+              if (patch.checks && held.checks.join('\n') === patch.checks.join('\n')) held.checks = before.checks
+            }
+            return
+          }
+          inTable.add(cid)
+          // The row as it is once the write is in: a phone may have changed it meanwhile.
+          if (!disposed) readPoints(cid)
+        })
     }
     const savePoints = (legacy: LegacyState) => {
       const now = accountPoints(legacy)
-      const changed = diffPoints(now, lastWritten)
+      for (const [cid, v] of now) {
+        const before = lastWritten.get(cid)
+        const patch = keeperPatch(v, before, inTable.has(cid))
+        if (patch) sendPoints(cid, patch, before)
+      }
       lastWritten = now
-      upsertPoints(changed)
     }
     const flush = () => {
       if (!pending) return
@@ -265,35 +280,41 @@ export function GamePage() {
       void supabase
         .rpc('save_game_state', { p_game: g.id, p_state: state as unknown as Json, p_removed: removed })
         .then(({ error }) => {
-          if (error) console.error('Game save failed', error)
-          else qc.invalidateQueries({ queryKey: gameKeys.all })
+          if (error) return console.error('Game save failed', error)
+          // The running game never reads its own row again (it keeps what it started from): mark it
+          // stale without downloading the state just sent and the story with it. The home list is
+          // refetched where it is shown (after "Quitter"), else when it next is.
+          void qc.invalidateQueries({ queryKey: gameKeys.one(g.id), refetchType: 'none' })
+          void qc.invalidateQueries({ queryKey: [...gameKeys.all, 'mine'] })
         })
     }
 
-    /** Only phone rows move `seen`: their updated_at is the time catch-up compares with. */
-    const notePoints = (r: PointsRow) => {
-      if (r.source !== 'phone') return
-      const before = seen.get(r.characterId)
-      if (!before || Date.parse(r.updatedAt) > Date.parse(before)) seen.set(r.characterId, r.updatedAt)
-    }
-    /** Phone values into the engine, recorded as written so the next save doesn't send them back as the keeper's. */
-    const setPhone = (e: EngineApi, r: PointsRow) => {
-      const v = { pv: r.pv, san: r.san, chance: r.chance, pm: r.pm }
-      if (accountIds.has(r.characterId)) {
-        lastWritten.set(r.characterId, { ...v, checks: lastWritten.get(r.characterId)?.checks ?? r.checks })
-        phoneSinceWrite.add(r.characterId)
-      }
-      e.setPoints(r.characterId, v)
+    /**
+     * A game_points row (a phone's change, another keeper tab's, or our own write coming back) into
+     * the engine, field by field (mergeRow): the engine takes what changed in the table and keeps its
+     * own value elsewhere, which may be a keeper change still waiting for the next save. What the
+     * table holds is recorded, so that save sends the keeper's change and doesn't send the row back.
+     */
+    const applyRow = (e: EngineApi, r: PointsRow) => {
+      const cid = r.characterId
+      const before = seen.get(cid)
+      if (before && Date.parse(r.updatedAt) < Date.parse(before)) return
+      seen.set(cid, r.updatedAt)
+      inTable.add(cid)
+      const last = lastWritten.get(cid)
+      const current = latest ? pointsFromState(latest, storyId).get(cid) : undefined
+      const merged = mergeRow(r, last, current, new Set(sending.get(cid)))
+      lastWritten.set(cid, { ...merged.table, checks: last?.checks ?? r.checks })
+      if (merged.changed) e.setPoints(cid, merged.engine)
     }
     const newer = (a: PointsRow | undefined, b: PointsRow | undefined) =>
       !a ? b : !b ? a : Date.parse(b.updatedAt) > Date.parse(a.updatedAt) ? b : a
-    // Phone points for an investigator still joining: kept until the engine has them.
+    // Points for an investigator still joining: kept until the engine has them.
     const early = new Map<string, PointsRow>()
-    const applyPhone = (r: PointsRow) => {
-      notePoints(r)
+    const onPointsRow = (r: PointsRow) => {
       withEngine((e) => {
-        if (!accountIds.has(r.characterId) && joining.has(r.characterId)) early.set(r.characterId, newer(early.get(r.characterId), r)!)
-        else setPhone(e, r)
+        if (accountIds.has(r.characterId)) applyRow(e, r)
+        else if (joining.has(r.characterId)) early.set(r.characterId, newer(early.get(r.characterId), r)!)
       })
     }
     const refreshNotes = (characterId: string) => {
@@ -331,10 +352,7 @@ export function GamePage() {
           e.setPhotos(photos)
           const r = newer(p.data ? toPointsRow(p.data) : undefined, early.get(row.id))
           early.delete(row.id)
-          if (r) {
-            notePoints(r)
-            setPhone(e, r)
-          }
+          if (r) applyRow(e, r)
         })
         refreshNotes(characterId)
         readItems([characterId])
@@ -345,21 +363,6 @@ export function GamePage() {
     }
     // One read at a time per investigator, so rows are handled in the order they were read.
     const pointsReads = new Map<string, Promise<void>>()
-    const onPointsRow = (r: PointsRow) => {
-      if (r.source === 'phone') return applyPhone(r)
-      const cid = r.characterId
-      withEngine((e) => {
-        if (!accountIds.has(cid)) return
-        const mine = lastWritten.get(cid)
-        const action = keeperEchoAction(mine, r, phoneSinceWrite.has(cid))
-        if (action === 'repair' && mine) upsertPoints([{ characterId: cid, ...mine }])
-        else if (action === 'adopt') {
-          const v = { pv: r.pv, san: r.san, chance: r.chance, pm: r.pm }
-          lastWritten.set(cid, { ...v, checks: mine?.checks ?? r.checks })
-          e.setPoints(cid, v)
-        }
-      })
-    }
     const readPhoto = (characterId: string) => {
       void supabase.from('characters').select('photo').eq('id', characterId).single().then(({ data, error }) => {
         if (error) return console.error('Photo load failed', error)
@@ -371,14 +374,16 @@ export function GamePage() {
         void qc.invalidateQueries({ queryKey: characterKeys.all })
       })
     }
+    // One read at a time, in the order of the hints: a slow early answer can't replace a later one
+    // (three shots in a row are three hints, and the last count must win).
+    const itemReads = inOrder((error) => console.error('Items load failed', error))
     const readItems = (ids: string[]) => {
-      fetchItems(ids)
-        .then((list) => {
-          if (disposed) return
-          for (const cid of ids) held.set(cid, list.filter((h) => h.characterId === cid))
-          withEngine((e) => e.setItems(engineItems()))
-        })
-        .catch((error) => console.error('Items load failed', error))
+      itemReads(async () => {
+        const list = await fetchItems(ids)
+        if (disposed) return
+        for (const cid of ids) held.set(cid, list.filter((h) => h.characterId === cid))
+        withEngine((e) => e.setItems(engineItems()))
+      })
     }
     const readPoints = (characterId: string) => {
       const next = (pointsReads.get(characterId) ?? Promise.resolve()).then(async () => {
@@ -392,15 +397,14 @@ export function GamePage() {
     const catchUp = async () => {
       const [gs, ps] = await Promise.all([
         supabase.from('games').select('state').eq('id', g.id).single(),
-        supabase.from('game_points').select('*').eq('game_id', g.id).eq('source', 'phone'),
+        supabase.from('game_points').select('*').eq('game_id', g.id),
       ])
       if (disposed) return
       const ids = ((gs.data?.state as unknown as GameState | undefined)?.party ?? []).map((m) => m.characterId)
       for (const cid of ids) if (!accountIds.has(cid)) void addMember(cid)
-      for (const r of (ps.data ?? []).map(toPointsRow)) {
-        const before = seen.get(r.characterId)
-        if (accountIds.has(r.characterId) && (!before || Date.parse(r.updatedAt) > Date.parse(before))) applyPhone(r)
-      }
+      // Every row, whoever wrote last (a keeper write to one field leaves a phone's other fields in
+      // the row): applying a row twice changes nothing.
+      for (const r of (ps.data ?? []).map(toPointsRow)) if (accountIds.has(r.characterId)) onPointsRow(r)
     }
 
     const onHide = () => {
@@ -420,7 +424,10 @@ export function GamePage() {
       if (disposed) return
       if (points.error) console.error('Points load failed', points.error)
       const rows = (points.data ?? []).map(toPointsRow)
-      rows.forEach(notePoints)
+      for (const r of rows) {
+        seen.set(r.characterId, r.updatedAt)
+        inTable.add(r.characterId)
+      }
       // Phone rows written after the keeper's last account save are newer than the saved state.
       // Both times are the server's (save_game_state stamps serverSavedAt).
       const since = Number(g.state.serverSavedAt) || Date.parse(g.updated_at) || 0
@@ -445,6 +452,7 @@ export function GamePage() {
             return [cid, r ? { pv: r.pv, san: r.san, chance: r.chance, pm: r.pm, checks: [...r.checks] } : v]
           }))
           screenControl.sceneChanged(sceneOf(S))
+          latest = S
           return S
         },
         save: (s) => {
@@ -455,6 +463,7 @@ export function GamePage() {
             /* storage full or blocked: the account copy still goes through */
           }
           pending = copy
+          latest = copy
           screenControl.sceneChanged(sceneOf(copy))
           clearTimeout(timer)
           timer = setTimeout(flush, SAVE_DELAY)
@@ -490,7 +499,13 @@ export function GamePage() {
           void supabase.rpc('use_item', { p_item: itemId, p_delta: delta }).then(({ error }) => error && console.error('Item use failed', error))
         },
         giveItem: (storyItemId) => {
-          if (!storyItemsRef.current.some((x) => x.itemId === storyItemId)) return false
+          if (!storyItemsRef.current.some((x) => x.itemId === storyItemId)) {
+            // Listed in the scene but not a card Grimoire can make (the story's item is incomplete):
+            // say so rather than doing nothing. Named t: the i18n test reads t calls.
+            const t = tRef.current
+            toast.error(t('Cet objet de l’histoire ne peut pas être donné : sa fiche est incomplète.'))
+            return false
+          }
           setGiving(storyItemId)
           return true
         },
@@ -516,7 +531,7 @@ export function GamePage() {
 
     return () => {
       disposed = true
-      clearInterval(poll)
+      calls.stop()
       window.removeEventListener('pagehide', onHide)
       onHide()
       live.current = null
@@ -577,21 +592,23 @@ export function GamePage() {
     }
   }, [ready, channel, id, qc, t])
 
-  if (game.error) {
+  // A running game stays on screen whatever a background refetch of the game answers (gameView).
+  const view = gameView({ error: !!game.error, noStory: !!game.data && !game.data.story, started: !!start, ready })
+  if (view === 'missing') {
     return (
       <Alert variant="destructive" className="m-8 w-auto">
         <AlertDescription>{t('Partie introuvable.')}</AlertDescription>
       </Alert>
     )
   }
-  if (game.data && !game.data.story) {
+  if (view === 'no-story') {
     return (
       <Alert variant="destructive" className="m-8 w-auto">
         <AlertDescription>{t("L'histoire de cette partie n'est plus disponible.")}</AlertDescription>
       </Alert>
     )
   }
-  if (!ready || !id) {
+  if (view === 'loading' || !id) {
     return (
       <div className="flex min-h-svh items-center justify-center">
         <Spinner />

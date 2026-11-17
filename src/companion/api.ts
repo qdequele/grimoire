@@ -5,7 +5,7 @@ import { toast } from 'sonner'
 import type { CharacterData } from '@/characters/character'
 import { photoOr } from '@/characters/photo'
 import { currentT } from '@/i18n/t'
-import { asHeld, sortHeld, type HeldItem } from '@/items/item'
+import { asHeld, clampUses, sortHeld, type HeldItem } from '@/items/item'
 import type { Json } from '@/lib/database.types'
 import { supabase } from '@/lib/supabase'
 import type { Points, PointsRow } from '@/play/companion'
@@ -32,6 +32,12 @@ export interface CompanionView {
   notes: CompanionNote[]
   /** The party's items, in display order. */
   items: HeldItem[]
+  /**
+   * Investigators whose shown points come from a `points` broadcast since the server was last read.
+   * Anyone with a link can send on the topic, so these values are for display only: a tap reads the
+   * server before it builds on them.
+   */
+  hinted: string[]
 }
 
 export type CompanionErrorCode = 'link_invalid' | 'not_in_game' | 'bad_value' | 'party_full' | 'network'
@@ -141,6 +147,7 @@ function asView(raw: unknown): CompanionView {
       .map((n) => ({ id: n.id as string, characterId: n.characterId as string, body: str(n.body), createdAt: str(n.createdAt) }))
       .sort((a, b) => b.createdAt.localeCompare(a.createdAt)),
     items: sortHeld(objects(r.items).map(asHeld).filter((h): h is HeldItem => !!h)),
+    hinted: [],
   }
 }
 
@@ -164,10 +171,14 @@ export function pointsOf(view: CompanionView | undefined, member: CompanionMembe
 
 const isLinkInvalid = (e: unknown) => e instanceof CompanionError && e.code === 'link_invalid'
 
+const openView = async (token: string): Promise<CompanionView> =>
+  asView(await call(() => supabase.rpc('companion_open', { p_token: token })))
+
 export function useCompanion(token: string): UseQueryResult<CompanionView, CompanionError> {
   return useQuery<CompanionView, CompanionError>({
     queryKey: companionKeys.one(token),
-    queryFn: async () => asView(await call(() => supabase.rpc('companion_open', { p_token: token }))),
+    // Taps still running keep what they show: this answer may predate their writes.
+    queryFn: async () => withTaps(await openView(token), token, tapBook),
     // A revoked link stays revoked; network errors get the usual retries.
     retry: (count, e) => !isLinkInvalid(e) && count < 2,
     // Phones sleep and wake: refetch to catch up on what the channel missed.
@@ -215,74 +226,166 @@ export interface PointTap {
   delta: number
 }
 
-/** The tapped field's value from the latest cache (keeper changes included), plus delta, clamped. */
-function tappedValue(view: CompanionView | undefined, characterId: string, field: keyof Points, delta: number): number | null {
-  const member = view?.party.find((m) => m.id === characterId)
-  if (!member) return null
-  const cur = pointsOf(view, member)
-  const base: Points = { pv: cur.pv, san: cur.san, chance: cur.chance, pm: cur.pm }
-  return clampPoints({ ...base, [field]: base[field] + delta }, member.data.hp ?? 10)[field]
-}
-
-function patchField(view: CompanionView, characterId: string, field: keyof Points, value: number): CompanionView {
-  const member = view.party.find((m) => m.id === characterId)
-  if (!member) return view
-  const cur = pointsOf(view, member)
-  // Server time comes with the refetch: keep the last known one so keeper changes still compare.
-  return patchPoints(view, { ...cur, [field]: value, source: 'phone' })
-}
-
-/** Points writes of this link still running for one investigator. */
-const pointsInFlight = (qc: QueryClient, token: string, characterId: string): number =>
-  qc.isMutating({
-    mutationKey: pointsMutationKey(token),
-    predicate: (m) => (m.state.variables as PointTap | undefined)?.characterId === characterId,
-  })
-
-/** Fields with a tap still running for one investigator. */
-const tappedFields = (qc: QueryClient, token: string, characterId: string): Set<keyof Points> =>
-  new Set(
-    qc.getMutationCache()
-      .findAll({ mutationKey: pointsMutationKey(token), status: 'pending' })
-      .map((m) => m.state.variables as PointTap | undefined)
-      .filter((v): v is PointTap => v?.characterId === characterId)
-      .map((v) => v.field),
-  )
+const POINT_FIELDS: Array<keyof Points> = ['pv', 'san', 'chance', 'pm']
 
 /**
- * One tap on an investigator's HP / SAN / Luck / MP. The cache changes at once (only that field),
- * rolled back with a toast if the server refuses. Taps are queued per investigator; each sends only
- * its field, with the cache's value when it runs, so a keeper change to another field is never undone.
+ * The taps of one investigator that the server hasn't answered yet. Kept apart from the query cache:
+ * a refetch (a hint on the channel, a resubscribe, the window's focus) replaces the cache at any time,
+ * also with an answer older than a write in flight, and a tap sent from it would be lost.
+ */
+export interface Taps {
+  /** The server's values: as this phone knew them at the first tap, then as each write was accepted. */
+  base: Points
+  maxHp: number
+  /** What the phone shows for the tapped fields. */
+  shown: Partial<Points>
+  /** Taps not settled. */
+  running: number
+  /** `base` may hold a broadcast's values, or miss a change one announced: read the server before sending. */
+  unsure: boolean
+}
+export type TapBook = Map<string, Taps>
+
+const tapBook: TapBook = new Map()
+export const tapKey = (token: string, characterId: string) => `${token}:${characterId}`
+
+/**
+ * Counts a tap and says what its field now shows (`applied` is what the tap really changed, 0 against
+ * a bound). Null when the investigator isn't in the view and has no tap running: nothing is counted.
+ */
+export function startTap(book: TapBook, key: string, view: CompanionView | undefined, tap: PointTap): { shown: number; applied: number } | null {
+  let taps = book.get(key)
+  if (!taps) {
+    const member = view?.party.find((m) => m.id === tap.characterId)
+    if (!member) return null
+    const cur = pointsOf(view, member)
+    taps = {
+      base: { pv: cur.pv, san: cur.san, chance: cur.chance, pm: cur.pm },
+      maxHp: member.data.hp ?? 10,
+      shown: {},
+      running: 0,
+      unsure: view?.hinted.includes(tap.characterId) ?? false,
+    }
+    book.set(key, taps)
+  }
+  taps.running += 1
+  const before = taps.shown[tap.field] ?? taps.base[tap.field]
+  const shown = clampPoints({ ...taps.base, [tap.field]: before + tap.delta }, taps.maxHp)[tap.field]
+  taps.shown[tap.field] = shown
+  return { shown, applied: shown - before }
+}
+
+/** The value a tap sends when its turn comes: what the server holds, plus this tap. */
+export function tapTarget(taps: Taps, field: keyof Points, delta: number): number {
+  return clampPoints({ ...taps.base, [field]: taps.base[field] + delta }, taps.maxHp)[field]
+}
+
+/** A refused tap no longer shows; the taps after it still do. */
+export function undoTap(taps: Taps, field: keyof Points, applied: number): number {
+  const shown = (taps.shown[field] ?? taps.base[field]) - applied
+  taps.shown[field] = shown
+  return shown
+}
+
+/**
+ * A tap is through, accepted or not. After the investigator's last one, returns the values the server
+ * accepted for the tapped fields (what the sheet shows until the refetch) and forgets the taps;
+ * null while others are still running.
+ */
+export function endTap(book: TapBook, key: string): Partial<Points> | null {
+  const taps = book.get(key)
+  if (!taps) return {}
+  taps.running -= 1
+  if (taps.running > 0) return null
+  book.delete(key)
+  return Object.fromEntries(POINT_FIELDS.filter((f) => taps.shown[f] !== undefined).map((f) => [f, taps.base[f]]))
+}
+
+function patchFields(view: CompanionView, characterId: string, values: Partial<Points>): CompanionView {
+  const member = view.party.find((m) => m.id === characterId)
+  if (!member) return view
+  // Server time comes with the refetch: keep the last known one so keeper changes still compare.
+  return patchPoints(view, { ...pointsOf(view, member), ...values, source: 'phone' })
+}
+
+/**
+ * The view once an investigator's last tap is through: the tapped fields show what the server accepted.
+ * `unsure`: a broadcast came in after the server was last read, so the next tap reads it again.
+ */
+export function afterTaps(view: CompanionView, characterId: string, accepted: Partial<Points>, unsure: boolean): CompanionView {
+  const next = patchFields(view, characterId, accepted)
+  return unsure && !next.hinted.includes(characterId) ? { ...next, hinted: [...next.hinted, characterId] } : next
+}
+
+/** A view from the server, with what the running taps show on top (other fields are the server's). */
+export function withTaps(view: CompanionView, token: string, book: TapBook): CompanionView {
+  let out = view
+  for (const m of view.party) {
+    const taps = book.get(tapKey(token, m.id))
+    if (taps) out = patchFields(out, m.id, taps.shown)
+  }
+  return out
+}
+
+/**
+ * One tap on an investigator's HP / SAN / Luck / MP. The sheet changes at once (only that field); a
+ * refused tap is taken back with a toast. Taps are queued per investigator and each sends only its
+ * field, so a keeper change to another field is never undone. What a tap sends comes from the tap
+ * book (the last value the server accepted, plus the tap), never from the cache; when the sheet shows
+ * a broadcast's values, the tap first reads the server's.
  */
 export function useSetPoints(token: string) {
   const qc = useQueryClient()
   const key = companionKeys.one(token)
-  return useMutation<void, CompanionError, PointTap, { before: number | null }>({
+  return useMutation<void, CompanionError, PointTap, { applied: number | null }>({
     mutationKey: pointsMutationKey(token),
-    mutationFn: ({ characterId, field }) =>
-      enqueue(`${token}:${characterId}`, async () => {
-        // The optimistic value (this tap and the ones before it), on top of what the keeper set since.
-        const value = tappedValue(qc.getQueryData<CompanionView>(key), characterId, field, 0)
-        if (value === null) throw new CompanionError('not_in_game')
+    mutationFn: ({ characterId, field, delta }) =>
+      enqueue(tapKey(token, characterId), async () => {
+        const taps = tapBook.get(tapKey(token, characterId))
+        if (!taps) throw new CompanionError('not_in_game')
+        if (taps.unsure) {
+          // No write of this investigator is in flight here (one at a time): the answer is current.
+          taps.unsure = false
+          try {
+            const fresh = await openView(token)
+            const member = fresh.party.find((m) => m.id === characterId)
+            if (!member) throw new CompanionError('not_in_game')
+            const cur = pointsOf(fresh, member)
+            taps.base = { pv: cur.pv, san: cur.san, chance: cur.chance, pm: cur.pm }
+            taps.maxHp = member.data.hp ?? 10
+            qc.setQueryData<CompanionView>(key, withTaps(fresh, token, tapBook))
+          } catch (e) {
+            taps.unsure = true
+            throw e
+          }
+        }
+        const value = tapTarget(taps, field, delta)
         await call(() => supabase.rpc('companion_set_point', { p_token: token, p_character: characterId, p_field: field, p_value: value }))
+        taps.base = { ...taps.base, [field]: value }
       }),
-    onMutate: async ({ characterId, field, delta }) => {
+    onMutate: async (tap) => {
       await qc.cancelQueries({ queryKey: key })
       const view = qc.getQueryData<CompanionView>(key)
-      const member = view?.party.find((m) => m.id === characterId)
-      const before = view && member ? pointsOf(view, member)[field] : null
-      const next = tappedValue(view, characterId, field, delta)
-      if (view && next !== null) qc.setQueryData<CompanionView>(key, patchField(view, characterId, field, next))
-      return { before }
+      const started = startTap(tapBook, tapKey(token, tap.characterId), view, tap)
+      if (view && started) qc.setQueryData<CompanionView>(key, patchFields(view, tap.characterId, { [tap.field]: started.shown }))
+      return { applied: started ? started.applied : null }
     },
     onError: (e, { characterId, field }, ctx) => {
+      const taps = tapBook.get(tapKey(token, characterId))
       const view = qc.getQueryData<CompanionView>(key)
-      if (view && ctx?.before != null) qc.setQueryData<CompanionView>(key, patchField(view, characterId, field, ctx.before))
+      if (taps && view && ctx?.applied != null) {
+        qc.setQueryData<CompanionView>(key, patchFields(view, characterId, { [field]: undoTap(taps, field, ctx.applied) }))
+      }
       onWriteError(qc, token, e)
     },
-    onSettled: (_d, _e, { characterId }) => {
-      // Once this investigator's last tap is through, fetch the server's values (this one still counts as running).
-      if (pointsInFlight(qc, token, characterId) <= 1) void qc.invalidateQueries({ queryKey: key })
+    onSettled: (_d, _e, { characterId }, ctx) => {
+      const unsure = tapBook.get(tapKey(token, characterId))?.unsure === true
+      const accepted = ctx?.applied != null ? endTap(tapBook, tapKey(token, characterId)) : {}
+      if (!accepted) return
+      // The investigator's last tap is through: show what the server accepted, then fetch its values.
+      const view = qc.getQueryData<CompanionView>(key)
+      if (view) qc.setQueryData<CompanionView>(key, afterTaps(view, characterId, accepted, unsure))
+      void qc.invalidateQueries({ queryKey: key })
     },
   })
 }
@@ -341,11 +444,18 @@ export function useCreateCharacter(token: string) {
 
 // ------------------------------------------------------------------ items
 
-function patchItem(view: CompanionView, id: string, uses: number): CompanionView {
-  return { ...view, items: view.items.map((i) => (i.id === id ? { ...i, uses } : i)) }
+function patchItem(view: CompanionView, id: string, uses: number, updatedAt?: string): CompanionView {
+  return { ...view, items: view.items.map((i) => (i.id === id ? { ...i, uses, ...(updatedAt === undefined ? {} : { updatedAt }) } : i)) }
 }
 
-/** A use spent (−1) or regained (+1). The card changes at once; the server's count wins. */
+// Uses of an item this phone has sent and not heard back about.
+const itemTaps = new Map<string, number>()
+const itemKey = (token: string, id: string) => `${token}:${id}`
+
+/**
+ * A use spent (−1) or regained (+1). The card changes at once; the server's count wins: the view is
+ * read again once, after the item's last queued use (not after each).
+ */
 export function useUseItem(token: string) {
   const qc = useQueryClient()
   const key = companionKeys.one(token)
@@ -353,6 +463,7 @@ export function useUseItem(token: string) {
     mutationFn: ({ item, delta }) =>
       enqueue(`${token}:item:${item.id}`, () => call(() => supabase.rpc('companion_use_item', { p_token: token, p_item: item.id, p_delta: delta }))),
     onMutate: async ({ item, delta }) => {
+      itemTaps.set(itemKey(token, item.id), (itemTaps.get(itemKey(token, item.id)) ?? 0) + 1)
       await qc.cancelQueries({ queryKey: key })
       const view = qc.getQueryData<CompanionView>(key)
       const cur = view?.items.find((i) => i.id === item.id)
@@ -366,7 +477,12 @@ export function useUseItem(token: string) {
       if (view && ctx?.before != null) qc.setQueryData<CompanionView>(key, patchItem(view, item.id, ctx.before))
       onWriteError(qc, token, e)
     },
-    onSettled: () => qc.invalidateQueries({ queryKey: key }),
+    onSettled: (_d, _e, { item }) => {
+      const left = (itemTaps.get(itemKey(token, item.id)) ?? 1) - 1
+      if (left > 0) return void itemTaps.set(itemKey(token, item.id), left)
+      itemTaps.delete(itemKey(token, item.id))
+      void qc.invalidateQueries({ queryKey: key })
+    },
   })
 }
 
@@ -418,10 +534,80 @@ export function useRollDice(token: string) {
 
 // ------------------------------------------------------------------ live
 
+/** A phone's clock may run a little behind the server's: a payload stamped further ahead is not the server's. */
+export const HINT_SKEW_MS = 2 * 60_000
+
 /**
- * Listens to the game's channel: `points` (keeper or phone) go straight into the cache, clamped to
- * what the server accepts (anyone with a link can send on this public topic; writes are re-checked
- * by the RPCs), `notes`, `member`, `photo` and `items` refetch. Returns true while subscribed (the "live" badge).
+ * A `points` broadcast applied to the view, for display only, or null when it is to be ignored. The
+ * topic is public, so nothing in the payload is trusted: values are clamped, the investigator is
+ * marked `hinted` (taps then read the server instead of building on these values), and a payload
+ * stamped later than now plus a small skew is dropped, or it would hide every real one after it.
+ */
+export function applyPointsHint(view: CompanionView, payload: unknown, now: number, taps?: Taps): CompanionView | null {
+  if (!payload || typeof payload !== 'object') return null
+  const row = asPointsRow(payload as Record<string, unknown>)
+  if (!row) return null
+  // Echoes of our own taps in flight would undo the taps made since: the refetch after the last one settles it.
+  if (row.source === 'phone' && taps) return null
+  const member = view.party.find((m) => m.id === row.characterId)
+  if (!member) return null
+  const stamp = Date.parse(row.updatedAt)
+  if (!(stamp <= now + HINT_SKEW_MS)) return null
+  const current = view.points.find((p) => p.characterId === row.characterId)
+  if (current?.updatedAt && stamp < Date.parse(current.updatedAt)) return null
+  // A keeper change arriving mid-taps keeps what the tapped fields show (it may predate them).
+  const next = patchPoints(view, { ...row, ...clampPoints(row, member.data.hp ?? 10), ...taps?.shown })
+  return next.hinted.includes(row.characterId) ? next : { ...next, hinted: [...next.hinted, row.characterId] }
+}
+
+/** What the channel's `points` handler does with a payload. */
+export function receivePoints(qc: QueryClient, token: string, payload: unknown, now = Date.now()): void {
+  const key = companionKeys.one(token)
+  const view = qc.getQueryData<CompanionView>(key)
+  if (!view || !payload || typeof payload !== 'object') return
+  const taps = tapBook.get(tapKey(token, String((payload as { characterId?: unknown }).characterId)))
+  const next = applyPointsHint(view, payload, now, taps)
+  if (!next) return
+  // Taps already queued were counted on older values: the next one reads the server first.
+  if (taps) taps.unsure = true
+  qc.setQueryData<CompanionView>(key, next)
+}
+
+/**
+ * An `items` broadcast: the view with the item's new count when the hint carries one for a card this
+ * phone knows (the server sends `{ characterId, itemId, uses, updatedAt }` when only the uses changed),
+ * 'refetch' for anything else (a card given, taken, edited, or a hint it cannot place), null to ignore
+ * it (older than what is shown, or `busy`: the echo of uses this phone is still sending). The topic is
+ * public: the count is clamped to the card and only shown, uses are spent with a delta the server applies.
+ */
+export function applyItemHint(view: CompanionView, payload: unknown, now: number, busy: boolean): CompanionView | 'refetch' | null {
+  if (!payload || typeof payload !== 'object') return 'refetch'
+  const p = payload as Record<string, unknown>
+  const item = typeof p.itemId === 'string' ? view.items.find((i) => i.id === p.itemId) : undefined
+  if (!item || item.characterId !== p.characterId || item.uses === null) return 'refetch'
+  if (typeof p.uses !== 'number' || !Number.isInteger(p.uses)) return 'refetch'
+  const uses = clampUses(item.card, p.uses)
+  const stamp = typeof p.updatedAt === 'string' ? Date.parse(p.updatedAt) : NaN
+  if (uses === null || !(stamp <= now + HINT_SKEW_MS)) return 'refetch'
+  if (busy) return null
+  if (item.updatedAt && stamp < Date.parse(item.updatedAt)) return null
+  return patchItem(view, item.id, uses, p.updatedAt as string)
+}
+
+/** What the channel's `items` handler does with a payload. */
+export function receiveItems(qc: QueryClient, token: string, payload: unknown, now = Date.now()): void {
+  const key = companionKeys.one(token)
+  const view = qc.getQueryData<CompanionView>(key)
+  const itemId = payload && typeof payload === 'object' ? (payload as { itemId?: unknown }).itemId : undefined
+  const next = view ? applyItemHint(view, payload, now, typeof itemId === 'string' && itemTaps.has(itemKey(token, itemId))) : 'refetch'
+  if (next === 'refetch') void qc.invalidateQueries({ queryKey: key })
+  else if (next) qc.setQueryData<CompanionView>(key, next)
+}
+
+/**
+ * Listens to the game's channel: `points` (keeper or phone) are shown at once but never written back
+ * (`applyPointsHint`: anyone with a link can send on this public topic), a use spent on an item is
+ * shown from its hint (`applyItemHint`), `notes`, `member`, `photo` and other `items` hints refetch. Returns true while subscribed (the "live" badge).
  * A revoke sends `rotate` on the old topic before moving the game: refetching gives a still-valid
  * link the new channel (this hook resubscribes) and a revoked one the invalid-link state.
  */
@@ -433,26 +619,11 @@ export function useCompanionLive(token: string, channel: string | undefined): bo
     const key = companionKeys.one(token)
     const ch = supabase
       .channel(`companion:${channel}`)
-      .on('broadcast', { event: 'points' }, ({ payload }) => {
-        const row = asPointsRow((payload ?? {}) as Record<string, unknown>)
-        if (!row) return
-        // Echoes of our own taps in flight would undo the taps made since: the refetch after the last one settles it.
-        if (row.source === 'phone' && pointsInFlight(qc, token, row.characterId) > 0) return
-        const view = qc.getQueryData<CompanionView>(key)
-        if (!view || !view.party.some((m) => m.id === row.characterId)) return
-        const current = view.points.find((p) => p.characterId === row.characterId)
-        if (current?.updatedAt && row.updatedAt && Date.parse(row.updatedAt) < Date.parse(current.updatedAt)) return
-        // A keeper change arriving mid-taps keeps the tapped fields' pending values (it may predate them).
-        const member = view.party.find((m) => m.id === row.characterId)!
-        const mine = pointsOf(view, member)
-        const merged = { ...row, ...clampPoints(row, member.data.hp ?? 10) }
-        for (const f of tappedFields(qc, token, row.characterId)) merged[f] = mine[f]
-        qc.setQueryData<CompanionView>(key, patchPoints(view, merged))
-      })
+      .on('broadcast', { event: 'points' }, ({ payload }) => receivePoints(qc, token, payload))
       .on('broadcast', { event: 'notes' }, () => void qc.invalidateQueries({ queryKey: key }))
       .on('broadcast', { event: 'member' }, () => void qc.invalidateQueries({ queryKey: key }))
       .on('broadcast', { event: 'photo' }, () => void qc.invalidateQueries({ queryKey: key }))
-      .on('broadcast', { event: 'items' }, () => void qc.invalidateQueries({ queryKey: key }))
+      .on('broadcast', { event: 'items' }, ({ payload }) => receiveItems(qc, token, payload))
       .on('broadcast', { event: 'rotate' }, () => void qc.invalidateQueries({ queryKey: key }))
       .subscribe((status) => {
         setLive(status === 'SUBSCRIBED')

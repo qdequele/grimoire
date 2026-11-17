@@ -194,7 +194,16 @@ export const ITEM_LIMITS = {
   perCharacter: 60,
 } as const
 
-const DAMAGE = /^[0-9Dd+\-/ ]+$/
+/** One range band of a damage, spaces removed: dice (2D6, D6) and numbers joined by + or −. */
+const DICE = /^(?:\d*D\d+|\d+)(?:[+-](?:\d*D\d+|\d+))*$/i
+/**
+ * A weapon's damage the game screen can roll: 1D10, 2D6+4, or bands by range 4D6/2D6/1D6 (the
+ * engine's rollFormula reads each band; engine-combat.test.ts keeps the two in step). Not a damage
+ * bonus written out ("1D6+DB"): that is the card's `db`.
+ */
+export const isDamage = (s: string): boolean => s.split('/').every((band) => DICE.test(band.replace(/\s/g, '')))
+/** What a damage was checked against before isDamage: the characters of dice, in any order. */
+const STORED_DAMAGE = /^(?=.*\d)[0-9Dd+\-/ ]+$/
 const AMMO = /^[\p{L}\p{N} .-]+$/u
 
 const str = (v: unknown): string | undefined => (typeof v === 'string' && v.trim() ? v.trim() : undefined)
@@ -203,8 +212,11 @@ const int = (v: unknown): number | undefined => (typeof v === 'number' && Number
 /**
  * A card from untrusted JSON (the database, a story, a form), or the list of what's wrong with it.
  * Nothing is repaired: a bad value is a problem, so a story or a form says exactly what to fix.
+ * `stored`: the card is read back (a row, a story's item), not written: a weapon keeps a damage that
+ * was accepted when only its characters were checked, rather than stop being a weapon. The game
+ * screen shows "?" for the damage it can't roll.
  */
-export function parseCard(raw: unknown): { card: ItemCard; problems: [] } | { card: null; problems: string[] } {
+export function parseCard(raw: unknown, opts: { stored?: boolean } = {}): { card: ItemCard; problems: [] } | { card: null; problems: string[] } {
   const problems: string[] = []
   if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return { card: null, problems: ['not an object'] }
   const r = raw as Record<string, unknown>
@@ -233,7 +245,7 @@ export function parseCard(raw: unknown): { card: ItemCard; problems: [] } | { ca
       const skill = str(w.skill)
       const damage = str(w.damage)
       if (!skill || !(WEAPON_SKILLS as readonly string[]).includes(skill)) problems.push(`weapon.skill: one of ${WEAPON_SKILLS.join(', ')}`)
-      if (!damage || damage.length > ITEM_LIMITS.damage || !DAMAGE.test(damage) || !/\d/.test(damage)) problems.push('weapon.damage: dice such as 1D10 or 2D6+4')
+      if (!damage || damage.length > ITEM_LIMITS.damage || !(opts.stored ? STORED_DAMAGE.test(damage) : isDamage(damage))) problems.push('weapon.damage: dice such as 1D10 or 2D6+4')
       const weapon: WeaponStats = { skill: skill ?? '', damage: damage ?? '' }
       if (w.db !== undefined) weapon.db = w.db === true
       for (const [key, max] of [['range', ITEM_LIMITS.range], ['rate', ITEM_LIMITS.rate]] as const) {
@@ -291,7 +303,7 @@ export function parseCard(raw: unknown): { card: ItemCard; problems: [] } | { ca
 
 /** A card read from the database: checked, or a plain gear card named after it (never throws). */
 export function cardOr(raw: unknown): ItemCard {
-  const p = parseCard(raw)
+  const p = parseCard(raw, { stored: true })
   if (p.card) return p.card
   const name = raw && typeof raw === 'object' ? str((raw as Record<string, unknown>).name) : undefined
   return { name: name && !hasMarkup(name) ? name.slice(0, ITEM_LIMITS.name) : '?', kind: 'gear' }

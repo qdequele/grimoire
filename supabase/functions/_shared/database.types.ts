@@ -614,11 +614,13 @@ export type Database = {
         Row: {
           brief: Json
           created_at: string
+          details_count: number
           draft: Json | null
           error: string | null
           finished_at: string | null
           id: string
           input_tokens: number
+          map_attempts: number
           outline: Json | null
           outline_count: number
           output_tokens: number
@@ -631,11 +633,13 @@ export type Database = {
         Insert: {
           brief: Json
           created_at?: string
+          details_count?: number
           draft?: Json | null
           error?: string | null
           finished_at?: string | null
           id?: string
           input_tokens?: number
+          map_attempts?: number
           outline?: Json | null
           outline_count?: number
           output_tokens?: number
@@ -648,11 +652,13 @@ export type Database = {
         Update: {
           brief?: Json
           created_at?: string
+          details_count?: number
           draft?: Json | null
           error?: string | null
           finished_at?: string | null
           id?: string
           input_tokens?: number
+          map_attempts?: number
           outline?: Json | null
           outline_count?: number
           output_tokens?: number
@@ -675,6 +681,48 @@ export type Database = {
             columns: ["story_id"]
             isOneToOne: false
             referencedRelation: "stories"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      story_import_batches: {
+        Row: {
+          created_at: string
+          id: string
+          import_id: string | null
+          owner_id: string
+          pages: number
+          saved: boolean
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          import_id?: string | null
+          owner_id: string
+          pages: number
+          saved?: boolean
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          import_id?: string | null
+          owner_id?: string
+          pages?: number
+          saved?: boolean
+        }
+        Relationships: [
+          {
+            foreignKeyName: "story_import_batches_import_id_fkey"
+            columns: ["import_id"]
+            isOneToOne: false
+            referencedRelation: "story_imports"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "story_import_batches_owner_id_fkey"
+            columns: ["owner_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
         ]
@@ -803,6 +851,7 @@ export type Database = {
         Returns: undefined
       }
       companion_clean_character: { Args: { p_data: Json }; Returns: Json }
+      companion_clean_creation: { Args: { p: Json }; Returns: Json }
       companion_create_character: {
         Args: { p_data: Json; p_player_name: string; p_token: string }
         Returns: string
@@ -903,6 +952,7 @@ export type Database = {
         Args: { p: Json; p_default: number }
         Returns: number
       }
+      companion_skill_id: { Args: { p: Json }; Returns: string }
       companion_text: { Args: { p: Json; p_max: number }; Returns: string }
       companion_use_item: {
         Args: { p_delta: number; p_item: string; p_token: string }
@@ -925,6 +975,7 @@ export type Database = {
           user_agent: string
         }[]
       }
+      import_pages_used: { Args: { p_owner: string }; Returns: number }
       is_admin: { Args: Record<PropertyKey, never>; Returns: boolean }
       item_add_uses: {
         Args: { p_delta: number; p_item: string; p_owner: string }
@@ -936,8 +987,30 @@ export type Database = {
         Returns: number
       }
       reload_item: { Args: { p_weapon: string }; Returns: number }
+      reserve_ai_usage: {
+        Args: {
+          p_kind: string
+          p_limit?: number
+          p_owner: string
+          p_since: string
+        }
+        Returns: string
+      }
+      reserve_story_creation: {
+        Args: {
+          p_brief: Json
+          p_limit?: number
+          p_owner: string
+          p_since: string
+        }
+        Returns: string
+      }
       revoke_screen_link: { Args: { p_link: string }; Returns: undefined }
       revoke_table_link: { Args: { p_link: string }; Returns: undefined }
+      save_character_progress: {
+        Args: { p_character: string; p_progress: Json }
+        Returns: undefined
+      }
       save_game_state: {
         Args: { p_game: string; p_removed: string[]; p_state: Json }
         Returns: undefined

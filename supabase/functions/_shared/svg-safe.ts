@@ -19,6 +19,8 @@ export const SVG_LIMITS = {
   depth: 48,
   /** Elements drawn once every <use> is expanded (guards against exponential <use> chains). */
   rendered: 100_000,
+  /** References followed one inside another (a <use> of a <use>…, a gradient inheriting from a gradient…). */
+  chain: 1000,
 } as const
 
 /** A refused SVG: the message says what is wrong and where. */
@@ -131,21 +133,28 @@ export interface SafeSvg {
 const escText = (s: string) => s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
 const escAttr = (s: string) => escText(s).replace(/"/g, '&quot;')
 
-/**
- * CSS from a <style> element or a style attribute: plain declarations only. Anything that could load
- * something (url() other than url(#id), image-set, @import, @font-face…) or hide it (backslash escapes)
- * is refused.
- */
+// CSS from a <style> element or a style attribute: plain declarations only. Anything that could load
+// something (url() other than url(#id), image-set, @import, @font-face…) or hide it (backslash
+// escapes) is refused.
+//
+// It is checked twice: as written, and with comments read as spaces. For a browser a "/*" inside a
+// quoted string does not start a comment, so removing "comments" first would hide the live CSS
+// between a string holding "/*" and one holding "*/": the text as written shows everything a browser
+// can read. The copy without comments catches a word a comment cuts in two ("url/**/("). The price:
+// a comment or a string can't hold these words either, and the message says so.
 function checkCss(css: string, where: string) {
   if (/\/\*(?![\s\S]*?\*\/)/.test(css)) throw new SvgError(`${where}: unterminated CSS comment.`)
-  const plain = css.replace(/\/\*[\s\S]*?\*\//g, ' ').replace(LOCAL_URL, '')
-  if (/\\/.test(plain)) throw new SvgError(`${where}: backslash escapes are not allowed in CSS.`)
-  if (plain.includes('<')) throw new SvgError(`${where}: "<" is not allowed in CSS.`)
-  const bad = plain.match(/url\s*\(|image-set|image\s*\(|cross-fade|element\s*\(|\bsrc\s*\(|expression\s*\(|javascript|vbscript|-moz-binding|behavior\s*:/i)
-  if (bad) throw new SvgError(`${where}: "${bad[0]}" is not allowed in CSS. Only url(#id) can reference something, and only inside the file.`)
-  for (const m of plain.matchAll(/@([\w-]*)/g)) {
-    if (!['media', 'keyframes', '-webkit-keyframes', 'supports'].includes(m[1].toLowerCase())) {
-      throw new SvgError(`${where}: @${m[1]} is not allowed in CSS (no @import, @font-face: use generic font families such as serif or cursive).`)
+  const asWritten = css.replace(LOCAL_URL, '')
+  const withoutComments = css.replace(/\/\*[\s\S]*?\*\//g, ' ').replace(LOCAL_URL, '')
+  for (const [plain, hint] of [[withoutComments, ''], [asWritten, ' (in comments and quoted strings too: remove it there)']]) {
+    if (/\\/.test(plain)) throw new SvgError(`${where}: backslash escapes are not allowed in CSS${hint}.`)
+    if (plain.includes('<')) throw new SvgError(`${where}: "<" is not allowed in CSS${hint}.`)
+    const bad = plain.match(/url\s*\(|image-set|image\s*\(|cross-fade|element\s*\(|\bsrc\s*\(|expression\s*\(|javascript|vbscript|-moz-binding|behavior\s*:/i)
+    if (bad) throw new SvgError(`${where}: "${bad[0]}" is not allowed in CSS${hint}. Only url(#id) can reference something, and only inside the file.`)
+    for (const m of plain.matchAll(/@([\w-]*)/g)) {
+      if (!['media', 'keyframes', '-webkit-keyframes', 'supports'].includes(m[1].toLowerCase())) {
+        throw new SvgError(`${where}: @${m[1]} is not allowed in CSS${hint} (no @import, @font-face: use generic font families such as serif or cursive).`)
+      }
     }
   }
 }
@@ -187,7 +196,20 @@ export function sanitizeSvg(input: unknown): SafeSvg {
   if (CONTROL.test(src)) throw new SvgError('The SVG holds control characters.')
 
   let i = 0
-  const lineAt = (pos: number) => src.slice(0, pos).split('\n').length
+  // Where each line break is, found once: the line of a position is then a binary search, not a
+  // count from the top of the file for every element (which made large files quadratic).
+  const breaks: number[] = []
+  for (let at = src.indexOf('\n'); at !== -1; at = src.indexOf('\n', at + 1)) breaks.push(at)
+  const lineAt = (pos: number) => {
+    let lo = 0
+    let hi = breaks.length
+    while (lo < hi) {
+      const mid = (lo + hi) >> 1
+      if (breaks[mid] < pos) lo = mid + 1
+      else hi = mid
+    }
+    return lo + 1
+  }
   const at = () => `line ${lineAt(i)}`
   const fail = (msg: string): never => {
     throw new SvgError(`${at()}: ${msg}`)
@@ -363,22 +385,25 @@ export function sanitizeSvg(input: unknown): SafeSvg {
   }
   const counts = new Map<SvgNode, number>()
   const visiting = new Set<SvgNode>()
-  const rendered = (n: SvgNode): number => {
+  // `depth`: how far down this walk is (nesting and references together). Bounded, so a very long
+  // chain is refused with a message instead of overflowing the stack.
+  const rendered = (n: SvgNode, depth: number): number => {
     const known = counts.get(n)
     if (known !== undefined) return known
     if (visiting.has(n)) throw new SvgError(`line ${n.line}: <${n.name}> is part of a reference loop.`)
+    if (depth > SVG_LIMITS.chain) throw new SvgError(`line ${n.line}: <${n.name}> ends a chain of more than ${SVG_LIMITS.chain} references (href to an element that itself has an href…): simplify it.`)
     visiting.add(n)
     let total = 1
-    for (const c of n.children) if (typeof c !== 'string') total += rendered(c)
+    for (const c of n.children) if (typeof c !== 'string') total += rendered(c, depth + 1)
     const t = target(n)
-    if (t && n.name === 'use') total += rendered(t)
-    else if (t) rendered(t) // gradients, patterns, filters inheriting from another: check for loops
+    if (t && n.name === 'use') total += rendered(t, depth + 1)
+    else if (t) rendered(t, depth + 1) // gradients, patterns, filters inheriting from another: check for loops
     visiting.delete(n)
     if (total > SVG_LIMITS.rendered) throw new SvgError(`The drawing expands to more than ${SVG_LIMITS.rendered} elements through <use>: simplify it.`)
     counts.set(n, total)
     return total
   }
-  rendered(root)
+  rendered(root, 0)
 
   // The root: a viewBox, and the namespaces an image/svg+xml file needs.
   const vbRaw = root.attrs.find(([k]) => k === 'viewBox')?.[1]

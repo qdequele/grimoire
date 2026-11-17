@@ -1,7 +1,7 @@
 import { readFileSync } from 'node:fs'
 import { strToU8, zipSync } from 'fflate'
 import { describe, expect, it } from 'vitest'
-import { mimeOf, packSceneCount, readPack, splitPacks, unzipPack, zipPack } from './pack'
+import { mimeOf, PACK_FILE_MAX_BYTES, packSceneCount, readPack, splitPacks, unzipPack, zipPack } from './pack'
 
 const sample = readFileSync('stories/the-silent-light/story.json')
 const png = new Uint8Array([137, 80, 78, 71])
@@ -41,6 +41,47 @@ describe('readPack', () => {
     const r = readPack([entry('story.json', JSON.stringify({ format: 'other', meta: {}, acts: [] }))])
     expect(r.story).toBeNull()
     expect(r.errors).toEqual(expect.arrayContaining(['meta.title manquant.', 'Aucune scène.']))
+  })
+
+  it('refuses a story whose acts or scenes lack what every screen reads', () => {
+    const base = { format: 'grimoire-story/1', meta: { id: 'x', title: 'X', lang: 'fr' } }
+    const scene = { id: 's1', title: 'S' }
+    const read = (acts: unknown) => readPack([entry('story.json', JSON.stringify({ ...base, acts }))])
+    const badAct = (at: string) => [`Acte mal formé (id, title et scenes sont requis) : ${at}`]
+    const badScene = (at: string) => [`Scène mal formée (id et title sont requis) : ${at}`]
+    // One good act is not enough: the list and the story page read every act's scenes.
+    const noScenes = read([{ id: 'a1', title: 'I', scenes: [scene] }, { id: 'a2', title: 'II' }])
+    expect(noScenes.story).toBeNull()
+    expect(noScenes.errors).toEqual(badAct('acts[1]'))
+    expect(read([{ id: 'a1', title: 'I', scenes: [scene] }, null]).errors).toEqual(badAct('acts[1]'))
+    expect(read([{ title: 'I', scenes: [scene] }]).errors).toEqual(badAct('acts[0]'))
+    expect(read([{ id: 'a1', title: 'I', scenes: [scene, { id: 's2' }] }]).errors).toEqual(badScene('acts[0].scenes[1]'))
+    expect(read([{ id: 'a1', title: 'I', scenes: [scene, 'oops'] }]).errors).toEqual(badScene('acts[0].scenes[1]'))
+    // An act may still be empty, as long as the story has a scene somewhere.
+    const emptyAct = read([{ id: 'a1', title: 'I', scenes: [scene] }, { id: 'a2', title: 'II', scenes: [] }])
+    expect(emptyAct.errors).toEqual([])
+    expect(emptyAct.story).not.toBeNull()
+  })
+
+  it('refuses file names Storage would refuse half-way through the import', () => {
+    const refused = (path: string) => readPack([entry('story.json', sample), entry(path, png)])
+    const error = (path: string) => [`Nom de fichier refusé (lettres sans accent, chiffres, espaces et - _ . ( ) seulement) : ${path}`]
+    // Accents (composed or decomposed, as macOS zips store them), #, [ ], %, and ? which would cut the address.
+    for (const path of ['images/château.jpg', 'images/château.jpg', 'images/carte #1.jpg', 'images/map[1].jpg', 'images/50%.png', 'images/quoi?.png', 'sons/tonnerre~1.mp3']) {
+      const r = refused(path)
+      expect(r.errors, path).toEqual(error(path))
+      expect(r.story, path).toBeNull()
+    }
+    const ok = readPack([entry('story.json', sample), entry('images/plan du manoir (rez-de-chaussee)_v2.jpg', png), entry("images/l'entree.png", png)])
+    expect(ok.errors).toEqual([])
+    expect(ok.files).toHaveLength(2)
+  })
+
+  it('refuses a file larger than the bucket accepts', () => {
+    const big = { length: PACK_FILE_MAX_BYTES + 1 } as Uint8Array
+    expect(readPack([entry('story.json', sample), { path: 'sounds/long.mp3', data: big }]).errors).toEqual(['Fichier trop lourd (50 Mo au plus) : sounds/long.mp3'])
+    const limit = { length: PACK_FILE_MAX_BYTES } as Uint8Array
+    expect(readPack([entry('story.json', sample), { path: 'sounds/long.mp3', data: limit }]).errors).toEqual([])
   })
 
   it('imports with warnings when only the finer schema rules are broken', () => {

@@ -250,6 +250,29 @@ describe('mergeDraft', () => {
   it('keeps NPCs from earlier batches', () => {
     expect(merged.npcs.map((n) => n.id)).toEqual(['otto'])
   })
+
+  it("keeps an NPC's earlier details when a later batch only adds to it", () => {
+    const full = normalizeDraft({
+      npcs: [{
+        id: 'keeper-of-keys', name: 'Test Keeper', kind: 'creature', role: 'Guardian', description: 'Tall and silent.',
+        personality: 'Patient.', knows: ['Where the key is.'], damageBonus: '+1D4', sanLoss: '0/1D6',
+        attacks: [{ name: 'Claw', skill: 40, damage: '1D6', note: '' }], skills: [{ id: 'stealth', value: 60 }],
+        special: ['Sees in the dark.'],
+      }],
+    })
+    // The stat block comes pages later: same id, nothing else repeated.
+    const stub = normalizeDraft({ npcs: [{ id: 'keeper-of-keys', name: 'Test Keeper', stats: [{ key: 'STR', value: 50 }] }] })
+    const [npc] = mergeDraft(full, stub).npcs
+    expect(npc).toEqual({ ...full.npcs[0], stats: [{ key: 'STR', value: 50 }] })
+  })
+
+  it("lets a later batch rewrite an NPC's fields it does fill", () => {
+    const first = normalizeDraft({ npcs: [{ id: 'a', name: 'First', role: 'Clerk', knows: ['One.'], description: 'Old text.' }] })
+    const later = normalizeDraft({ npcs: [{ id: 'a', name: 'Renamed', kind: 'creature', description: 'New text.', knows: ['Two.', 'Three.'] }] })
+    expect(mergeDraft(first, later).npcs[0]).toMatchObject({
+      name: 'Renamed', kind: 'creature', role: 'Clerk', description: 'New text.', knows: ['Two.', 'Three.'],
+    })
+  })
 })
 
 describe('draftContext', () => {

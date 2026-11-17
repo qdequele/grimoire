@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest'
 import SOUNDS from '../../spec/sounds.json'
 import schema from '../../spec/story.schema.json'
 import sample from '../../stories/the-silent-light/story.json'
-import { AMBIENCE_FILE, asFire, LOOKS, mix, paletteFor, PLACE_PRESET, PLACES, placeFromText, PRESETS, presetFromSounds, sceneAmbiance, soundUrls, TIMES, timeFromSounds, timeFromText, type StoryForScreen } from './ambiance'
+import { AMBIENCE_FILE, asFire, LOOKS, mix, packImagePath, paletteFor, PLACE_PRESET, PLACES, placeFromText, PRESETS, presetFromSounds, sceneAmbiance, sceneImages, soundUrls, TIMES, timeFromSounds, timeFromText, type StoryForScreen } from './ambiance'
 
 const story = (scene: Record<string, unknown>): StoryForScreen => ({ acts: [{ scenes: [{ id: 's', ...scene }] }] })
 
@@ -59,6 +59,27 @@ describe('sceneAmbiance', () => {
     expect(sceneAmbiance(s, 's', ['images/map.jpg', 'images/view.jpg']).image).toBe('images/view.jpg')
     const secret = story({ images: [{ src: 'images/map.jpg' }, { src: 'images/plan.jpg', keeperOnly: true }] })
     expect(sceneAmbiance(secret, 's', ['images/map.jpg', 'images/plan.jpg']).image).toBeNull()
+  })
+
+  it('finds a picture written without the images/ folder, like a handout picture', () => {
+    expect(packImagePath('harbour.jpg')).toBe('images/harbour.jpg')
+    expect(packImagePath('images/harbour.jpg')).toBe('images/harbour.jpg')
+    expect(packImagePath(undefined)).toBeUndefined()
+    expect(packImagePath('')).toBeUndefined()
+    // The ambiance carries the path in the pack, whichever way the story wrote it.
+    expect(sceneAmbiance(story({ screen: { image: 'harbour.jpg' } }), 's', ['images/harbour.jpg']).image).toBe('images/harbour.jpg')
+    expect(sceneAmbiance(story({ screen: { image: 'images/harbour.jpg' } }), 's', ['images/harbour.jpg']).image).toBe('images/harbour.jpg')
+    expect(sceneAmbiance(story({ images: [{ src: 'view.jpg', keeperOnly: false }] }), 's', ['images/view.jpg']).image).toBe('images/view.jpg')
+    expect(sceneAmbiance(story({ screen: { image: 'missing.jpg' } }), 's', ['images/harbour.jpg']).image).toBeNull()
+  })
+
+  it("lists a scene's pictures the pack has, with their path in the pack", () => {
+    const scene = { id: 's', images: [{ src: 'map.jpg', caption: 'Map' }, { src: 'images/view.jpg', keeperOnly: false }, { src: 'gone.jpg' }] }
+    expect(sceneImages(scene, ['images/map.jpg', 'images/view.jpg'])).toEqual([
+      { src: 'map.jpg', caption: 'Map', path: 'images/map.jpg' },
+      { src: 'images/view.jpg', keeperOnly: false, path: 'images/view.jpg' },
+    ])
+    expect(sceneImages({ id: 's' }, ['images/map.jpg'])).toEqual([])
   })
 
   it('an unknown scene gets the default ambiance', () => {
@@ -131,6 +152,34 @@ describe('places (drawn décors)', () => {
     expect(placeFromText('La porte rouge')).toBeNull()
     expect(placeFromText('Martha Varnum')).toBeNull()
     expect(placeFromText('Woodward')).toBeNull()
+  })
+
+  it('everyday words are not places', () => {
+    // "mais" (but) is not "maïs" (corn) once accents are ignored.
+    expect(placeFromText('Tard, mais pas trop tard')).toBeNull()
+    expect(placeFromText('Mais qui est-ce ?')).toBeNull()
+    expect(placeFromText('A Fair Trade')).toBeNull()
+    expect(placeFromText(undefined, 'the-fair-deal')).toBeNull()
+    expect(placeFromText('En train de mentir')).toBeNull()
+    expect(placeFromText('The next day on deck')).toBeNull()
+    expect(placeFromText('The pit of the stomach')).toBeNull()
+    expect(placeFromText('What is yours is mine')).toBeNull()
+    expect(placeFromText(undefined, 'yours-and-mine')).toBeNull()
+    expect(sceneAmbiance(story({ title: 'Tard, mais pas trop tard' }), 's', [])).toMatchObject({ place: null, preset: 'fog' })
+  })
+
+  it('a mine is named with its article, or by another word', () => {
+    expect(placeFromText('Dans la mine')).toBe('mine')
+    expect(placeFromText('The old mine')).toBe('mine')
+    expect(placeFromText(undefined, 'the-mine')).toBe('mine')
+    expect(placeFromText('Les mines du nord')).toBe('mine')
+    expect(placeFromText('Down the mineshaft')).toBe('mine')
+    // The other words of these places still find them.
+    expect(placeFromText('Le champ de maïs')).toBe('farm')
+    expect(placeFromText('La fête foraine')).toBe('fair')
+    expect(placeFromText('The night train station')).toBe('station')
+    expect(placeFromText('Le wagon de queue')).toBe('station')
+    expect(placeFromText('On the steamer')).toBe('ship')
   })
 
   it("the scene's screen.place first, then its title; the place's preset when the sounds say nothing", () => {

@@ -3,10 +3,12 @@
 // One function, four actions (they share auth, quotas, the cached system prompt and the brief):
 //   - "ideas":           "Inspire me" fills the empty questionnaire fields (Haiku, effort low).
 //   - "outline":         writes (or rewrites) the outline's frame: title, secret, scenes, NPCs.
-//                        Starts a new creation (counted against the monthly limit) or revises the
-//                        current one.
+//                        Starts a new creation (reserved against the monthly limit before Claude
+//                        is asked: reserve_story_creation) or revises the current one (outline_count
+//                        taken first, at most STORY_OUTLINES_PER_STORY).
 //   - "outline-details": completes the frame: each scene's clues, NPCs and next scenes, and the
-//                        keeper's overview. The browser calls it right after "outline".
+//                        keeper's overview. The browser calls it right after "outline". Counted per
+//                        creation (details_count), at most STORY_DETAILS_PER_STORY calls.
 //   - "write":           writes the next scene of the outline in full (the same ImportDraft shape
 //                        as the AI import), merges it, converts with draftToStory, validates against
 //                        the spec and saves the private story + its story.json. The browser calls
@@ -14,17 +16,24 @@
 //   - "map":             composes a map (floor plan, crypt, village) from the keeper's description,
 //                        as a MapDoc the app's map editor opens (map kit in _shared/maps/). Counted in
 //                        ai_usage (kind "map"), MAP_MONTHLY_LIMIT a month.
+// "ideas" and "map" reserve their ai_usage row before Claude is asked (_shared/ai-usage.ts): calls
+// made at once can't pass the limit, and a call that fails after Claude started is counted.
 //   - "scene-map":       once every scene is written, draws the map of the next scene that asked for
 //                        one (draft mapKind, at most STORY_MAPS_PER_STORY): the players' and the
 //                        keeper's copies as SVG in the pack, two handouts of that scene. The browser
-//                        calls it until `remaining` is 0. Part of the creation, not the map quota.
+//                        calls it until `remaining` is 0. Part of the creation, not the map quota:
+//                        counted per creation (map_attempts), at most twice STORY_MAPS_PER_STORY calls.
+//                        The map is added to the story as it is stored then (the keeper may have
+//                        edited it since the last scene), under a condition on its updated_at.
+// The creation's own counters (outline_count, details_count, map_attempts) move before the Claude
+// call, and are given back only when the AI service refused the call over HTTP.
 //
 // Every call must end before the Edge Function's wall-clock limit (150 s): that is why the outline
 // takes two calls, scenes go one at a time, the writing is done by Sonnet, and each Claude call is
 // cut at AI_DEADLINE_MS with a clean "try again" instead of the function being killed.
 //
 // Secrets: ANTHROPIC_API_KEY (required). Optional: STORY_CREATE_MONTHLY_LIMIT (default 10 new
-// stories), STORY_OUTLINES_PER_STORY (default 5), STORY_SCENES_PER_CALL (default 1),
+// stories), STORY_OUTLINES_PER_STORY (default 5), STORY_DETAILS_PER_STORY (default 10), STORY_SCENES_PER_CALL (default 1),
 // STORY_IDEAS_MONTHLY_LIMIT (default 50), MAP_MONTHLY_LIMIT (default 30), AI_DEADLINE_MS (default 130000, from the request's start).
 
 import Anthropic from 'npm:@anthropic-ai/sdk@1.4.0'
@@ -35,8 +44,9 @@ import type { Database, Json } from '../_shared/database.types.ts'
 import { createSystemPrompt, ideasUserPrompt, outlineDetailsPrompt, outlineUserPrompt, scenesUserPrompt } from '../_shared/create-prompt.ts'
 import { STORY_SCHEMA } from '../_shared/spec-bundle.ts'
 import { forbiddenNamesIn } from '../_shared/story-mcp.ts'
-import { existingStory, savePackFile, saveStory } from '../_shared/story-save.ts'
-import { mapFiles, sceneMapRequest, scenesWithoutMap, withSceneMap } from '../_shared/story-maps.ts'
+import { monthStart, recordUsage, refusedUpstream, releaseUsage, reserveUsage, type UsageKind } from '../_shared/ai-usage.ts'
+import { existingStory, savePackFile, saveStory, writePackJson } from '../_shared/story-save.ts'
+import { mapFiles, sceneMapRequest, scenesWithoutMap, STORY_MAPS_PER_STORY, withSceneMap } from '../_shared/story-maps.ts'
 import { renderMap } from '../_shared/maps/render.ts'
 import { sanitizeSvg } from '../_shared/svg-safe.ts'
 import { mapSchema, mapSystemPrompt, mapUserPrompt, parseMapRequest, type MapRequest } from '../_shared/map-prompt.ts'
@@ -58,6 +68,7 @@ import {
   pickIdeas,
   storyMetaId,
   withDetails,
+  withStoredSceneMap,
   writtenSceneIds,
   type IdeaField,
   type StoryBrief,
@@ -68,6 +79,10 @@ const IDEAS_MODEL = 'claude-haiku-5-5'
 const WRITER_MODEL = 'claude-sonnet-5-5'
 const MONTHLY_LIMIT = Number(Deno.env.get('STORY_CREATE_MONTHLY_LIMIT') ?? 10)
 const OUTLINES_PER_STORY = Number(Deno.env.get('STORY_OUTLINES_PER_STORY') ?? 5)
+/** "outline-details" calls per creation: one per outline, and as many retries after a timeout. */
+const DETAILS_PER_STORY = Number(Deno.env.get('STORY_DETAILS_PER_STORY') ?? 2 * OUTLINES_PER_STORY)
+/** "scene-map" calls per creation: one per map, and as many retries after a failure. */
+const MAP_ATTEMPTS_PER_STORY = 2 * STORY_MAPS_PER_STORY
 const SCENES_PER_CALL = Number(Deno.env.get('STORY_SCENES_PER_CALL') ?? 1)
 const IDEAS_MONTHLY_LIMIT = Number(Deno.env.get('STORY_IDEAS_MONTHLY_LIMIT') ?? 50)
 const MAP_MONTHLY_LIMIT = Number(Deno.env.get('MAP_MONTHLY_LIMIT') ?? 30)
@@ -102,13 +117,6 @@ class Failure extends Error {
   constructor(readonly status: number, readonly code: string, message: string) {
     super(message)
   }
-}
-
-const monthStart = () => {
-  const d = new Date()
-  d.setUTCDate(1)
-  d.setUTCHours(0, 0, 0, 0)
-  return d.toISOString()
 }
 
 /**
@@ -188,8 +196,69 @@ async function isAdmin(admin: Admin, userId: string) {
 async function loadCreation(admin: Admin, id: unknown, userId: string): Promise<CreationRow> {
   if (typeof id !== 'string') throw new Failure(400, 'bad_request', 'creationId is required.')
   const { data } = await admin.from('story_creations').select('*').eq('id', id).maybeSingle()
-  if (!data || data.owner_id !== userId) throw new Failure(404, 'not_found', 'Création introuvable.')
+  // Creations started through the MCP connector are written by the keeper's chat app, never by
+  // this function's paid model: they don't exist here (same answer as an unknown id).
+  if (!data || data.owner_id !== userId || data.source !== 'web') throw new Failure(404, 'not_found', 'Création introuvable.')
   return data
+}
+
+type SlotCounter = 'outline_count' | 'details_count' | 'map_attempts'
+const slotValue = (counter: SlotCounter, value: number) =>
+  counter === 'outline_count' ? { outline_count: value } : counter === 'details_count' ? { details_count: value } : { map_attempts: value }
+
+/**
+ * Take one of a creation's counted calls BEFORE asking Claude, so calls that fail, time out or run
+ * at the same time are counted too. The counter only moves from the value this request read: of
+ * several requests that read the same value, one goes on and the others are told to try again.
+ * Admins have no limit unless `adminsLimited` (the outlines per story, as before); their calls are
+ * still counted.
+ */
+async function takeSlot(admin: Admin, userId: string, row: CreationRow, counter: SlotCounter, limit: number, refusal: Failure, adminsLimited = false) {
+  if (row[counter] >= limit && (adminsLimited || !(await isAdmin(admin, userId)))) throw refusal
+  const { data, error } = await admin
+    .from('story_creations')
+    .update(slotValue(counter, row[counter] + 1))
+    .eq('id', row.id)
+    .eq(counter, row[counter])
+    .select('id')
+  if (error) throw error
+  if (!data.length) throw new Failure(409, 'busy', 'Une autre demande est déjà en cours pour cette histoire. Réessaie dans un instant.')
+}
+
+/**
+ * Run a Claude call on a slot taken with takeSlot. When the AI service refused the call itself
+ * (an HTTP error: nothing generated), the slot is given back, only if nobody moved the counter since.
+ */
+async function onSlot<T>(admin: Admin, row: CreationRow, counter: SlotCounter, run: () => Promise<T>): Promise<T> {
+  try {
+    return await run()
+  } catch (e) {
+    if (refusedUpstream(e)) {
+      const { error } = await admin.from('story_creations').update(slotValue(counter, row[counter])).eq('id', row.id).eq(counter, row[counter] + 1)
+      if (error) console.error('story_creations slot release failed', error)
+    }
+    throw e
+  }
+}
+
+/**
+ * A call counted in ai_usage against a monthly limit: reserved first (refused with `refusal` when
+ * the month is used up; admins have no limit), then `run`, then the tokens on the reserved row.
+ * The reservation is given back only when the AI service refused the call itself (nothing was
+ * generated); a timeout, or an answer that proved too long or unreadable, stays counted.
+ */
+async function counted<T extends { usage: { input: number; output: number } }>(admin: Admin, userId: string, kind: UsageKind, limit: number, refusal: Failure, run: () => Promise<T>): Promise<T> {
+  const usageId = await reserveUsage(admin, userId, kind, (await isAdmin(admin, userId)) ? null : limit)
+  if (!usageId) throw refusal
+  let result: T
+  try {
+    result = await run()
+  } catch (e) {
+    if (refusedUpstream(e)) await releaseUsage(admin, usageId)
+    throw e
+  }
+  await recordUsage(admin, usageId, result.usage)
+  return result
 }
 
 // ------------------------------------------------------------------ actions
@@ -199,43 +268,24 @@ async function ideas(apiKey: string, deadline: number, admin: Admin, userId: str
   if (typeof brief === 'string') throw new Failure(400, 'bad_request', brief)
   const field = body.field === undefined ? undefined : (body.field as IdeaField)
   if (field !== undefined && !IDEA_FIELDS.includes(field)) throw new Failure(400, 'bad_request', `field must be one of ${IDEA_FIELDS.join(', ')}.`)
-  if (!(await isAdmin(admin, userId))) {
-    const { count, error } = await admin
-      .from('ai_usage')
-      .select('id', { count: 'exact', head: true })
-      .eq('owner_id', userId)
-      .eq('kind', 'story-ideas')
-      .gte('created_at', monthStart())
-    if (error) throw error
-    if ((count ?? 0) >= IDEAS_MONTHLY_LIMIT) throw new Failure(429, 'quota_exceeded', `Limite mensuelle atteinte (${IDEAS_MONTHLY_LIMIT} suggestions).`)
-  }
-  const { output, usage } = await ask(apiKey, deadline, { model: IDEAS_MODEL, format: IDEAS_FORMAT, effort: 'low', text: ideasUserPrompt(brief, field), maxTokens: 4000 })
-  await admin.from('ai_usage').insert({ owner_id: userId, kind: 'story-ideas', input_tokens: usage.input, output_tokens: usage.output })
+  const { output } = await counted(admin, userId, 'story-ideas', IDEAS_MONTHLY_LIMIT, new Failure(429, 'quota_exceeded', `Limite mensuelle atteinte (${IDEAS_MONTHLY_LIMIT} suggestions).`), () =>
+    ask(apiKey, deadline, { model: IDEAS_MODEL, format: IDEAS_FORMAT, effort: 'low', text: ideasUserPrompt(brief, field), maxTokens: 4000 }),
+  )
   return { ideas: pickIdeas(brief, (output ?? {}) as Record<string, unknown>, field) }
 }
 
 async function outline(apiKey: string, deadline: number, admin: Admin, userId: string, body: Record<string, unknown>) {
+  const tooMany = new Failure(429, 'too_many_outlines', `Pas plus de ${OUTLINES_PER_STORY} plans par histoire.`)
   let row: CreationRow | null = null
   let brief: StoryBrief | string
   if (body.creationId !== undefined) {
     row = await loadCreation(admin, body.creationId, userId)
     if (row.status !== 'outlined' && row.status !== 'failed') throw new Failure(409, 'already_writing', 'Les scènes sont déjà en cours d’écriture.')
     if (row.story_id) throw new Failure(409, 'already_writing', 'Les scènes sont déjà en cours d’écriture.')
-    if (row.outline_count >= OUTLINES_PER_STORY) throw new Failure(429, 'too_many_outlines', `Pas plus de ${OUTLINES_PER_STORY} plans par histoire.`)
     // The keeper may have changed their answers between two outlines.
     brief = parseBrief(body.brief ?? row.brief)
   } else {
     brief = parseBrief(body.brief)
-    if (!(await isAdmin(admin, userId))) {
-      const { count, error } = await admin
-        .from('story_creations')
-        .select('id', { count: 'exact', head: true })
-        .eq('owner_id', userId)
-        .eq('source', 'web') // creations from the MCP connector have their own limit
-        .gte('created_at', monthStart())
-      if (error) throw error
-      if ((count ?? 0) >= MONTHLY_LIMIT) throw new Failure(429, 'quota_exceeded', `Limite mensuelle atteinte (${MONTHLY_LIMIT} histoires créées).`)
-    }
   }
   if (typeof brief === 'string') throw new Failure(400, 'bad_request', brief)
 
@@ -243,37 +293,61 @@ async function outline(apiKey: string, deadline: number, admin: Admin, userId: s
   const previous = row?.outline ? parseOutline(body.outline ?? row.outline) : null
   const notes = typeof body.notes === 'string' ? body.notes.trim().slice(0, 1500) : ''
   const revise = previous && typeof previous !== 'string' ? { previous, notes } : undefined
-  const { output, usage } = await ask(apiKey, deadline, { model: WRITER_MODEL, format: FRAME_FORMAT, effort: 'medium', text: outlineUserPrompt(brief, revise), maxTokens: 32000 })
-  const parsed = frameToOutline(output)
-  if (typeof parsed === 'string') throw new Failure(502, 'invalid_output', 'Le plan reçu est incomplet. Réessaie.')
-
-  const fields = {
+  const text = outlineUserPrompt(brief, revise)
+  const askFrame = async () => {
+    const { output, usage } = await ask(apiKey, deadline, { model: WRITER_MODEL, format: FRAME_FORMAT, effort: 'medium', text, maxTokens: 32000 })
+    const parsed = frameToOutline(output)
+    if (typeof parsed === 'string') throw new Failure(502, 'invalid_output', 'Le plan reçu est incomplet. Réessaie.')
+    return { parsed, usage }
+  }
+  const fields = (parsed: unknown) => ({
     brief: brief as unknown as Json,
-    outline: parsed as unknown as Json,
+    outline: parsed as Json,
     status: 'outlined',
     error: null,
     updated_at: new Date().toISOString(),
-  }
+  })
+
   if (row) {
+    // The revision is taken before Claude is asked: revisions sent at once can't pass the limit.
+    await takeSlot(admin, userId, row, 'outline_count', OUTLINES_PER_STORY, tooMany, true)
+    const { parsed, usage } = await onSlot(admin, row, 'outline_count', askFrame)
     const { error } = await admin
       .from('story_creations')
-      .update({
-        ...fields,
-        outline_count: row.outline_count + 1,
-        input_tokens: row.input_tokens + usage.input,
-        output_tokens: row.output_tokens + usage.output,
-      })
+      .update({ ...fields(parsed), input_tokens: row.input_tokens + usage.input, output_tokens: row.output_tokens + usage.output })
       .eq('id', row.id)
     if (error) throw error
     return { creationId: row.id, outline: parsed, outlinesLeft: OUTLINES_PER_STORY - row.outline_count - 1 }
   }
-  const { data, error } = await admin
+
+  // A new creation is reserved before Claude is asked (reserve_story_creation: counted and inserted
+  // under a lock), so calls made at once can't pass the monthly limit.
+  const { data: creationId, error: reserveError } = await admin.rpc('reserve_story_creation', {
+    p_owner: userId,
+    p_brief: brief as unknown as Json,
+    p_since: monthStart(),
+    ...((await isAdmin(admin, userId)) ? {} : { p_limit: MONTHLY_LIMIT }),
+  })
+  if (reserveError) throw reserveError
+  if (!creationId) throw new Failure(429, 'quota_exceeded', `Limite mensuelle atteinte (${MONTHLY_LIMIT} histoires créées).`)
+  let result: Awaited<ReturnType<typeof askFrame>>
+  try {
+    result = await askFrame()
+  } catch (e) {
+    // Refused by the AI service itself: nothing was generated, the creation is given back. Anything
+    // else stays counted, as a failed creation with no outline (nothing to resume from).
+    const { error } = refusedUpstream(e)
+      ? await admin.from('story_creations').delete().eq('id', creationId)
+      : await admin.from('story_creations').update({ status: 'failed', error: e instanceof Failure ? e.code : 'ai_error', updated_at: new Date().toISOString() }).eq('id', creationId)
+    if (error) console.error('story_creations reservation update failed', error)
+    throw e
+  }
+  const { error } = await admin
     .from('story_creations')
-    .insert({ ...fields, owner_id: userId, outline_count: 1, input_tokens: usage.input, output_tokens: usage.output })
-    .select('id')
-    .single()
+    .update({ ...fields(result.parsed), input_tokens: result.usage.input, output_tokens: result.usage.output })
+    .eq('id', creationId)
   if (error) throw error
-  return { creationId: data.id, outline: parsed, outlinesLeft: OUTLINES_PER_STORY - 1 }
+  return { creationId, outline: result.parsed, outlinesLeft: OUTLINES_PER_STORY - 1 }
 }
 
 /** The outline's second half: clues, NPCs present and next scenes for each scene, and the overview. */
@@ -284,8 +358,11 @@ async function outlineDetails(apiKey: string, deadline: number, admin: Admin, us
   if (typeof brief === 'string') throw new Failure(500, 'internal', brief)
   const frame = parseOutline(body.outline ?? row.outline)
   if (typeof frame === 'string') throw new Failure(409, 'no_outline', 'Écris d’abord le plan de l’histoire.')
+  await takeSlot(admin, userId, row, 'details_count', DETAILS_PER_STORY, new Failure(429, 'too_many_details', `Le plan de cette histoire a déjà été complété ${DETAILS_PER_STORY} fois. Écris les scènes, ou commence une nouvelle histoire.`))
 
-  const { output, usage } = await ask(apiKey, deadline, { model: WRITER_MODEL, format: DETAILS_FORMAT, effort: 'medium', text: outlineDetailsPrompt(brief, frame), maxTokens: 32000 })
+  const { output, usage } = await onSlot(admin, row, 'details_count', () =>
+    ask(apiKey, deadline, { model: WRITER_MODEL, format: DETAILS_FORMAT, effort: 'medium', text: outlineDetailsPrompt(brief, frame), maxTokens: 32000 }),
+  )
   const full = withDetails(frame, output)
   if (typeof full === 'string') throw new Failure(502, 'invalid_output', 'Le plan reçu est incomplet. Réessaie.')
   const { error } = await admin
@@ -380,19 +457,35 @@ async function composeMap(apiKey: string, deadline: number, req: MapRequest) {
 async function map(apiKey: string, deadline: number, admin: Admin, userId: string, body: Record<string, unknown>) {
   const req = parseMapRequest(body)
   if (typeof req === 'string') throw new Failure(400, 'bad_request', req)
-  if (!(await isAdmin(admin, userId))) {
-    const { count, error } = await admin
-      .from('ai_usage')
-      .select('id', { count: 'exact', head: true })
-      .eq('owner_id', userId)
-      .eq('kind', 'map')
-      .gte('created_at', monthStart())
-    if (error) throw error
-    if ((count ?? 0) >= MAP_MONTHLY_LIMIT) throw new Failure(429, 'quota_exceeded', `Limite mensuelle atteinte (${MAP_MONTHLY_LIMIT} plans).`)
-  }
-  const { map: doc, problems, usage } = await composeMap(apiKey, deadline, req)
-  await admin.from('ai_usage').insert({ owner_id: userId, kind: 'map', input_tokens: usage.input, output_tokens: usage.output })
+  const { map: doc, problems } = await counted(admin, userId, 'map', MAP_MONTHLY_LIMIT, new Failure(429, 'quota_exceeded', `Limite mensuelle atteinte (${MAP_MONTHLY_LIMIT} plans).`), () =>
+    composeMap(apiKey, deadline, req),
+  )
   return { map: doc, problems }
+}
+
+/**
+ * Add a scene's map to the story as it is stored now (withStoredSceneMap), only if nobody changed
+ * the story between the read and the write (updated_at), then to the pack's story.json. Tried
+ * twice: an edit landing in between is kept, never overwritten.
+ */
+async function attachSceneMap(admin: Admin, userId: string, storyId: string, fresh: unknown, sceneId: string, handoutIds: string[]) {
+  for (let attempt = 0; attempt < 2; attempt++) {
+    const { data: stored, error } = await admin.from('stories').select('content, updated_at').eq('id', storyId).eq('owner_id', userId).maybeSingle()
+    if (error) throw error
+    if (!stored) throw new Failure(404, 'not_found', 'Histoire introuvable.')
+    const story = withStoredSceneMap(stored.content, fresh, sceneId, handoutIds)
+    if (!story) return // the keeper removed the scene: its map has nowhere to go
+    const { data: saved, error: saveError } = await admin
+      .from('stories')
+      .update({ content: story as Json })
+      .eq('id', storyId)
+      .eq('owner_id', userId)
+      .eq('updated_at', stored.updated_at)
+      .select('id')
+    if (saveError) throw saveError
+    if (saved.length) return await writePackJson(admin, userId, storyId, story)
+  }
+  throw new Failure(409, 'conflict', 'L’histoire a changé pendant le dessin du plan. Réessaie.')
 }
 
 async function sceneMap(apiKey: string, deadline: number, admin: Admin, userId: string, body: Record<string, unknown>) {
@@ -408,16 +501,18 @@ async function sceneMap(apiKey: string, deadline: number, admin: Admin, userId: 
 
   const scene = todo[0]
   const lang = brief.lang === 'en' ? 'en' : 'fr'
-  const { map: doc, problems, usage } = await composeMap(apiKey, deadline, sceneMapRequest(scene, lang))
+  // Nothing to draw on: checked before Claude is paid for a map.
   const target = await existingStory(admin, row.story_id, storyMetaId(outline.title, row.id))
   if (!target.storyId) throw new Failure(404, 'not_found', 'Histoire introuvable.')
+  await takeSlot(admin, userId, row, 'map_attempts', MAP_ATTEMPTS_PER_STORY, new Failure(429, 'too_many_maps', 'Trop d’essais pour les plans de cette histoire. Elle est prête sans eux.'))
+  const { map: doc, problems, usage } = await onSlot(admin, row, 'map_attempts', () => composeMap(apiKey, deadline, sceneMapRequest(scene, lang)))
   const files = mapFiles(scene.id)
   // The renderer's output always passes sanitizeSvg (a unit test checks it); checked again before it is stored.
   await savePackFile(admin, userId, target.storyId, files.players.image, sanitizeSvg(renderMap(doc, { audience: 'players', lang })).svg, 'image/svg+xml')
   await savePackFile(admin, userId, target.storyId, files.keeper.image, sanitizeSvg(renderMap(doc, { audience: 'keeper', lang })).svg, 'image/svg+xml')
 
   draft = withSceneMap(draft, scene.id, doc.title, lang)
-  await saveStory(admin, userId, target.storyId, createdStory(draft, outline, brief, target.metaId))
+  await attachSceneMap(admin, userId, target.storyId, createdStory(draft, outline, brief, target.metaId), scene.id, [files.players.handout, files.keeper.handout])
   await admin
     .from('story_creations')
     .update({

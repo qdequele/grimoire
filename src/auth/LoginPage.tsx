@@ -14,7 +14,7 @@ import { Epigraph, Masthead, SkinToggle } from '@/theme/Masthead'
 import { useT, type T } from '@/i18n/t'
 import { LegalLinks } from '@/legal/LegalPage'
 import { useAuth } from './auth'
-import { forgetNext, rememberNext, rememberedNext, returnedOAuthError, signInWithGoogle, useGoogleEnabled } from './oauth'
+import { forgetNext, forgetOAuthError, rememberNext, rememberedNext, returnedOAuthError, signInWithGoogle, useGoogleEnabled } from './oauth'
 
 const makeSchema = (t: T) =>
   z.object({
@@ -45,7 +45,15 @@ export function LoginPage() {
   const schema = useMemo(() => makeSchema(t), [t])
   // ?mode=signup: the landing page's "Créer un compte" opens the sign-up tab.
   const [mode, setMode] = useState<Mode>(params.get('mode') === 'signup' ? 'signup' : 'signin')
-  const [error, setError] = useState<string | null>(returnedOAuthError)
+  const [error, setError] = useState<string | null>(null)
+  // Back from Google (or a confirmation link) with an error: said in our own words, never the
+  // address's, until the keeper tries again.
+  const [oauthFailed, setOauthFailed] = useState(returnedOAuthError)
+  const report = (message: string | null) => {
+    setOauthFailed(false)
+    forgetOAuthError()
+    setError(message)
+  }
   // Where accounts need an e-mail confirmation (hosted Supabase), sign-up returns no session.
   const [confirmTo, setConfirmTo] = useState<string | null>(null)
   const form = useForm<Values>({ resolver: zodResolver(schema), defaultValues: { email: '', password: '', displayName: '' } })
@@ -54,7 +62,7 @@ export function LoginPage() {
   if (session) return <ResumeAfterLogin to={next !== '/' ? next : (rememberedNext() ?? '/')} />
 
   async function onSubmit(values: Values) {
-    setError(null)
+    report(null)
     setConfirmTo(null)
     if (mode === 'signin') {
       const { error } = await supabase.auth.signInWithPassword({ email: values.email, password: values.password })
@@ -88,7 +96,7 @@ export function LoginPage() {
               <TabsTrigger value="signup">{t('Créer un compte')}</TabsTrigger>
             </TabsList>
           </Tabs>
-          <GoogleButton next={next} onError={setError} />
+          <GoogleButton next={next} onError={report} />
           <form onSubmit={form.handleSubmit(onSubmit)} noValidate>
             <FieldGroup>
               {mode === 'signup' && (
@@ -120,9 +128,9 @@ export function LoginPage() {
                   </AlertDescription>
                 </Alert>
               )}
-              {error && (
+              {(error || oauthFailed) && (
                 <Alert variant="destructive">
-                  <AlertDescription>{t(error)}</AlertDescription>
+                  <AlertDescription>{error ? t(error) : t('La connexion a échoué ou a été annulée. Réessaie.')}</AlertDescription>
                 </Alert>
               )}
               <Button type="submit" disabled={isSubmitting}>

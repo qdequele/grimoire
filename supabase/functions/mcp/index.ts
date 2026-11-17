@@ -28,6 +28,8 @@ import type { Database, Json } from '../_shared/database.types.ts'
 import { STORY_SCHEMA } from '../_shared/spec-bundle.ts'
 import {
   createdStory,
+  type StoryBrief,
+  type StoryOutline,
   nextBatch,
   orderLikeOutline,
   outlineScenes,
@@ -38,13 +40,16 @@ import {
   writtenSceneIds,
 } from '../_shared/story-create.ts'
 import {
+  addedSchemaIssues,
   applyEdits,
   attachImage,
   detachImage,
+  FINISHED_WITH_ERRORS,
   forbiddenNamesIn,
   GUIDE_TOPICS,
   guideText,
   imageUses,
+  issueText,
   MCP_LIMITS,
   normalizeDraft,
   parseImageRequest,
@@ -54,7 +59,9 @@ import {
   ToolError,
   toolDefinitions,
   usesImage,
+  WRITE_CONFLICT,
   type GuideTopic,
+  type SchemaIssue,
   type StoryPart,
 } from '../_shared/story-mcp.ts'
 import { choicesOf, investigatorSheet, investigatorView, parseInvestigator, type ParsedInvestigator } from '../_shared/investigator.ts'
@@ -82,8 +89,19 @@ const CORS = {
 
 const ajv = new Ajv2020({ allErrors: true, strict: false })
 const validateStory = ajv.compile(STORY_SCHEMA)
-const schemaErrors = (story: unknown) =>
-  validateStory(story) ? [] : (validateStory.errors ?? []).slice(0, 50).map((e) => `${e.instancePath || '/'} ${e.message ?? ''}`.trim())
+/** Schema errors listed in an answer or a message. */
+const ERRORS_SHOWN = 50
+/** Every schema error of a story (copied: Ajv reuses its list at the next validation). */
+const schemaIssues = (story: unknown): SchemaIssue[] =>
+  validateStory(story)
+    ? []
+    : (validateStory.errors ?? []).map((e) => ({
+        path: e.instancePath,
+        // Ajv's message for an extra property doesn't name it.
+        message: `${e.message ?? ''}${typeof e.params?.additionalProperty === 'string' ? `: ${e.params.additionalProperty}` : ''}`,
+      }))
+const shown = (issues: SchemaIssue[]) => issues.slice(0, ERRORS_SHOWN).map(issueText)
+const schemaErrors = (story: unknown) => shown(schemaIssues(story))
 
 type Db = SupabaseClient<Database>
 type CreationRow = Database['public']['Tables']['story_creations']['Row']
@@ -104,6 +122,8 @@ const since = (unit: 'month' | 'day') => {
 const storyUrl = (id: string) => `${APP_URL}/stories/${id}`
 const characterUrl = (id: string) => `${APP_URL}/characters/${id}`
 const str = (v: unknown) => (typeof v === 'string' ? v.trim() : '')
+/** A new updated_at for a row, never the one it has (two writes in the same millisecond). */
+const laterThan = (previous: string) => new Date(Math.max(Date.now(), Date.parse(previous) + 1)).toISOString()
 
 async function isAdmin(ctx: Ctx) {
   const { data } = await ctx.admin.from('profiles').select('is_admin').eq('id', ctx.userId).single()
@@ -113,7 +133,9 @@ async function isAdmin(ctx: Ctx) {
 async function loadCreation(ctx: Ctx, id: unknown): Promise<CreationRow> {
   if (!str(id)) throw new ToolError('bad_request', 'creationId is required.')
   const { data } = await ctx.admin.from('story_creations').select('*').eq('id', str(id)).maybeSingle()
-  if (!data || data.owner_id !== ctx.userId) throw new ToolError('not_found', 'No creation with this id. Start one with save_outline.')
+  // The website creator's creations are not the connector's: it must not replace their outline or
+  // write their scenes (and create-story doesn't write the connector's). Answered like a missing id.
+  if (!data || data.owner_id !== ctx.userId || data.source !== 'mcp') throw new ToolError('not_found', 'No creation with this id. Start one with save_outline.')
   return data
 }
 
@@ -203,24 +225,98 @@ async function writeScenes(ctx: Ctx, args: Record<string, unknown>) {
   refuseForbidden(story)
   refuseTooBig(story)
   const validationErrors = schemaErrors(story)
-  const storyId = await saveStory(ctx.db, ctx.userId, target.storyId, story)
-
   const total = outlineScenes(outline).length
   const written = writtenSceneIds(draft).size
   const remaining = total - written
-  const { error } = await ctx.admin
+
+  // The draft first, and only onto the creation as this call read it. Calls for one creation that
+  // arrive together all read the same row: one of them gets it, the others are refused here, before
+  // anything of theirs is saved (they used to overwrite each other's scenes, and each made a story).
+  const { data: kept, error } = await ctx.admin
     .from('story_creations')
-    .update({
-      status: remaining ? 'writing' : 'succeeded',
-      draft: draft as unknown as Json,
-      story_id: storyId,
-      error: null,
-      updated_at: new Date().toISOString(),
-      finished_at: remaining ? null : new Date().toISOString(),
-    })
+    .update({ status: 'writing', draft: draft as unknown as Json, error: null, updated_at: laterThan(row.updated_at) })
     .eq('id', row.id)
+    .eq('updated_at', row.updated_at)
+    .select('updated_at')
   if (error) throw error
-  return { creationId: row.id, storyId, url: storyUrl(storyId), written, total, remaining, next: nextBatch(outline, draft, NEXT_BATCH), validationErrors }
+  if (!kept?.length) throw new ToolError('conflict', WRITE_CONFLICT)
+  const version = kept[0].updated_at
+
+  // Then the story, which is that draft in the story format.
+  const storyId = await saveCreationStory(ctx, { id: row.id, version, outline, brief }, target.storyId, story)
+  if (!remaining) {
+    // Closed only once the story is saved, so a failed save can be sent again. If a later call has
+    // changed the draft since, closing is its job.
+    const { error: closeError } = await ctx.admin
+      .from('story_creations')
+      .update({ status: 'succeeded', finished_at: new Date().toISOString() })
+      .eq('id', row.id)
+      .eq('updated_at', version)
+    if (closeError) throw closeError
+  }
+  return {
+    creationId: row.id,
+    storyId,
+    url: storyUrl(storyId),
+    written,
+    total,
+    remaining,
+    next: nextBatch(outline, draft, NEXT_BATCH),
+    validationErrors,
+    // The creation is closed now: these errors can't be fixed by sending the scenes again.
+    ...(!remaining && validationErrors.length ? { note: FINISHED_WITH_ERRORS } : {}),
+  }
+}
+
+/** Remove a story this call inserted and its pack's story.json (another call gave the creation its story first). */
+async function dropStory(ctx: Ctx, storyId: string) {
+  const { error } = await ctx.db.from('stories').delete().eq('id', storyId).eq('owner_id', ctx.userId)
+  if (error) throw error
+  const { error: fileError } = await ctx.db.storage.from(PACK_BUCKET).remove([`${ctx.userId}/${storyId}/story.json`])
+  if (fileError) console.error('story pack remove failed', fileError)
+}
+
+/**
+ * Save the story of a creation whose draft this call just committed (as `version`). Returns its id.
+ *
+ * A call that starts after that commit can overlap this save. Two things keep them right:
+ * - a creation gets one story: the new story is given to the creation only while it has none, and a
+ *   call that finds one there removes the story it inserted and writes the creation's;
+ * - the story ends as the newest draft: after saving, the creation is read again, and if its draft
+ *   has changed (a later call, whose own save may have landed before this one), the story is written
+ *   again from that draft.
+ */
+async function saveCreationStory(
+  ctx: Ctx,
+  creation: { id: string; version: string; outline: StoryOutline; brief: StoryBrief },
+  storyId: string | null,
+  story: unknown,
+): Promise<string> {
+  let id = storyId
+  let version = creation.version
+  if (id) {
+    await saveStory(ctx.db, ctx.userId, id, story)
+  } else {
+    const inserted = await saveStory(ctx.db, ctx.userId, null, story)
+    const { data, error } = await ctx.admin.from('story_creations').update({ story_id: inserted }).eq('id', creation.id).is('story_id', null).select('id')
+    if (error) throw error
+    if (data?.length) id = inserted
+    else await dropStory(ctx, inserted)
+  }
+  for (let turn = 0; turn < 5; turn++) {
+    const { data: latest, error } = await ctx.admin.from('story_creations').select('draft, story_id, updated_at').eq('id', creation.id).single()
+    if (error) throw error
+    if (id && latest.story_id === id && latest.updated_at === version) return id
+    // The creation's story (not the one this call wrote, or not at this draft): write it from the newest draft.
+    const target = await existingStory(ctx.db, latest.story_id, storyMetaId(creation.outline.title, creation.id))
+    // No story any more: the keeper deleted it meanwhile. The draft is kept; the next call starts a new story.
+    if (!target.storyId || !latest.draft) throw new ToolError('conflict', WRITE_CONFLICT)
+    id = target.storyId
+    version = latest.updated_at
+    await saveStory(ctx.db, ctx.userId, id, createdStory(latest.draft as unknown as ImportDraft, creation.outline, creation.brief, target.metaId))
+  }
+  if (!id) throw new ToolError('conflict', WRITE_CONFLICT)
+  return id
 }
 
 async function listMyStories(ctx: Ctx) {
@@ -232,10 +328,11 @@ async function listMyStories(ctx: Ctx) {
     .order('updated_at', { ascending: false })
     .limit(100)
   if (error) throw error
-  // Creations not finished yet: their story can't be edited, write_scenes continues them.
+  // Creations not finished yet: their story can't be edited; write_scenes continues the connector's
+  // own (the website creator's are finished on the website).
   const { data: open } = await ctx.admin
     .from('story_creations')
-    .select('id, status, story_id, outline, updated_at')
+    .select('id, status, story_id, outline, updated_at, source')
     .eq('owner_id', ctx.userId)
     .in('status', ['outlined', 'writing'])
     .order('updated_at', { ascending: false })
@@ -243,7 +340,7 @@ async function listMyStories(ctx: Ctx) {
   const writing = new Set((open ?? []).map((c) => c.story_id).filter(Boolean))
   return {
     stories: (data ?? []).map((s) => ({ id: s.id, title: s.title, lang: s.lang, summary: s.summary, updatedAt: s.updated_at, beingWritten: writing.has(s.id), url: storyUrl(s.id) })),
-    unfinishedCreations: (open ?? []).map((c) => ({
+    unfinishedCreations: (open ?? []).filter((c) => c.source === 'mcp').map((c) => ({
       creationId: c.id,
       title: (c.outline as { title?: string } | null)?.title ?? '',
       status: c.status,
@@ -267,10 +364,10 @@ async function loadOwnStory(ctx: Ctx, storyId: unknown) {
   return data
 }
 
-/** A creation still writing this story: its next batch would overwrite an edit. */
+/** A creation still writing this story (the connector's or the website creator's): its next batch would overwrite an edit. */
 async function creationWriting(ctx: Ctx, storyId: string) {
-  const { data } = await ctx.admin.from('story_creations').select('id').eq('story_id', storyId).in('status', ['outlined', 'writing']).limit(1)
-  return data?.[0]?.id as string | undefined
+  const { data } = await ctx.admin.from('story_creations').select('id, source').eq('story_id', storyId).in('status', ['outlined', 'writing']).limit(1)
+  return data?.[0]
 }
 
 async function getStory(ctx: Ctx, args: Record<string, unknown>) {
@@ -282,7 +379,7 @@ async function getStory(ctx: Ctx, args: Record<string, unknown>) {
     storyId: story.id,
     version: story.updated_at,
     url: storyUrl(story.id),
-    ...(writing ? { beingWrittenBy: writing } : {}),
+    ...(writing ? { beingWrittenBy: writing.source === 'mcp' ? writing.id : 'the story creator on the Grimoire website' } : {}),
     ...storyPart(story.content, part, sceneIds),
     // Pictures in the pack (save_image) and where the story uses them.
     images: imageUses(story.content, story.pack_files),
@@ -316,18 +413,30 @@ async function storyToEdit(ctx: Ctx, args: Record<string, unknown>) {
   const current = await loadOwnStory(ctx, args.storyId)
   if (current.updated_at !== version) throw new ToolError('conflict', CONFLICT)
   const writing = await creationWriting(ctx, current.id)
-  if (writing) throw new ToolError('busy', `A creation is still writing this story (${writing}). Finish it with write_scenes first.`)
+  if (writing) {
+    throw new ToolError(
+      'busy',
+      writing.source === 'mcp'
+        ? `A creation is still writing this story (${writing.id}). Finish it with write_scenes first.`
+        : 'The story creator on the Grimoire website is still writing this story: the keeper finishes it there first.',
+    )
+  }
   return { current, version }
 }
 
-/** The edited story must not have more schema errors than before (it may already have some). */
+/**
+ * The edited story must not have a schema error the story didn't have (it may already have some).
+ * Compared error by error on the full lists, not by their number: an edit that mends one error and
+ * adds another is refused, and so is any bad edit to a story with more errors than are shown.
+ */
 function refuseNewSchemaErrors(before: unknown, story: unknown) {
-  const was = schemaErrors(before)
-  const validationErrors = schemaErrors(story)
-  if (validationErrors.length > was.length) {
-    throw new ToolError('invalid_story', `The edit doesn't fit the story format (nothing was changed):\n${validationErrors.filter((e) => !was.includes(e)).join('\n')}`)
+  const now = schemaIssues(story)
+  const added = addedSchemaIssues(before, schemaIssues(before), story, now)
+  if (added.length) {
+    const more = added.length > ERRORS_SHOWN ? `\n… and ${added.length - ERRORS_SHOWN} more.` : ''
+    throw new ToolError('invalid_story', `The edit doesn't fit the story format (nothing was changed):\n${shown(added).join('\n')}${more}`)
   }
-  return validationErrors
+  return shown(now)
 }
 
 async function editStory(ctx: Ctx, args: Record<string, unknown>) {
@@ -364,6 +473,8 @@ async function editStory(ctx: Ctx, args: Record<string, unknown>) {
 async function saveImage(ctx: Ctx, args: Record<string, unknown>) {
   if (!str(args.version)) throw new ToolError('bad_request', 'version is required (from get_story).')
   const req = parseImageRequest(args)
+  // Before the SVG is read: checking a large one costs CPU, which a keeper over the limit doesn't get.
+  await checkEditQuota(ctx, req.svg !== undefined)
   let safe: ReturnType<typeof sanitizeSvg> | null = null
   if (req.svg !== undefined) {
     try {
@@ -373,7 +484,6 @@ async function saveImage(ctx: Ctx, args: Record<string, unknown>) {
       throw e
     }
   }
-  await checkEditQuota(ctx, !!safe)
   const { current, version } = await storyToEdit(ctx, args)
 
   const files = current.pack_files

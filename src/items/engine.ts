@@ -6,7 +6,7 @@ import type { T } from '@/i18n/t'
 import type { EngineItem } from '@/play/host'
 import { SKILL_BY_ID } from '@/rules/d100'
 import { documentCard, documentItemId, type StoryNames } from './documents'
-import { CONDITION_LABEL, conditionEffects, parseCard, type HeldItem, type ItemCard } from './item'
+import { CONDITION_LABEL, conditionEffects, isFirearm, parseCard, type HeldItem, type ItemCard } from './item'
 import { localCard } from './text'
 
 /** The investigator's value in a skill: their sheet's, else the base (numeric bases only, which weapon skills have). */
@@ -19,6 +19,7 @@ export function skillValue(data: CharacterData | undefined, skill: string): numb
 
 export function toEngineItem(t: T, item: HeldItem, data: CharacterData | undefined): EngineItem {
   const c = item.card
+  const jam = jamAt(item)
   return {
     id: item.id,
     n: localCard(t, c, item.source).name,
@@ -32,11 +33,19 @@ export function toEngineItem(t: T, item: HeldItem, data: CharacterData | undefin
           dmg: c.weapon.damage,
           db: !!c.weapon.db,
           imp: !!c.weapon.impale,
+          ...(jam !== undefined ? { jam } : {}),
           ...(item.condition !== 'clean' ? { c: engineCondition(t, item) } : {}),
         },
       }
       : {}),
   }
+}
+
+/** The roll from which a firearm jams, in its condition (its card's, or the condition's when lower); none below 100. */
+function jamAt(item: HeldItem): number | undefined {
+  if (!isFirearm(item.card)) return undefined
+  const m = conditionEffects(item.card, item.condition).malfunction
+  return m !== undefined && m < 100 ? m : undefined
 }
 
 /** A weapon's condition as the engine applies it (EngineItem.w.c). */
@@ -71,13 +80,43 @@ export function storyDocuments(content: unknown): Array<{ itemId: string; card: 
   return handouts.map((h) => ({ itemId: documentItemId(h.id), card: documentCard({ ...h, title: h.title! }, names) }))
 }
 
-/** A story's items as cards to give (the ones that check out; the story's id and scene are not part of the card). */
+/**
+ * A story's items as cards to give (the story's id and scene are not part of the card). The story
+ * format lets through optional values a card refuses (a skill id the rules don't have, a calibre with
+ * a comma, markup in a range): the card is given without them rather than not at all, since the scene
+ * lists the item anyway. An item whose name, kind or weapon a card can't do without is left out.
+ */
 export function storyCards(items: unknown): Array<{ itemId: string; card: ItemCard }> {
   if (!Array.isArray(items)) return []
   return items.flatMap((raw) => {
     if (!raw || typeof raw !== 'object') return []
     const { id, scene: _scene, ...rest } = raw as Record<string, unknown>
-    const parsed = parseCard(rest)
-    return typeof id === 'string' && parsed.card ? [{ itemId: id, card: parsed.card }] : []
+    if (typeof id !== 'string') return []
+    let parsed = parseCard(rest, { stored: true })
+    if (!parsed.card) parsed = parseCard(withoutOptional(rest, parsed.problems), { stored: true })
+    return parsed.card ? [{ itemId: id, card: parsed.card }] : []
   })
+}
+
+/** The optional values parseCard named in its problems, removed (a copy: the story is left as it is). */
+function withoutOptional(raw: Record<string, unknown>, problems: string[]): Record<string, unknown> {
+  const named = new Set(problems.map((p) => p.split(':')[0]))
+  const out = { ...raw }
+  const obj = (v: unknown) => (v && typeof v === 'object' && !Array.isArray(v) ? { ...(v as Record<string, unknown>) } : null)
+  if (named.has('ammo')) delete out.ammo
+  if (named.has('bonus.skill')) delete out.bonus
+  else if (named.has('bonus.note')) {
+    const b = obj(out.bonus)
+    if (b) {
+      delete b.note
+      out.bonus = b
+    }
+  }
+  const w = obj(out.weapon)
+  if (w && (named.has('weapon.range') || named.has('weapon.rate'))) {
+    if (named.has('weapon.range')) delete w.range
+    if (named.has('weapon.rate')) delete w.rate
+    out.weapon = w
+  }
+  return out
 }

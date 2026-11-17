@@ -414,4 +414,127 @@ describe('mcp: limits', () => {
     })
     expect(res.status).toBe(413)
   })
+
+  it('checks the daily limits before reading a picture', async () => {
+    const dora = await keeper()
+    // Same value as the function's default MCP_IMAGES_DAILY_LIMIT: this keeper has drawn today's pictures.
+    const { error } = await service.from('ai_usage').insert(Array.from({ length: 100 }, () => ({ owner_id: dora.id, kind: 'mcp-edit', input_tokens: 10, output_tokens: 0 })))
+    expect(error).toBeNull()
+    // An SVG the check would refuse: the limit answers first, the SVG is never read.
+    const res = await call(dora, 'save_image', { storyId: crypto.randomUUID(), version: 'x', name: 'late.svg', svg: '<svg viewBox="0 0 1 1"><script/></svg>' })
+    expect(res.error).toMatch(/^quota_exceeded: .*pictures/)
+    // Attaching a stored picture draws nothing: not held back by the picture limit.
+    expect((await call(dora, 'save_image', { storyId: crypto.randomUUID(), version: 'x', name: 'late.svg', attach: { scene: 'a' } })).error).toMatch(/^not_found/)
+  })
+})
+
+describe('mcp: creations of the website creator', () => {
+  it('are not the connector\'s to write or re-outline', async () => {
+    const eve = await keeper()
+    const { data: web, error } = await service
+      .from('story_creations')
+      .insert({ owner_id: eve.id, brief, outline: FAKE_OUTLINE, status: 'outlined', source: 'web', outline_count: 1 })
+      .select('id, updated_at')
+      .single()
+    expect(error).toBeNull()
+    expect((await call(eve, 'write_scenes', { creationId: web!.id, draft: draftFor([['act-1', 'arrival']]) })).error).toMatch(/^not_found/)
+    expect((await call(eve, 'save_outline', { creationId: web!.id, brief, outline: { ...FAKE_OUTLINE, title: 'Another Mill' } })).error).toMatch(/^not_found/)
+    const { data: row } = await service.from('story_creations').select('status, source, story_id, draft, outline_count, updated_at, outline').eq('id', web!.id).single()
+    expect(row).toMatchObject({ status: 'outlined', source: 'web', story_id: null, draft: null, outline_count: 1, updated_at: web!.updated_at, outline: { title: FAKE_OUTLINE.title } })
+
+    // Once the website is writing its story: the connector shows it as being written, offers nothing to
+    // continue with write_scenes, and says where it is finished.
+    const { data: story } = await eve.db
+      .from('stories')
+      .insert({ owner_id: eve.id, visibility: 'private', content: { format: 'grimoire-story/1', meta: { id: 'web-mill', title: 'A Mill', lang: 'en', license: 'private' }, acts: [] } })
+      .select('id, updated_at')
+      .single()
+    await service.from('story_creations').update({ status: 'writing', story_id: story!.id }).eq('id', web!.id)
+    const list = await call(eve, 'list_my_stories')
+    expect(list.stories).toEqual([expect.objectContaining({ id: story!.id, beingWritten: true })])
+    expect(list.unfinishedCreations).toEqual([])
+    const edit = await call(eve, 'edit_story', { storyId: story!.id, version: story!.updated_at, ops: [{ op: 'set_info', info: { title: 'Mine' } }] })
+    expect(edit.error).toMatch(/^busy: .*website/)
+    expect(edit.error).not.toMatch(/write_scenes/)
+  })
+})
+
+describe('mcp: a story with format errors', () => {
+  let erin: Keeper
+  let storyId: string
+  // The draft takes any text as dice; the story format doesn't take these.
+  const brute = { ...millerNpc, attacks: [{ name: 'Fist', skill: 50, damage: '1d3+DB', note: '' }] }
+
+  it('says how to fix the errors left once the last scene is written', async () => {
+    erin = await keeper()
+    const { creationId } = await call(erin, 'save_outline', { brief, outline: FAKE_OUTLINE })
+    const first = await call(erin, 'write_scenes', { creationId, draft: draftFor([['act-1', 'arrival'], ['act-1', 'mill']], { npcs: [brute] }) })
+    // Scenes remain: the next write_scenes call can still fix them.
+    expect(first.remaining).toBe(1)
+    expect(first.validationErrors.join('\n')).toMatch(/damage/)
+    expect(first.note).toBeUndefined()
+    const last = await call(erin, 'write_scenes', { creationId, draft: draftFor([['act-2', 'cellar']]) })
+    expect(last.remaining).toBe(0)
+    expect(last.validationErrors.join('\n')).toMatch(/damage/)
+    // write_scenes is closed now: the answer names the tools that still can.
+    expect(last.note).toMatch(/get_story.*edit_story/)
+    storyId = last.storyId
+    expect((await call(erin, 'write_scenes', { creationId, draft: draftFor([['act-2', 'cellar']], { npcs: [millerNpc] }) })).error).toMatch(/^finished: .*edit_story/)
+  })
+
+  it('refuses an edit that replaces one format error with another', async () => {
+    const { npcs, version } = await call(erin, 'get_story', { storyId, part: 'npcs' })
+    const miller = npcs.find((n: { id: string }) => n.id === 'miller')
+    const mended = { ...miller, attacks: [{ ...miller.attacks[0], damage: '1D3' }] }
+    // One error before, one after: still a new one.
+    const swap = await call(erin, 'edit_story', { storyId, version, ops: [{ op: 'put_npc', npc: mended }, { op: 'put_npc', npc: { id: 'stranger', name: 42 } }] })
+    expect(swap.error).toMatch(/^invalid_story: [\s\S]*name must be string/)
+    expect(swap.error).not.toMatch(/damage/)
+    // The error the story already had doesn't block other edits, and mending it works.
+    const other = await call(erin, 'edit_story', { storyId, version, ops: [{ op: 'put_npc', npc: { id: 'stranger', name: 'A stranger' } }] })
+    expect(other.validationErrors.join('\n')).toMatch(/damage/)
+    const fixed = await call(erin, 'edit_story', { storyId, version: other.version, ops: [{ op: 'put_npc', npc: mended }] })
+    expect(fixed.validationErrors).toEqual([])
+  })
+})
+
+describe('mcp: write_scenes calls arriving together', () => {
+  it('never give a creation two stories, and lose no scene', async () => {
+    const finn = await keeper()
+    const { creationId } = await call(finn, 'save_outline', { brief, outline: FAKE_OUTLINE })
+    const batches: Array<[string, string]> = [['act-1', 'arrival'], ['act-1', 'mill'], ['act-2', 'cellar']]
+    const written = (content: unknown) =>
+      (content as { acts: Array<{ scenes: Array<{ id: string; lead?: string }> }> }).acts.flatMap((a) => a.scenes.filter((s) => s.lead === 'Lead.').map((s) => s.id)).sort()
+
+    // The chat app sends the three batches as parallel tool calls.
+    const answers = await Promise.all(batches.map((b) => call(finn, 'write_scenes', { creationId, draft: draftFor([b]) })))
+    const saved = batches.filter((_, i) => !answers[i].error).map(([, id]) => id).sort()
+    const refused = batches.filter((_, i) => answers[i].error)
+    expect(saved.length).toBeGreaterThan(0)
+    for (const a of answers) if (a.error) expect(a.error).toMatch(/^conflict: .*one call at a time/)
+
+    // One story, holding exactly the scenes of the calls that were answered "saved".
+    const { data: stories } = await finn.db.from('stories').select('id, content').eq('owner_id', finn.id)
+    expect(stories).toHaveLength(1)
+    expect(written(stories![0].content)).toEqual(saved)
+    for (const a of answers) if (!a.error) expect(a.storyId).toBe(stories![0].id)
+    const { data: row } = await service.from('story_creations').select('story_id, status').eq('id', creationId).single()
+    expect(row).toEqual({ story_id: stories![0].id, status: saved.length === 3 ? 'succeeded' : 'writing' })
+
+    // The refused batches, sent again one after the other, finish the story.
+    let last = answers.find((a) => !a.error && a.remaining === 0)
+    for (const b of refused) {
+      last = await call(finn, 'write_scenes', { creationId, draft: draftFor([b]) })
+      expect(last.error).toBeUndefined()
+    }
+    expect(last).toMatchObject({ storyId: stories![0].id, written: 3, remaining: 0 })
+    const { data: after } = await finn.db.from('stories').select('id, content').eq('owner_id', finn.id)
+    expect(after).toHaveLength(1)
+    expect(written(after![0].content)).toEqual(['arrival', 'cellar', 'mill'])
+    const { data: file } = await finn.db.storage.from('story-packs').download(`${finn.id}/${after![0].id}/story.json`)
+    expect(written(JSON.parse(await file!.text()))).toEqual(['arrival', 'cellar', 'mill'])
+    const { data: done } = await service.from('story_creations').select('status').eq('id', creationId).single()
+    expect(done!.status).toBe('succeeded')
+    expect((await call(finn, 'list_my_stories')).stories).toHaveLength(1)
+  }, 60_000)
 })

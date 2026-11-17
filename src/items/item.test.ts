@@ -26,6 +26,24 @@ describe('parseCard', () => {
     expect(r.problems.map((p) => p.split(':')[0])).toEqual(['name', 'kind', 'art', 'weapon.skill', 'weapon.damage', 'uses', 'ammo'])
   })
 
+  it("takes a weapon's damage only as dice the game screen can roll", () => {
+    const weapon = (damage: string, opts?: { stored: boolean }) =>
+      parseCard({ name: 'W', kind: 'weapon', weapon: { skill: 'fighting-brawl', damage } }, opts).card?.weapon?.damage
+    for (const ok of ['1D10', '2D6+4', '1d6', 'D6', '1D6+1D4', '1D8 + 1', '1D3-1', '5', '4D6/2D6/1D6', '1D10 / 1D6+2']) expect(weapon(ok), ok).toBe(ok)
+    // What the form made of "1D6+DB", a die without faces, a doubled die, loose ends, an empty band.
+    for (const bad of ['1D6+D', '2D', '1D6+D4D', '1D6+', '+1D6', '1D6 1D4', '1D6//1D4', '/1D6', 'D', '+', 'lots']) expect(weapon(bad), bad).toBeUndefined()
+  })
+
+  it('still reads a stored card whose damage was saved before that check', () => {
+    const old = { name: 'Club', kind: 'weapon', weapon: { skill: 'fighting-brawl', damage: '1D6+D', db: true } }
+    expect(parseCard(old).card).toBeNull()
+    expect(parseCard(old, { stored: true }).card).toEqual(old)
+    expect(asHeld({ id: 'i', character_id: 'c', card: old })?.card).toEqual(old)
+    expect(storyCards([{ id: 'club', ...old }])).toEqual([{ itemId: 'club', card: old }])
+    // Never anything else than dice characters, stored or not.
+    expect(parseCard({ ...old, weapon: { ...old.weapon, damage: 'lots' } }, { stored: true }).card).toBeNull()
+  })
+
   it('keeps names and texts within the limits the database checks', () => {
     expect(parseCard({ name: 'x'.repeat(ITEM_LIMITS.name), kind: 'tool' }).card).not.toBeNull()
     expect(parseCard({ name: 'x'.repeat(ITEM_LIMITS.name + 1), kind: 'tool' }).card).toBeNull()
@@ -121,6 +139,23 @@ describe('the game screen', () => {
     ])).toEqual([{ itemId: 'key', card: { name: 'Crypt key', kind: 'key' } }])
     expect(storyCards(undefined)).toEqual([])
   })
+
+  it("gives a story's item without an optional value it can't use, rather than not at all", () => {
+    // Values the story format lets through but a card refuses: an unknown skill, a calibre with a
+    // comma, markup in a range or rate, a note too long or with markup.
+    const gun = { name: 'Gun', kind: 'weapon', weapon: { skill: 'firearms-handgun', damage: '1D8', range: '6"', rate: '<1>' }, ammo: '7,65 mm', uses: 6 }
+    expect(storyCards([
+      { id: 'kit', name: 'Kit', kind: 'tool', bonus: { skill: 'lockpick' } },
+      { id: 'lens', name: 'Lens', kind: 'tool', bonus: { skill: 'spot-hidden', note: '<b>' } },
+      { id: 'gun', ...gun },
+    ])).toEqual([
+      { itemId: 'kit', card: { name: 'Kit', kind: 'tool' } },
+      { itemId: 'lens', card: { name: 'Lens', kind: 'tool', bonus: { skill: 'spot-hidden' } } },
+      { itemId: 'gun', card: { name: 'Gun', kind: 'weapon', weapon: { skill: 'firearms-handgun', damage: '1D8' }, uses: 6 } },
+    ])
+    // What a card can't do without is still refused.
+    expect(storyCards([{ id: 'w', name: 'W', kind: 'weapon', weapon: { skill: 'firearms-handgun', damage: 'lots' }, ammo: '7,65' }])).toEqual([])
+  })
 })
 
 describe('the catalogue pictures (src/items/pictures, scripts/item-arts-ship.mjs)', () => {
@@ -180,6 +215,18 @@ describe("a weapon's condition", () => {
     const t = currentT()
     expect(toEngineItem(t, { ...held('gun', gun, 6), condition: 'rusty' }, undefined).w?.c).toEqual({ label: 'Rouillée', pen: 1, minus: 1, half: false, jam: 90, broken: false })
     expect(toEngineItem(t, held('gun', gun, 6), undefined).w?.c).toBeUndefined()
+  })
+
+  it("sends a firearm's jam threshold, clean or not (the card's own, or its condition's when lower)", () => {
+    const t = currentT()
+    const own: ItemCard = { ...gun, weapon: { ...gun.weapon!, malfunction: 92 } }
+    expect(toEngineItem(t, held('gun', own, 6), undefined).w?.jam).toBe(92)
+    expect(toEngineItem(t, { ...held('gun', own, 6), condition: 'rusty' }, undefined).w?.jam).toBe(90)
+    expect(toEngineItem(t, { ...held('gun', own, 6), condition: 'dirty' }, undefined).w?.jam).toBe(92)
+    // A firearm that never jams sends none; a melee weapon never jams, whatever its card says.
+    expect(toEngineItem(t, held('gun', gun, 6), undefined).w?.jam).toBeUndefined()
+    const club: ItemCard = { ...knife, weapon: { ...knife.weapon!, malfunction: 92 } }
+    expect(toEngineItem(t, held('club', club, null), undefined).w?.jam).toBeUndefined()
   })
 })
 

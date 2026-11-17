@@ -1,8 +1,10 @@
 import type { Session } from '@supabase/supabase-js'
-import { useQuery } from '@tanstack/react-query'
+import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { createContext, useContext, useEffect, useState, type ReactNode } from 'react'
 import { supabase, type Tables } from '@/lib/supabase'
 import { useLang } from '@/settings/lang'
+import { followSession, type SessionSource } from './account'
+import { forgetOAuthError } from './oauth'
 
 interface AuthState {
   session: Session | null
@@ -14,11 +16,20 @@ const AuthContext = createContext<AuthState>({ session: null, ready: false })
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [state, setState] = useState<AuthState>({ session: null, ready: false })
+  const queryClient = useQueryClient()
 
   useEffect(() => {
-    supabase.auth.getSession().then(({ data }) => setState({ session: data.session, ready: true }))
-    const { data } = supabase.auth.onAuthStateChange((_event, session) => {
+    const follow = (source: SessionSource, session: Session | null, error?: unknown) => {
+      // Nothing of one account stays for the next (cached data, drafts): see followAccount.
+      // A session that could not be checked (offline at start-up) is not a sign-out: see accountGone.
+      followSession(source, session?.user.id ?? null, queryClient, error)
+      // Signed in: an error Google sent back earlier in this visit is no longer news.
+      if (session) forgetOAuthError()
       setState({ session, ready: true })
+    }
+    supabase.auth.getSession().then(({ data, error }) => follow('getSession', data.session, error))
+    const { data } = supabase.auth.onAuthStateChange((event, session) => {
+      follow(event, session)
       // Accounts made with Google skip the sign-up form, which records the keeper's
       // language for the e-mails (supabase/templates read user_metadata.lang): record it now.
       // Deferred: Auth calls made inside this callback deadlock.
@@ -26,7 +37,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setTimeout(() => void supabase.auth.updateUser({ data: { lang: useLang.getState().lang } }))
     })
     return () => data.subscription.unsubscribe()
-  }, [])
+  }, [queryClient])
 
   return <AuthContext.Provider value={state}>{children}</AuthContext.Provider>
 }

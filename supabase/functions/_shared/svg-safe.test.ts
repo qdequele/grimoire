@@ -117,6 +117,19 @@ describe('sanitizeSvg: attacks are refused', () => {
     refused(wrap('<style>rect { fill: url/**/(http://evil.example/x) }</style>'), /url/)
   })
 
+  it('refuses CSS hidden between a string holding "/*" and one holding "*/"', () => {
+    // A browser reads "/*" inside quotes as a string, not as the start of a comment: what follows is live CSS.
+    refused(wrap('<style>x"/*"{} @import "https://evil.example/x.css"; y{font-family:"*/"}</style>'), /@import/)
+    refused(wrap('<style>x{font-family:"/*"} svg{background:url(https://evil.example/a.png)} y{font-family:"*/"}</style>'), /url/)
+    refused(wrap('<style>x{font-family:"/*"} @font-face{font-family:f;src:url(https://evil.example/f.woff)} y{font-family:"*/"}</style>'), /url|@font-face/)
+    refused(wrap('<style>x{font-family:"/*"} rect{fill:u\\72l(https://evil.example/x)} y{font-family:"*/"}</style>'), /backslash/)
+    refused(wrap('<style><![CDATA[x{font-family:"/*"} y::after{content:"<"} z{font-family:"*/"}]]></style>'), /"<"/)
+    // So a comment can't hold them either, and the message says so.
+    refused(wrap('<style>/* no @import here */ rect { fill: red }</style>'), /@import.*comment/)
+    // Plain comments stay fine.
+    expect(() => sanitizeSvg(wrap('<style>/* the sky */ rect { fill: url(#sky) } /* end */</style><linearGradient id="sky"/>'))).not.toThrow()
+  })
+
   it('refuses DOCTYPE, entities, processing instructions and other namespaces', () => {
     refused('<!DOCTYPE svg [<!ENTITY x "y">]><svg viewBox="0 0 1 1">&x;</svg>', /DOCTYPE/)
     refused('<?xml version="1.0"?><!DOCTYPE svg SYSTEM "file:///etc/passwd"><svg viewBox="0 0 1 1"/>', /DOCTYPE/)
@@ -157,6 +170,34 @@ describe('sanitizeSvg: attacks are refused', () => {
     let body = '<g id="l0"><rect width="1" height="1"/></g>'
     for (let n = 1; n <= 8; n++) body += `<g id="l${n}">${Array.from({ length: 10 }, () => `<use href="#l${n - 1}"/>`).join('')}</g>`
     refused(wrap(`<defs>${body}</defs>`), /expands/)
+  })
+
+  it('refuses long reference chains with a message, not a crash', () => {
+    const hops = 9000
+    const uses = Array.from({ length: hops }, (_, n) => `<use id="u${n}" href="#u${n + 1}"/>`).join('')
+    refused(wrap(`<defs>${uses}<rect id="u${hops}"/></defs>`), /expands|chain/)
+    // Gradients inheriting from one another draw nothing more, so only the chain's length stops them.
+    const gradients = Array.from({ length: 6500 }, (_, n) => `<linearGradient id="g${n}" href="#g${n + 1}"/>`).join('')
+    refused(wrap(`<defs>${gradients}<linearGradient id="g6500"/></defs>`), /chain/)
+    // A short chain is fine.
+    expect(() => sanitizeSvg(wrap('<linearGradient id="a" href="#b"/><linearGradient id="b" href="#c"/><linearGradient id="c"/>'))).not.toThrow()
+  })
+
+  it('reads a large file of one element per line quickly', () => {
+    // Line numbers used to be counted from the top of the file for every element: about 4 s for this one.
+    // Measured against the same elements on one line, so a busy machine doesn't change the verdict.
+    const time = (svg: string) => {
+      const start = performance.now()
+      sanitizeSvg(svg)
+      return performance.now() - start
+    }
+    const oneLine = Math.max(time(wrap('<rect/>'.repeat(19_000))), time(wrap('<rect/>'.repeat(19_000))))
+    const manyLines = Math.min(time(wrap(`\n${'<rect/>\n'.repeat(19_000)}`)), time(wrap(`\n${'<rect/>\n'.repeat(19_000)}`)))
+    expect(manyLines).toBeLessThan(oneLine * 10 + 50)
+    // The line numbers are still right.
+    refused(wrap(`\n${'<rect/>\n'.repeat(500)}<script/>\n`), /^line 502: <script>/)
+    refused(`<svg viewBox="0 0 1 1">\n<g>\n<rect/>\n</svg>`, /^line 4: <\/svg> closes <g> \(opened line 2\)/)
+    refused(`<svg viewBox="0 0 1 1">\n\n<text>a & b</text></svg>`, /^line 3/)
   })
 
   it('refuses files that are too large or too deep', () => {

@@ -7,12 +7,16 @@
    choices of the step before it: shown under that step as lettered options (A, B, C), so the
    keeper sees at a glance what happens for each choice the players make.
    The engine renders a first time before this code runs: functions only here (hoisted), state in
-   `var`s (no temporal dead zone). */
+   `var`s (no temporal dead zone).
+   A step's title (h) is plain text from the story: escaped here. Its other texts, its condition
+   (br) included, are HTML the app made inert (toHtml in src/play/legacy/adapter.ts). */
+/* The text of some of that HTML (a <template> runs and loads nothing). */
+function htmlText(h){const t=document.createElement("template");t.innerHTML=String(h||"");return t.content.textContent;}
 function flowHTML(fl){if(!fl||!fl.length)return "";
   const body=s=>`${s.txt?`<p>${s.txt}</p>`:""}${s.test?ftHTML(s.test):""}${s.ok?`<div class="fb ok"><span class="lab">Réussi</span> ${s.ok}</div>`:""}${s.ko?`<div class="fb ko"><span class="lab">Raté</span> ${s.ko}</div>`:""}${s.fail?`<div class="fb fx">${s.fail}</div>`:""}${s.extra?`<p class="fe">${s.extra}</p>`:""}`;
   const groups=[];fl.forEach(s=>{if(s.br&&groups.length)groups[groups.length-1].br.push(s);else groups.push({s,br:[]});});
-  const choice=(b,j)=>`<li data-l="${String.fromCharCode(65+j%26)}"><div class="fh"><span class="br-if">${b.br}</span></div>${b.h&&b.h!==b.br?`<div class="br-t">${b.h}</div>`:""}${body(b)}</li>`;
-  return `<div class="sec flow"><ol class="flw">${groups.map(({s,br})=>`<li${br.length?' class="has-br"':""}><div class="fh">${s.h||s.br||""}</div>${body(s)}${br.length?`<div class="flb-l">Selon le choix des joueurs</div><ol class="flb">${br.map(choice).join("")}</ol>`:""}</li>`).join("")}</ol></div>`;}
+  const choice=(b,j)=>`<li data-l="${String.fromCharCode(65+j%26)}"><div class="fh"><span class="br-if">${b.br}</span></div>${b.h&&b.h!==htmlText(b.br)?`<div class="br-t">${esc(b.h)}</div>`:""}${body(b)}</li>`;
+  return `<div class="sec flow"><ol class="flw">${groups.map(({s,br})=>`<li${br.length?' class="has-br"':""}><div class="fh">${s.h?esc(s.h):s.br||""}</div>${body(s)}${br.length?`<div class="flb-l">Selon le choix des joueurs</div><ol class="flb">${br.map(choice).join("")}</ol>`:""}</li>`).join("")}</ol></div>`;}
 
 /* ---------- The ambiance screen's background for this scene ----------
    A small live preview (the TV's own drawing, /screen-preview in an iframe) next to the scene's
@@ -73,18 +77,21 @@ $("#invView").addEventListener("click",e=>{const b=e.target.closest("[data-sheet
 var ITEMS={};
 function itemsOf(cid){const v=ITEMS[cid];return Array.isArray(v)?v:[];}
 function itIcon(){return '<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="5" y="3" width="14" height="18" rx="1.5"/><path d="M12 8l2.5 4-2.5 4-2.5-4z"/></svg>';}
-/* A weapon card as an attack: [name, value, damage, item id, impales, rounds loaded, capacity, condition].
+/* A weapon card as an attack: [name, value, damage, item id, impales, rounds loaded, capacity, condition,
+   roll from which it jams (x.w.jam: the card's malfunction, or the condition's; clean weapons too)].
    The condition (x.w.c, from the app: absent when clean) takes its −n into the damage formula; the
    rest is applied when rolling (itemPen, itemJam, itemDmg, itemFire). */
 function itemAttacks(c,imp){return itemsOf(c.id).filter(x=>x.w).map(x=>{const d=String(x.w.dmg||"1D3").split("/")[0];const k=x.w.c||null;
   const minus=k&&Number(k.minus)>0?"-"+Math.round(Number(k.minus)):"";
-  return [x.n,Number(x.w.v)||0,(x.w.db&&imp?d+imp:d)+minus,x.id,!!x.w.imp,x.cap!=null?x.uses:null,x.cap,k];});}
+  return [x.n,Number(x.w.v)||0,(x.w.db&&imp?d+imp:d)+minus,x.id,!!x.w.imp,x.cap!=null?x.uses:null,x.cap,k,x.w.jam!=null?Number(x.w.jam):null];});}
 /* Penalty dice a weapon's condition adds to the attack roll. */
 function itemPen(a){const k=a[7];return k&&Number(k.pen)>0?Math.min(2,Math.round(Number(k.pen))):0;}
-/* A firearm that jams: its roll is at or above the condition's (or card's) malfunction value. */
-function itemJam(a,r){const k=a[7];return k&&k.jam&&r>=Number(k.jam)?["fail","Arme enrayée"]:null;}
-/* Damage after the condition: halved (rounded down) for a damaged weapon. */
-function itemDmg(a,dmg,dd){const k=a[7];if(!k||!k.half)return {dmg,dd};const h=Math.floor(dmg/2);return {dmg:h,dd:dd+" · "+k.label+" : "+dmg+" ÷ 2 = "+h};}
+/* A firearm that jams: its roll is at or above its malfunction value (a[8]; the condition's, from an
+   app that sent only that). */
+function itemJam(a,r){const j=a[8]!=null?a[8]:a[7]&&a[7].jam;return j&&r>=Number(j)?["fail","Arme enrayée"]:null;}
+/* Damage after the condition: halved (rounded down) for a damaged weapon. A damage that couldn't be
+   rolled ("?") stays as it is. */
+function itemDmg(a,dmg,dd){const k=a[7];if(!k||!k.half||typeof dmg!=="number")return {dmg,dd};const h=Math.floor(dmg/2);return {dmg:h,dd:dd+" · "+k.label+" : "+dmg+" ÷ 2 = "+h};}
 /* The generic "Arme de poing" / "Fusil" attacks give way to the investigator's own firearms. */
 function withItemAttacks(c,at,imp){const it=itemAttacks(c,imp);if(!it.length)return at;
   const sks=new Set(itemsOf(c.id).filter(x=>x.w).map(x=>x.w.sk));

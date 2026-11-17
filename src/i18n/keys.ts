@@ -51,7 +51,10 @@ export function dataKeys(): string[] {
     'story.json n’est pas un JSON valide.',
     'format doit valoir "grimoire-story/1".',
     'meta.id manquant.', 'meta.title manquant.', 'meta.lang manquant.', 'Aucune scène.',
+    'Acte mal formé (id, title et scenes sont requis)', 'Scène mal formée (id et title sont requis)',
     'Ignoré (hors du dossier de l’histoire)',
+    'Nom de fichier refusé (lettres sans accent, chiffres, espaces et - _ . ( ) seulement)', 'Fichier trop lourd (50 Mo au plus)',
+    'Plusieurs de tes histoires portent cet identifiant (garde-en une seule, puis réimporte)',
     'Archive .zip illisible.',
     'Import impossible.', 'Suggestion impossible.',
     // suggest-profile function messages

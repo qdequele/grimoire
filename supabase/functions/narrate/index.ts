@@ -4,11 +4,17 @@
 // or `data: {"error": {"code", "message"}}` if the answer fails midway. Errors before the stream
 // starts are plain JSON with an HTTP status (401, 400, 429, 503).
 //
+// The answer is counted when it STARTS: a row is reserved in ai_usage before Claude is asked
+// (_shared/ai-usage.ts), so an answer the keeper stops, one that is cut midway and answers asked at
+// the same time all count against the monthly limit. Only an answer the AI service refused before
+// writing anything gives its reservation back.
+//
 // Secrets: ANTHROPIC_API_KEY (required). Optional: NARRATOR_MONTHLY_LIMIT (default 300).
 
 import Anthropic from 'npm:@anthropic-ai/sdk@1.4.0'
 import { createClient } from 'npm:@supabase/supabase-js@2.118.0'
 import type { Database } from '../_shared/database.types.ts'
+import { recordUsage, releaseUsage, reserveUsage } from '../_shared/ai-usage.ts'
 import { parseNarrateRequest, toApiMessages } from '../_shared/narrate.ts'
 
 const MODEL = 'claude-opus-5-5'
@@ -47,20 +53,16 @@ Deno.serve(async (req) => {
   if (typeof messages === 'string') return fail(400, 'bad_request', messages)
 
   const { data: profile } = await admin.from('profiles').select('is_admin').eq('id', userId).single()
-  if (!profile?.is_admin) {
-    const monthStart = new Date()
-    monthStart.setUTCDate(1)
-    monthStart.setUTCHours(0, 0, 0, 0)
-    const { count } = await admin
-      .from('ai_usage')
-      .select('id', { count: 'exact', head: true })
-      .eq('owner_id', userId)
-      .eq('kind', 'narrator')
-      .gte('created_at', monthStart.toISOString())
-    if ((count ?? 0) >= MONTHLY_LIMIT) {
-      return fail(429, 'quota_exceeded', `Limite mensuelle du narrateur atteinte (${MONTHLY_LIMIT} réponses).`)
-    }
+  // Reserved before the answer starts (admins: no limit, still recorded).
+  let usageId: string | null
+  try {
+    usageId = await reserveUsage(admin, userId, 'narrator', profile?.is_admin ? null : MONTHLY_LIMIT)
+  } catch (e) {
+    console.error('narrate: reservation failed', e)
+    return fail(503, 'unavailable', 'Le narrateur est indisponible pour le moment. Réessaie.')
   }
+  if (!usageId) return fail(429, 'quota_exceeded', `Limite mensuelle du narrateur atteinte (${MONTHLY_LIMIT} réponses).`)
+  const reserved = usageId
 
   const client = new Anthropic({ apiKey })
   const stream = client.beta.messages.stream({
@@ -79,27 +81,48 @@ Deno.serve(async (req) => {
   const body = new ReadableStream<Uint8Array>({
     async start(controller) {
       const send = (data: unknown) => controller.enqueue(encoder.encode(`data: ${JSON.stringify(data)}\n\n`))
+      // What the answer used so far, read from the stream: a stopped answer has no final message.
+      const usage = { input: 0, output: 0 }
+      let started = false
+      let release = false
       try {
         for await (const event of stream) {
-          if (event.type === 'content_block_delta' && event.delta.type === 'text_delta') send({ text: event.delta.text })
+          if (event.type === 'message_start') {
+            started = true
+            usage.input = event.message.usage.input_tokens + (event.message.usage.cache_read_input_tokens ?? 0)
+            usage.output = event.message.usage.output_tokens
+          } else if (event.type === 'message_delta') {
+            usage.output = event.usage.output_tokens
+          } else if (event.type === 'content_block_delta' && event.delta.type === 'text_delta') {
+            send({ text: event.delta.text })
+          }
         }
         const message = await stream.finalMessage()
-        await admin.from('ai_usage').insert({
-          owner_id: userId,
-          kind: 'narrator',
-          input_tokens: message.usage.input_tokens + (message.usage.cache_read_input_tokens ?? 0),
-          output_tokens: message.usage.output_tokens,
-        })
         if (message.stop_reason === 'refusal') send({ error: { code: 'refused', message: 'Pas de réponse à cette demande.' } })
         else send({ done: true })
       } catch (e) {
+        // The AI service failed before the answer started, and the keeper didn't stop it: not counted.
+        release = !started && !req.signal.aborted
+        // Whatever broke the loop (the keeper gone, the AI service), stop paying for the rest.
+        stream.abort()
         if (!req.signal.aborted) {
           console.error('narrate failed', e)
           const code = e instanceof Anthropic.RateLimitError ? 'rate_limited' : 'ai_error'
-          send({ error: { code, message: "Le service d'IA n'a pas répondu." } })
+          try {
+            send({ error: { code, message: "Le service d'IA n'a pas répondu." } })
+          } catch {
+            /* the keeper is gone */
+          }
         }
       } finally {
-        controller.close()
+        // Best effort: after a stop the runtime may end the worker first; the reserved row counts anyway.
+        if (release) await releaseUsage(admin, reserved)
+        else if (started) await recordUsage(admin, reserved, usage)
+        try {
+          controller.close()
+        } catch {
+          /* already closed by the keeper's stop */
+        }
       }
     },
   })

@@ -3,7 +3,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import type { Json } from '@/lib/database.types'
 import { supabase, type Tables } from '@/lib/supabase'
-import { findScene, sceneAmbiance, type StoryForScreen } from '@/screen/ambiance'
+import { findScene, packImagePath, sceneAmbiance, type StoryForScreen } from '@/screen/ambiance'
 import { previewParams } from '@/screen/preview'
 import {
   imagesOf, INITIAL_SCREEN, sameScreen, screenReducer, toScreenScene,
@@ -71,8 +71,14 @@ export const SCREEN_BUCKET = 'screen-images'
 const SIGN_TTL_S = 8 * 3600
 /** Renew a signature when less than this is left. */
 const RENEW_BEFORE_MS = 3 * 3600_000
-/** How often a long session checks its signatures. */
+/** How often a long session checks its signatures (and a state that could not be saved). */
 const REFRESH_MS = 3600_000
+/**
+ * A write of games.screen that failed is tried again after these waits, one per failure in a row. After the
+ * last one it is left to the hourly check, the network coming back or the keeper's next change: a refusal
+ * that lasts (signed out, game deleted) is not hammered.
+ */
+const RETRY_MS = [2000, 5000, 15_000, 30_000, 60_000]
 
 /** Pictures the keeper uploaded during this game (newest first), as refs for the screen. */
 export async function listUploads(ownerId: string, gameId: string): Promise<ImageRef[]> {
@@ -106,11 +112,7 @@ export const screenStory = (story: { id: string; owner_id: string | null; pack_f
   files: story.pack_files,
 })
 
-/** A handout's picture in the pack: the spec says "relative path in images/", written either way. */
-export const handoutImagePath = (image: string | undefined): string | undefined =>
-  image ? (image.startsWith('images/') ? image : `images/${image}`) : undefined
-
-/** A picture of the story pack, if the pack really has it. */
+/** A picture of the story pack, if the pack really has it (`path` as `packImagePath` gives it). */
 export const packImage = (story: ScreenStory, path: string | undefined): ImageRef | null =>
   path && story.files.includes(path) ? { bucket: 'story-packs', path: `${story.folder}/${path}` } : null
 
@@ -118,7 +120,7 @@ export const packImage = (story: ScreenStory, path: string | undefined): ImageRe
 export function storyHandout(story: ScreenStory, id: string): ScreenHandout | null {
   const h = story.content.handouts?.find((x) => x.id === id)
   if (!h) return null
-  const image = packImage(story, handoutImagePath(h.image))
+  const image = packImage(story, packImagePath(h.image))
   if (!image && !h.text) return null
   return { key: `handout:${h.id}`, title: h.title, ...(h.text ? { text: h.text } : {}), image }
 }
@@ -126,7 +128,8 @@ export function storyHandout(story: ScreenStory, id: string): ScreenHandout | nu
 /**
  * Holds the screen state for one game: reduces game events and keeper actions, then publishes
  * (signs the pictures, writes games.screen; the database broadcasts it to the screen). Publications
- * run one at a time and only the newest state is written.
+ * run one at a time and only the newest state is written. A write that fails is tried again by itself
+ * (RETRY_MS): the keeper's dialog already shows the new state, the screen must end up showing it too.
  */
 export class ScreenControl {
   private state: ScreenState
@@ -136,6 +139,12 @@ export class ScreenControl {
   private signed = new Map<string, { url: string; until: number }>()
   private running: Promise<void> | null = null
   private dirty = false
+  /** The last write failed: the row may hold anything, so the state is written again whatever `published` says. */
+  private unsaved = false
+  /** Failed writes in a row (chooses the wait before the next try). */
+  private failures = 0
+  private retry: ReturnType<typeof setTimeout> | null = null
+  private disposed = false
   private timer: ReturnType<typeof setInterval>
   private gameId: string
   private story: ScreenStory
@@ -146,13 +155,24 @@ export class ScreenControl {
     this.state = saved ?? INITIAL_SCREEN
     this.published = saved
     this.timer = setInterval(() => this.renew(), REFRESH_MS)
+    if (typeof window !== 'undefined') window.addEventListener('online', this.online)
     // Signed URLs saved in an earlier session have expired (or soon will): sign again.
     queueMicrotask(() => this.renew())
   }
 
   dispose() {
+    this.disposed = true
     clearInterval(this.timer)
+    this.clearRetry()
+    if (typeof window !== 'undefined') window.removeEventListener('online', this.online)
     this.listeners.clear()
+  }
+
+  /** The network is back: a state that could not be saved is written now, with the short waits again. */
+  private online = () => {
+    if (!this.unsaved) return
+    this.failures = 0
+    this.publish()
   }
 
   // For useSyncExternalStore.
@@ -206,6 +226,8 @@ export class ScreenControl {
     if (next === this.state) return
     this.state = next
     for (const fn of this.listeners) fn()
+    // The keeper acts: if earlier writes failed, the short waits start over.
+    this.failures = 0
     this.publish()
   }
 
@@ -224,6 +246,9 @@ export class ScreenControl {
   }
 
   private publish(force = false) {
+    if (this.disposed) return
+    // This write (or the one it queues behind the running one) carries the newest state: no retry beside it.
+    this.clearRetry()
     if (this.running) {
       this.dirty = true
       return
@@ -232,16 +257,39 @@ export class ScreenControl {
       do {
         this.dirty = false
         const state = this.state
-        if (!force && this.published && sameScreen(state, this.published) && !this.needsRenewal()) break
+        if (!force && !this.unsaved && this.published && sameScreen(state, this.published) && !this.needsRenewal()) break
         force = false
         const signed = await this.withUrls(state)
         const { error } = await supabase.from('games').update({ screen: signed as unknown as Json }).eq('id', this.gameId)
-        if (error) console.error('Screen save failed', error)
-        else this.published = signed
+        if (error) {
+          console.error('Screen save failed', error)
+          this.unsaved = true
+          this.failures++
+        } else {
+          this.published = signed
+          this.unsaved = false
+          this.failures = 0
+        }
       } while (this.dirty)
     })().finally(() => {
       this.running = null
+      this.retryLater()
     })
+  }
+
+  /** After a failed write: try again by itself, a little later each time, RETRY_MS.length times at most. */
+  private retryLater() {
+    const wait = RETRY_MS[this.failures - 1]
+    if (!this.unsaved || this.disposed || this.retry || wait === undefined) return
+    this.retry = setTimeout(() => {
+      this.retry = null
+      this.publish()
+    }, wait)
+  }
+
+  private clearRetry() {
+    if (this.retry) clearTimeout(this.retry)
+    this.retry = null
   }
 
   /** Signatures on screen that will expire soon. */
@@ -253,7 +301,7 @@ export class ScreenControl {
   }
 
   private renew() {
-    if (this.needsRenewal()) this.publish(true)
+    if (this.unsaved || this.needsRenewal()) this.publish(true)
   }
 
   private async withUrls(s: ScreenState): Promise<ScreenState> {

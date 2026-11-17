@@ -4,14 +4,17 @@ import { CRAFT_RULES, createSystemPrompt, FORBIDDEN_NAMES, ORIGINALITY_RULES, PL
 import { draftToStory, SCREEN_PLACES, SCREEN_PRESETS, SCREEN_TIMES } from './import-draft'
 import { SAMPLE_STORY, STORY_SCHEMA } from './spec-bundle'
 import {
+  addedSchemaIssues,
   applyEdits,
   attachImage,
   detachImage,
   EDIT_OPS,
+  FINISHED_WITH_ERRORS,
   forbiddenNamesIn,
   GUIDE_TOPICS,
   guideText,
   imageUses,
+  issueText,
   normalizeDraft,
   parseImageRequest,
   relax,
@@ -23,6 +26,8 @@ import {
   ToolError,
   toolDefinitions,
   usesImage,
+  WRITE_CONFLICT,
+  type SchemaIssue,
 } from './story-mcp'
 import { sanitizeSvg } from './svg-safe'
 
@@ -334,6 +339,62 @@ describe('pictures (save_image)', () => {
   })
 })
 
+describe('addedSchemaIssues', () => {
+  const issuesOf = (story: unknown): SchemaIssue[] => (validate(story) ? [] : (validate.errors ?? []).map((e) => ({ path: e.instancePath, message: e.message ?? '' })))
+  const added = (before: unknown, after: unknown) => addedSchemaIssues(before, issuesOf(before), after, issuesOf(after)).map(issueText)
+  const badNpc = { op: 'put_npc', npc: { id: 'bad-npc', name: 42 } }
+
+  it('finds the errors an edit adds, whatever the story already had', () => {
+    const clean = sample()
+    const last = clean.npcs.length
+    expect(added(clean, clean)).toEqual([])
+    expect(added(clean, applyEdits(clean, [badNpc]))).toEqual([`/npcs/${last}/name must be string`])
+
+    // One error mended and another added: as many errors as before, but one is new.
+    const flawed = sample()
+    firstScene(flawed).title = 42
+    expect(issuesOf(flawed)).toHaveLength(1)
+    const swapped = applyEdits(flawed, [{ op: 'put_scene', scene: { ...firstScene(flawed), title: 'A title' } }, badNpc])
+    expect(issuesOf(swapped)).toHaveLength(1)
+    expect(added(flawed, swapped)).toEqual([`/npcs/${last}/name must be string`])
+
+    // A story with many errors (more than a message would list) gets no free pass.
+    const many = sample()
+    for (let n = 0; n < 60; n++) many.npcs.push({ id: `npc-${n}`, name: n })
+    expect(issuesOf(many).length).toBeGreaterThanOrEqual(60)
+    expect(added(many, applyEdits(many, [badNpc]))).toEqual([`/npcs/${last + 60}/name must be string`])
+    expect(added(many, applyEdits(many, [{ op: 'put_npc', npc: { id: 'good-npc', name: 'Someone' } }]))).toEqual([])
+  })
+
+  it('does not take an error that moved for a new one', () => {
+    const flawed = sample()
+    const [act1, act2] = flawed.acts
+    const broken = act2.scenes[1]
+    broken.title = 42
+    flawed.npcs[2].name = 42
+    expect(issuesOf(flawed)).toHaveLength(2)
+    // NPCs come and go before the broken one, and the broken scene goes to another act: every path changes.
+    const moved = applyEdits(flawed, [
+      { op: 'put_npc', npc: { id: 'guest', name: 'A guest' }, after: flawed.npcs[0].id },
+      { op: 'put_npc', npc: { id: 'host', name: 'A host' }, after: flawed.npcs[0].id },
+      { op: 'put_scene', actId: act1.id, scene: broken, after: act1.scenes[0].id },
+    ])
+    expect(issuesOf(moved).map(issueText)).not.toEqual(issuesOf(flawed).map(issueText))
+    expect(added(flawed, moved)).toEqual([])
+    // The same error on another item is a new one.
+    const other = applyEdits(flawed, [{ op: 'put_npc', npc: { ...flawed.npcs[0], name: 42 } }])
+    expect(added(flawed, other)).toEqual(['/npcs/0/name must be string'])
+  })
+
+  it('counts errors on items without an id one by one', () => {
+    const step = (n: number): SchemaIssue => ({ path: `/acts/0/scenes/0/flow/${n}/title`, message: 'must be string' })
+    const story = sample()
+    expect(addedSchemaIssues(story, [step(0)], story, [step(1)])).toEqual([])
+    expect(addedSchemaIssues(story, [step(0)], story, [step(0), step(1)])).toEqual([step(1)])
+    expect(addedSchemaIssues(story, [step(0), step(1)], story, [step(1)])).toEqual([])
+  })
+})
+
 describe('guide and tools', () => {
   it('serves the creator prompt\'s own rules', () => {
     const prompt = createSystemPrompt()
@@ -344,6 +405,21 @@ describe('guide and tools', () => {
     for (const topic of GUIDE_TOPICS) expect(guideText(topic).length).toBeGreaterThan(200)
     expect(guideText('example')).toContain(JSON.stringify(SAMPLE_STORY, null, 1))
     expect(SERVER_INSTRUCTIONS).toContain('grimoire_guide')
+  })
+
+  it('says where validation errors are fixed once write_scenes is closed', () => {
+    const step = guideText('workflow').split('\n').find((l) => l.includes('validationErrors'))!
+    // While scenes remain: the next write_scenes call. After the last one: edit_story, in the story.json format.
+    expect(step).toMatch(/while scenes remain.*next write_scenes call/)
+    expect(step).toMatch(/"remaining" is 0.*get_story and edit_story.*story\.json/)
+    expect(toolDefinitions().find((t) => t.name === 'write_scenes')!.description).toMatch(/edit_story/)
+    expect(FINISHED_WITH_ERRORS).toMatch(/get_story and edit_story/)
+  })
+
+  it('tells the model to send write_scenes calls one at a time', () => {
+    expect(guideText('workflow')).toMatch(/One call at a time, never in parallel/)
+    expect(toolDefinitions().find((t) => t.name === 'write_scenes')!.description).toMatch(/One call at a time/)
+    expect(WRITE_CONFLICT).toMatch(/one call at a time/)
   })
 
   it('names every tool the guide mentions, with valid JSON Schemas and annotations', () => {

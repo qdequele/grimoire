@@ -321,16 +321,26 @@ describe('companion RPCs (anonymous)', () => {
 
 // ------------------------------------------------------------------ create from a link, live broadcast
 // ------------------------------------------------------------------ live helpers
+// The broadcast gets its own 10 s, counted once the channel is subscribed (`listen` has 5 s for that):
+// on a cold stack the first subscription or the first delivery can take seconds. With the test's
+// set-up this stays under the 20 s test timeout.
+const BROADCAST_MS = 10_000
+
 async function waitFor<T>(subscribe: (resolve: (v: T) => void) => Promise<() => Promise<void>>, act: () => Promise<void>): Promise<T> {
   let off: () => Promise<void> = async () => {}
+  let timer: ReturnType<typeof setTimeout> | undefined
   try {
     return await new Promise<T>((resolve, reject) => {
-      const timer = setTimeout(() => reject(new Error('no broadcast within 5 s')), 5000)
-      subscribe((v) => { clearTimeout(timer); resolve(v) })
-        .then((o) => { off = o; return act() })
+      subscribe(resolve)
+        .then((o) => {
+          off = o
+          timer = setTimeout(() => reject(new Error(`no broadcast within ${BROADCAST_MS / 1000} s`)), BROADCAST_MS)
+          return act()
+        })
         .catch(reject)
     })
   } finally {
+    clearTimeout(timer)
     await off()
   }
 }
@@ -469,10 +479,90 @@ describe('companion: create an investigator and broadcast', () => {
     expect(ok.error).toBeNull()
     const ch = (await alice.client.from('characters').select('data').eq('id', ok.data as unknown as string).single()).data!
     const data = ch.data as Record<string, unknown>
-    expect(data).toMatchObject({ name: 'Valid', hp: 5, damageBonus: '+1D4', characteristics: { DEX: 70 }, creation: { step: 3 } })
+    expect(data).toMatchObject({ name: 'Valid', hp: 5, damageBonus: '+1D4', characteristics: { DEX: 70 } })
+    // The wizard's state is rebuilt too: what it doesn't know is left out.
+    expect(data.creation).toEqual({ name: 'Valid' })
     expect(data).not.toHaveProperty('progress')
     const pts = (await alice.client.from('game_points').select('pv').eq('character_id', ok.data as unknown as string).single()).data!
     expect(pts.pv).toBe(5)
+  })
+
+  it("the wizard's state (`creation`) is checked field by field, like the sheet", async () => {
+    const g = await newGame(alice, [{ name: 'One' }])
+    const l = await link(alice, g.gameId)
+    const create = (creation: Json) => anon.rpc('companion_create_character', { p_token: l.token, p_data: { name: 'X', creation }, p_player_name: '' })
+    const picked = { occupationSkills: ['art-craft'] }
+    const hostile: Json[] = [
+      { name: '<img src=x onerror=1>' },
+      { name: 'A & B' },
+      { name: 'Say "hi"' },
+      { name: 5 },
+      { name: 'n'.repeat(81) },
+      { occupation: 7 },
+      { occupation: 'o'.repeat(201) },
+      { age: 'old' },
+      { playerId: 5 },
+      { playerId: '<b>' },
+      { link: 5 },
+      { link: 'l'.repeat(201) },
+      { luck: 'lots' },
+      { rolled: 'yes' },
+      { characteristics: [50] },
+      { characteristics: { DEX: 'x' } },
+      { characteristics: { DEX: 100 } },
+      { characteristics: { HACK: 50 } },
+      { occupationSkills: 'art-craft' },
+      { occupationSkills: [5] },
+      { occupationSkills: ['<img src=x>'] },
+      { occupationSkills: ['Spot'] },
+      { occupationSkills: Array.from({ length: 101 }, (_, i) => `s${i}`) },
+      { personalInterests: [['listen']] },
+      { personalInterests: ['a&b'] },
+      { occupationValues: ['art-craft'] },
+      { occupationValues: { 'art-craft': '70' } },
+      { occupationValues: { '<b>': 70 } },
+      { ...picked, specialties: ['x'] },
+      { ...picked, specialties: { 'art-craft': 5 } },
+      { ...picked, specialties: { 'art-craft': '<svg onload=1>' } },
+      { ...picked, specialties: { 'art-craft': 'a&b' } },
+      { ...picked, specialties: { 'art-craft': '"q"' } },
+      { ...picked, specialties: { 'art-craft': 's'.repeat(41) } },
+      { personalInterests: ['listen'], specialties: { listen: 'x>' } },
+      { profile: ['x'] },
+      { profile: { traits: 5 } },
+      { profile: { traits: 'p'.repeat(2001) } },
+      { profile: { '<b>': 'x' } },
+    ]
+    for (const creation of hostile) {
+      const r = await create(creation)
+      expect(r.error?.message, JSON.stringify(creation).slice(0, 80)).toContain('bad_value')
+    }
+
+    // What the phone's wizard really sends is kept as it was, so the keeper reopens it.
+    const draft = {
+      name: " Ada O'Brien ", occupation: 'journalist', age: 200, playerId: '', link: 'Cousin of the "old" man & co',
+      characteristics: { STR: 50, CON: 60, SIZ: 40, DEX: 70, APP: 50, INT: 80, POW: 60, EDU: 90 },
+      luck: 45, rolled: false,
+      occupationSkills: ['art-craft', 'library-use', 'history', 'language-own', 'psychology', 'fast-talk', 'science-2', 'listen'],
+      occupationValues: { 'art-craft': 70, 'library-use': 60, 'credit-rating': 40 },
+      personalInterests: ['spot-hidden', 'firearms-handgun', 'language-other', 'dodge'],
+      specialties: { 'art-craft': "Peinture à l'huile", 'science-2': '', 'language-other': 's'.repeat(40) },
+      profile: { description: 'Tall, "quiet" & kind', traits: 'p'.repeat(2000), ideology: '' },
+    }
+    const ok = await create(draft)
+    expect(ok.error).toBeNull()
+    const kept = (await alice.client.from('characters').select('data').eq('id', ok.data as unknown as string).single()).data!
+    expect((kept.data as Record<string, unknown>).creation).toEqual(draft)
+
+    // Keys the wizard doesn't have, and specialties of skills that aren't picked (the wizard never
+    // reads them), are left out, whatever they hold.
+    const extra = await create({ ...draft, step: 3, specialties: { ...draft.specialties, survival: '<b>' }, more: { '<i>': '<u>' } })
+    expect(extra.error).toBeNull()
+    const cleaned = (await alice.client.from('characters').select('data').eq('id', extra.data as unknown as string).single()).data!
+    expect((cleaned.data as Record<string, unknown>).creation).toEqual(draft)
+
+    // A partial state is fine: the app fills what is missing.
+    expect((await create({})).error).toBeNull()
   })
 
   it('skill keys must have the app shape, and names carry no HTML characters', async () => {
@@ -1036,5 +1126,97 @@ describe('companion: items', () => {
       },
     )
     expect(payload).toMatchObject({ characterId: g.ids[0] })
+  })
+
+  it('a use spent says which item and how many are left; a use that changes nothing says nothing; other changes only name the investigator', async () => {
+    const g = await newGame(alice, [{ name: 'One' }])
+    const gun = (await give(g.ids[0], revolver, 6)).data!.id
+    const l = await link(alice, g.gameId)
+    const channel = (await alice.client.from('games').select('channel').eq('id', g.gameId).single()).data!.channel
+    const seen: Array<Record<string, unknown>> = []
+    const off = await listen(channel, 'items', (p) => seen.push(p as Record<string, unknown>))
+    try {
+      const use = (p_delta: number) => anon.rpc('companion_use_item', { p_token: l.token, p_item: gun, p_delta })
+      expect((await use(1)).data).toBe(6) // already full: the row is written, nothing changes
+      expect((await use(-1)).data).toBe(5)
+      expect((await alice.client.from('character_items').update({ condition: 'dirty' }).eq('id', gun)).error).toBeNull()
+      for (let i = 0; i < 50 && seen.length < 2; i++) await new Promise((r) => setTimeout(r, 100))
+      await new Promise((r) => setTimeout(r, 500)) // a third hint would have come by now
+      expect(seen).toHaveLength(2)
+      expect(seen[0]).toMatchObject({ characterId: g.ids[0], itemId: gun, uses: 5 })
+      const row = (await alice.client.from('character_items').select('updated_at').eq('id', gun).single()).data!
+      expect(Date.parse(String(seen[0].updatedAt))).toBeLessThanOrEqual(Date.parse(row.updated_at))
+      expect(seen[1]).toMatchObject({ characterId: g.ids[0] })
+      expect(seen[1]).not.toHaveProperty('itemId')
+      expect(seen[1]).not.toHaveProperty('uses')
+    } finally {
+      await off()
+    }
+  })
+})
+
+describe('companion: keeper point writes', () => {
+  it('a keeper write of one field keeps a phone change to another field made in the meantime', async () => {
+    const g = await newGame(alice, [{ name: 'One', hp: 11, progress: { san: 54 } }])
+    const l = await link(alice, g.gameId)
+    const row = async () =>
+      (await alice.client.from('game_points').select('*').eq('game_id', g.gameId).eq('character_id', g.ids[0]).single()).data!
+    // The first write creates the row: the game screen sends it whole.
+    const first = await alice.client.from('game_points')
+      .upsert({ game_id: g.gameId, character_id: g.ids[0], pv: 10, san: 54, chance: 50, pm: 10, checks: ['spot-hidden'], source: 'keeper' })
+    expect(first.error).toBeNull()
+
+    // The phone lowers SAN just before the keeper's damage is written: the game screen sends only
+    // what the keeper changed (an upsert sets the columns it is given), so the SAN stays.
+    const phone = await anon.rpc('companion_set_point', { p_token: l.token, p_character: g.ids[0], p_field: 'san', p_value: 53 })
+    expect(phone.error).toBeNull()
+    const keeper = await alice.client.from('game_points').upsert({ game_id: g.gameId, character_id: g.ids[0], pv: 4, source: 'keeper' })
+    expect(keeper.error).toBeNull()
+    expect(await row()).toMatchObject({ pv: 4, san: 53, chance: 50, pm: 10, checks: ['spot-hidden'], source: 'keeper' })
+
+    // Checks alone, too.
+    const checks = await alice.client.from('game_points').upsert({ game_id: g.gameId, character_id: g.ids[0], checks: ['spot-hidden', 'listen'], source: 'keeper' })
+    expect(checks.error).toBeNull()
+    expect(await row()).toMatchObject({ pv: 4, san: 53, chance: 50, pm: 10, checks: ['spot-hidden', 'listen'] })
+  })
+})
+
+describe('companion: progression saved from a game', () => {
+  const dataOf = async (id: string) =>
+    (await alice.client.from('characters').select('data').eq('id', id).single()).data!.data as Record<string, unknown>
+
+  it('save_character_progress writes the progression only, keeping a sheet edited since the game started', async () => {
+    const g = await newGame(alice, [{ name: 'One', hp: 11, progress: { san: 54 } }])
+    // The keeper corrects the sheet in another tab while the game is open…
+    const edited = await alice.client.from('characters')
+      .update({ data: { name: 'One, corrected', hp: 12, skills: { listen: 60 }, progress: { san: 54 } } }).eq('id', g.ids[0])
+    expect(edited.error).toBeNull()
+    // …then the game saves the investigator's progression.
+    const progress = { skills: { listen: 61 }, checks: ['listen'], hist: [], san: 52 }
+    const saved = await alice.client.rpc('save_character_progress', { p_character: g.ids[0], p_progress: progress })
+    expect(saved.error).toBeNull()
+    expect(await dataOf(g.ids[0])).toEqual({ name: 'One, corrected', hp: 12, skills: { listen: 60 }, progress })
+  })
+
+  it('adds the progression to a sheet that has none, and refuses anything but an object', async () => {
+    const g = await newGame(alice, [{ name: 'Two' }])
+    const before = await dataOf(g.ids[0])
+    for (const bad of [null, 'text', 3, ['a']] as Json[]) {
+      const r = await alice.client.rpc('save_character_progress', { p_character: g.ids[0], p_progress: bad })
+      expect(r.error?.message).toContain('bad_value')
+    }
+    expect(await dataOf(g.ids[0])).toEqual(before)
+    const ok = await alice.client.rpc('save_character_progress', { p_character: g.ids[0], p_progress: { checks: ['listen'] } })
+    expect(ok.error).toBeNull()
+    expect(await dataOf(g.ids[0])).toEqual({ ...before, progress: { checks: ['listen'] } })
+  })
+
+  it("can't write to someone else's investigator, nor without an account", async () => {
+    const g = await newGame(alice, [{ name: 'Three', progress: { san: 40 } }])
+    const theirs = await bob.client.rpc('save_character_progress', { p_character: g.ids[0], p_progress: { san: 1 } })
+    expect(theirs.error?.message).toContain('not_found')
+    const nobody = await anon.rpc('save_character_progress', { p_character: g.ids[0], p_progress: { san: 1 } })
+    expect(nobody.error).not.toBeNull()
+    expect((await dataOf(g.ids[0])).progress).toEqual({ san: 40 })
   })
 })

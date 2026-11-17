@@ -70,6 +70,17 @@ describe('parseMapDoc', () => {
   it('never throws, whatever it gets', () => {
     for (const v of [null, 1, 'map', [], { ground: 'abc' }, { items: {}, labels: 3 }]) expect(() => parseMapDoc(v)).not.toThrow()
   })
+
+  it('drops an item named after something every object has, like any unknown stamp', () => {
+    for (const t of ['constructor', 'toString', 'valueOf', 'hasOwnProperty', '__proto__']) {
+      const input = JSON.parse(`{"cols":10,"rows":10,"ground":[],"items":[{"t":"${t}","x":1,"y":1},{"t":"bed","x":2,"y":2}]}`)
+      const { doc, problems } = parseMapDoc(input)
+      expect(doc.items.map((i) => i.t), t).toEqual(['bed'])
+      expect(problems.join(), t).toMatch(/1 item\(s\) dropped/)
+      expect(STAMPS[t], t).toBeUndefined()
+      expect(footprint({ t }), t).toEqual([1, 1])
+    }
+  })
 })
 
 describe('random maps', () => {

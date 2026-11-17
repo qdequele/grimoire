@@ -1,5 +1,5 @@
 // Server state of the ambiance screen: everything goes through the screen link's token (no account).
-import { useQuery, useQueryClient, type UseQueryResult } from '@tanstack/react-query'
+import { queryOptions, useQuery, useQueryClient, type QueryClient, type UseQueryResult } from '@tanstack/react-query'
 import { useEffect, useState } from 'react'
 import { supabase } from '@/lib/supabase'
 import { parseScreen, type ScreenState } from './state'
@@ -27,11 +27,13 @@ export const screenKeys = {
 /** How often the screen checks in without any broadcast (TV asleep, network blip, revoked link). */
 const REFRESH_MS = 60_000
 
-export function useScreenView(token: string): UseQueryResult<ScreenView, ScreenError> {
-  return useQuery<ScreenView, ScreenError>({
+/** The screen's one read: what its link shows now (`screen_open`). */
+export const screenQuery = (token: string) =>
+  queryOptions<ScreenView, ScreenError>({
     queryKey: screenKeys.one(token),
-    queryFn: async () => {
-      const { data, error } = await supabase.rpc('screen_open', { p_token: token })
+    queryFn: async ({ signal }) => {
+      // A read given up for a newer one (screenChanged) is aborted, not left to finish.
+      const { data, error } = await supabase.rpc('screen_open', { p_token: token }).abortSignal(signal)
       if (error) throw new ScreenError(error.message.trim() === 'link_invalid' ? 'link_invalid' : 'network', error.message)
       const o = (data ?? {}) as { channel?: unknown; screen?: unknown }
       if (typeof o.channel !== 'string') throw new ScreenError('network', 'empty response')
@@ -44,28 +46,37 @@ export function useScreenView(token: string): UseQueryResult<ScreenView, ScreenE
     // Keep showing the last picture through a network blip.
     staleTime: 0,
   })
+
+export function useScreenView(token: string): UseQueryResult<ScreenView, ScreenError> {
+  return useQuery(screenQuery(token))
 }
 
 /**
- * Listens to the screen's topic: every change the keeper makes arrives whole and replaces the cache.
- * Returns true while subscribed.
+ * Something was sent on the screen's topic. The topic is public (anyone holding the link can send on it), so
+ * what it carries is never shown: it is a hint to read the link again. A read already under way may have seen
+ * the row from before the change: it is given up and a new one starts, so the last read to answer is always
+ * one started after the last hint.
+ */
+export function screenChanged(qc: QueryClient, token: string): void {
+  void qc.invalidateQueries({ queryKey: screenKeys.one(token) }, { cancelRefetch: true })
+}
+
+/**
+ * Listens to the screen's topic: every change the keeper makes is announced there, and the screen then reads
+ * its link again (`screenChanged`). Returns true while subscribed.
  */
 export function useScreenLive(token: string, channel: string | undefined): boolean {
   const qc = useQueryClient()
   const [live, setLive] = useState(false)
   useEffect(() => {
     if (!channel) return
-    const key = screenKeys.one(token)
     const ch = supabase
       .channel(`screen:${channel}`)
-      .on('broadcast', { event: 'screen' }, ({ payload }) => {
-        const view = qc.getQueryData<ScreenView>(key)
-        if (view) qc.setQueryData<ScreenView>(key, { ...view, screen: parseScreen(payload) })
-      })
+      .on('broadcast', { event: 'screen' }, () => screenChanged(qc, token))
       .subscribe((status) => {
         setLive(status === 'SUBSCRIBED')
         // What changed while we were not listening.
-        if (status === 'SUBSCRIBED') void qc.invalidateQueries({ queryKey: key })
+        if (status === 'SUBSCRIBED') screenChanged(qc, token)
       })
     return () => {
       setLive(false)

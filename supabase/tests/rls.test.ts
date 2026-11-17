@@ -298,4 +298,20 @@ describe('feedback', () => {
     const over = await carol.client.from('feedback').insert({ kind: 'other', message: 'One more' })
     expect(over.error?.message).toContain('feedback_limit')
   })
+
+  it("a keeper can't date a message: the limit counts it, and the inbox order is the server's", async () => {
+    const dave = await signUp('dave')
+    const before = Date.now()
+    for (const created_at of ['2020-01-01T00:00:00Z', '2099-01-01T00:00:00Z']) {
+      const sent = await dave.client.from('feedback').insert({ kind: 'other', message: 'Dated', created_at }).select('created_at').single()
+      expect(sent.error).toBeNull()
+      const at = new Date(sent.data!.created_at).getTime()
+      // The server's clock, give or take a minute of drift between it and this machine.
+      expect(Math.abs(at - before)).toBeLessThan(60_000)
+    }
+    const old = Array.from({ length: 18 }, (_, i) => ({ kind: 'other', message: `Old ${i}`, created_at: '2020-01-01T00:00:00Z' }))
+    expect((await dave.client.from('feedback').insert(old)).error).toBeNull()
+    const over = await dave.client.from('feedback').insert({ kind: 'other', message: 'One more', created_at: '2020-01-01T00:00:00Z' })
+    expect(over.error?.message).toContain('feedback_limit')
+  })
 })

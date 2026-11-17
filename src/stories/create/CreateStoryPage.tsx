@@ -15,42 +15,12 @@ import { tMsg, useT } from '@/i18n/t'
 import { functionErrorMessage } from '@/lib/functions'
 import { cn } from '@/lib/utils'
 import { useLang } from '@/settings/lang'
+import { useAuth } from '@/auth/auth'
 import { useCompleteOutline, useCreation, useDrawSceneMap, useCreationsThisMonth, useSuggestIdeas, useWriteOutline, useWriteScenes } from './api'
+import { browserStore, creationLost, drawAllMaps, loadSaved, saveState, type Saved } from './creator'
 import { briefSchema, emptyBrief, LENGTHS, outlineHasDetails, sceneTotal, THREATS, TONES, type Brief, type IdeaField, type Outline } from './brief'
 import { OutlineReview } from './OutlineReview'
 import { MoodStep, MysteryStep, SettingStep, TableStep, type QuestionProps } from './steps'
-
-// The creator's progress, kept per browser so a reload (or coming back later) doesn't lose it.
-const STORE_KEY = 'grimoire-story-creator'
-
-interface Saved {
-  brief: Brief
-  creationId: string | null
-  outline: Outline | null
-  outlinesLeft: number | null
-}
-
-function load(): Saved | null {
-  try {
-    const raw = localStorage.getItem(STORE_KEY)
-    if (raw) {
-      const s = JSON.parse(raw) as Saved
-      if (briefSchema.safeParse(s.brief).success) return s
-    }
-  } catch {
-    /* unavailable or corrupt: start fresh */
-  }
-  return null
-}
-
-function save(s: Saved | null) {
-  try {
-    if (s) localStorage.setItem(STORE_KEY, JSON.stringify(s))
-    else localStorage.removeItem(STORE_KEY)
-  } catch {
-    /* not remembered, that's fine */
-  }
-}
 
 const QUESTION_STEPS: Array<{ title: string; Component: ComponentType<QuestionProps> }> = [
   { title: 'Cadre', Component: SettingStep },
@@ -66,14 +36,23 @@ type Phase =
   | { kind: 'idle' }
   | { kind: 'writing'; written: number; total: number }
   | { kind: 'maps'; drawn: number; total: number }
+  | { kind: 'mapsFailed'; storyId: string | null }
   | { kind: 'error'; message: string; written: number; total: number; storyId: string | null }
 
 export function CreateStoryPage() {
+  const userId = useAuth().session?.user.id
+  // Keyed on the account: the page keeps one keeper's progress (creator.ts) and never another's.
+  return userId ? <Creator key={userId} userId={userId} /> : null
+}
+
+function Creator({ userId }: { userId: string }) {
   const t = useT()
   const navigate = useNavigate()
   const [params, setParams] = useSearchParams()
   const step = Math.min(STEPS.length - 1, Math.max(0, Number(params.get('etape') ?? 1) - 1))
-  const [initial] = useState(load)
+  // The creator's progress, kept in the browser so a reload (or coming back later) doesn't lose it.
+  const [initial] = useState(() => loadSaved(browserStore, userId))
+  const save = (s: Saved | null) => saveState(browserStore, userId, s)
   const form = useForm<Brief>({ resolver: zodResolver(briefSchema), defaultValues: initial?.brief ?? emptyBrief(useLang.getState().lang) })
   const [creationId, setCreationId] = useState<string | null>(initial?.creationId ?? null)
   const [outline, setOutline] = useState<Outline | null>(initial?.outline ?? null)
@@ -95,8 +74,16 @@ export function CreateStoryPage() {
   // Remember everything the keeper did, answers included.
   const brief = useWatch({ control: form.control }) as Brief
   useEffect(() => {
-    save({ brief, creationId, outline, outlinesLeft })
-  }, [brief, creationId, outline, outlinesLeft])
+    saveState(browserStore, userId, { brief, creationId, outline, outlinesLeft })
+  }, [userId, brief, creationId, outline, outlinesLeft])
+
+  // A saved creation this account can't read (deleted since): every call with its id would be
+  // refused. The plan goes with it; the answers stay.
+  if (creationLost(creationId, server)) {
+    setCreationId(null)
+    setOutline(null)
+    setOutlinesLeft(null)
+  }
 
   // Leaving the page stops the writing loop after the current batch (it can be resumed).
   useEffect(() => () => { stopped.current = true }, [])
@@ -150,10 +137,14 @@ export function CreateStoryPage() {
     }
   }
 
-  /** The outline's second call (clues, links, overview). On failure the frame stays, with a button to retry. */
-  async function addDetails(id: string) {
+  /**
+   * The outline's second call (clues, links, overview). On failure the frame stays, editable, with a
+   * button to retry; that retry sends the frame as the keeper left it, so the details are added to
+   * the edited frame (the server keeps its titles, summaries and scene list).
+   */
+  async function addDetails(id: string, edited?: Outline) {
     try {
-      const res = await completeOutline.mutateAsync({ creationId: id })
+      const res = await completeOutline.mutateAsync({ creationId: id, outline: edited })
       setOutline(res.outline)
     } catch (e) {
       toast.error(tMsg(t, await functionErrorMessage(e, 'Plan incomplet. Réessaie avec « Compléter le plan ».')))
@@ -176,13 +167,13 @@ export function CreateStoryPage() {
         progress = { written: res.written, total: res.total, storyId: res.storyId }
         setPhase({ kind: 'writing', ...progress })
         if (!res.remaining) {
-          await drawMaps(creationId)
           if (res.validationErrors.length) {
             toast.warning(t.n(res.validationErrors.length, "{n} point à vérifier dans l'histoire (identifiants ou valeurs hors format).", "{n} points à vérifier dans l'histoire (identifiants ou valeurs hors format)."))
           }
-          toast.success(t('Ton histoire est prête.'))
-          save(null)
-          navigate(`/stories/${res.storyId}`)
+          // Left during the last scene: no maps now, and no navigation. The Écriture step offers
+          // « Dessiner les plans manquants » when the keeper comes back.
+          if (stopped.current) return
+          await drawMaps(creationId, res.storyId)
           return
         }
         if (stopped.current) return
@@ -192,20 +183,27 @@ export function CreateStoryPage() {
     }
   }
 
-  /** The scenes' maps, after the last scene. A map that fails is left out: the story works without it. */
-  async function drawMaps(id: string) {
-    let drawn = 0
-    setPhase({ kind: 'maps', drawn, total: 0 })
-    try {
-      for (;;) {
-        const res = await drawSceneMap.mutateAsync({ creationId: id })
-        if (res.scene) drawn++
-        setPhase({ kind: 'maps', drawn, total: drawn + res.remaining })
-        if (!res.remaining || stopped.current) return
-      }
-    } catch {
-      toast.warning(t('Un plan n’a pas pu être dessiné. L’histoire est prête sans lui ; « Reprendre l’écriture » réessaie.'))
+  /**
+   * The scenes' maps, after the last scene (also the retry of the ones that failed). Done: the story
+   * opens and the creator starts afresh. A failed map keeps the creation, with a button to draw it
+   * again and a link to the story, which works without it. Left the page: nothing more happens.
+   */
+  async function drawMaps(id: string, storyId: string | null) {
+    setPhase({ kind: 'maps', drawn: 0, total: 0 })
+    const outcome = await drawAllMaps(
+      () => drawSceneMap.mutateAsync({ creationId: id }),
+      () => stopped.current,
+      (drawn, total) => setPhase({ kind: 'maps', drawn, total }),
+    )
+    if (outcome === 'stopped') return
+    if (outcome === 'failed') {
+      toast.warning(t('Un plan n’a pas pu être dessiné. L’histoire est prête sans lui ; « Réessayer les plans » le redessine.'))
+      setPhase({ kind: 'mapsFailed', storyId })
+      return
     }
+    toast.success(t('Ton histoire est prête.'))
+    save(null)
+    navigate(`/stories/${storyId}`)
   }
 
   const title = STEPS[step]
@@ -291,7 +289,7 @@ export function CreateStoryPage() {
                 )}
                 <div className="flex flex-wrap items-center gap-2">
                   {outline && creationId && !outlineHasDetails(outline) && !completeOutline.isPending && (
-                    <Button onClick={() => addDetails(creationId)} disabled={busy}>
+                    <Button onClick={() => addDetails(creationId, outline)} disabled={busy}>
                       <ScrollText data-icon="inline-start" />
                       {t('Compléter le plan')}
                     </Button>
@@ -325,7 +323,18 @@ export function CreateStoryPage() {
         )}
 
         {step === WRITE && (
-          <WritingPanel phase={phase} onRetry={writeAll} done={done} storyId={server.data?.story_id ?? null} />
+          <WritingPanel
+            phase={phase}
+            onRetry={writeAll}
+            onRetryMaps={(storyId) => {
+              if (!creationId) return
+              // The keeper is on the page: a leave from an earlier run no longer applies.
+              stopped.current = false
+              void drawMaps(creationId, storyId)
+            }}
+            done={done}
+            storyId={server.data?.story_id ?? null}
+          />
         )}
 
         <div className="flex flex-wrap items-center justify-between gap-2 pt-2">
@@ -393,11 +402,18 @@ function PlanIntro({ brief: b }: { brief: Brief }) {
   )
 }
 
-function WritingPanel({ phase, onRetry, done, storyId }: { phase: Phase; onRetry: () => void; done: boolean; storyId: string | null }) {
+function WritingPanel({ phase, onRetry, onRetryMaps, done, storyId }: {
+  phase: Phase
+  onRetry: () => void
+  onRetryMaps: (storyId: string | null) => void
+  done: boolean
+  storyId: string | null
+}) {
   const t = useT()
+  if (phase.kind === 'mapsFailed') return <WrittenActions storyId={phase.storyId} failed onRetryMaps={onRetryMaps} />
   if (phase.kind === 'idle') {
     return done && storyId ? (
-      <Link to={`/stories/${storyId}`} className="underline underline-offset-4">{t("Ouvrir l'histoire")}</Link>
+      <WrittenActions storyId={storyId} onRetryMaps={onRetryMaps} />
     ) : (
       <Button className="w-fit" onClick={onRetry}>
         <Feather data-icon="inline-start" />
@@ -440,6 +456,23 @@ function WritingPanel({ phase, onRetry, done, storyId }: { phase: Phase; onRetry
           </AlertDescription>
         </Alert>
       )}
+    </div>
+  )
+}
+
+/**
+ * The scenes are written. Some maps may still be missing (one failed, or the page was closed while
+ * they were drawn): drawing again does only those, and does nothing when none is left.
+ */
+function WrittenActions({ storyId, failed = false, onRetryMaps }: { storyId: string | null; failed?: boolean; onRetryMaps: (storyId: string | null) => void }) {
+  const t = useT()
+  return (
+    <div className="flex flex-wrap items-center gap-3">
+      <Button className="w-fit" variant={failed ? 'default' : 'outline'} onClick={() => onRetryMaps(storyId)}>
+        <RefreshCw data-icon="inline-start" />
+        {failed ? t('Réessayer les plans') : t('Dessiner les plans manquants')}
+      </Button>
+      {storyId && <Link to={`/stories/${storyId}`} className="underline underline-offset-4">{t("Ouvrir l'histoire")}</Link>}
     </div>
   )
 }

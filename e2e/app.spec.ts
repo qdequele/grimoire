@@ -119,7 +119,12 @@ test('the Google button follows the provider being enabled in Supabase Auth', as
   // Back from Google with an error (e.g. cancelled): shown on the login page.
   await page.goto('/?error=access_denied&error_description=Cancelled%20by%20user')
   await expect(page).toHaveURL(/\/login$/)
-  await expect(page.getByText('Cancelled by user')).toBeVisible()
+  // In the app's own words: the address's text is never shown (anyone can write an address).
+  await expect(page.getByText('La connexion a échoué ou a été annulée. Réessaie.')).toBeVisible()
+  await expect(page.getByText('Cancelled by user')).toHaveCount(0)
+  await page.goto('/?error_description=Cancelled%20by%20user')
+  await expect(page.getByRole('link', { name: 'Créer un compte' }).first()).toBeVisible()
+  await expect(page.getByText('Cancelled by user')).toHaveCount(0)
 })
 
 test('keeper creates an investigator, then plays a marketplace story', async ({ page }) => {
@@ -323,7 +328,7 @@ test('game screen: the original engine runs a story, rolls, saves to the account
 
   // Progression is the investigator's: written in this game…
   const frame = () => page.frames().find((f) => f.url().includes('play.html'))!
-  const progressSaved = page.waitForResponse((r) => r.request().method() === 'PATCH' && r.url().includes('/rest/v1/characters'))
+  const progressSaved = page.waitForResponse((r) => r.url().includes('/rest/v1/rpc/save_character_progress') && r.ok())
   await frame().evaluate(() => {
     const g = eval as (s: string) => unknown
     const S = g('S') as { chars: Array<{ id: string }> }
@@ -685,7 +690,8 @@ test('keeper sends feedback from the account menu', async ({ page }) => {
   await page.getByRole('menuitem', { name: 'Donner mon avis' }).click()
   const dialog = page.getByRole('dialog', { name: 'Donner mon avis' })
   await expect(dialog.getByRole('button', { name: 'Envoyer' })).toBeDisabled()
-  await dialog.getByText('Un problème').click()
+  // The label alone: the dialog's description starts with the same words.
+  await dialog.getByText('Un problème', { exact: true }).click()
   await expect(dialog.getByRole('radio', { name: 'Un problème' })).toBeChecked()
   await dialog.getByRole('textbox', { name: 'Ton message' }).fill('The fog never lifts.')
   await dialog.getByRole('button', { name: 'Envoyer' }).click()
@@ -840,6 +846,40 @@ test.describe('AI features (fake Claude API)', () => {
     await expect(page.getByText('Import privé')).toBeVisible()
   })
 
+  test('an import that stopped half-way resumes where it was, in the same story', async ({ page }) => {
+    test.setTimeout(120_000) // three function calls
+    await signUp(page)
+    await page.goto('/stories/import')
+    await page.getByRole('tab', { name: 'Pages scannées (IA)' }).click()
+    // The second call fails as if the function had been cut at its deadline
+    const calls: Array<Record<string, unknown>> = []
+    await page.route('**/functions/v1/import-story', async (route) => {
+      calls.push(route.request().postDataJSON())
+      if (calls.length === 2) {
+        await route.fulfill({ status: 504, contentType: 'application/json', body: JSON.stringify({ error: { code: 'timeout', message: 'L’IA a mis trop de temps à répondre. Réessaie.' } }) })
+      } else await route.continue()
+    })
+    const png = Buffer.from([137, 80, 78, 71, 13, 10, 26, 10])
+    await page.getByTestId('page-input').setInputFiles([1, 2, 3, 4].map((n) => ({ name: `page-${n}.png`, mimeType: 'image/png', buffer: png })))
+    await page.getByRole('tab', { name: 'English' }).click()
+    await page.getByRole('button', { name: 'Importer 4 pages' }).click()
+
+    await expect(page.getByText("L'import s'est arrêté")).toBeVisible({ timeout: 60_000 })
+    await page.getByRole('button', { name: 'Reprendre à la page 3' }).click()
+    await expect(page.getByText('Import terminé')).toBeVisible({ timeout: 60_000 })
+
+    // Only pages 3-4 were sent again, to the same import: pages 1-2 are neither converted nor counted twice
+    expect(calls).toHaveLength(3)
+    const [first, , resumed] = calls
+    expect(first).toMatchObject({ firstPage: 1, totalPages: 4 })
+    expect(first.importId).toBeUndefined()
+    expect(resumed).toMatchObject({ firstPage: 3, totalPages: 4, lang: 'en' })
+    expect(resumed.importId).toEqual(expect.any(String))
+    expect(resumed.pagePaths).toHaveLength(2)
+    // Counted once each: pages 1-2 and 3-4
+    await expect(page.getByText(/4 pages importées ce mois-ci/)).toBeVisible()
+  })
+
   test('keeper creates an original story from the questionnaire', async ({ page }) => {
     await signUp(page)
     await page.getByRole('link', { name: /^Histoires/ }).click()
@@ -880,5 +920,61 @@ test.describe('AI features (fake Claude API)', () => {
     await page.getByRole('link', { name: 'Mes histoires' }).click()
     await expect(page.getByRole('link', { name: 'Mill of Silence' })).toBeVisible()
     await expect(page.getByText('Création privée')).toBeVisible()
+  })
+
+  test('completing a plan whose second call failed keeps the keeper’s edits', async ({ page }) => {
+    test.setTimeout(120_000) // outline, scenes and maps through the functions
+    await signUp(page)
+    // The outline's second call (clues, links) fails once, as on a timeout.
+    let failed = false
+    await page.route('**/functions/v1/create-story', async (route) => {
+      const body = route.request().method() === 'POST' ? route.request().postDataJSON() as { action?: string } | null : null
+      if (!failed && body?.action === 'outline-details') {
+        failed = true
+        return route.fulfill({ status: 504, contentType: 'application/json', body: JSON.stringify({ error: 'timeout', message: 'Réessaie.' }) })
+      }
+      return route.continue()
+    })
+    await page.goto('/stories/create?etape=5')
+    await page.getByRole('button', { name: 'Écrire le plan' }).click()
+    await expect(page.getByRole('button', { name: 'Compléter le plan' })).toBeVisible({ timeout: 60_000 })
+
+    // The frame is there and editable: rename, drop a scene, then ask for the rest.
+    await page.getByLabel('Titre', { exact: true }).fill('Mill of Silence')
+    await page.getByRole('button', { name: 'Retirer la scène 3' }).click()
+    await page.getByRole('button', { name: 'Compléter le plan' }).click()
+
+    await expect(page.getByText('A ribbon')).toBeVisible({ timeout: 60_000 })
+    await expect(page.getByRole('button', { name: 'Compléter le plan' })).toHaveCount(0)
+    await expect(page.getByLabel('Titre', { exact: true })).toHaveValue('Mill of Silence')
+    await expect(page.getByRole('button', { name: "Écrire l'histoire (2 scènes)" })).toBeVisible()
+  })
+
+  test('a scene map that fails can be drawn again before the story opens', async ({ page }) => {
+    test.setTimeout(120_000) // outline, scenes and maps through the functions
+    await signUp(page)
+    // The first scene-map call fails, as on a timeout.
+    let failed = false
+    await page.route('**/functions/v1/create-story', async (route) => {
+      const body = route.request().method() === 'POST' ? route.request().postDataJSON() as { action?: string } | null : null
+      if (!failed && body?.action === 'scene-map') {
+        failed = true
+        return route.fulfill({ status: 504, contentType: 'application/json', body: JSON.stringify({ error: 'timeout', message: 'Réessaie.' }) })
+      }
+      return route.continue()
+    })
+    await page.goto('/stories/create?etape=5')
+    await page.getByRole('button', { name: 'Écrire le plan' }).click()
+    await expect(page.getByText('A ribbon')).toBeVisible({ timeout: 60_000 })
+    await page.getByRole('button', { name: "Écrire l'histoire (3 scènes)" }).click()
+
+    // The creator stays, with the retry and a link to the story (ready without its map).
+    await expect(page.getByRole('button', { name: 'Réessayer les plans' })).toBeVisible({ timeout: 60_000 })
+    await expect(page).toHaveURL(/\/stories\/create/)
+    await expect(page.getByRole('link', { name: "Ouvrir l'histoire" })).toBeVisible()
+    await page.getByRole('button', { name: 'Réessayer les plans' }).click()
+
+    await expect(page.getByRole('heading', { name: 'The Quiet Mill', level: 1 })).toBeVisible({ timeout: 60_000 })
+    expect(failed).toBe(true)
   })
 })

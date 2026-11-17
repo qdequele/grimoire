@@ -13,6 +13,7 @@ import { CELL, mapLayout, renderMap, type Audience } from '../kit/render.ts'
 import { STAMPS, stampsFor, type Stamp } from '../kit/stamps.ts'
 import { downloadBlob, fileSlug, svgToPng } from './exportMap'
 import { BRUSHES, MAP_KIND_LABEL } from './labels'
+import { settledSize, sizeWithin } from './size'
 
 // The map editor: paint the ground, draw rooms, place stamps and words, mark what is secret, and see
 // the keeper's or the players' copy. The same component serves the free public page and the app.
@@ -45,6 +46,49 @@ function savedDraft(key: string): MapDoc | null {
 /** Resizes a map, keeping what still fits. */
 function resized(doc: MapDoc, cols: number, rows: number): MapDoc {
   return parseMapDoc({ ...doc, cols, rows, ground: doc.ground.map((r) => r.padEnd(cols, ' ')), secret: doc.secret }).doc
+}
+
+/**
+ * The map's width or height. Typed digits stay text until the keeper presses Enter or leaves the
+ * field (size.ts); the field's arrows, which give a whole size in one go, resize at once.
+ */
+function SizeField({ label, value, min, max, onResize }: { label: string; value: number; min: number; max: number; onResize: (size: number) => void }) {
+  const [text, setText] = useState(String(value))
+  // The map changed from elsewhere (undo, another map, a resize): the field shows its size again.
+  const [shown, setShown] = useState(value)
+  if (shown !== value) {
+    setShown(value)
+    setText(String(value))
+  }
+  // A key is down while the text changes: the keeper is typing. The arrows of the field aren't keys.
+  const typing = useRef(false)
+  const settle = () => {
+    const size = settledSize(text, min, max, value)
+    setText(String(size))
+    if (size !== value) onResize(size)
+  }
+  return (
+    <label className="flex flex-col gap-1">
+      <span className="eyebrow">{label}</span>
+      <Input
+        type="number" className="w-20" min={min} max={max} value={text}
+        onKeyDown={(e) => {
+          if (e.key === 'Enter') settle()
+          else typing.current = e.key !== 'ArrowUp' && e.key !== 'ArrowDown'
+        }}
+        onKeyUp={() => (typing.current = false)}
+        onChange={(e) => {
+          setText(e.target.value)
+          const size = typing.current ? null : sizeWithin(e.target.value, min, max)
+          if (size !== null && size !== value) onResize(size)
+        }}
+        onBlur={() => {
+          typing.current = false
+          settle()
+        }}
+      />
+    </label>
+  )
 }
 
 function setCell(doc: MapDoc, x: number, y: number, c: string, field: 'ground' | 'secret' = 'ground'): MapDoc {
@@ -466,14 +510,8 @@ export function MapEditor({ lang, storageKey, header }: MapEditorProps) {
             ))}
           </NativeSelect>
         </label>
-        <label className="flex flex-col gap-1">
-          <span className="eyebrow">{t('Largeur')}</span>
-          <Input type="number" className="w-20" min={MAP_LIMITS.minCols} max={MAP_LIMITS.maxCols} value={doc.cols} onChange={(e) => change(resized(doc, Number(e.target.value) || doc.cols, doc.rows))} />
-        </label>
-        <label className="flex flex-col gap-1">
-          <span className="eyebrow">{t('Hauteur')}</span>
-          <Input type="number" className="w-20" min={MAP_LIMITS.minRows} max={MAP_LIMITS.maxRows} value={doc.rows} onChange={(e) => change(resized(doc, doc.cols, Number(e.target.value) || doc.rows))} />
-        </label>
+        <SizeField label={t('Largeur')} value={doc.cols} min={MAP_LIMITS.minCols} max={MAP_LIMITS.maxCols} onResize={(cols) => change(resized(doc, cols, doc.rows))} />
+        <SizeField label={t('Hauteur')} value={doc.rows} min={MAP_LIMITS.minRows} max={MAP_LIMITS.maxRows} onResize={(rows) => change(resized(doc, doc.cols, rows))} />
         <div className="flex flex-wrap gap-2">
           <Button variant="outline" size="sm" onClick={() => load(randomMap(doc.kind, Math.floor(Math.random() * 1e9), lang))}>
             <Shuffle /> {t('Plan au hasard')}

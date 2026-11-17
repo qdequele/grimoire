@@ -519,6 +519,30 @@ function mergeById<T extends { id: string }>(old: T[], next: T[], merge: (a: T, 
 }
 
 /** Merge the draft from one batch of pages into the accumulated draft. Later pages extend earlier ones. */
+/**
+ * An NPC met again in a later batch (its stat block pages after its portrait, a scene naming it
+ * again). Drafts are normalized, so what the batch left out is '' or []: only what it filled
+ * replaces the earlier value. A missing kind reads as 'person', so a creature stays one.
+ */
+function mergeNpc(a: DraftNpc, b: DraftNpc): DraftNpc {
+  const list = <T>(old: T[], newer: T[]) => (newer.length ? newer : old)
+  return {
+    id: a.id,
+    name: b.name || a.name,
+    kind: a.kind === 'creature' || b.kind === 'creature' ? 'creature' : 'person',
+    role: b.role || a.role,
+    description: b.description || a.description,
+    personality: b.personality || a.personality,
+    knows: list(a.knows, b.knows),
+    stats: list(a.stats, b.stats),
+    damageBonus: b.damageBonus || a.damageBonus,
+    attacks: list(a.attacks, b.attacks),
+    skills: list(a.skills, b.skills),
+    sanLoss: b.sanLoss || a.sanLoss,
+    special: list(a.special, b.special),
+  }
+}
+
 export function mergeDraft(acc: ImportDraft, batch: ImportDraft): ImportDraft {
   return {
     title: keepOrNew(acc.title, batch.title),
@@ -539,7 +563,7 @@ export function mergeDraft(acc: ImportDraft, batch: ImportDraft): ImportDraft {
       // a scene that continues across pages: the later batch's version is more complete
       scenes: mergeById(a.scenes, b.scenes, (_old, newer) => newer),
     })),
-    npcs: mergeById(acc.npcs, batch.npcs, (a, b) => ({ ...a, ...b, stats: b.stats.length ? b.stats : a.stats })),
+    npcs: mergeById(acc.npcs, batch.npcs, mergeNpc),
     handouts: mergeById(acc.handouts, batch.handouts, (_a, b) => b),
     items: mergeById(acc.items ?? [], batch.items ?? [], (_a, b) => b),
   }

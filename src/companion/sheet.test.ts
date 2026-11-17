@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import type { CharacterData } from '@/characters/character'
+import { newDraft } from '@/engine/creation'
 import { clampPoints, companionSheet, companionSheetProblems, skillRows } from './sheet'
 
 const data = (over: Partial<CharacterData> = {}): CharacterData => ({
@@ -36,6 +37,16 @@ describe('companionSheet', () => {
   it('brings skills and age within what the server accepts', () => {
     const d = companionSheet({ name: 'Z', age: 200, characteristics: {}, skills: { own: 110, spot: 45 } })
     expect(d).toMatchObject({ age: 150, skills: { own: 99, spot: 45 } })
+  })
+
+  it('brings typed characteristics to whole numbers within 0..99, on the sheet and in the wizard draft kept with it', () => {
+    const typed = { STR: 100, CON: 55.5, SIZ: -5, DEX: 60 }
+    const creation = { ...newDraft(), rolled: true, characteristics: typed }
+    const d = companionSheet({ name: 'Z', characteristics: typed, skills: {}, creation })
+    expect(d.characteristics).toEqual({ STR: 99, CON: 56, SIZ: 0, DEX: 60 })
+    expect(d.creation?.characteristics).toEqual({ STR: 99, CON: 56, SIZ: 0, DEX: 60 })
+    expect(d.creation).toMatchObject({ rolled: true })
+    expect(companionSheet({ name: 'Y', characteristics: {}, skills: {} }).creation).toBeUndefined()
   })
 })
 

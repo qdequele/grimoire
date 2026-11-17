@@ -18,7 +18,7 @@ import { SKILLS } from '@/rules/d100'
 import { useGiveItem } from './api'
 import { ART_IDS, type ArtId } from './arts'
 import { CATALOG } from './catalog'
-import { ITEM_KINDS, ITEM_LIMITS, KIND_ART, KIND_LABEL, parseCard, USE_UNITS, WEAPON_SKILLS, type ItemCard as Card, type ItemKind, type UseUnit } from './item'
+import { isDamage, ITEM_KINDS, ITEM_LIMITS, KIND_ART, KIND_LABEL, parseCard, USE_UNITS, WEAPON_SKILLS, type ItemCard as Card, type ItemKind, type UseUnit } from './item'
 import { DocumentFields, filledCard, type DocumentDraft } from './DocumentFields'
 import { ItemArt } from './ItemArt'
 import { searchCatalog } from './search'
@@ -93,7 +93,7 @@ function draftCard(d: Draft): { card: Card | null; problem: string | null } {
   if (!name) return { card: null, problem: DRAFT_PROBLEMS[0] }
   if (hasMarkup(name)) return { card: null, problem: DRAFT_PROBLEMS[1] }
   const weapon = d.kind === 'weapon'
-  if (weapon && !/\d/.test(d.damage)) return { card: null, problem: DRAFT_PROBLEMS[2] }
+  if (weapon && !isDamage(d.damage)) return { card: null, problem: DRAFT_PROBLEMS[2] }
   const raw: Record<string, unknown> = { name, kind: d.kind, art: d.art }
   if (d.text.trim()) raw.text = d.text.trim()
   if (weapon) {

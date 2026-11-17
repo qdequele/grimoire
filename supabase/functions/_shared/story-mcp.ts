@@ -141,6 +141,70 @@ export function storyPart(content: unknown, part: StoryPart, sceneIds: string[] 
 
 export const sceneCount = (content: unknown) => asStory(content).acts.reduce((n, a) => n + a.scenes.length, 0)
 
+// ------------------------------------------------------------------ messages of write_scenes
+
+/** Two write_scenes calls for one creation at the same moment: the second one saves nothing. */
+export const WRITE_CONFLICT =
+  'Another write_scenes call for this creation was being saved at the same moment, so nothing from this call was saved. Send these scenes again, and send write_scenes calls one call at a time, never in parallel.'
+
+/** With the last scene's answer, when the finished story still has schema errors. */
+export const FINISHED_WITH_ERRORS =
+  'Every scene is written, so write_scenes takes nothing more for this story, but it still has format errors (validationErrors). Fix them with get_story and edit_story (put_scene, put_npc… in the story.json format), then give the keeper the link.'
+
+// ------------------------------------------------------------------ schema errors an edit adds
+
+/** One error of the story schema: where (a JSON pointer, as Ajv's instancePath) and what. */
+export interface SchemaIssue {
+  path: string
+  message: string
+}
+
+export const issueText = (e: SchemaIssue) => `${e.path || '/'} ${e.message}`.trim()
+
+/**
+ * What an issue is about, wherever it sits: positions in lists are replaced by the item's id (and
+ * what comes before a named item is dropped), so "/npcs/4/name" is the same error after an NPC was
+ * inserted or removed before it, or a scene moved to another act. Items without an id count as "*".
+ */
+function issueKey(story: unknown, issue: SchemaIssue): string {
+  let node: unknown = story
+  let key: string[] = []
+  let list = ''
+  for (const raw of issue.path.split('/').slice(1)) {
+    const part = raw.replace(/~1/g, '/').replace(/~0/g, '~')
+    const parent = node
+    node = Array.isArray(parent) ? parent[Number(part)] : isObj(parent) ? parent[part] : undefined
+    if (!Array.isArray(parent)) {
+      key.push(part)
+      list = part
+    } else if (isObj(node) && typeof node.id === 'string') {
+      key = [`${list}[${node.id}]`]
+    } else {
+      key.push('*')
+    }
+  }
+  return `${key.join('/')} ${issue.message}`
+}
+
+/**
+ * The schema errors the edited story has and the story before did not (it may already have some:
+ * stories converted from books, creations saved with validation errors). Counted per error, not as a
+ * total: mending one error doesn't pay for adding another. `was` and `now` are the full lists.
+ */
+export function addedSchemaIssues(before: unknown, was: SchemaIssue[], after: unknown, now: SchemaIssue[]): SchemaIssue[] {
+  const had = new Map<string, number>()
+  for (const e of was) {
+    const k = issueKey(before, e)
+    had.set(k, (had.get(k) ?? 0) + 1)
+  }
+  return now.filter((e) => {
+    const k = issueKey(after, e)
+    const left = had.get(k) ?? 0
+    if (left) had.set(k, left - 1)
+    return !left
+  })
+}
+
 // ------------------------------------------------------------------ editing a story (story.json level)
 
 export const EDIT_OPS = [
@@ -448,7 +512,7 @@ Before drawing a background, check the built-in décors (topic "sounds"): if the
 Anything else is refused with the reason, and nothing is saved.
 - One root <svg> with a viewBox, at most ${SVG_LIMITS.bytes / 1024} KB and ${SVG_LIMITS.elements} elements.
 - Elements: ${IMAGE_ELEMENTS}, and the filter primitives (feGaussianBlur, feTurbulence, feDisplacementMap, feColorMatrix, feComposite, feMerge, feOffset, feFlood…) except feImage.
-- Not allowed: scripts, event attributes (onload…), foreignObject, <image> and feImage, links (<a>), animation (animate, set…), DOCTYPE and entities, editor namespaces (inkscape, sodipodi), external URLs. href only as "#id" (use, textPath, gradients, patterns), url() only as url(#id). In <style> and style="": plain CSS, no @import, no @font-face, no backslashes.
+- Not allowed: scripts, event attributes (onload…), foreignObject, <image> and feImage, links (<a>), animation (animate, set…), DOCTYPE and entities, editor namespaces (inkscape, sodipodi), external URLs. href only as "#id" (use, textPath, gradients, patterns), url() only as url(#id). In <style> and style="": plain CSS, no @import, no @font-face, no backslashes, not even inside a CSS comment or a quoted string.
 
 ## Calling save_image
 
@@ -478,8 +542,8 @@ You write the story; Grimoire checks it, saves it as a private story in the keep
 2. Agree on the brief with the keeper: language (fr or en), era, place, tone, threat, the central mystery, number of investigators, length, and content to avoid (lines and veils). Ask only for what they care about; choose the rest yourself and say what you chose.
 3. Write the OUTLINE: title, a spoiler-free pitch, the secret, the overview, the scenes grouped in acts (each with a short summary, its clues, NPC ids and next scene ids) and every NPC with a short description. Show it to the keeper as a readable list, not JSON, and revise it until they approve it.
 4. Call save_outline with the brief and the approved outline. It returns a creationId and the scene ids to write, in order. You may call save_outline again with the same creationId to replace the outline, but only before the first scene is written.
-5. Call write_scenes with 2 or 3 scenes at a time (${MCP_LIMITS.scenesPerCall} at most), in the order given by "next", until "remaining" is 0. Each call carries a draft: the acts holding these scenes (same act and scene ids as the outline), the full entry of every NPC who appears in them and is not detailed yet (personality, knows, stats, skills, attacks), their handouts, and the items found there (objects the investigators keep: a key, a weapon, a talisman). Leave out what you have nothing for. The story is saved after every call, so the keeper can already open it.
-6. If a call returns validationErrors, fix those scenes by sending them again with the same ids in the next call. When "remaining" is 0, give the keeper the story's link.
+5. Call write_scenes with 2 or 3 scenes at a time (${MCP_LIMITS.scenesPerCall} at most), in the order given by "next", until "remaining" is 0. One call at a time, never in parallel: wait for each answer before sending the next batch (a call that arrives while another one is being saved is refused with "conflict" and saves nothing: send it again). Each call carries a draft: the acts holding these scenes (same act and scene ids as the outline), the full entry of every NPC who appears in them and is not detailed yet (personality, knows, stats, skills, attacks), their handouts, and the items found there (objects the investigators keep: a key, a weapon, a talisman). Leave out what you have nothing for. The story is saved after every call, so the keeper can already open it.
+6. If a call returns validationErrors while scenes remain, fix them by sending those scenes or NPCs again with the same ids in the next write_scenes call. When "remaining" is 0 the creation is closed and write_scenes takes nothing more: errors still listed then are fixed with get_story and edit_story (put_scene, put_npc… in the story.json format, topic "format"). Then give the keeper the story's link.
 7. Then offer pictures: a background for the ambiance screen in two or three key scenes (when no built-in décor fits them) and a picture for the handouts that are papers, letters or maps. Draw only the ones the keeper wants, in SVG, with save_image (grimoire_guide topic "images").
 
 # Revising one of the keeper's stories
@@ -649,7 +713,7 @@ export function toolDefinitions(): ToolDef[] {
     {
       name: 'write_scenes',
       title: 'Write scenes',
-      description: `Write the next scenes of a creation in full (${MCP_LIMITS.scenesPerCall} at most per call, 2 or 3 is best), with the NPCs and handouts they need. The story is saved after every call. Returns how many scenes remain, the next ids to write and any validation errors to fix.`,
+      description: `Write the next scenes of a creation in full (${MCP_LIMITS.scenesPerCall} at most per call, 2 or 3 is best), with the NPCs and handouts they need. The story is saved after every call. One call at a time for a creation, never in parallel. Returns how many scenes remain, the next ids to write and any validation errors: fix them in the next call, or with get_story and edit_story once no scene remains.`,
       inputSchema: {
         type: 'object',
         properties: { creationId: { type: 'string' }, draft },
