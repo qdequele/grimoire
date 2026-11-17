@@ -26,7 +26,7 @@
 //                        The map is added to the story as it is stored then (the keeper may have
 //                        edited it since the last scene), under a condition on its updated_at.
 // The creation's own counters (outline_count, details_count, map_attempts) move before the Claude
-// call; a revision is given back when the AI service refused the call over HTTP.
+// call, and are given back only when the AI service refused the call over HTTP.
 //
 // Every call must end before the Edge Function's wall-clock limit (150 s): that is why the outline
 // takes two calls, scenes go one at a time, the writing is done by Sonnet, and each Claude call is
@@ -360,7 +360,9 @@ async function outlineDetails(apiKey: string, deadline: number, admin: Admin, us
   if (typeof frame === 'string') throw new Failure(409, 'no_outline', 'Écris d’abord le plan de l’histoire.')
   await takeSlot(admin, userId, row, 'details_count', DETAILS_PER_STORY, new Failure(429, 'too_many_details', `Le plan de cette histoire a déjà été complété ${DETAILS_PER_STORY} fois. Écris les scènes, ou commence une nouvelle histoire.`))
 
-  const { output, usage } = await ask(apiKey, deadline, { model: WRITER_MODEL, format: DETAILS_FORMAT, effort: 'medium', text: outlineDetailsPrompt(brief, frame), maxTokens: 32000 })
+  const { output, usage } = await onSlot(admin, row, 'details_count', () =>
+    ask(apiKey, deadline, { model: WRITER_MODEL, format: DETAILS_FORMAT, effort: 'medium', text: outlineDetailsPrompt(brief, frame), maxTokens: 32000 }),
+  )
   const full = withDetails(frame, output)
   if (typeof full === 'string') throw new Failure(502, 'invalid_output', 'Le plan reçu est incomplet. Réessaie.')
   const { error } = await admin
@@ -503,7 +505,7 @@ async function sceneMap(apiKey: string, deadline: number, admin: Admin, userId: 
   const target = await existingStory(admin, row.story_id, storyMetaId(outline.title, row.id))
   if (!target.storyId) throw new Failure(404, 'not_found', 'Histoire introuvable.')
   await takeSlot(admin, userId, row, 'map_attempts', MAP_ATTEMPTS_PER_STORY, new Failure(429, 'too_many_maps', 'Trop d’essais pour les plans de cette histoire. Elle est prête sans eux.'))
-  const { map: doc, problems, usage } = await composeMap(apiKey, deadline, sceneMapRequest(scene, lang))
+  const { map: doc, problems, usage } = await onSlot(admin, row, 'map_attempts', () => composeMap(apiKey, deadline, sceneMapRequest(scene, lang)))
   const files = mapFiles(scene.id)
   // The renderer's output always passes sanitizeSvg (a unit test checks it); checked again before it is stored.
   await savePackFile(admin, userId, target.storyId, files.players.image, sanitizeSvg(renderMap(doc, { audience: 'players', lang })).svg, 'image/svg+xml')

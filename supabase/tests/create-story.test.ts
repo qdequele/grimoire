@@ -182,6 +182,12 @@ describe('create-story', () => {
     const creationId = rows![0].id
     // One attempt left (twice the maps a story may have). Four calls at once: Claude is called once.
     await service.from('story_creations').update({ map_attempts: 5 }).eq('id', creationId)
+    // The AI service refused the call itself: nothing was generated, the attempt is given back
+    fake.status = 400
+    const refused = await invoke({ action: 'scene-map', creationId })
+    expect([refused.status, refused.body.error?.code]).toEqual([502, 'ai_error'])
+    expect((await service.from('story_creations').select('map_attempts').eq('id', creationId).single()).data).toEqual({ map_attempts: 5 })
+    fake.status = 200
     const before = callsAsking('ground')
     fake.text = 'not a map' // the answer can't be read: the attempt is spent all the same
     const statuses = (await burst(4, { action: 'scene-map', creationId })).map((r) => r.status).sort()
@@ -275,6 +281,12 @@ describe('create-story', () => {
       .single()
     expect(error).toBeNull()
     const creationId = row!.id
+    // The AI service refused the call itself: nothing was generated, the call is given back
+    fake.status = 400
+    const refused = await invoke({ action: 'outline-details', creationId })
+    expect([refused.status, refused.body.error?.code]).toEqual([502, 'ai_error'])
+    expect((await service.from('story_creations').select('details_count').eq('id', creationId).single()).data).toEqual({ details_count: 9 })
+    fake.status = 200
     const before = callsAsking('overview')
     const statuses = (await burst(4, { action: 'outline-details', creationId })).map((r) => r.status).sort()
     expect(callsAsking('overview') - before).toBe(1)
