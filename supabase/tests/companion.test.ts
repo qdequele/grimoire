@@ -1181,3 +1181,42 @@ describe('companion: keeper point writes', () => {
   })
 })
 
+describe('companion: progression saved from a game', () => {
+  const dataOf = async (id: string) =>
+    (await alice.client.from('characters').select('data').eq('id', id).single()).data!.data as Record<string, unknown>
+
+  it('save_character_progress writes the progression only, keeping a sheet edited since the game started', async () => {
+    const g = await newGame(alice, [{ name: 'One', hp: 11, progress: { san: 54 } }])
+    // The keeper corrects the sheet in another tab while the game is open…
+    const edited = await alice.client.from('characters')
+      .update({ data: { name: 'One, corrected', hp: 12, skills: { listen: 60 }, progress: { san: 54 } } }).eq('id', g.ids[0])
+    expect(edited.error).toBeNull()
+    // …then the game saves the investigator's progression.
+    const progress = { skills: { listen: 61 }, checks: ['listen'], hist: [], san: 52 }
+    const saved = await alice.client.rpc('save_character_progress', { p_character: g.ids[0], p_progress: progress })
+    expect(saved.error).toBeNull()
+    expect(await dataOf(g.ids[0])).toEqual({ name: 'One, corrected', hp: 12, skills: { listen: 60 }, progress })
+  })
+
+  it('adds the progression to a sheet that has none, and refuses anything but an object', async () => {
+    const g = await newGame(alice, [{ name: 'Two' }])
+    const before = await dataOf(g.ids[0])
+    for (const bad of [null, 'text', 3, ['a']] as Json[]) {
+      const r = await alice.client.rpc('save_character_progress', { p_character: g.ids[0], p_progress: bad })
+      expect(r.error?.message).toContain('bad_value')
+    }
+    expect(await dataOf(g.ids[0])).toEqual(before)
+    const ok = await alice.client.rpc('save_character_progress', { p_character: g.ids[0], p_progress: { checks: ['listen'] } })
+    expect(ok.error).toBeNull()
+    expect(await dataOf(g.ids[0])).toEqual({ ...before, progress: { checks: ['listen'] } })
+  })
+
+  it("can't write to someone else's investigator, nor without an account", async () => {
+    const g = await newGame(alice, [{ name: 'Three', progress: { san: 40 } }])
+    const theirs = await bob.client.rpc('save_character_progress', { p_character: g.ids[0], p_progress: { san: 1 } })
+    expect(theirs.error?.message).toContain('not_found')
+    const nobody = await anon.rpc('save_character_progress', { p_character: g.ids[0], p_progress: { san: 1 } })
+    expect(nobody.error).not.toBeNull()
+    expect((await dataOf(g.ids[0])).progress).toEqual({ san: 40 })
+  })
+})

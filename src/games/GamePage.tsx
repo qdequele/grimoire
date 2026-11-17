@@ -206,10 +206,10 @@ export function GamePage() {
         const json = JSON.stringify(progress)
         if (written.get(c.id) === json) continue
         written.set(c.id, json)
+        // The progress key only, written on the server: the rest of the sheet may have been
+        // corrected since the game started (the wizard in another tab, the MCP connector).
         void supabase
-          .from('characters')
-          .update({ data: { ...c.data, progress } as unknown as Json })
-          .eq('id', c.id)
+          .rpc('save_character_progress', { p_character: c.id, p_progress: progress as unknown as Json })
           .then(({ error }) => error && console.error('Progress save failed', error))
       }
     }
