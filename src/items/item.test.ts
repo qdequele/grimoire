@@ -139,6 +139,23 @@ describe('the game screen', () => {
     ])).toEqual([{ itemId: 'key', card: { name: 'Crypt key', kind: 'key' } }])
     expect(storyCards(undefined)).toEqual([])
   })
+
+  it("gives a story's item without an optional value it can't use, rather than not at all", () => {
+    // Values the story format lets through but a card refuses: an unknown skill, a calibre with a
+    // comma, markup in a range or rate, a note too long or with markup.
+    const gun = { name: 'Gun', kind: 'weapon', weapon: { skill: 'firearms-handgun', damage: '1D8', range: '6"', rate: '<1>' }, ammo: '7,65 mm', uses: 6 }
+    expect(storyCards([
+      { id: 'kit', name: 'Kit', kind: 'tool', bonus: { skill: 'lockpick' } },
+      { id: 'lens', name: 'Lens', kind: 'tool', bonus: { skill: 'spot-hidden', note: '<b>' } },
+      { id: 'gun', ...gun },
+    ])).toEqual([
+      { itemId: 'kit', card: { name: 'Kit', kind: 'tool' } },
+      { itemId: 'lens', card: { name: 'Lens', kind: 'tool', bonus: { skill: 'spot-hidden' } } },
+      { itemId: 'gun', card: { name: 'Gun', kind: 'weapon', weapon: { skill: 'firearms-handgun', damage: '1D8' }, uses: 6 } },
+    ])
+    // What a card can't do without is still refused.
+    expect(storyCards([{ id: 'w', name: 'W', kind: 'weapon', weapon: { skill: 'firearms-handgun', damage: 'lots' }, ammo: '7,65' }])).toEqual([])
+  })
 })
 
 describe('the catalogue pictures (src/items/pictures, scripts/item-arts-ship.mjs)', () => {
