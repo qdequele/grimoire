@@ -188,7 +188,9 @@ async function isAdmin(admin: Admin, userId: string) {
 async function loadCreation(admin: Admin, id: unknown, userId: string): Promise<CreationRow> {
   if (typeof id !== 'string') throw new Failure(400, 'bad_request', 'creationId is required.')
   const { data } = await admin.from('story_creations').select('*').eq('id', id).maybeSingle()
-  if (!data || data.owner_id !== userId) throw new Failure(404, 'not_found', 'Création introuvable.')
+  // Creations started through the MCP connector are written by the keeper's chat app, never by
+  // this function's paid model: they don't exist here (same answer as an unknown id).
+  if (!data || data.owner_id !== userId || data.source !== 'web') throw new Failure(404, 'not_found', 'Création introuvable.')
   return data
 }
 

@@ -197,6 +197,29 @@ describe('create-story', () => {
     expect((await invoke({ action: 'outline', brief }, anon)).status).toBe(401)
   })
 
+  it('refuses a creation started through the MCP connector: those never use the paid writer', async () => {
+    const { data: done } = await service.from('story_creations').select('draft, story_id').eq('owner_id', userId).eq('status', 'succeeded').order('created_at', { ascending: false }).limit(1).single()
+    const base = { owner_id: userId, brief, outline: FAKE_OUTLINE, outline_count: 1, source: 'mcp' }
+    const { data: rows, error } = await service
+      .from('story_creations')
+      .insert([
+        { ...base, status: 'outlined' },
+        // Every scene written, one still asks for its map
+        { ...base, status: 'succeeded', story_id: done!.story_id, draft: { ...(done!.draft as object), handouts: [] } },
+      ])
+      .select('id, status')
+    expect(error).toBeNull()
+    const outlined = rows!.find((r) => r.status === 'outlined')!.id
+    const written = rows!.find((r) => r.status === 'succeeded')!.id
+    const before = requests.length
+    for (const [action, creationId] of [['outline', outlined], ['outline-details', outlined], ['write', outlined], ['scene-map', written]]) {
+      const res = await invoke({ action, creationId })
+      expect([action, res.status, res.body.error?.code]).toEqual([action, 404, 'not_found'])
+    }
+    expect(requests.length).toBe(before) // Claude was never called
+    await service.from('story_creations').delete().in('id', [outlined, written])
+  })
+
   it('composes a map from a description, checked by the map kit, within its own monthly limit', async () => {
     const res = await invoke({ action: 'map', description: 'A small house with two rooms.', kind: 'building', lang: 'en' })
     expect(res.status).toBe(200)
