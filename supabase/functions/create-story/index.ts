@@ -6,7 +6,8 @@
 //                        Starts a new creation (counted against the monthly limit) or revises the
 //                        current one.
 //   - "outline-details": completes the frame: each scene's clues, NPCs and next scenes, and the
-//                        keeper's overview. The browser calls it right after "outline".
+//                        keeper's overview. The browser calls it right after "outline". Counted per
+//                        creation (details_count), at most STORY_DETAILS_PER_STORY calls.
 //   - "write":           writes the next scene of the outline in full (the same ImportDraft shape
 //                        as the AI import), merges it, converts with draftToStory, validates against
 //                        the spec and saves the private story + its story.json. The browser calls
@@ -24,7 +25,7 @@
 // cut at AI_DEADLINE_MS with a clean "try again" instead of the function being killed.
 //
 // Secrets: ANTHROPIC_API_KEY (required). Optional: STORY_CREATE_MONTHLY_LIMIT (default 10 new
-// stories), STORY_OUTLINES_PER_STORY (default 5), STORY_SCENES_PER_CALL (default 1),
+// stories), STORY_OUTLINES_PER_STORY (default 5), STORY_DETAILS_PER_STORY (default 10), STORY_SCENES_PER_CALL (default 1),
 // STORY_IDEAS_MONTHLY_LIMIT (default 50), MAP_MONTHLY_LIMIT (default 30), AI_DEADLINE_MS (default 130000, from the request's start).
 
 import Anthropic from 'npm:@anthropic-ai/sdk@1.4.0'
@@ -68,6 +69,8 @@ const IDEAS_MODEL = 'claude-haiku-5-5'
 const WRITER_MODEL = 'claude-sonnet-5-5'
 const MONTHLY_LIMIT = Number(Deno.env.get('STORY_CREATE_MONTHLY_LIMIT') ?? 10)
 const OUTLINES_PER_STORY = Number(Deno.env.get('STORY_OUTLINES_PER_STORY') ?? 5)
+/** "outline-details" calls per creation: one per outline, and as many retries after a timeout. */
+const DETAILS_PER_STORY = Number(Deno.env.get('STORY_DETAILS_PER_STORY') ?? 2 * OUTLINES_PER_STORY)
 const SCENES_PER_CALL = Number(Deno.env.get('STORY_SCENES_PER_CALL') ?? 1)
 const IDEAS_MONTHLY_LIMIT = Number(Deno.env.get('STORY_IDEAS_MONTHLY_LIMIT') ?? 50)
 const MAP_MONTHLY_LIMIT = Number(Deno.env.get('MAP_MONTHLY_LIMIT') ?? 30)
@@ -194,6 +197,24 @@ async function loadCreation(admin: Admin, id: unknown, userId: string): Promise<
   return data
 }
 
+/**
+ * Take one of a creation's counted calls BEFORE asking Claude, so calls that fail, time out or run
+ * at the same time are counted too. The counter only moves from the value this request read: of
+ * several requests that read the same value, one goes on and the others are told to try again.
+ * Admins have no limit; their calls are still counted.
+ */
+async function takeSlot(admin: Admin, userId: string, row: CreationRow, counter: 'details_count', limit: number, refusal: Failure) {
+  if (row[counter] >= limit && !(await isAdmin(admin, userId))) throw refusal
+  const { data, error } = await admin
+    .from('story_creations')
+    .update({ details_count: row.details_count + 1 })
+    .eq('id', row.id)
+    .eq(counter, row[counter])
+    .select('id')
+  if (error) throw error
+  if (!data.length) throw new Failure(409, 'busy', 'Une autre demande est déjà en cours pour cette histoire. Réessaie dans un instant.')
+}
+
 // ------------------------------------------------------------------ actions
 
 async function ideas(apiKey: string, deadline: number, admin: Admin, userId: string, body: Record<string, unknown>) {
@@ -286,6 +307,7 @@ async function outlineDetails(apiKey: string, deadline: number, admin: Admin, us
   if (typeof brief === 'string') throw new Failure(500, 'internal', brief)
   const frame = parseOutline(body.outline ?? row.outline)
   if (typeof frame === 'string') throw new Failure(409, 'no_outline', 'Écris d’abord le plan de l’histoire.')
+  await takeSlot(admin, userId, row, 'details_count', DETAILS_PER_STORY, new Failure(429, 'too_many_details', `Le plan de cette histoire a déjà été complété ${DETAILS_PER_STORY} fois. Écris les scènes, ou commence une nouvelle histoire.`))
 
   const { output, usage } = await ask(apiKey, deadline, { model: WRITER_MODEL, format: DETAILS_FORMAT, effort: 'medium', text: outlineDetailsPrompt(brief, frame), maxTokens: 32000 })
   const full = withDetails(frame, output)

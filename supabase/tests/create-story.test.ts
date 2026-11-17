@@ -2,7 +2,7 @@
 // Run with `pnpm test:import` (needs `supabase functions serve --env-file supabase/tests/functions.env`).
 import { createServer, type Server } from 'node:http'
 import { createClient, type SupabaseClient } from '@supabase/supabase-js'
-import { afterAll, beforeAll, describe, expect, it } from 'vitest'
+import { afterAll, afterEach, beforeAll, describe, expect, it } from 'vitest'
 import type { Database } from '../../src/lib/database.types'
 import { fakeAnswer, FAKE_IDEAS, FAKE_OUTLINE, FAKE_SCREEN } from './fake-creator'
 
@@ -12,6 +12,11 @@ const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!
 const MOCK_PORT = Number(process.env.MOCK_ANTHROPIC_PORT ?? 4010)
 
 const requests: Array<{ body: Record<string, unknown>; headers: Record<string, unknown> }> = []
+/** For one test: the fake Claude answers late, with another text, or with an HTTP error. */
+const fake = { delayMs: 0, text: null as string | null, status: 200 }
+/** Calls Claude received whose structured output has this property (the kind of answer asked for). */
+const callsAsking = (property: string) =>
+  requests.filter((r) => property in ((r.body.output_config as { format?: { schema?: { properties?: object } } } | undefined)?.format?.schema?.properties ?? {})).length
 
 /** Streams one Messages API response the way the real API does (SSE). */
 function sse(text: string) {
@@ -38,8 +43,16 @@ beforeAll(async () => {
     req.on('end', () => {
       const body = JSON.parse(raw || '{}')
       requests.push({ body, headers: req.headers })
-      res.writeHead(200, { 'content-type': 'text/event-stream' })
-      res.end(sse(fakeAnswer(body) ?? '{}'))
+      const { delayMs, text, status } = fake
+      setTimeout(() => {
+        if (status !== 200) {
+          res.writeHead(status, { 'content-type': 'application/json' })
+          res.end(JSON.stringify({ type: 'error', error: { type: 'invalid_request_error', message: 'refused by the fake API' } }))
+          return
+        }
+        res.writeHead(200, { 'content-type': 'text/event-stream' })
+        res.end(sse(text ?? fakeAnswer(body) ?? '{}'))
+      }, delayMs)
     })
   })
   await new Promise<void>((r) => mock.listen(MOCK_PORT, '0.0.0.0', r))
@@ -50,6 +63,7 @@ beforeAll(async () => {
 })
 
 afterAll(() => new Promise<void>((r) => mock.close(() => r())))
+afterEach(() => Object.assign(fake, { delayMs: 0, text: null, status: 200 }))
 
 // FUNCTIONS_URL: run against a function served elsewhere (e.g. `deno run` of index.ts).
 const functionsUrl = process.env.FUNCTIONS_URL ?? `${url}/functions/v1`
@@ -63,6 +77,9 @@ async function invoke(body: Record<string, unknown>, client = user) {
   })
   return { status: res.status, body: await res.json() }
 }
+
+/** Several calls at once. */
+const burst = (n: number, body: Record<string, unknown>) => Promise.all(Array.from({ length: n }, () => invoke(body)))
 
 const brief = {
   lang: 'en', era: '', place: 'A mill town', tone: 'folk', threat: 'human', hook: 'People vanish.',
@@ -218,6 +235,29 @@ describe('create-story', () => {
     }
     expect(requests.length).toBe(before) // Claude was never called
     await service.from('story_creations').delete().in('id', [outlined, written])
+  })
+
+  it('counts the outline-details calls of a creation, calls at once included', async () => {
+    // One call left out of 10 (twice the outlines a story may have)
+    const { data: row, error } = await service
+      .from('story_creations')
+      .insert({ owner_id: userId, brief, outline: FAKE_OUTLINE, outline_count: 1, details_count: 9 })
+      .select('id')
+      .single()
+    expect(error).toBeNull()
+    const creationId = row!.id
+    const before = callsAsking('overview')
+    const statuses = (await burst(4, { action: 'outline-details', creationId })).map((r) => r.status).sort()
+    expect(callsAsking('overview') - before).toBe(1)
+    expect(statuses[0]).toBe(200)
+    expect(statuses.slice(1).every((s) => s === 409 || s === 429)).toBe(true)
+    // Used up: refused before Claude is called
+    const over = await invoke({ action: 'outline-details', creationId })
+    expect([over.status, over.body.error?.code]).toEqual([429, 'too_many_details'])
+    expect(callsAsking('overview') - before).toBe(1)
+    const { data: after } = await service.from('story_creations').select('details_count').eq('id', creationId).single()
+    expect(after).toEqual({ details_count: 10 })
+    await service.from('story_creations').delete().eq('id', creationId)
   })
 
   it('composes a map from a description, checked by the map kit, within its own monthly limit', async () => {
