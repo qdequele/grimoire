@@ -1154,3 +1154,30 @@ describe('companion: items', () => {
     }
   })
 })
+
+describe('companion: keeper point writes', () => {
+  it('a keeper write of one field keeps a phone change to another field made in the meantime', async () => {
+    const g = await newGame(alice, [{ name: 'One', hp: 11, progress: { san: 54 } }])
+    const l = await link(alice, g.gameId)
+    const row = async () =>
+      (await alice.client.from('game_points').select('*').eq('game_id', g.gameId).eq('character_id', g.ids[0]).single()).data!
+    // The first write creates the row: the game screen sends it whole.
+    const first = await alice.client.from('game_points')
+      .upsert({ game_id: g.gameId, character_id: g.ids[0], pv: 10, san: 54, chance: 50, pm: 10, checks: ['spot-hidden'], source: 'keeper' })
+    expect(first.error).toBeNull()
+
+    // The phone lowers SAN just before the keeper's damage is written: the game screen sends only
+    // what the keeper changed (an upsert sets the columns it is given), so the SAN stays.
+    const phone = await anon.rpc('companion_set_point', { p_token: l.token, p_character: g.ids[0], p_field: 'san', p_value: 53 })
+    expect(phone.error).toBeNull()
+    const keeper = await alice.client.from('game_points').upsert({ game_id: g.gameId, character_id: g.ids[0], pv: 4, source: 'keeper' })
+    expect(keeper.error).toBeNull()
+    expect(await row()).toMatchObject({ pv: 4, san: 53, chance: 50, pm: 10, checks: ['spot-hidden'], source: 'keeper' })
+
+    // Checks alone, too.
+    const checks = await alice.client.from('game_points').upsert({ game_id: g.gameId, character_id: g.ids[0], checks: ['spot-hidden', 'listen'], source: 'keeper' })
+    expect(checks.error).toBeNull()
+    expect(await row()).toMatchObject({ pv: 4, san: 53, chance: 50, pm: 10, checks: ['spot-hidden', 'listen'] })
+  })
+})
+

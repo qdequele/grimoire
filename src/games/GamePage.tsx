@@ -7,7 +7,7 @@ import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Spinner } from '@/components/ui/spinner'
 import type { Json } from '@/lib/database.types'
 import { supabase, type Tables } from '@/lib/supabase'
-import { addMissingMembers, applyPoints, diffPoints, keeperEchoAction, partyIds, pointsFromState, type PointsRow } from '@/play/companion'
+import { addMissingMembers, applyPoints, partyIds, pointsFromState, type PointsRow } from '@/play/companion'
 import type { StoryForEngine } from '@/play/legacy/adapter'
 import { engineGlobals, freshState, toLegacyCharacter, withAccountProgress } from '@/play/engineData'
 import type { EngineApi, LegacyState, NotebookEntry } from '@/play/host'
@@ -17,6 +17,7 @@ import { TableLinksDialog, type TableMember } from './TableLinksDialog'
 import { ScreenControl, screenStory } from './screen'
 import { ScreenDialog } from './ScreenDialog'
 import { engineQueue, gameView, inOrder } from './live'
+import { keeperPatch, mergeRow, POINT_FIELDS, type PointField, type PointsWithChecks } from './points'
 import { rollFeed } from './rolls'
 import { showRollToast } from './RollToast'
 import { rollJournal } from '@/companion/rolls'
@@ -160,12 +161,16 @@ export function GamePage() {
     const sceneOf = (S: LegacyState) => ((S.scen ?? {}) as Record<string, { scene?: string } | undefined>)[storyId]?.scene
     const toMember = (c: CharacterRow): TableMember => ({ id: c.id, name: c.data.name, player: c.player?.name ?? undefined, photo: c.photo })
 
-    // Points last written to (or received from) game_points, per account investigator.
+    // What game_points is known to hold (read from it, or sent to it), per account investigator.
     let lastWritten: Tracked = new Map()
-    // Investigators whose phone values were applied since our last keeper write (see keeperEchoAction).
-    const phoneSinceWrite = new Set<string>()
-    // Newest game_points update seen per investigator, to catch up after (re)subscribing.
+    // Investigators who have a game_points row: their writes carry only the fields that changed.
+    const inTable = new Set<string>()
+    // Keeper writes on their way, per investigator: a row read meanwhile is older for these fields.
+    const sending = new Map<string, PointField[]>()
+    // updated_at (the server's) of the newest row handled per investigator: an older read is dropped.
     const seen = new Map<string, string>()
+    // The engine's state at its last save (or load): where its current values are read.
+    let latest: LegacyState | null = null
     let notebooks: Record<string, NotebookEntry[]> = {}
     // Account investigators' photos (the round heads), kept out of the engine's saved state.
     let photos: Record<string, string> = {}
@@ -213,23 +218,45 @@ export function GamePage() {
       const ids = new Set(partyIds(legacy, storyId, accountIds))
       return new Map([...pointsFromState(legacy, storyId)].filter(([cid]) => ids.has(cid)))
     }
-    /** Keeper values to game_points. updated_at is the server's (trigger): client clocks drift. */
-    const upsertPoints = (rows: ReturnType<typeof diffPoints>) => {
-      if (!rows.length) return
-      for (const r of rows) phoneSinceWrite.delete(r.characterId)
+    /**
+     * Keeper values to game_points: only the fields the keeper changed (an upsert sets the columns it
+     * is given), so a phone's change to another field at the same moment stays. updated_at is the
+     * server's (trigger): client clocks drift.
+     */
+    const sendPoints = (cid: string, patch: NonNullable<ReturnType<typeof keeperPatch>>, before: PointsWithChecks | undefined) => {
+      const fields = POINT_FIELDS.filter((f) => patch[f] !== undefined)
+      sending.set(cid, [...(sending.get(cid) ?? []), ...fields])
       void supabase
         .from('game_points')
-        .upsert(rows.map((p) => ({
-          game_id: g.id, character_id: p.characterId, pv: p.pv, san: p.san, chance: p.chance, pm: p.pm,
-          checks: p.checks, source: 'keeper',
-        })))
-        .then(({ error }) => error && console.error('Points save failed', error))
+        .upsert({ game_id: g.id, character_id: cid, ...patch, source: 'keeper' })
+        .then(({ error }) => {
+          const left = [...(sending.get(cid) ?? [])]
+          for (const f of fields) left.splice(left.indexOf(f), 1)
+          sending.set(cid, left)
+          if (error) {
+            console.error('Points save failed', error)
+            // Not written: the table still holds what it held, so the next save sends these again.
+            const held = lastWritten.get(cid)
+            if (!before) lastWritten.delete(cid)
+            else if (held) {
+              for (const f of fields) if (held[f] === patch[f]) held[f] = before[f]
+              if (patch.checks && held.checks.join('\n') === patch.checks.join('\n')) held.checks = before.checks
+            }
+            return
+          }
+          inTable.add(cid)
+          // The row as it is once the write is in: a phone may have changed it meanwhile.
+          if (!disposed) readPoints(cid)
+        })
     }
     const savePoints = (legacy: LegacyState) => {
       const now = accountPoints(legacy)
-      const changed = diffPoints(now, lastWritten)
+      for (const [cid, v] of now) {
+        const before = lastWritten.get(cid)
+        const patch = keeperPatch(v, before, inTable.has(cid))
+        if (patch) sendPoints(cid, patch, before)
+      }
       lastWritten = now
-      upsertPoints(changed)
     }
     const flush = () => {
       if (!pending) return
@@ -261,30 +288,32 @@ export function GamePage() {
         })
     }
 
-    /** Only phone rows move `seen`: their updated_at is the time catch-up compares with. */
-    const notePoints = (r: PointsRow) => {
-      if (r.source !== 'phone') return
-      const before = seen.get(r.characterId)
-      if (!before || Date.parse(r.updatedAt) > Date.parse(before)) seen.set(r.characterId, r.updatedAt)
-    }
-    /** Phone values into the engine, recorded as written so the next save doesn't send them back as the keeper's. */
-    const setPhone = (e: EngineApi, r: PointsRow) => {
-      const v = { pv: r.pv, san: r.san, chance: r.chance, pm: r.pm }
-      if (accountIds.has(r.characterId)) {
-        lastWritten.set(r.characterId, { ...v, checks: lastWritten.get(r.characterId)?.checks ?? r.checks })
-        phoneSinceWrite.add(r.characterId)
-      }
-      e.setPoints(r.characterId, v)
+    /**
+     * A game_points row (a phone's change, another keeper tab's, or our own write coming back) into
+     * the engine, field by field (mergeRow): the engine takes what changed in the table and keeps its
+     * own value elsewhere, which may be a keeper change still waiting for the next save. What the
+     * table holds is recorded, so that save sends the keeper's change and doesn't send the row back.
+     */
+    const applyRow = (e: EngineApi, r: PointsRow) => {
+      const cid = r.characterId
+      const before = seen.get(cid)
+      if (before && Date.parse(r.updatedAt) < Date.parse(before)) return
+      seen.set(cid, r.updatedAt)
+      inTable.add(cid)
+      const last = lastWritten.get(cid)
+      const current = latest ? pointsFromState(latest, storyId).get(cid) : undefined
+      const merged = mergeRow(r, last, current, new Set(sending.get(cid)))
+      lastWritten.set(cid, { ...merged.table, checks: last?.checks ?? r.checks })
+      if (merged.changed) e.setPoints(cid, merged.engine)
     }
     const newer = (a: PointsRow | undefined, b: PointsRow | undefined) =>
       !a ? b : !b ? a : Date.parse(b.updatedAt) > Date.parse(a.updatedAt) ? b : a
-    // Phone points for an investigator still joining: kept until the engine has them.
+    // Points for an investigator still joining: kept until the engine has them.
     const early = new Map<string, PointsRow>()
-    const applyPhone = (r: PointsRow) => {
-      notePoints(r)
+    const onPointsRow = (r: PointsRow) => {
       withEngine((e) => {
-        if (!accountIds.has(r.characterId) && joining.has(r.characterId)) early.set(r.characterId, newer(early.get(r.characterId), r)!)
-        else setPhone(e, r)
+        if (accountIds.has(r.characterId)) applyRow(e, r)
+        else if (joining.has(r.characterId)) early.set(r.characterId, newer(early.get(r.characterId), r)!)
       })
     }
     const refreshNotes = (characterId: string) => {
@@ -322,10 +351,7 @@ export function GamePage() {
           e.setPhotos(photos)
           const r = newer(p.data ? toPointsRow(p.data) : undefined, early.get(row.id))
           early.delete(row.id)
-          if (r) {
-            notePoints(r)
-            setPhone(e, r)
-          }
+          if (r) applyRow(e, r)
         })
         refreshNotes(characterId)
         readItems([characterId])
@@ -336,21 +362,6 @@ export function GamePage() {
     }
     // One read at a time per investigator, so rows are handled in the order they were read.
     const pointsReads = new Map<string, Promise<void>>()
-    const onPointsRow = (r: PointsRow) => {
-      if (r.source === 'phone') return applyPhone(r)
-      const cid = r.characterId
-      withEngine((e) => {
-        if (!accountIds.has(cid)) return
-        const mine = lastWritten.get(cid)
-        const action = keeperEchoAction(mine, r, phoneSinceWrite.has(cid))
-        if (action === 'repair' && mine) upsertPoints([{ characterId: cid, ...mine }])
-        else if (action === 'adopt') {
-          const v = { pv: r.pv, san: r.san, chance: r.chance, pm: r.pm }
-          lastWritten.set(cid, { ...v, checks: mine?.checks ?? r.checks })
-          e.setPoints(cid, v)
-        }
-      })
-    }
     const readPhoto = (characterId: string) => {
       void supabase.from('characters').select('photo').eq('id', characterId).single().then(({ data, error }) => {
         if (error) return console.error('Photo load failed', error)
@@ -385,15 +396,14 @@ export function GamePage() {
     const catchUp = async () => {
       const [gs, ps] = await Promise.all([
         supabase.from('games').select('state').eq('id', g.id).single(),
-        supabase.from('game_points').select('*').eq('game_id', g.id).eq('source', 'phone'),
+        supabase.from('game_points').select('*').eq('game_id', g.id),
       ])
       if (disposed) return
       const ids = ((gs.data?.state as unknown as GameState | undefined)?.party ?? []).map((m) => m.characterId)
       for (const cid of ids) if (!accountIds.has(cid)) void addMember(cid)
-      for (const r of (ps.data ?? []).map(toPointsRow)) {
-        const before = seen.get(r.characterId)
-        if (accountIds.has(r.characterId) && (!before || Date.parse(r.updatedAt) > Date.parse(before))) applyPhone(r)
-      }
+      // Every row, whoever wrote last (a keeper write to one field leaves a phone's other fields in
+      // the row): applying a row twice changes nothing.
+      for (const r of (ps.data ?? []).map(toPointsRow)) if (accountIds.has(r.characterId)) onPointsRow(r)
     }
 
     const onHide = () => {
@@ -413,7 +423,10 @@ export function GamePage() {
       if (disposed) return
       if (points.error) console.error('Points load failed', points.error)
       const rows = (points.data ?? []).map(toPointsRow)
-      rows.forEach(notePoints)
+      for (const r of rows) {
+        seen.set(r.characterId, r.updatedAt)
+        inTable.add(r.characterId)
+      }
       // Phone rows written after the keeper's last account save are newer than the saved state.
       // Both times are the server's (save_game_state stamps serverSavedAt).
       const since = Number(g.state.serverSavedAt) || Date.parse(g.updated_at) || 0
@@ -438,6 +451,7 @@ export function GamePage() {
             return [cid, r ? { pv: r.pv, san: r.san, chance: r.chance, pm: r.pm, checks: [...r.checks] } : v]
           }))
           screenControl.sceneChanged(sceneOf(S))
+          latest = S
           return S
         },
         save: (s) => {
@@ -448,6 +462,7 @@ export function GamePage() {
             /* storage full or blocked: the account copy still goes through */
           }
           pending = copy
+          latest = copy
           screenControl.sceneChanged(sceneOf(copy))
           clearTimeout(timer)
           timer = setTimeout(flush, SAVE_DELAY)
