@@ -1,4 +1,5 @@
 import { useQueryClient } from '@tanstack/react-query'
+import { toast } from 'sonner'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { useNavigate, useParams } from 'react-router'
 import { characterKeys, useCharacters, type CharacterRow } from '@/characters/api'
@@ -498,7 +499,13 @@ export function GamePage() {
           void supabase.rpc('use_item', { p_item: itemId, p_delta: delta }).then(({ error }) => error && console.error('Item use failed', error))
         },
         giveItem: (storyItemId) => {
-          if (!storyItemsRef.current.some((x) => x.itemId === storyItemId)) return false
+          if (!storyItemsRef.current.some((x) => x.itemId === storyItemId)) {
+            // Listed in the scene but not a card Grimoire can make (the story's item is incomplete):
+            // say so rather than doing nothing. Named t: the i18n test reads t calls.
+            const t = tRef.current
+            toast.error(t('Cet objet de l’histoire ne peut pas être donné : sa fiche est incomplète.'))
+            return false
+          }
           setGiving(storyItemId)
           return true
         },

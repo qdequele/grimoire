@@ -1631,4 +1631,5 @@ export const EN: Record<string, string> = {
   "Imprimer {n} carte": "Print {n} card",
   "Imprimer les {n} cartes": "Print the {n} cards",
   "Près de cent objets des années 1920 en cartes illustrées, avec leurs règles : à imprimer neuf par page, ou à télécharger une par une.": "Nearly a hundred 1920s items as illustrated cards, with their rules: print them nine to a page, or download them one by one.",
+  'Cet objet de l’histoire ne peut pas être donné : sa fiche est incomplète.': 'This story item can’t be given: its card is incomplete.',
 }
