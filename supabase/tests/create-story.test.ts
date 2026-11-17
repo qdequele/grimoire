@@ -347,6 +347,63 @@ describe('create-story', () => {
     expect(over.body.error.code).toBe('quota_exceeded')
   })
 
+  it('takes a revision before Claude is called: revisions at once stay under the limit', async () => {
+    const frame = await invoke({ action: 'outline', brief })
+    const creationId = frame.body.creationId as string
+    const outlines = async () => (await service.from('story_creations').select('outline_count').eq('id', creationId).single()).data!.outline_count
+    // One revision left out of 5
+    await service.from('story_creations').update({ outline_count: 4 }).eq('id', creationId)
+    // The AI service refused the call itself: nothing was generated, the revision is given back
+    fake.status = 400
+    const refused = await invoke({ action: 'outline', creationId })
+    expect([refused.status, refused.body.error?.code]).toEqual([502, 'ai_error'])
+    expect(await outlines()).toBe(4)
+    // Four revisions at once: one is written, Claude is called once
+    Object.assign(fake, { status: 200, delayMs: 300 })
+    const before = requests.length
+    const statuses = (await burst(4, { action: 'outline', creationId })).map((r) => r.status).sort()
+    expect(requests.length - before).toBe(1)
+    expect(statuses[0]).toBe(200)
+    expect(statuses.slice(1).every((s) => s === 409 || s === 429)).toBe(true)
+    expect(await outlines()).toBe(5)
+    const over = await invoke({ action: 'outline', creationId })
+    expect([over.status, over.body.error?.code]).toEqual([429, 'too_many_outlines'])
+    expect(requests.length - before).toBe(1)
+  })
+
+  it('reserves a new creation before Claude is called: calls at once stay under the monthly limit', async () => {
+    const webCreations = async () => (await service.from('story_creations').select('id', { count: 'exact', head: true }).eq('owner_id', userId).eq('source', 'web')).count!
+    // Two creations left this month
+    await service.from('story_creations').insert(Array.from({ length: 8 - (await webCreations()) }, () => ({ owner_id: userId, brief: {} })))
+    // The AI service refused the call itself: nothing was generated, the creation is given back
+    fake.status = 400
+    let before = requests.length
+    const refused = await invoke({ action: 'outline', brief })
+    expect([refused.status, refused.body.error?.code]).toEqual([502, 'ai_error'])
+    expect(requests.length - before).toBe(1)
+    expect(await webCreations()).toBe(8)
+    // An unreadable answer was generated: it counts, kept as a failed creation without an outline
+    Object.assign(fake, { status: 200, text: 'not an outline' })
+    const unreadable = await invoke({ action: 'outline', brief })
+    expect([unreadable.status, unreadable.body.error?.code]).toEqual([502, 'invalid_output'])
+    expect(await webCreations()).toBe(9)
+    const { data: failed } = await service
+      .from('story_creations')
+      .select('status, error, outline, outline_count')
+      .eq('owner_id', userId)
+      .eq('source', 'web')
+      .order('created_at', { ascending: false })
+      .limit(1)
+      .single()
+    expect(failed).toEqual({ status: 'failed', error: 'invalid_output', outline: null, outline_count: 1 })
+    // One left. Four calls at once: one outline, three refusals, Claude is called once.
+    Object.assign(fake, { text: null, delayMs: 300 })
+    before = requests.length
+    expect((await burst(4, { action: 'outline', brief })).map((r) => r.status).sort()).toEqual([200, 429, 429, 429])
+    expect(requests.length - before).toBe(1)
+    expect(await webCreations()).toBe(10)
+  })
+
   it('enforces the monthly limit on new stories', async () => {
     await service.from('story_creations').insert(Array.from({ length: 10 }, () => ({ owner_id: userId, brief: {} })))
     const res = await invoke({ action: 'outline', brief })

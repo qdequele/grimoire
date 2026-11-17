@@ -3,8 +3,9 @@
 // One function, four actions (they share auth, quotas, the cached system prompt and the brief):
 //   - "ideas":           "Inspire me" fills the empty questionnaire fields (Haiku, effort low).
 //   - "outline":         writes (or rewrites) the outline's frame: title, secret, scenes, NPCs.
-//                        Starts a new creation (counted against the monthly limit) or revises the
-//                        current one.
+//                        Starts a new creation (reserved against the monthly limit before Claude
+//                        is asked: reserve_story_creation) or revises the current one (outline_count
+//                        taken first, at most STORY_OUTLINES_PER_STORY).
 //   - "outline-details": completes the frame: each scene's clues, NPCs and next scenes, and the
 //                        keeper's overview. The browser calls it right after "outline". Counted per
 //                        creation (details_count), at most STORY_DETAILS_PER_STORY calls.
@@ -24,6 +25,8 @@
 //                        counted per creation (map_attempts), at most twice STORY_MAPS_PER_STORY calls.
 //                        The map is added to the story as it is stored then (the keeper may have
 //                        edited it since the last scene), under a condition on its updated_at.
+// The creation's own counters (outline_count, details_count, map_attempts) move before the Claude
+// call; a revision is given back when the AI service refused the call over HTTP.
 //
 // Every call must end before the Edge Function's wall-clock limit (150 s): that is why the outline
 // takes two calls, scenes go one at a time, the writing is done by Sonnet, and each Claude call is
@@ -199,22 +202,43 @@ async function loadCreation(admin: Admin, id: unknown, userId: string): Promise<
   return data
 }
 
+type SlotCounter = 'outline_count' | 'details_count' | 'map_attempts'
+const slotValue = (counter: SlotCounter, value: number) =>
+  counter === 'outline_count' ? { outline_count: value } : counter === 'details_count' ? { details_count: value } : { map_attempts: value }
+
 /**
  * Take one of a creation's counted calls BEFORE asking Claude, so calls that fail, time out or run
  * at the same time are counted too. The counter only moves from the value this request read: of
  * several requests that read the same value, one goes on and the others are told to try again.
- * Admins have no limit; their calls are still counted.
+ * Admins have no limit unless `adminsLimited` (the outlines per story, as before); their calls are
+ * still counted.
  */
-async function takeSlot(admin: Admin, userId: string, row: CreationRow, counter: 'details_count' | 'map_attempts', limit: number, refusal: Failure) {
-  if (row[counter] >= limit && !(await isAdmin(admin, userId))) throw refusal
+async function takeSlot(admin: Admin, userId: string, row: CreationRow, counter: SlotCounter, limit: number, refusal: Failure, adminsLimited = false) {
+  if (row[counter] >= limit && (adminsLimited || !(await isAdmin(admin, userId)))) throw refusal
   const { data, error } = await admin
     .from('story_creations')
-    .update(counter === 'details_count' ? { details_count: row.details_count + 1 } : { map_attempts: row.map_attempts + 1 })
+    .update(slotValue(counter, row[counter] + 1))
     .eq('id', row.id)
     .eq(counter, row[counter])
     .select('id')
   if (error) throw error
   if (!data.length) throw new Failure(409, 'busy', 'Une autre demande est déjà en cours pour cette histoire. Réessaie dans un instant.')
+}
+
+/**
+ * Run a Claude call on a slot taken with takeSlot. When the AI service refused the call itself
+ * (an HTTP error: nothing generated), the slot is given back, only if nobody moved the counter since.
+ */
+async function onSlot<T>(admin: Admin, row: CreationRow, counter: SlotCounter, run: () => Promise<T>): Promise<T> {
+  try {
+    return await run()
+  } catch (e) {
+    if (refusedUpstream(e)) {
+      const { error } = await admin.from('story_creations').update(slotValue(counter, row[counter])).eq('id', row.id).eq(counter, row[counter] + 1)
+      if (error) console.error('story_creations slot release failed', error)
+    }
+    throw e
+  }
 }
 
 /**
@@ -251,27 +275,17 @@ async function ideas(apiKey: string, deadline: number, admin: Admin, userId: str
 }
 
 async function outline(apiKey: string, deadline: number, admin: Admin, userId: string, body: Record<string, unknown>) {
+  const tooMany = new Failure(429, 'too_many_outlines', `Pas plus de ${OUTLINES_PER_STORY} plans par histoire.`)
   let row: CreationRow | null = null
   let brief: StoryBrief | string
   if (body.creationId !== undefined) {
     row = await loadCreation(admin, body.creationId, userId)
     if (row.status !== 'outlined' && row.status !== 'failed') throw new Failure(409, 'already_writing', 'Les scènes sont déjà en cours d’écriture.')
     if (row.story_id) throw new Failure(409, 'already_writing', 'Les scènes sont déjà en cours d’écriture.')
-    if (row.outline_count >= OUTLINES_PER_STORY) throw new Failure(429, 'too_many_outlines', `Pas plus de ${OUTLINES_PER_STORY} plans par histoire.`)
     // The keeper may have changed their answers between two outlines.
     brief = parseBrief(body.brief ?? row.brief)
   } else {
     brief = parseBrief(body.brief)
-    if (!(await isAdmin(admin, userId))) {
-      const { count, error } = await admin
-        .from('story_creations')
-        .select('id', { count: 'exact', head: true })
-        .eq('owner_id', userId)
-        .eq('source', 'web') // creations from the MCP connector have their own limit
-        .gte('created_at', monthStart())
-      if (error) throw error
-      if ((count ?? 0) >= MONTHLY_LIMIT) throw new Failure(429, 'quota_exceeded', `Limite mensuelle atteinte (${MONTHLY_LIMIT} histoires créées).`)
-    }
   }
   if (typeof brief === 'string') throw new Failure(400, 'bad_request', brief)
 
@@ -279,37 +293,61 @@ async function outline(apiKey: string, deadline: number, admin: Admin, userId: s
   const previous = row?.outline ? parseOutline(body.outline ?? row.outline) : null
   const notes = typeof body.notes === 'string' ? body.notes.trim().slice(0, 1500) : ''
   const revise = previous && typeof previous !== 'string' ? { previous, notes } : undefined
-  const { output, usage } = await ask(apiKey, deadline, { model: WRITER_MODEL, format: FRAME_FORMAT, effort: 'medium', text: outlineUserPrompt(brief, revise), maxTokens: 32000 })
-  const parsed = frameToOutline(output)
-  if (typeof parsed === 'string') throw new Failure(502, 'invalid_output', 'Le plan reçu est incomplet. Réessaie.')
-
-  const fields = {
+  const text = outlineUserPrompt(brief, revise)
+  const askFrame = async () => {
+    const { output, usage } = await ask(apiKey, deadline, { model: WRITER_MODEL, format: FRAME_FORMAT, effort: 'medium', text, maxTokens: 32000 })
+    const parsed = frameToOutline(output)
+    if (typeof parsed === 'string') throw new Failure(502, 'invalid_output', 'Le plan reçu est incomplet. Réessaie.')
+    return { parsed, usage }
+  }
+  const fields = (parsed: unknown) => ({
     brief: brief as unknown as Json,
-    outline: parsed as unknown as Json,
+    outline: parsed as Json,
     status: 'outlined',
     error: null,
     updated_at: new Date().toISOString(),
-  }
+  })
+
   if (row) {
+    // The revision is taken before Claude is asked: revisions sent at once can't pass the limit.
+    await takeSlot(admin, userId, row, 'outline_count', OUTLINES_PER_STORY, tooMany, true)
+    const { parsed, usage } = await onSlot(admin, row, 'outline_count', askFrame)
     const { error } = await admin
       .from('story_creations')
-      .update({
-        ...fields,
-        outline_count: row.outline_count + 1,
-        input_tokens: row.input_tokens + usage.input,
-        output_tokens: row.output_tokens + usage.output,
-      })
+      .update({ ...fields(parsed), input_tokens: row.input_tokens + usage.input, output_tokens: row.output_tokens + usage.output })
       .eq('id', row.id)
     if (error) throw error
     return { creationId: row.id, outline: parsed, outlinesLeft: OUTLINES_PER_STORY - row.outline_count - 1 }
   }
-  const { data, error } = await admin
+
+  // A new creation is reserved before Claude is asked (reserve_story_creation: counted and inserted
+  // under a lock), so calls made at once can't pass the monthly limit.
+  const { data: creationId, error: reserveError } = await admin.rpc('reserve_story_creation', {
+    p_owner: userId,
+    p_brief: brief as unknown as Json,
+    p_since: monthStart(),
+    ...((await isAdmin(admin, userId)) ? {} : { p_limit: MONTHLY_LIMIT }),
+  })
+  if (reserveError) throw reserveError
+  if (!creationId) throw new Failure(429, 'quota_exceeded', `Limite mensuelle atteinte (${MONTHLY_LIMIT} histoires créées).`)
+  let result: Awaited<ReturnType<typeof askFrame>>
+  try {
+    result = await askFrame()
+  } catch (e) {
+    // Refused by the AI service itself: nothing was generated, the creation is given back. Anything
+    // else stays counted, as a failed creation with no outline (nothing to resume from).
+    const { error } = refusedUpstream(e)
+      ? await admin.from('story_creations').delete().eq('id', creationId)
+      : await admin.from('story_creations').update({ status: 'failed', error: e instanceof Failure ? e.code : 'ai_error', updated_at: new Date().toISOString() }).eq('id', creationId)
+    if (error) console.error('story_creations reservation update failed', error)
+    throw e
+  }
+  const { error } = await admin
     .from('story_creations')
-    .insert({ ...fields, owner_id: userId, outline_count: 1, input_tokens: usage.input, output_tokens: usage.output })
-    .select('id')
-    .single()
+    .update({ ...fields(result.parsed), input_tokens: result.usage.input, output_tokens: result.usage.output })
+    .eq('id', creationId)
   if (error) throw error
-  return { creationId: data.id, outline: parsed, outlinesLeft: OUTLINES_PER_STORY - 1 }
+  return { creationId, outline: result.parsed, outlinesLeft: OUTLINES_PER_STORY - 1 }
 }
 
 /** The outline's second half: clues, NPCs present and next scenes for each scene, and the overview. */
