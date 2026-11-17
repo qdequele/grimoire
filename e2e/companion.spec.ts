@@ -375,11 +375,13 @@ test("a keeper change that never reached the live points is written on the next 
 
   const again = await keeperContext.newPage()
   watch(again)
+  // Listening before the game opens: the engine saves by itself about a second after it starts,
+  // and that save already carries the repair (the save asked for below may then have nothing to send).
+  const repaired = pointsWrite(again)
   const reopened = await openGame(again, gameId)
   await unfold(reopened, 'Alpha')
   await expect(engineStat(reopened, 'Alpha', 'san')).toHaveText('58')
   const frame = () => again.frames().find((f) => f.url().includes('play.html'))!
-  const repaired = pointsWrite(again)
   await frame().evaluate(() => (eval('save') as () => void)())
   const body = (await repaired).request().postDataJSON() as Array<{ san: number }> | { san: number }
   expect(Array.isArray(body) ? body[0].san : body.san).toBe(58)
