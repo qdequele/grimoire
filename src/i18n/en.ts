@@ -1032,7 +1032,9 @@ export const EN: Record<string, string> = {
   'Outils': 'Tools',
   'Fiche vierge': 'Blank sheet',
   // ---------------------------------------------------------------- map maker
-  'Un plan n’a pas pu être dessiné. L’histoire est prête sans lui ; « Reprendre l’écriture » réessaie.': 'A map couldn’t be drawn. The story is ready without it; “Resume writing” tries again.',
+  'Un plan n’a pas pu être dessiné. L’histoire est prête sans lui ; « Réessayer les plans » le redessine.': 'A map couldn’t be drawn. The story is ready without it; “Retry the maps” draws it again.',
+  'Réessayer les plans': 'Retry the maps',
+  'Dessiner les plans manquants': 'Draw the missing maps',
   'Dessin des plans des lieux à explorer : {done} / {total}.': 'Drawing the maps of the places to explore: {done} / {total}.',
   'Dessin des plans des lieux à explorer…': 'Drawing the maps of the places to explore…',
   'Plan dessiné. Quelques détails ont été corrigés : vérifie les portes et les objets.': 'Map drawn. A few details were corrected: check the doors and the objects.',

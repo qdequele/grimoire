@@ -950,4 +950,31 @@ test.describe('AI features (fake Claude API)', () => {
     await expect(page.getByRole('button', { name: "Écrire l'histoire (2 scènes)" })).toBeVisible()
   })
 
+  test('a scene map that fails can be drawn again before the story opens', async ({ page }) => {
+    test.setTimeout(120_000) // outline, scenes and maps through the functions
+    await signUp(page)
+    // The first scene-map call fails, as on a timeout.
+    let failed = false
+    await page.route('**/functions/v1/create-story', async (route) => {
+      const body = route.request().method() === 'POST' ? route.request().postDataJSON() as { action?: string } | null : null
+      if (!failed && body?.action === 'scene-map') {
+        failed = true
+        return route.fulfill({ status: 504, contentType: 'application/json', body: JSON.stringify({ error: 'timeout', message: 'Réessaie.' }) })
+      }
+      return route.continue()
+    })
+    await page.goto('/stories/create?etape=5')
+    await page.getByRole('button', { name: 'Écrire le plan' }).click()
+    await expect(page.getByText('A ribbon')).toBeVisible({ timeout: 60_000 })
+    await page.getByRole('button', { name: "Écrire l'histoire (3 scènes)" }).click()
+
+    // The creator stays, with the retry and a link to the story (ready without its map).
+    await expect(page.getByRole('button', { name: 'Réessayer les plans' })).toBeVisible({ timeout: 60_000 })
+    await expect(page).toHaveURL(/\/stories\/create/)
+    await expect(page.getByRole('link', { name: "Ouvrir l'histoire" })).toBeVisible()
+    await page.getByRole('button', { name: 'Réessayer les plans' }).click()
+
+    await expect(page.getByRole('heading', { name: 'The Quiet Mill', level: 1 })).toBeVisible({ timeout: 60_000 })
+    expect(failed).toBe(true)
+  })
 })

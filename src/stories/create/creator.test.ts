@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { emptyBrief } from './brief'
-import { creationLost, loadSaved, saveState, storeKey, type Saved } from './creator'
+import { creationLost, drawAllMaps, loadSaved, saveState, storeKey, type Saved } from './creator'
 
 function memory(initial: Record<string, string> = {}) {
   const items = new Map(Object.entries(initial))
@@ -55,5 +55,49 @@ describe('creationLost', () => {
     // Still loading, or the request failed: nothing is known yet.
     expect(creationLost('creation-a', { isSuccess: false, data: undefined })).toBe(false)
     expect(creationLost(null, { isSuccess: false, data: undefined })).toBe(false)
+  })
+})
+
+describe('the scenes’ maps after the last scene', () => {
+  /** A scene-map endpoint with `left` maps to draw, failing on the listed calls (1-based). */
+  function endpoint(left: number, failOn: number[] = []) {
+    let calls = 0
+    return {
+      draw: async () => {
+        calls++
+        if (failOn.includes(calls)) throw new Error('timeout')
+        if (!left) return { scene: null, remaining: 0 }
+        left--
+        return { scene: `scene-${calls}`, remaining: left }
+      },
+      calls: () => calls,
+    }
+  }
+
+  it('draws every map, then says it is done', async () => {
+    const api = endpoint(2)
+    const seen: Array<[number, number]> = []
+    expect(await drawAllMaps(api.draw, () => false, (d, t) => seen.push([d, t]))).toBe('done')
+    expect(seen).toEqual([[1, 2], [2, 2]])
+  })
+
+  it('says a map failed, so the page offers to draw it again instead of moving on', async () => {
+    const api = endpoint(2, [1])
+    expect(await drawAllMaps(api.draw, () => false, () => {})).toBe('failed')
+    // Drawing again picks up where it failed.
+    expect(await drawAllMaps(api.draw, () => false, () => {})).toBe('done')
+    expect(api.calls()).toBe(3)
+  })
+
+  it('says it was stopped when the keeper left the page, so nothing navigates away', async () => {
+    const api = endpoint(3)
+    let left = false
+    const outcome = drawAllMaps(api.draw, () => left, () => { left = true })
+    expect(await outcome).toBe('stopped')
+    expect(api.calls()).toBe(1)
+  })
+
+  it('is done at once when no map is left', async () => {
+    expect(await drawAllMaps(endpoint(0).draw, () => false, () => {})).toBe('done')
   })
 })

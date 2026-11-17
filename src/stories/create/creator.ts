@@ -56,3 +56,30 @@ export const browserStore: Store = {
   setItem: (k, v) => localStorage.setItem(k, v),
   removeItem: (k) => localStorage.removeItem(k),
 }
+
+/** How drawing the scenes' maps ended: all drawn, the keeper left the page, or a map failed. */
+export type MapsOutcome = 'done' | 'stopped' | 'failed'
+
+/**
+ * The scenes' maps, after the last scene, one call each until none is left. A failure stops there
+ * and says so: the story is ready without the map, and drawing again resumes at the first scene
+ * still without one (the server picks it).
+ */
+export async function drawAllMaps(
+  draw: () => Promise<{ scene: string | null; remaining: number }>,
+  stopped: () => boolean,
+  onProgress: (drawn: number, total: number) => void,
+): Promise<MapsOutcome> {
+  let drawn = 0
+  try {
+    for (;;) {
+      const res = await draw()
+      if (res.scene) drawn++
+      onProgress(drawn, drawn + res.remaining)
+      if (!res.remaining) return 'done'
+      if (stopped()) return 'stopped'
+    }
+  } catch {
+    return 'failed'
+  }
+}
