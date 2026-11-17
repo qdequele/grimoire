@@ -4,15 +4,24 @@
 // calls this function once per small batch of pages with the same importId. Each call:
 //   1. checks the caller and their monthly page quota,
 //   2. reads the batch's images and deletes them from storage straight away,
-//   3. asks Claude for an ImportDraft (plain JSON, coerced by normalizeDraft; see _shared/import-draft.ts),
+//   3. counts the batch's pages (story_import_batches), then asks Claude for an ImportDraft (plain
+//      JSON, coerced by normalizeDraft; see _shared/import-draft.ts),
 //   4. merges it into the import's draft, converts to story.json, validates against the spec,
 //   5. saves the result as the caller's private story and returns it.
 //
-// Batches stay small so a call fits in the Edge Function wall-clock limit.
+// Quota: pages are counted per call, at the call's date (import_pages_used in the database), so an
+// import continued in a later month still counts. A call Claude answered counts even when the
+// answer can't be used (refused, too long, unreadable, cut at the deadline): the tokens were spent.
+// A call the AI service turned down (busy, error) is not counted.
+//
+// Batches stay small so a call fits in the Edge Function wall-clock limit (150 s, then the worker is
+// killed). Claude is cut at AI_DEADLINE_MS from the request's start so the function can still mark
+// the import failed and answer "try again", as create-story does.
 //
 // Secrets: ANTHROPIC_API_KEY (required). Optional: IMPORT_MONTHLY_PAGE_LIMIT (default 60),
-// IMPORT_MAX_PAGES_PER_CALL (default 4). SUPABASE_URL / SUPABASE_ANON_KEY /
-// SUPABASE_SERVICE_ROLE_KEY are provided by Supabase.
+// IMPORT_MAX_PAGES_PER_CALL (default 2), AI_DEADLINE_MS (default 130000, shared with create-story;
+// IMPORT_AI_DEADLINE_MS overrides it here). SUPABASE_URL /
+// SUPABASE_ANON_KEY / SUPABASE_SERVICE_ROLE_KEY are provided by Supabase.
 
 import Anthropic from 'npm:@anthropic-ai/sdk@1.4.0'
 import { createClient, type SupabaseClient } from 'npm:@supabase/supabase-js@2.118.0'
@@ -35,7 +44,10 @@ import { STORY_SCHEMA } from '../_shared/spec-bundle.ts'
 
 const MODEL = 'claude-opus-5-5'
 const MONTHLY_PAGE_LIMIT = Number(Deno.env.get('IMPORT_MONTHLY_PAGE_LIMIT') ?? 60)
-const MAX_PAGES_PER_CALL = Number(Deno.env.get('IMPORT_MAX_PAGES_PER_CALL') ?? 4)
+const MAX_PAGES_PER_CALL = Number(Deno.env.get('IMPORT_MAX_PAGES_PER_CALL') ?? 2)
+// IMPORT_AI_DEADLINE_MS lets the tests shorten this function's deadline alone.
+const AI_DEADLINE_MS = Number(Deno.env.get('IMPORT_AI_DEADLINE_MS') ?? Deno.env.get('AI_DEADLINE_MS') ?? 130_000)
+const TIMEOUT_MESSAGE = 'L’IA a mis trop de temps à répondre. Réessaie.'
 const LANGS = ['fr', 'en']
 const MEDIA_TYPES = ['image/png', 'image/jpeg', 'image/webp', 'image/gif'] as const
 type MediaType = (typeof MEDIA_TYPES)[number]
@@ -100,6 +112,7 @@ const SYSTEM_PROMPT = importSystemPrompt()
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response('ok', { headers: CORS })
   if (req.method !== 'POST') return fail(405, 'method_not_allowed', 'Use POST.')
+  const deadline = Date.now() + AI_DEADLINE_MS
 
   const apiKey = Deno.env.get('ANTHROPIC_API_KEY')
   if (!apiKey) return fail(503, 'not_configured', 'The import is not configured on this server (missing ANTHROPIC_API_KEY).')
@@ -129,21 +142,18 @@ Deno.serve(async (req) => {
 
   // Pages are read once and never kept, whatever happens below.
   const removePages = () => admin.storage.from('import-pages').remove(input.pagePaths)
+  // Known once the import row and this call's usage row exist: the catch below needs them.
+  let importId: string | undefined
+  let batchId: string | undefined
+  const controller = new AbortController()
+  let timer: ReturnType<typeof setTimeout> | undefined
 
   try {
     // ---- quota
     const { data: profile } = await admin.from('profiles').select('is_admin').eq('id', userId).single()
     if (!profile?.is_admin) {
-      const monthStart = new Date()
-      monthStart.setUTCDate(1)
-      monthStart.setUTCHours(0, 0, 0, 0)
-      const { data: rows, error } = await admin
-        .from('story_imports')
-        .select('page_count')
-        .eq('owner_id', userId)
-        .gte('created_at', monthStart.toISOString())
+      const { data: used, error } = await admin.rpc('import_pages_used', { p_owner: userId })
       if (error) throw error
-      const used = (rows ?? []).reduce((n, r) => n + (r.page_count as number), 0)
       if (used + input.pagePaths.length > MONTHLY_PAGE_LIMIT) {
         return fail(429, 'quota_exceeded', `Monthly import limit reached (${used}/${MONTHLY_PAGE_LIMIT} pages).`)
       }
@@ -168,13 +178,17 @@ Deno.serve(async (req) => {
       if (error) throw error
       importRow = { ...data, draft: data.draft as unknown as ImportDraft | null }
     }
+    importId = importRow.id
     await admin.from('story_imports').update({ status: 'running', error: null }).eq('id', importRow.id)
 
     // ---- read the pages
     const images: Anthropic.ImageBlockParam[] = []
     for (const path of input.pagePaths) {
       const { data, error } = await admin.storage.from('import-pages').download(path)
-      if (error || !data) return fail(400, 'page_missing', `Page not found: ${path.split('/').pop()}`)
+      if (error || !data) {
+        await markFailed(admin, importRow.id, 'page_missing')
+        return fail(400, 'page_missing', `Page not found: ${path.split('/').pop()}`)
+      }
       const mediaType = (MEDIA_TYPES as readonly string[]).includes(data.type) ? (data.type as MediaType) : 'image/png'
       images.push({
         type: 'image',
@@ -182,10 +196,29 @@ Deno.serve(async (req) => {
       })
     }
 
+    // The pages are in memory: nothing is left in storage if the worker is killed while Claude
+    // answers. (The `finally` below still covers the early returns above.)
+    await removePages()
+
     // ---- ask Claude for this batch's draft
+    const left = deadline - Date.now()
+    if (left < 10_000) {
+      await markFailed(admin, importRow.id, 'timeout')
+      return fail(504, 'timeout', TIMEOUT_MESSAGE)
+    }
+    // Counted before the call, so a batch whose answer can't be used still counts.
+    const { data: usage, error: usageError } = await admin
+      .from('story_import_batches')
+      .insert({ owner_id: userId, import_id: importRow.id, pages: input.pagePaths.length })
+      .select('id')
+      .single()
+    if (usageError) throw usageError
+    batchId = usage.id
+
     const accumulated = importRow.draft ?? emptyDraft()
     const last = input.firstPage + input.pagePaths.length - 1
     const client = new Anthropic({ apiKey })
+    timer = setTimeout(() => controller.abort(), left)
     const stream = client.beta.messages.stream({
       model: MODEL,
       max_tokens: 64000,
@@ -210,8 +243,9 @@ Deno.serve(async (req) => {
           ],
         },
       ],
-    })
+    }, { signal: controller.signal })
     const message = await stream.finalMessage()
+    clearTimeout(timer)
 
     if (message.stop_reason === 'refusal') {
       await markFailed(admin, importRow.id, 'refused')
@@ -271,6 +305,7 @@ Deno.serve(async (req) => {
       if (error) console.error('story pack write failed', error)
     }
 
+    await admin.from('story_import_batches').update({ saved: true }).eq('id', batchId)
     await admin
       .from('story_imports')
       .update({
@@ -287,10 +322,23 @@ Deno.serve(async (req) => {
     return json({ importId: importRow.id, storyId, story, validationErrors })
   } catch (e) {
     console.error('import-story failed', e)
-    if (e instanceof Anthropic.RateLimitError) return fail(429, 'busy', 'The AI service is busy. Try again in a minute.')
-    if (e instanceof Anthropic.APIError) return fail(502, 'ai_error', `AI service error (${e.status ?? 'network'}).`)
+    if (controller.signal.aborted) {
+      // Cut at the deadline: Claude was writing, the pages stay counted.
+      if (importId) await markFailed(admin, importId, 'timeout')
+      return fail(504, 'timeout', TIMEOUT_MESSAGE)
+    }
+    if (e instanceof Anthropic.APIError) {
+      // The AI service gave no answer: this call is not counted.
+      if (batchId) await admin.from('story_import_batches').delete().eq('id', batchId)
+      const busy = e instanceof Anthropic.RateLimitError
+      if (importId) await markFailed(admin, importId, busy ? 'busy' : 'ai_error')
+      if (busy) return fail(429, 'busy', 'The AI service is busy. Try again in a minute.')
+      return fail(502, 'ai_error', `AI service error (${e.status ?? 'network'}).`)
+    }
+    if (importId) await markFailed(admin, importId, 'internal')
     return fail(500, 'internal', 'Import failed.')
   } finally {
+    clearTimeout(timer)
     await removePages()
   }
 })

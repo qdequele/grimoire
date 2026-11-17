@@ -40,13 +40,11 @@ function usePagesUsedThisMonth() {
   return useQuery({
     queryKey: ['imports', 'month', session?.user.id],
     enabled: !!session,
+    // The same count as the import function's quota: pages sent this month, whatever their import's age.
     queryFn: async () => {
-      const start = new Date()
-      start.setUTCDate(1)
-      start.setUTCHours(0, 0, 0, 0)
-      const { data, error } = await supabase.from('story_imports').select('page_count').gte('created_at', start.toISOString())
+      const { data, error } = await supabase.rpc('import_pages_used', { p_owner: session!.user.id })
       if (error) throw error
-      return data.reduce((n, r) => n + r.page_count, 0)
+      return data
     },
   })
 }
