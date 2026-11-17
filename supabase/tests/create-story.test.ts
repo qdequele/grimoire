@@ -260,6 +260,43 @@ describe('create-story', () => {
     await service.from('story_creations').delete().eq('id', creationId)
   })
 
+  it('reserves a map before Claude is called: calls at once stay under the limit, an unreadable answer counts', async () => {
+    const mapsCounted = async () => (await service.from('ai_usage').select('id', { count: 'exact', head: true }).eq('owner_id', userId).eq('kind', 'map')).count
+    const request = { action: 'map', description: 'A small house with two rooms.' }
+    // One map left this month. Four calls at once: one is drawn, three are refused, Claude is called once.
+    await service.from('ai_usage').insert(Array.from({ length: 29 }, () => ({ owner_id: userId, kind: 'map' })))
+    fake.delayMs = 300
+    let before = requests.length
+    expect((await burst(4, request)).map((r) => r.status).sort()).toEqual([200, 429, 429, 429])
+    expect(requests.length - before).toBe(1)
+    expect(await mapsCounted()).toBe(30)
+    const { data: drawn } = await service.from('ai_usage').select('input_tokens, output_tokens').eq('owner_id', userId).eq('kind', 'map').not('input_tokens', 'is', null)
+    expect(drawn).toEqual([{ input_tokens: 20500, output_tokens: 700 }]) // the reserved row gets the tokens
+    await service.from('ai_usage').delete().eq('owner_id', userId).eq('kind', 'map')
+
+    // Claude answered something unreadable: generated and billed, so counted
+    Object.assign(fake, { delayMs: 0, text: 'not a map' })
+    expect((await invoke(request)).status).toBe(502)
+    expect(await mapsCounted()).toBe(1)
+    // The AI service refused the call itself: nothing was generated, nothing is counted
+    Object.assign(fake, { text: null, status: 400 })
+    before = requests.length
+    const refused = await invoke(request)
+    expect([refused.status, refused.body.error?.code]).toEqual([502, 'ai_error'])
+    expect(requests.length - before).toBe(1)
+    expect(await mapsCounted()).toBe(1)
+    await service.from('ai_usage').delete().eq('owner_id', userId).eq('kind', 'map')
+  })
+
+  it('reserves an idea suggestion the same way', async () => {
+    const { count } = await service.from('ai_usage').select('id', { count: 'exact', head: true }).eq('owner_id', userId).eq('kind', 'story-ideas')
+    await service.from('ai_usage').insert(Array.from({ length: 49 - count! }, () => ({ owner_id: userId, kind: 'story-ideas' })))
+    fake.delayMs = 300
+    const before = requests.length
+    expect((await burst(4, { action: 'ideas', brief })).map((r) => r.status).sort()).toEqual([200, 429, 429, 429])
+    expect(requests.length - before).toBe(1)
+  })
+
   it('composes a map from a description, checked by the map kit, within its own monthly limit', async () => {
     const res = await invoke({ action: 'map', description: 'A small house with two rooms.', kind: 'building', lang: 'en' })
     expect(res.status).toBe(200)

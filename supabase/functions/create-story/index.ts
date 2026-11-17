@@ -15,6 +15,8 @@
 //   - "map":             composes a map (floor plan, crypt, village) from the keeper's description,
 //                        as a MapDoc the app's map editor opens (map kit in _shared/maps/). Counted in
 //                        ai_usage (kind "map"), MAP_MONTHLY_LIMIT a month.
+// "ideas" and "map" reserve their ai_usage row before Claude is asked (_shared/ai-usage.ts): calls
+// made at once can't pass the limit, and a call that fails after Claude started is counted.
 //   - "scene-map":       once every scene is written, draws the map of the next scene that asked for
 //                        one (draft mapKind, at most STORY_MAPS_PER_STORY): the players' and the
 //                        keeper's copies as SVG in the pack, two handouts of that scene. The browser
@@ -36,6 +38,7 @@ import type { Database, Json } from '../_shared/database.types.ts'
 import { createSystemPrompt, ideasUserPrompt, outlineDetailsPrompt, outlineUserPrompt, scenesUserPrompt } from '../_shared/create-prompt.ts'
 import { STORY_SCHEMA } from '../_shared/spec-bundle.ts'
 import { forbiddenNamesIn } from '../_shared/story-mcp.ts'
+import { monthStart, recordUsage, refusedUpstream, releaseUsage, reserveUsage, type UsageKind } from '../_shared/ai-usage.ts'
 import { existingStory, savePackFile, saveStory } from '../_shared/story-save.ts'
 import { mapFiles, sceneMapRequest, scenesWithoutMap, withSceneMap } from '../_shared/story-maps.ts'
 import { renderMap } from '../_shared/maps/render.ts'
@@ -105,13 +108,6 @@ class Failure extends Error {
   constructor(readonly status: number, readonly code: string, message: string) {
     super(message)
   }
-}
-
-const monthStart = () => {
-  const d = new Date()
-  d.setUTCDate(1)
-  d.setUTCHours(0, 0, 0, 0)
-  return d.toISOString()
 }
 
 /**
@@ -215,6 +211,26 @@ async function takeSlot(admin: Admin, userId: string, row: CreationRow, counter:
   if (!data.length) throw new Failure(409, 'busy', 'Une autre demande est déjà en cours pour cette histoire. Réessaie dans un instant.')
 }
 
+/**
+ * A call counted in ai_usage against a monthly limit: reserved first (refused with `refusal` when
+ * the month is used up; admins have no limit), then `run`, then the tokens on the reserved row.
+ * The reservation is given back only when the AI service refused the call itself (nothing was
+ * generated); a timeout, or an answer that proved too long or unreadable, stays counted.
+ */
+async function counted<T extends { usage: { input: number; output: number } }>(admin: Admin, userId: string, kind: UsageKind, limit: number, refusal: Failure, run: () => Promise<T>): Promise<T> {
+  const usageId = await reserveUsage(admin, userId, kind, (await isAdmin(admin, userId)) ? null : limit)
+  if (!usageId) throw refusal
+  let result: T
+  try {
+    result = await run()
+  } catch (e) {
+    if (refusedUpstream(e)) await releaseUsage(admin, usageId)
+    throw e
+  }
+  await recordUsage(admin, usageId, result.usage)
+  return result
+}
+
 // ------------------------------------------------------------------ actions
 
 async function ideas(apiKey: string, deadline: number, admin: Admin, userId: string, body: Record<string, unknown>) {
@@ -222,18 +238,9 @@ async function ideas(apiKey: string, deadline: number, admin: Admin, userId: str
   if (typeof brief === 'string') throw new Failure(400, 'bad_request', brief)
   const field = body.field === undefined ? undefined : (body.field as IdeaField)
   if (field !== undefined && !IDEA_FIELDS.includes(field)) throw new Failure(400, 'bad_request', `field must be one of ${IDEA_FIELDS.join(', ')}.`)
-  if (!(await isAdmin(admin, userId))) {
-    const { count, error } = await admin
-      .from('ai_usage')
-      .select('id', { count: 'exact', head: true })
-      .eq('owner_id', userId)
-      .eq('kind', 'story-ideas')
-      .gte('created_at', monthStart())
-    if (error) throw error
-    if ((count ?? 0) >= IDEAS_MONTHLY_LIMIT) throw new Failure(429, 'quota_exceeded', `Limite mensuelle atteinte (${IDEAS_MONTHLY_LIMIT} suggestions).`)
-  }
-  const { output, usage } = await ask(apiKey, deadline, { model: IDEAS_MODEL, format: IDEAS_FORMAT, effort: 'low', text: ideasUserPrompt(brief, field), maxTokens: 4000 })
-  await admin.from('ai_usage').insert({ owner_id: userId, kind: 'story-ideas', input_tokens: usage.input, output_tokens: usage.output })
+  const { output } = await counted(admin, userId, 'story-ideas', IDEAS_MONTHLY_LIMIT, new Failure(429, 'quota_exceeded', `Limite mensuelle atteinte (${IDEAS_MONTHLY_LIMIT} suggestions).`), () =>
+    ask(apiKey, deadline, { model: IDEAS_MODEL, format: IDEAS_FORMAT, effort: 'low', text: ideasUserPrompt(brief, field), maxTokens: 4000 }),
+  )
   return { ideas: pickIdeas(brief, (output ?? {}) as Record<string, unknown>, field) }
 }
 
@@ -404,18 +411,9 @@ async function composeMap(apiKey: string, deadline: number, req: MapRequest) {
 async function map(apiKey: string, deadline: number, admin: Admin, userId: string, body: Record<string, unknown>) {
   const req = parseMapRequest(body)
   if (typeof req === 'string') throw new Failure(400, 'bad_request', req)
-  if (!(await isAdmin(admin, userId))) {
-    const { count, error } = await admin
-      .from('ai_usage')
-      .select('id', { count: 'exact', head: true })
-      .eq('owner_id', userId)
-      .eq('kind', 'map')
-      .gte('created_at', monthStart())
-    if (error) throw error
-    if ((count ?? 0) >= MAP_MONTHLY_LIMIT) throw new Failure(429, 'quota_exceeded', `Limite mensuelle atteinte (${MAP_MONTHLY_LIMIT} plans).`)
-  }
-  const { map: doc, problems, usage } = await composeMap(apiKey, deadline, req)
-  await admin.from('ai_usage').insert({ owner_id: userId, kind: 'map', input_tokens: usage.input, output_tokens: usage.output })
+  const { map: doc, problems } = await counted(admin, userId, 'map', MAP_MONTHLY_LIMIT, new Failure(429, 'quota_exceeded', `Limite mensuelle atteinte (${MAP_MONTHLY_LIMIT} plans).`), () =>
+    composeMap(apiKey, deadline, req),
+  )
   return { map: doc, problems }
 }
 

@@ -3,13 +3,15 @@
 // The browser sends what the wizard knows (occupation, characteristics, best skills, link, fields
 // already written), with the keeper's session or, from a player's phone, the table link as `link`
 // (the game owner's quota then applies). Claude proposes the six profile statements; the function returns only the
-// fields that were empty, or the single field asked for. Monthly limit per account.
+// fields that were empty, or the single field asked for. Monthly limit per account: the call is
+// reserved in ai_usage before Claude is asked (_shared/ai-usage.ts), so calls made at once can't pass it.
 //
 // Secrets: ANTHROPIC_API_KEY (required). Optional: PROFILE_MONTHLY_LIMIT (default 50).
 
 import Anthropic from 'npm:@anthropic-ai/sdk@1.4.0'
 import { createClient } from 'npm:@supabase/supabase-js@2.118.0'
 import type { Database } from '../_shared/database.types.ts'
+import { recordUsage, refusedUpstream, releaseUsage, reserveUsage } from '../_shared/ai-usage.ts'
 import {
   parseProfileRequest,
   pickSuggestions,
@@ -72,39 +74,28 @@ Deno.serve(async (req) => {
 
   try {
     const { data: profile } = await admin.from('profiles').select('is_admin').eq('id', userId).single()
-    if (!profile?.is_admin) {
-      const monthStart = new Date()
-      monthStart.setUTCDate(1)
-      monthStart.setUTCHours(0, 0, 0, 0)
-      const { count, error } = await admin
-        .from('ai_usage')
-        .select('id', { count: 'exact', head: true })
-        .eq('owner_id', userId)
-        .eq('kind', 'profile')
-        .gte('created_at', monthStart.toISOString())
-      if (error) throw error
-      if ((count ?? 0) >= MONTHLY_LIMIT) {
-        return fail(429, 'quota_exceeded', `Limite mensuelle atteinte (${MONTHLY_LIMIT} suggestions).`)
-      }
-    }
+    // Reserved before the call (admins: no limit, still recorded).
+    const usageId = await reserveUsage(admin, userId, 'profile', profile?.is_admin ? null : MONTHLY_LIMIT)
+    if (!usageId) return fail(429, 'quota_exceeded', `Limite mensuelle atteinte (${MONTHLY_LIMIT} suggestions).`)
 
     const client = new Anthropic({ apiKey })
-    const message = await client.beta.messages.create({
-      model: MODEL,
-      max_tokens: 4000,
-      betas: ['server-side-fallback-2026-07-01'],
-      fallbacks: 'default',
-      output_config: { effort: 'low', format },
-      system: PROFILE_SYSTEM_PROMPT,
-      messages: [{ role: 'user', content: profileUserPrompt(input) }],
-    })
-
-    await admin.from('ai_usage').insert({
-      owner_id: userId,
-      kind: 'profile',
-      input_tokens: message.usage.input_tokens,
-      output_tokens: message.usage.output_tokens,
-    })
+    let message: Anthropic.Beta.BetaMessage
+    try {
+      message = await client.beta.messages.create({
+        model: MODEL,
+        max_tokens: 4000,
+        betas: ['server-side-fallback-2026-07-01'],
+        fallbacks: 'default',
+        output_config: { effort: 'low', format },
+        system: PROFILE_SYSTEM_PROMPT,
+        messages: [{ role: 'user', content: profileUserPrompt(input) }],
+      })
+    } catch (e) {
+      // The AI service refused the call: nothing generated, the reservation is given back.
+      if (refusedUpstream(e)) await releaseUsage(admin, usageId)
+      throw e
+    }
+    await recordUsage(admin, usageId, { input: message.usage.input_tokens, output: message.usage.output_tokens })
 
     if (message.stop_reason === 'refusal') return fail(422, 'refused', 'Pas de suggestion possible pour ce profil.')
     const text = message.content.flatMap((b) => (b.type === 'text' ? [b.text] : [])).join('')

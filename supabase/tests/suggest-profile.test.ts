@@ -2,7 +2,7 @@
 // Run with `pnpm test:import` (needs `supabase functions serve --env-file supabase/tests/functions.env`).
 import { createServer, type Server } from 'node:http'
 import { createClient, type SupabaseClient } from '@supabase/supabase-js'
-import { afterAll, beforeAll, describe, expect, it } from 'vitest'
+import { afterAll, afterEach, beforeAll, describe, expect, it } from 'vitest'
 import type { Database } from '../../src/lib/database.types'
 
 const url = process.env.SUPABASE_URL!
@@ -19,6 +19,8 @@ const PROFILE = {
   traits: 'Têtue, curieuse',
 }
 const requests: Array<Record<string, unknown>> = []
+/** For one test: the fake Claude answers late, or with an HTTP error. */
+const fake = { delayMs: 0, status: 200 }
 
 let mock: Server
 let user: SupabaseClient<Database>
@@ -31,12 +33,16 @@ beforeAll(async () => {
     req.on('data', (c) => (raw += c))
     req.on('end', () => {
       requests.push(JSON.parse(raw || '{}'))
-      res.writeHead(200, { 'content-type': 'application/json' })
-      res.end(JSON.stringify({
-        id: 'msg_test', type: 'message', role: 'assistant', model: 'claude-opus-5-5',
-        content: [{ type: 'text', text: JSON.stringify(PROFILE) }],
-        stop_reason: 'end_turn', stop_sequence: null, usage: { input_tokens: 600, output_tokens: 120 },
-      }))
+      const { delayMs, status } = fake
+      setTimeout(() => {
+        res.writeHead(status, { 'content-type': 'application/json' })
+        if (status !== 200) return res.end(JSON.stringify({ type: 'error', error: { type: 'invalid_request_error', message: 'refused by the fake API' } }))
+        res.end(JSON.stringify({
+          id: 'msg_test', type: 'message', role: 'assistant', model: 'claude-opus-5-5',
+          content: [{ type: 'text', text: JSON.stringify(PROFILE) }],
+          stop_reason: 'end_turn', stop_sequence: null, usage: { input_tokens: 600, output_tokens: 120 },
+        }))
+      }, delayMs)
     })
   })
   await new Promise<void>((r) => mock.listen(MOCK_PORT, '0.0.0.0', r))
@@ -47,6 +53,7 @@ beforeAll(async () => {
 })
 
 afterAll(() => new Promise<void>((r) => mock.close(() => r())))
+afterEach(() => Object.assign(fake, { delayMs: 0, status: 200 }))
 
 async function invoke(client: SupabaseClient<Database>, body: Record<string, unknown>) {
   const { data, error } = await client.functions.invoke('suggest-profile', { body })
@@ -129,6 +136,29 @@ describe('suggest-profile', () => {
     const res = await invoke(anon, { ...investigator, link: token })
     expect(res.status).toBe(401)
     expect(res.body.error.code).toBe('link_invalid')
+  })
+
+  it('reserves a suggestion before Claude is called: calls at once from a table link stay under the limit', async () => {
+    const { token, ownerId } = await tableLink()
+    const counted = async () => (await service.from('ai_usage').select('id', { count: 'exact', head: true }).eq('owner_id', ownerId).eq('kind', 'profile')).count
+    const anon = createClient<Database>(url, anonKey, { auth: { persistSession: false } })
+    // One suggestion left this month. Four calls at once: one answer, three refusals, Claude called once.
+    await service.from('ai_usage').insert(Array.from({ length: 49 }, () => ({ owner_id: ownerId, kind: 'profile' })))
+    fake.delayMs = 300
+    let before = requests.length
+    const answers = await Promise.all(Array.from({ length: 4 }, () => invoke(anon, { ...investigator, profile: {}, link: token })))
+    expect(answers.map((a) => a.status).sort()).toEqual([200, 429, 429, 429])
+    expect(requests.length - before).toBe(1)
+    expect(await counted()).toBe(50)
+
+    // The AI service refused the call itself: nothing was generated, nothing is counted
+    await service.from('ai_usage').delete().eq('owner_id', ownerId)
+    Object.assign(fake, { delayMs: 0, status: 400 })
+    before = requests.length
+    const refused = await invoke(anon, { ...investigator, profile: {}, link: token })
+    expect([refused.status, refused.body.error.code]).toEqual([502, 'ai_error'])
+    expect(requests.length - before).toBe(1)
+    expect(await counted()).toBe(0)
   })
 
   it('enforces the monthly limit', async () => {
