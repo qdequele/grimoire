@@ -23,6 +23,7 @@ import {
   storyMetaId,
   THREATS,
   withDetails,
+  withStoredSceneMap,
   TONES,
   type StoryBrief,
   type StoryOutline,
@@ -197,6 +198,49 @@ describe('writing scenes in batches', () => {
     const validate = new Ajv2020({ allErrors: true, strict: false }).compile(STORY_SCHEMA)
     expect(validate(story), JSON.stringify(validate.errors)).toBe(true)
     expect(story.meta).toMatchObject({ id: 'test-story-abcdef', license: 'private', players: { min: 2, max: 4 }, contentWarnings: ['missing children'] })
+  })
+})
+
+describe('a scene map joins the story as it is stored', () => {
+  // What the creation's draft rebuilds: its own titles, and the map's two handouts.
+  const fresh = {
+    acts: [{ id: 'a', scenes: [{ id: 'hall', title: 'Hall', handouts: ['letter', 'map-hall', 'map-hall-keeper'] }] }],
+    handouts: [
+      { id: 'letter', title: 'Letter' },
+      { id: 'map-hall', title: 'Map', image: 'images/map-hall.svg', scene: 'hall' },
+      { id: 'map-hall-keeper', title: 'Keeper map', image: 'images/map-hall-keeper.svg', scene: 'hall' },
+    ],
+  }
+  const ids = ['map-hall', 'map-hall-keeper']
+
+  it('adds the two handouts and links them to the scene, keeping what the keeper changed since', () => {
+    const stored = {
+      meta: { title: 'Renamed' },
+      acts: [{ id: 'a', scenes: [{ id: 'hall', title: 'Great hall', handouts: ['letter', 'photo'] }, { id: 'added', title: 'Added by the keeper' }] }],
+      handouts: [{ id: 'letter', title: 'Rewritten letter' }, { id: 'photo', title: 'Photo', image: 'images/photo.svg' }],
+    }
+    expect(withStoredSceneMap(stored, fresh, 'hall', ids)).toEqual({
+      meta: { title: 'Renamed' },
+      acts: [{ id: 'a', scenes: [{ id: 'hall', title: 'Great hall', handouts: ['letter', 'photo', 'map-hall', 'map-hall-keeper'] }, { id: 'added', title: 'Added by the keeper' }] }],
+      handouts: [{ id: 'letter', title: 'Rewritten letter' }, { id: 'photo', title: 'Photo', image: 'images/photo.svg' }, fresh.handouts[1], fresh.handouts[2]],
+    })
+    expect(stored.acts[0].scenes[0].handouts).toEqual(['letter', 'photo']) // the stored story isn't changed in place
+  })
+
+  it('replaces an earlier map of the same scene instead of adding a second one', () => {
+    const stored = {
+      acts: [{ id: 'a', scenes: [{ id: 'hall', handouts: ['map-hall', 'map-hall-keeper'] }] }],
+      handouts: [{ id: 'map-hall', title: 'Old map' }, { id: 'map-hall-keeper', title: 'Old keeper map' }],
+    }
+    expect(withStoredSceneMap(stored, fresh, 'hall', ids)).toEqual({
+      acts: [{ id: 'a', scenes: [{ id: 'hall', handouts: ids }] }],
+      handouts: [fresh.handouts[1], fresh.handouts[2]],
+    })
+  })
+
+  it('has nowhere to put the map when the keeper removed the scene', () => {
+    expect(withStoredSceneMap({ acts: [{ id: 'a', scenes: [{ id: 'other' }] }], handouts: [] }, fresh, 'hall', ids)).toBeNull()
+    expect(withStoredSceneMap(null, fresh, 'hall', ids)).toBeNull()
   })
 })
 

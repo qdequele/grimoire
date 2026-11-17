@@ -22,6 +22,8 @@
 //                        keeper's copies as SVG in the pack, two handouts of that scene. The browser
 //                        calls it until `remaining` is 0. Part of the creation, not the map quota:
 //                        counted per creation (map_attempts), at most twice STORY_MAPS_PER_STORY calls.
+//                        The map is added to the story as it is stored then (the keeper may have
+//                        edited it since the last scene), under a condition on its updated_at.
 //
 // Every call must end before the Edge Function's wall-clock limit (150 s): that is why the outline
 // takes two calls, scenes go one at a time, the writing is done by Sonnet, and each Claude call is
@@ -40,7 +42,7 @@ import { createSystemPrompt, ideasUserPrompt, outlineDetailsPrompt, outlineUserP
 import { STORY_SCHEMA } from '../_shared/spec-bundle.ts'
 import { forbiddenNamesIn } from '../_shared/story-mcp.ts'
 import { monthStart, recordUsage, refusedUpstream, releaseUsage, reserveUsage, type UsageKind } from '../_shared/ai-usage.ts'
-import { existingStory, savePackFile, saveStory } from '../_shared/story-save.ts'
+import { existingStory, savePackFile, saveStory, writePackJson } from '../_shared/story-save.ts'
 import { mapFiles, sceneMapRequest, scenesWithoutMap, STORY_MAPS_PER_STORY, withSceneMap } from '../_shared/story-maps.ts'
 import { renderMap } from '../_shared/maps/render.ts'
 import { sanitizeSvg } from '../_shared/svg-safe.ts'
@@ -63,6 +65,7 @@ import {
   pickIdeas,
   storyMetaId,
   withDetails,
+  withStoredSceneMap,
   writtenSceneIds,
   type IdeaField,
   type StoryBrief,
@@ -420,6 +423,31 @@ async function map(apiKey: string, deadline: number, admin: Admin, userId: strin
   return { map: doc, problems }
 }
 
+/**
+ * Add a scene's map to the story as it is stored now (withStoredSceneMap), only if nobody changed
+ * the story between the read and the write (updated_at), then to the pack's story.json. Tried
+ * twice: an edit landing in between is kept, never overwritten.
+ */
+async function attachSceneMap(admin: Admin, userId: string, storyId: string, fresh: unknown, sceneId: string, handoutIds: string[]) {
+  for (let attempt = 0; attempt < 2; attempt++) {
+    const { data: stored, error } = await admin.from('stories').select('content, updated_at').eq('id', storyId).eq('owner_id', userId).maybeSingle()
+    if (error) throw error
+    if (!stored) throw new Failure(404, 'not_found', 'Histoire introuvable.')
+    const story = withStoredSceneMap(stored.content, fresh, sceneId, handoutIds)
+    if (!story) return // the keeper removed the scene: its map has nowhere to go
+    const { data: saved, error: saveError } = await admin
+      .from('stories')
+      .update({ content: story as Json })
+      .eq('id', storyId)
+      .eq('owner_id', userId)
+      .eq('updated_at', stored.updated_at)
+      .select('id')
+    if (saveError) throw saveError
+    if (saved.length) return await writePackJson(admin, userId, storyId, story)
+  }
+  throw new Failure(409, 'conflict', 'L’histoire a changé pendant le dessin du plan. Réessaie.')
+}
+
 async function sceneMap(apiKey: string, deadline: number, admin: Admin, userId: string, body: Record<string, unknown>) {
   const row = await loadCreation(admin, body.creationId, userId)
   const brief = parseBrief(row.brief)
@@ -444,7 +472,7 @@ async function sceneMap(apiKey: string, deadline: number, admin: Admin, userId: 
   await savePackFile(admin, userId, target.storyId, files.keeper.image, sanitizeSvg(renderMap(doc, { audience: 'keeper', lang })).svg, 'image/svg+xml')
 
   draft = withSceneMap(draft, scene.id, doc.title, lang)
-  await saveStory(admin, userId, target.storyId, createdStory(draft, outline, brief, target.metaId))
+  await attachSceneMap(admin, userId, target.storyId, createdStory(draft, outline, brief, target.metaId), scene.id, [files.players.handout, files.keeper.handout])
   await admin
     .from('story_creations')
     .update({

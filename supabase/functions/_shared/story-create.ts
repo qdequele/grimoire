@@ -460,3 +460,40 @@ export const createdStory = (draft: ImportDraft, outline: StoryOutline, brief: S
     contentWarnings: outline.contentWarnings,
     tags: ['grimoire-creator'],
   })
+
+const record = (v: unknown): Record<string, unknown> | null => (v && typeof v === 'object' && !Array.isArray(v) ? (v as Record<string, unknown>) : null)
+const list = (v: unknown): unknown[] => (Array.isArray(v) ? v : [])
+
+/**
+ * A scene's map joins the story AS IT IS STORED, not as the creation's draft remembers it: once
+ * the last scene is written the keeper may already have changed the story (the editor, the MCP
+ * connector, a pack import), and rebuilding it from the draft would undo that. `fresh` is the
+ * story rebuilt from the draft with the map: only the map's handouts (`handoutIds`, replacing
+ * earlier ones) are taken from it, and linked to the scene. Null when the stored story no longer
+ * has that scene: the map has nowhere to go.
+ */
+export function withStoredSceneMap(stored: unknown, fresh: unknown, sceneId: string, handoutIds: string[]): Record<string, unknown> | null {
+  const story = record(stored)
+  if (!story) return null
+  const isMap = (id: unknown) => typeof id === 'string' && handoutIds.includes(id)
+  let found = false
+  const acts = list(story.acts).map((a) => {
+    const act = record(a)
+    if (!act) return a
+    return {
+      ...act,
+      scenes: list(act.scenes).map((s) => {
+        const scene = record(s)
+        if (!scene || scene.id !== sceneId) return s
+        found = true
+        return { ...scene, handouts: [...list(scene.handouts).filter((h) => !isMap(h)), ...handoutIds] }
+      }),
+    }
+  })
+  if (!found) return null
+  const handouts = [
+    ...list(story.handouts).filter((h) => !isMap(record(h)?.id)),
+    ...list(record(fresh)?.handouts).filter((h) => isMap(record(h)?.id)),
+  ]
+  return { ...story, acts, handouts }
+}
