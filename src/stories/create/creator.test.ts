@@ -97,6 +97,19 @@ describe('the scenes’ maps after the last scene', () => {
     expect(api.calls()).toBe(1)
   })
 
+  it('says it was stopped when the keeper left during the last map, not that it is done', async () => {
+    const api = endpoint(1)
+    let left = false
+    const outcome = drawAllMaps(api.draw, () => left, () => { left = true })
+    expect(await outcome).toBe('stopped')
+    expect(api.calls()).toBe(1)
+  })
+
+  it('says it was stopped, not failed, when a map fails after the keeper left', async () => {
+    const api = endpoint(2, [1])
+    expect(await drawAllMaps(api.draw, () => true, () => {})).toBe('stopped')
+  })
+
   it('is done at once when no map is left', async () => {
     expect(await drawAllMaps(endpoint(0).draw, () => false, () => {})).toBe('done')
   })

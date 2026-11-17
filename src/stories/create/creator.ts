@@ -63,7 +63,8 @@ export type MapsOutcome = 'done' | 'stopped' | 'failed'
 /**
  * The scenes' maps, after the last scene, one call each until none is left. A failure stops there
  * and says so: the story is ready without the map, and drawing again resumes at the first scene
- * still without one (the server picks it).
+ * still without one (the server picks it). Once the keeper has left the page the result is always
+ * 'stopped', even when that call drew the last map or failed: nothing more may happen on screen.
  */
 export async function drawAllMaps(
   draw: () => Promise<{ scene: string | null; remaining: number }>,
@@ -76,10 +77,10 @@ export async function drawAllMaps(
       const res = await draw()
       if (res.scene) drawn++
       onProgress(drawn, drawn + res.remaining)
-      if (!res.remaining) return 'done'
       if (stopped()) return 'stopped'
+      if (!res.remaining) return 'done'
     }
   } catch {
-    return 'failed'
+    return stopped() ? 'stopped' : 'failed'
   }
 }

@@ -170,6 +170,9 @@ function Creator({ userId }: { userId: string }) {
           if (res.validationErrors.length) {
             toast.warning(t.n(res.validationErrors.length, "{n} point à vérifier dans l'histoire (identifiants ou valeurs hors format).", "{n} points à vérifier dans l'histoire (identifiants ou valeurs hors format)."))
           }
+          // Left during the last scene: no maps now, and no navigation. The Écriture step offers
+          // « Dessiner les plans manquants » when the keeper comes back.
+          if (stopped.current) return
           await drawMaps(creationId, res.storyId)
           return
         }
@@ -186,7 +189,6 @@ function Creator({ userId }: { userId: string }) {
    * again and a link to the story, which works without it. Left the page: nothing more happens.
    */
   async function drawMaps(id: string, storyId: string | null) {
-    stopped.current = false
     setPhase({ kind: 'maps', drawn: 0, total: 0 })
     const outcome = await drawAllMaps(
       () => drawSceneMap.mutateAsync({ creationId: id }),
@@ -287,7 +289,7 @@ function Creator({ userId }: { userId: string }) {
                 )}
                 <div className="flex flex-wrap items-center gap-2">
                   {outline && creationId && !outlineHasDetails(outline) && !completeOutline.isPending && (
-                    <Button onClick={() => addDetails(creationId, outline)}disabled={busy}>
+                    <Button onClick={() => addDetails(creationId, outline)} disabled={busy}>
                       <ScrollText data-icon="inline-start" />
                       {t('Compléter le plan')}
                     </Button>
@@ -324,7 +326,12 @@ function Creator({ userId }: { userId: string }) {
           <WritingPanel
             phase={phase}
             onRetry={writeAll}
-            onRetryMaps={(storyId) => creationId && drawMaps(creationId, storyId)}
+            onRetryMaps={(storyId) => {
+              if (!creationId) return
+              // The keeper is on the page: a leave from an earlier run no longer applies.
+              stopped.current = false
+              void drawMaps(creationId, storyId)
+            }}
             done={done}
             storyId={server.data?.story_id ?? null}
           />
