@@ -6,7 +6,7 @@ import type { T } from '@/i18n/t'
 import type { EngineItem } from '@/play/host'
 import { SKILL_BY_ID } from '@/rules/d100'
 import { documentCard, documentItemId, type StoryNames } from './documents'
-import { CONDITION_LABEL, conditionEffects, parseCard, type HeldItem, type ItemCard } from './item'
+import { CONDITION_LABEL, conditionEffects, isFirearm, parseCard, type HeldItem, type ItemCard } from './item'
 import { localCard } from './text'
 
 /** The investigator's value in a skill: their sheet's, else the base (numeric bases only, which weapon skills have). */
@@ -19,6 +19,7 @@ export function skillValue(data: CharacterData | undefined, skill: string): numb
 
 export function toEngineItem(t: T, item: HeldItem, data: CharacterData | undefined): EngineItem {
   const c = item.card
+  const jam = jamAt(item)
   return {
     id: item.id,
     n: localCard(t, c, item.source).name,
@@ -32,11 +33,19 @@ export function toEngineItem(t: T, item: HeldItem, data: CharacterData | undefin
           dmg: c.weapon.damage,
           db: !!c.weapon.db,
           imp: !!c.weapon.impale,
+          ...(jam !== undefined ? { jam } : {}),
           ...(item.condition !== 'clean' ? { c: engineCondition(t, item) } : {}),
         },
       }
       : {}),
   }
+}
+
+/** The roll from which a firearm jams, in its condition (its card's, or the condition's when lower); none below 100. */
+function jamAt(item: HeldItem): number | undefined {
+  if (!isFirearm(item.card)) return undefined
+  const m = conditionEffects(item.card, item.condition).malfunction
+  return m !== undefined && m < 100 ? m : undefined
 }
 
 /** A weapon's condition as the engine applies it (EngineItem.w.c). */

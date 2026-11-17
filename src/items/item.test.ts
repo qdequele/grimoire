@@ -199,5 +199,17 @@ describe("a weapon's condition", () => {
     expect(toEngineItem(t, { ...held('gun', gun, 6), condition: 'rusty' }, undefined).w?.c).toEqual({ label: 'Rouillée', pen: 1, minus: 1, half: false, jam: 90, broken: false })
     expect(toEngineItem(t, held('gun', gun, 6), undefined).w?.c).toBeUndefined()
   })
+
+  it("sends a firearm's jam threshold, clean or not (the card's own, or its condition's when lower)", () => {
+    const t = currentT()
+    const own: ItemCard = { ...gun, weapon: { ...gun.weapon!, malfunction: 92 } }
+    expect(toEngineItem(t, held('gun', own, 6), undefined).w?.jam).toBe(92)
+    expect(toEngineItem(t, { ...held('gun', own, 6), condition: 'rusty' }, undefined).w?.jam).toBe(90)
+    expect(toEngineItem(t, { ...held('gun', own, 6), condition: 'dirty' }, undefined).w?.jam).toBe(92)
+    // A firearm that never jams sends none; a melee weapon never jams, whatever its card says.
+    expect(toEngineItem(t, held('gun', gun, 6), undefined).w?.jam).toBeUndefined()
+    const club: ItemCard = { ...knife, weapon: { ...knife.weapon!, malfunction: 92 } }
+    expect(toEngineItem(t, held('club', club, null), undefined).w?.jam).toBeUndefined()
+  })
 })
 

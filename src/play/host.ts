@@ -79,12 +79,14 @@ export interface EngineItem {
   uses?: number
   cap?: number
   /**
-   * A weapon: skill id, the investigator's value in it, damage, adds the damage bonus, impales, and
-   * its condition's effects (c, absent when clean): penalty dice, damage taken off and halved, the
-   * roll that jams it, out of order; its label for the attack button and the Journal.
+   * A weapon: skill id, the investigator's value in it, damage, adds the damage bonus, impales, the
+   * roll from which a firearm jams (jam: its card's malfunction, or its condition's when lower;
+   * absent when it never jams, clean or not), and its condition's effects (c, absent when clean):
+   * penalty dice, damage taken off and halved, the roll that jams it, out of order; its label for
+   * the attack button and the Journal.
    */
   w?: {
-    sk: string; v: number; dmg: string; db: boolean; imp: boolean
+    sk: string; v: number; dmg: string; db: boolean; imp: boolean; jam?: number
     c?: { label: string; pen: number; minus: number; half: boolean; jam?: number; broken: boolean }
   }
 }

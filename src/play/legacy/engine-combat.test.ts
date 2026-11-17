@@ -105,6 +105,17 @@ describe.skipIf(!hasBrowser)('game engine: weapon cards in combat', { timeout: 3
     expect(shot.big).toBe('? dég.')
   })
 
+  it("jams a clean firearm at its card's malfunction value", async () => {
+    const own: ItemCard = { ...pistol, weapon: { ...pistol.weapon!, malfunction: 92 } }
+    const jammed = await shoot(own, 93)
+    expect(jammed.errors).toEqual([])
+    expect(jammed.level).toContain('Arme enrayée')
+    expect(jammed.journal).toContain('Arme enrayée')
+    // Below it, the same roll is an ordinary hit (the investigator has 95 %).
+    const hit = await shoot(own, 91)
+    expect(hit.big).toMatch(/^\d+ dég\.$/)
+  })
+
   it('rolls every damage a card may be saved with', async () => {
     const samples = ['1D10', '2D6+4', '1d6', 'D6', '1D6+1D4', '1D8 + 1', '1D3-1', '5', '4D6/2D6/1D6', '1D10 / 1D6+2']
     expect(samples.filter((s) => !isDamage(s))).toEqual([])
