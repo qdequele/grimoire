@@ -87,8 +87,9 @@ function itemAttacks(c,imp){return itemsOf(c.id).filter(x=>x.w).map(x=>{const d=
 function itemPen(a){const k=a[7];return k&&Number(k.pen)>0?Math.min(2,Math.round(Number(k.pen))):0;}
 /* A firearm that jams: its roll is at or above the condition's (or card's) malfunction value. */
 function itemJam(a,r){const k=a[7];return k&&k.jam&&r>=Number(k.jam)?["fail","Arme enrayée"]:null;}
-/* Damage after the condition: halved (rounded down) for a damaged weapon. */
-function itemDmg(a,dmg,dd){const k=a[7];if(!k||!k.half)return {dmg,dd};const h=Math.floor(dmg/2);return {dmg:h,dd:dd+" · "+k.label+" : "+dmg+" ÷ 2 = "+h};}
+/* Damage after the condition: halved (rounded down) for a damaged weapon. A damage that couldn't be
+   rolled ("?") stays as it is. */
+function itemDmg(a,dmg,dd){const k=a[7];if(!k||!k.half||typeof dmg!=="number")return {dmg,dd};const h=Math.floor(dmg/2);return {dmg:h,dd:dd+" · "+k.label+" : "+dmg+" ÷ 2 = "+h};}
 /* The generic "Arme de poing" / "Fusil" attacks give way to the investigator's own firearms. */
 function withItemAttacks(c,at,imp){const it=itemAttacks(c,imp);if(!it.length)return at;
   const sks=new Set(itemsOf(c.id).filter(x=>x.w).map(x=>x.w.sk));

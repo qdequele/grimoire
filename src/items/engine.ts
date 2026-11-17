@@ -77,7 +77,7 @@ export function storyCards(items: unknown): Array<{ itemId: string; card: ItemCa
   return items.flatMap((raw) => {
     if (!raw || typeof raw !== 'object') return []
     const { id, scene: _scene, ...rest } = raw as Record<string, unknown>
-    const parsed = parseCard(rest)
+    const parsed = parseCard(rest, { stored: true })
     return typeof id === 'string' && parsed.card ? [{ itemId: id, card: parsed.card }] : []
   })
 }

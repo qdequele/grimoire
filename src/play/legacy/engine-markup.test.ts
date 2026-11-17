@@ -1,22 +1,13 @@
 // The generated game engine (public/play/engine.js), run in a real page on a story whose every text
 // carries markup (hostileStory.ts): none of it may become an element, and none may show with its
 // escaping doubled (&amp;). This is the check of the whole path: what the adapter hands over, and how
-// each of the engine's renders writes it. No server: the page's files are served from disk.
-// Needs Playwright's Chromium (`pnpm exec playwright install chromium`); skipped where it isn't installed.
-import { existsSync, readFileSync } from 'node:fs'
-import { chromium, type Browser } from '@playwright/test'
+// each of the engine's renders writes it. Runs in Chromium (enginePage.ts); skipped where it isn't installed.
+import type { Browser } from '@playwright/test'
 import { afterAll, beforeAll, describe, expect, it } from 'vitest'
 import { engineGlobals } from '../engineData'
 import type { EngineGlobals } from '../host'
+import { hasBrowser, launchBrowser, openEngine } from './enginePage'
 import { hostileStory, RAN } from './hostileStory'
-
-const hasBrowser = (() => {
-  try {
-    return existsSync(chromium.executablePath())
-  } catch {
-    return false
-  }
-})()
 
 interface Outcome {
   /** Markers whose element ran its handler. */
@@ -32,60 +23,14 @@ interface Outcome {
 }
 
 /**
- * Loads play.html and the engine on this data, opens every scene and panel, and says what became of
- * the markers. `current` is the story id the app starts the game with (the story's own, as GamePage does).
+ * Starts the engine on this data, opens every scene and panel, and says what became of the markers.
+ * `current` is the story id the app starts the game with (the story's own, as GamePage does).
  */
 async function play(browser: Browser, data: EngineGlobals, lang: string, current: string): Promise<Outcome> {
-  const html = readFileSync('play.html', 'utf8').replace(/<script type="module"[^>]*><\/script>/, '')
-  const engine = readFileSync('public/play/engine.js', 'utf8')
-  const context = await browser.newContext()
+  const { page, errors: pageErrors, close } = await openEngine(browser, data, { lang, current })
   try {
-    const page = await context.newPage()
-    const pageErrors: string[] = []
-    page.on('pageerror', (e) => pageErrors.push(String(e)))
-    await page.route('**/*', (route) => {
-      const path = new URL(route.request().url()).pathname
-      if (path === '/play.html') return route.fulfill({ contentType: 'text/html', body: html })
-      if (path === '/play/engine.js') return route.fulfill({ contentType: 'text/javascript', body: engine })
-      return route.fulfill({ status: 404, body: '' })
-    })
-    await page.addInitScript((l) => localStorage.setItem('gardien-lang', l), lang)
-    await page.goto('http://engine.test/play.html')
-    const outcome = await page.evaluate(async ({ data, RAN, current }) => {
+    const outcome = await page.evaluate(async ({ data, RAN }) => {
       const w = window as unknown as Record<string, unknown>
-      const storyId = (data.SCENARIOS[0] as { id: string }).id
-      // What boot.ts does (src/play/boot.ts), with a host that only starts a game of this story.
-      w.GRIMOIRE_DATA = {
-        ...data,
-        NPCS: data.NPC_TABLE ? { [storyId]: { p: data.NPC_TABLE.p, note: data.NPC_TABLE.note, rows: () => data.NPC_ROWS } } : {},
-      }
-      w.GRIMOIRE_HOST = {
-        data,
-        loadState: (f: { fresh: () => Record<string, unknown> }) => ({ ...f.fresh(), view: 'jouer', cur: current }),
-        save: () => {}, quit: () => {}, giveItem: () => true, showHandout: () => true, openItems: () => true,
-      }
-      const ritual = data.RITUAL as { title: string; max: number; add: string; sub: string; help: string } | null
-      if (ritual) {
-        const set = (id: string, text: string) => {
-          const el = document.getElementById(id)
-          if (el) el.textContent = text
-        }
-        set('ritTitle', ritual.title)
-        set('ritMax', String(ritual.max))
-        set('pmAdd', ritual.add)
-        set('pmSub', ritual.sub)
-        const help = document.getElementById('ritHelp')
-        if (help) help.innerHTML = ritual.help
-      }
-      history.replaceState(null, '', `#${storyId}`)
-      await new Promise((ok, ko) => {
-        const s = document.createElement('script')
-        s.src = '/play/engine.js'
-        s.onload = ok
-        s.onerror = ko
-        document.body.appendChild(s)
-      })
-
       // The engine's own globals (a classic script).
       const g = eval as (s: string) => unknown
       const call = (fn: string, ...args: unknown[]) => (g(fn) as (...a: unknown[]) => unknown)(...args)
@@ -167,17 +112,17 @@ async function play(browser: Browser, data: EngineGlobals, lang: string, current
         shown: markers(/(F\d+) & "q" <img/g),
         errors,
       }
-    }, { data, RAN, current })
+    }, { data, RAN })
     return { ...outcome, errors: [...outcome.errors, ...pageErrors] }
   } finally {
-    await context.close()
+    await close()
   }
 }
 
 describe.skipIf(!hasBrowser)('game engine: story text is never markup', () => {
   let browser: Browser
   beforeAll(async () => {
-    browser = await chromium.launch()
+    browser = await launchBrowser()
   }, 60_000)
   afterAll(() => browser?.close())
 

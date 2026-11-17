@@ -74,8 +74,8 @@ export const UI_PATCHES = [
   ],
   [
     'else{const f=rollFormula(a[2]);dmg=Math.max(0,f.tot);dd=f.det;}}',
-    'else{const f=rollFormula(a[2]);dmg=Math.max(0,f.tot);dd=f.det;}}if(hit)({dmg,dd}=itemDmg(a,dmg,dd));',
-    'a damaged weapon deals half damage',
+    'else{const f=rollFormula(a[2]);if(f){dmg=Math.max(0,f.tot);dd=f.det;}else{dmg="?";dd="?";}}}if(hit)({dmg,dd}=itemDmg(a,dmg,dd));',
+    'a damage the engine can\'t read (an old card, an opponent\'s "special") shows as "?" instead of throwing away the hit; a damaged weapon deals half damage',
   ],
   [
     '<button class="a" data-atk="${i}" data-j="${j}">${esc(a[0])} ${a[1]} %</button>',

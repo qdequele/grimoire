@@ -26,6 +26,24 @@ describe('parseCard', () => {
     expect(r.problems.map((p) => p.split(':')[0])).toEqual(['name', 'kind', 'art', 'weapon.skill', 'weapon.damage', 'uses', 'ammo'])
   })
 
+  it("takes a weapon's damage only as dice the game screen can roll", () => {
+    const weapon = (damage: string, opts?: { stored: boolean }) =>
+      parseCard({ name: 'W', kind: 'weapon', weapon: { skill: 'fighting-brawl', damage } }, opts).card?.weapon?.damage
+    for (const ok of ['1D10', '2D6+4', '1d6', 'D6', '1D6+1D4', '1D8 + 1', '1D3-1', '5', '4D6/2D6/1D6', '1D10 / 1D6+2']) expect(weapon(ok), ok).toBe(ok)
+    // What the form made of "1D6+DB", a die without faces, a doubled die, loose ends, an empty band.
+    for (const bad of ['1D6+D', '2D', '1D6+D4D', '1D6+', '+1D6', '1D6 1D4', '1D6//1D4', '/1D6', 'D', '+', 'lots']) expect(weapon(bad), bad).toBeUndefined()
+  })
+
+  it('still reads a stored card whose damage was saved before that check', () => {
+    const old = { name: 'Club', kind: 'weapon', weapon: { skill: 'fighting-brawl', damage: '1D6+D', db: true } }
+    expect(parseCard(old).card).toBeNull()
+    expect(parseCard(old, { stored: true }).card).toEqual(old)
+    expect(asHeld({ id: 'i', character_id: 'c', card: old })?.card).toEqual(old)
+    expect(storyCards([{ id: 'club', ...old }])).toEqual([{ itemId: 'club', card: old }])
+    // Never anything else than dice characters, stored or not.
+    expect(parseCard({ ...old, weapon: { ...old.weapon, damage: 'lots' } }, { stored: true }).card).toBeNull()
+  })
+
   it('keeps names and texts within the limits the database checks', () => {
     expect(parseCard({ name: 'x'.repeat(ITEM_LIMITS.name), kind: 'tool' }).card).not.toBeNull()
     expect(parseCard({ name: 'x'.repeat(ITEM_LIMITS.name + 1), kind: 'tool' }).card).toBeNull()

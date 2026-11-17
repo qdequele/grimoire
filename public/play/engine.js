@@ -596,7 +596,7 @@ $("#cbtBody").addEventListener("click",e=>{
   if(t.dataset.atk||t.dataset.dmg){const i=+(t.dataset.atk??t.dataset.dmg),r=R[i];const a=(r.type==="m"?r.atk:weaponsOf(charById(r.cid)).atk)[+t.dataset.j];
     if(t.dataset.dmg){doFormula(a[2],`${r.name} · ${a[0]}`);return;}if(!itemFire(a))return;
     const x=d100(B,M+itemPen(a)),L=itemJam(a,x.r)||level(x.r,a[1]);const hit=!["fail","fumble"].includes(L[0]);
-    let dmg=null,dd="";if(hit){if(L[0]==="ext"){dmg=maxOf(a[2]);dd="dégâts max + impact max (réussite extrême)";if(a[4]||EMPALE.test(a[0])){const die=(a[2].match(/\d*D\d+/i)||["0"])[0];const x2=rollFormula(die);if(x2){dmg+=x2.tot;dd+=` + relance ${die} = ${x2.tot} (arme qui empale)`;}}}else{const f=rollFormula(a[2]);dmg=Math.max(0,f.tot);dd=f.det;}}if(hit)({dmg,dd}=itemDmg(a,dmg,dd));
+    let dmg=null,dd="";if(hit){if(L[0]==="ext"){dmg=maxOf(a[2]);dd="dégâts max + impact max (réussite extrême)";if(a[4]||EMPALE.test(a[0])){const die=(a[2].match(/\d*D\d+/i)||["0"])[0];const x2=rollFormula(die);if(x2){dmg+=x2.tot;dd+=` + relance ${die} = ${x2.tot} (arme qui empale)`;}}}else{const f=rollFormula(a[2]);if(f){dmg=Math.max(0,f.tot);dd=f.det;}else{dmg="?";dd="?";}}}if(hit)({dmg,dd}=itemDmg(a,dmg,dd));
     showRes(hit?`${dmg} dég.`:x.r,L[0],`${a[0]} · ${L[1]}${hit?` · jet ${x.r}`:""}`,`${r.name} · ${a[0]} ${a[1]} % · ${x.det}${hit?` · ${a[2]} = ${dd}`:""}${hit?" · Reporte les dégâts sur la cible avec « Infliger ».":""}`,
       `${r.name} ${a[0]} → ${x.r} ${L[1]}${hit?` · ${dmg} dégâts`:""}`,FXOF[L[0]]);}
 });
@@ -1831,8 +1831,9 @@ function itemAttacks(c,imp){return itemsOf(c.id).filter(x=>x.w).map(x=>{const d=
 function itemPen(a){const k=a[7];return k&&Number(k.pen)>0?Math.min(2,Math.round(Number(k.pen))):0;}
 /* A firearm that jams: its roll is at or above the condition's (or card's) malfunction value. */
 function itemJam(a,r){const k=a[7];return k&&k.jam&&r>=Number(k.jam)?["fail","Arme enrayée"]:null;}
-/* Damage after the condition: halved (rounded down) for a damaged weapon. */
-function itemDmg(a,dmg,dd){const k=a[7];if(!k||!k.half)return {dmg,dd};const h=Math.floor(dmg/2);return {dmg:h,dd:dd+" · "+k.label+" : "+dmg+" ÷ 2 = "+h};}
+/* Damage after the condition: halved (rounded down) for a damaged weapon. A damage that couldn't be
+   rolled ("?") stays as it is. */
+function itemDmg(a,dmg,dd){const k=a[7];if(!k||!k.half||typeof dmg!=="number")return {dmg,dd};const h=Math.floor(dmg/2);return {dmg:h,dd:dd+" · "+k.label+" : "+dmg+" ÷ 2 = "+h};}
 /* The generic "Arme de poing" / "Fusil" attacks give way to the investigator's own firearms. */
 function withItemAttacks(c,at,imp){const it=itemAttacks(c,imp);if(!it.length)return at;
   const sks=new Set(itemsOf(c.id).filter(x=>x.w).map(x=>x.w.sk));
