@@ -160,7 +160,7 @@ Dice (`1D6`) and SAN losses (`1/1D4`) are detected automatically and get glossar
 The keeper can open an **ambiance screen** on a TV or tablet in the middle of the table: a slowly living picture for the current scene, and the handouts the keeper pushes to it. A scene may say what it shows:
 
 ```json
-"screen": { "image": "images/harbour-fog.jpg", "preset": "fog" }
+"screen": { "image": "images/harbour-fog.jpg", "preset": "fog", "name": "The old harbour" }
 ```
 
 or, for a fire burning in the picture's fireplace:
@@ -175,6 +175,7 @@ or, for a fire burning in the picture's fireplace:
 | `preset` | Living layers over it (see below). Default: picked from the scene's ambience sounds (`fireplace` → `hearth`). |
 | `place` | Drawn scenery, shown when there is no picture: `church`, `graveyard`, `crypt`, `castle`, `manor`, `library`, `police` (a police station), `forest`, `harbour`, `street`, `asylum`, `station` (a railway station), `swamp`, `dig` (a desert excavation), `mountain`, `museum`, `cavern` (a cave, an underground lake), `farm`, `ship` (on deck, at sea), `fair` (a fairground), `mine`, `moor` (standing stones on a moor). Its silhouettes take the preset's colours (a graveyard in the fog, a manor in the storm). Default: guessed from the scene's title ("The old church", "Le cimetière"…), else none. |
 | `time` | Time of day: `day`, `dusk` or `night`. It sets the light (sky colours, sun or moon, lit windows) and goes with any preset: a church in the `rain` by `day`, a street in the `snow` at `night`. Default: guessed from the scene's title ("Midnight", "L'aube"…) or its day/night sounds, else the preset's own (`night`, except `dust`: `day`). A `crypt` or a `cavern` stays dark. |
+| `name` | The place's name as the players may read it, shown over the background: plain text, 1 to 80 characters, e.g. `"L'église Saint-Roch"`, `"Carrow Manor"`. It belongs to the place, not to the scene: every scene in the same place carries the same name, and when the keeper moves to another scene the name follows. Never a spoiler (scene titles are written for the keeper: don't copy one that gives something away). Default: none; it is never guessed from the title. |
 | `fire` | For `hearth`: where the fire burns in the picture, `x`/`y` the base centre and `width`, as fractions of the picture (0 to 1). The flames, embers and their flickering light are drawn there and follow the pan and zoom. Default: bottom centre. |
 
 Presets:

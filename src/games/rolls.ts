@@ -1,7 +1,8 @@
 // The players' dice rolls, as the keeper's game screen sees them. A `roll` broadcast is only a hint
 // (the topic is public): the rows are read from game_rolls under the keeper's own RLS.
 import { asRoll, type Roll } from '@/companion/rolls'
-import { supabase } from '@/lib/supabase'
+import type { Json } from '@/lib/database.types'
+import { supabase, type TablesInsert } from '@/lib/supabase'
 
 const PAGE = 20
 /** A game keeps its 100 newest rolls (companion_roll_prune). */
@@ -58,7 +59,8 @@ export function rollFeed(gameId: string, show: (roll: Roll) => void): () => void
       for (const row of data) {
         if (seen.has(row.id)) continue
         note(row)
-        const roll = asRoll(row)
+        // The keeper's own rolls for investigators are in the table too (for the players): not shown back.
+        const roll = row.source === 'keeper' ? null : asRoll(row)
         if (roll) show(roll)
       }
       // A full page: there may be more. The next one starts at this one's last row (seen, so skipped).
@@ -70,4 +72,24 @@ export function rollFeed(gameId: string, show: (roll: Roll) => void): () => void
   }
 
   return () => run(readNew)
+}
+
+const LEVELS = ['extreme', 'hard', 'regular', 'failure']
+const whole = (v: unknown): number | null => (typeof v === 'number' && Number.isInteger(v) ? v : null)
+
+/**
+ * A roll the keeper's engine made for an investigator (GRIMOIRE_HOST.rolled), as the game_rolls row
+ * the table's players read; null when it isn't one the table shows. The database checks it again.
+ */
+export function keeperRoll(gameId: string, ownerId: string, characterId: string, raw: Record<string, unknown>): TablesInsert<'game_rolls'> | null {
+  const result = whole(raw.result)
+  const subject = typeof raw.subject === 'string' ? raw.subject.slice(0, 90) : ''
+  const dice = raw.dice && typeof raw.dice === 'object' ? (raw.dice as Json) : null
+  if (result === null || !subject || !dice) return null
+  const effect = raw.effect && typeof raw.effect === 'object' ? (raw.effect as Json) : null
+  const base = { game_id: gameId, owner_id: ownerId, character_id: characterId, source: 'keeper', subject, dice, result, effect }
+  if (raw.kind === 'damage') return { ...base, kind: 'damage' }
+  const target = whole(raw.target), net = whole(raw.net)
+  if (raw.kind !== 'check' || target === null || typeof raw.level !== 'string' || !LEVELS.includes(raw.level)) return null
+  return { ...base, kind: 'check', target: Math.max(0, Math.min(200, target)), net: Math.max(-2, Math.min(2, net ?? 0)), level: raw.level }
 }

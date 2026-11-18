@@ -89,7 +89,8 @@
           "screen": {
             "place": "asylum",
             "preset": "snow",
-            "time": "dusk"
+            "time": "dusk",
+            "name": "Le sanatorium des Gentianes"
           },
           "readAloud": [
             "À la gare du Fayet, un autocar bleu marqué SANATORIUM DES GENTIANES attend sous la neige, moteur tournant. Le chauffeur hisse votre valise sur le toit, entre des sacs de courrier et une caisse d'oranges. « Montez vite. Ça va tomber fort cette nuit. »",
@@ -223,7 +224,8 @@
           "screen": {
             "place": "asylum",
             "preset": "snow",
-            "time": "night"
+            "time": "night",
+            "name": "Le sanatorium des Gentianes"
           },
           "readAloud": [
             "Le vent cogne aux volets toute la soirée. Vers minuit, la lumière vacille, s'éteint une seconde, revient plus jaune. Le radiateur de votre chambre claque doucement.",
@@ -318,7 +320,8 @@
           "screen": {
             "place": "mountain",
             "preset": "snow",
-            "time": "day"
+            "time": "day",
+            "name": "Le plateau d'Assy"
           },
           "readAloud": [
             "Au matin, le monde a disparu. La neige monte jusqu'aux rebords des fenêtres du rez-de-chaussée, le ciel est blanc, la vallée n'existe plus. Dans le réfectoire, on rit.",
@@ -414,7 +417,8 @@
           "screen": {
             "place": "church",
             "preset": "snow",
-            "time": "day"
+            "time": "day",
+            "name": "La chapelle des Gentianes"
           },
           "readAloud": [
             "La chapelle est accolée à l'aile ouest : un toit pentu sous la neige, un petit clocher de bois. À l'intérieur, il fait presque aussi froid que dehors ; un poêle de fonte ronfle près de la sacristie.",
@@ -508,7 +512,8 @@
           "screen": {
             "place": "asylum",
             "preset": "bulb",
-            "time": "day"
+            "time": "day",
+            "name": "L'infirmerie des Gentianes"
           },
           "readAloud": [
             "Au deuxième étage, l'infirmerie sent l'éther et le linge bouilli. Une ampoule nue pend au-dessus de la table de radiologie ; elle grésille et baisse par moments, quand la chaudière force.",
@@ -606,7 +611,8 @@
           "screen": {
             "place": "mountain",
             "preset": "snow",
-            "time": "day"
+            "time": "day",
+            "name": "Le hameau des Combes"
           },
           "readAloud": [
             "Vingt minutes de raquettes dans une neige jusqu'aux genoux, et le hameau sort du blanc : une dizaine de fermes aux toits écrasés, une fontaine gelée, une petite chapelle, la fumée droite des cheminées.",
@@ -706,7 +712,8 @@
           "screen": {
             "place": "library",
             "preset": "candle",
-            "time": "night"
+            "time": "night",
+            "name": "Le bureau du directeur"
           },
           "readAloud": [
             "Le bureau sent le tabac froid et le papier. Une lampe verte, un fauteuil de cuir, des revues médicales jusqu'au plafond. Au mur, le graphique des guérisons monte en flèche à partir de l'été 1925.",
@@ -805,7 +812,8 @@
           "screen": {
             "place": "asylum",
             "preset": "bulb",
-            "time": "night"
+            "time": "night",
+            "name": "Le sanatorium des Gentianes"
           },
           "readAloud": [
             "Le vent est tombé. Dans le silence, le bâtiment craque de froid. Sur la vitre, côté intérieur, des fougères de givre poussent lentement, alors que le radiateur brûle sous la main.",
@@ -915,7 +923,8 @@
           "screen": {
             "place": "crypt",
             "preset": "bulb",
-            "time": "day"
+            "time": "day",
+            "name": "La chaufferie des Gentianes"
           },
           "readAloud": [
             "L'escalier de service descend dans une chaleur de four. Sous une rangée d'ampoules nues, la grande chaudière ronfle, la gueule rouge ouverte ; un homme en maillot de corps y jette le charbon à grandes pelletées.",
@@ -1011,7 +1020,8 @@
           "screen": {
             "place": "cavern",
             "preset": "ritual",
-            "time": "night"
+            "time": "night",
+            "name": "La galerie Saint-Bernard"
           },
           "readAloud": [
             "Derrière la porte de fer, une antichambre de béton, puis la roche. Le froid prend aux dents. La galerie descend doucement entre de vieux étais noircis, et votre lampe allume sur les parois un givre épais, blanc, qui ne fond pas sous la flamme.",
@@ -1145,7 +1155,8 @@
           "screen": {
             "place": "asylum",
             "preset": "nightmare",
-            "time": "night"
+            "time": "night",
+            "name": "Le sanatorium des Gentianes"
           },
           "readAloud": [
             "Toute la soirée, le froid gagne le bâtiment. Les radiateurs tiédissent, puis refroidissent, alors que la chaudière hurle en bas. Le givre monte aux vitres du réfectoire, aux miroirs, au verre des lampes.",
@@ -1338,7 +1349,8 @@
           "screen": {
             "place": "mountain",
             "preset": "fog",
-            "time": "dusk"
+            "time": "dusk",
+            "name": "Le plateau d'Assy"
           },
           "readAloud": [
             "Au matin, le ciel est d'un bleu dur. Les montagnes sont revenues, immenses, et la vallée fume de brume. Vers midi, on entend monter dans les lacets le moteur du chasse-neige.",

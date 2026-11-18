@@ -69,7 +69,8 @@
           "screen": {
             "place": "manor",
             "preset": "rain",
-            "time": "dusk"
+            "time": "dusk",
+            "name": "Le manoir du Clos-Aubert"
           },
           "readAloud": [
             "La carriole vous dépose au bout d'une allée de hêtres tordus par le vent. Le manoir du Clos-Aubert se dresse au bord de la lande, gris comme le ciel, et derrière lui on entend la mer cogner au pied de la falaise.",
@@ -173,7 +174,8 @@
           "screen": {
             "place": "manor",
             "preset": "night",
-            "time": "night"
+            "time": "night",
+            "name": "Le manoir du Clos-Aubert"
           },
           "readAloud": [
             "La pluie s'est calmée. Dans le silence, vous entendez la mer, et rien d'autre. Pas une horloge ne bat dans cette maison.",
@@ -271,7 +273,8 @@
           "screen": {
             "place": "manor",
             "preset": "candle",
-            "time": "night"
+            "time": "night",
+            "name": "Le manoir du Clos-Aubert"
           },
           "readAloud": [
             "L'air est froid et immobile, comme dans une église. Tout est en place : le lit fait, une robe posée sur une chaise, un bouquet de fleurs devenu poussière dans un vase.",
@@ -358,7 +361,8 @@
           "screen": {
             "place": "street",
             "preset": "fog",
-            "time": "day"
+            "time": "day",
+            "name": "Saint-Martin-des-Grèves"
           },
           "readAloud": [
             "Le bourg tient en une rue : l'église de granit, un café-épicerie, des maisons basses aux volets bleus. Des femmes en coiffe vous regardent passer sans répondre à votre bonjour.",
@@ -440,7 +444,8 @@
           "screen": {
             "place": "church",
             "preset": "candle",
-            "time": "dusk"
+            "time": "dusk",
+            "name": "La chapelle du Clos-Aubert"
           },
           "readAloud": [
             "La chapelle est une petite bâtisse de granit au fond du jardin, à moitié mangée par le lierre. La porte résiste, puis cède dans un grincement.",
@@ -533,7 +538,8 @@
           "screen": {
             "place": "harbour",
             "preset": "storm",
-            "time": "night"
+            "time": "night",
+            "name": "La crique du Clos-Aubert"
           },
           "readAloud": [
             "Cette nuit, aucun bruit dans la maison. Puis, d'un coup, toutes les horloges se mettent à sonner ensemble, alors que personne ne les a remontées. Trois coups. Et elles se taisent.",

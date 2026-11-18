@@ -113,7 +113,7 @@ describe('helpers', () => {
 
 describe('parseScreen', () => {
   it('reads back what was saved', () => {
-    const s: ScreenState = { v: 1, follow: false, sound: true, scene: storm, override: 'dust', placeOverride: null, timeOverride: null, handout: letter }
+    const s: ScreenState = { v: 1, follow: false, sound: true, scene: storm, override: 'dust', placeOverride: null, timeOverride: null, nameOverride: null, handout: letter }
     expect(parseScreen(JSON.parse(JSON.stringify(s)))).toEqual(s)
   })
 
@@ -149,5 +149,49 @@ describe('fire place (hearth)', () => {
   it('moving the fire is a new background', () => {
     expect(sceneKey(hearth)).not.toBe(sceneKey({ ...hearth, fire: { x: 0.6, y: 0.8, width: 0.3 } }))
     expect(screenReducer(run({ type: 'scene', scene: hearth }), { type: 'scene', scene: { ...hearth, fire: { x: 0.6, y: 0.8, width: 0.3 } } }).scene?.fire?.x).toBe(0.6)
+  })
+})
+
+describe('place name (players)', () => {
+  const church: ScreenScene = { ...fog, place: 'church', name: 'The old church' }
+
+  it('travels from the ambiance to the screen state and back, without a new background', () => {
+    expect(toScreenScene({ preset: 'fog', image: null, sounds: [], fire: null, place: null, time: null, name: 'Harbour' }, 'u/s').name).toBe('Harbour')
+    expect(toScreenScene({ preset: 'fog', image: null, sounds: [], fire: null, place: null, time: null }, 'u/s')).not.toHaveProperty('name')
+    const saved = JSON.parse(JSON.stringify(run({ type: 'scene', scene: church })))
+    expect(parseScreen(saved).scene).toEqual(church)
+    expect(sceneKey(church)).toBe(sceneKey({ ...church, name: 'Elsewhere' }))
+    expect(sceneKey(church)).toBe(sceneKey({ ...fog, place: 'church' }))
+  })
+
+  it('a scene with another name is another scene: the name follows the game', () => {
+    const s = run({ type: 'scene', scene: church }, { type: 'scene', scene: { ...church, name: 'The crypt' } })
+    expect(s.scene?.name).toBe('The crypt')
+  })
+
+  it("the keeper's name holds until the screen moves on; '' hides the scene's own", () => {
+    const s = run({ type: 'scene', scene: church }, { type: 'name', name: '  The chapel ' })
+    expect(s.nameOverride).toBe('The chapel')
+    expect(shownScene(s)?.name).toBe('The chapel')
+    expect(shownScene(screenReducer(s, { type: 'name', name: '' }))).not.toHaveProperty('name')
+    expect(shownScene(screenReducer(s, { type: 'name', name: null }))?.name).toBe('The old church')
+    expect(screenReducer(s, { type: 'name', name: 'The chapel' })).toBe(s)
+    expect(screenReducer(s, { type: 'scene', scene: storm }).nameOverride).toBeNull()
+    expect(screenReducer(screenReducer(s, { type: 'follow', on: false }), { type: 'follow', on: true, scene: storm }).nameOverride).toBeNull()
+    expect(screenReducer(s, { type: 'name', name: 'x'.repeat(100) }).nameOverride).toHaveLength(80)
+  })
+
+  it('a name with no scene yet still shows something; hiding it alone shows nothing', () => {
+    expect(shownScene(run({ type: 'name', name: 'Arrival' }))).toEqual({ preset: 'fog', image: null, sounds: [], name: 'Arrival' })
+    expect(shownScene(run({ type: 'name', name: '' }))).toBeNull()
+  })
+
+  it('reads the name and the override back from the row, dropping bad values', () => {
+    const saved = JSON.parse(JSON.stringify(run({ type: 'scene', scene: church }, { type: 'name', name: '' })))
+    expect(parseScreen(saved)).toMatchObject({ scene: church, nameOverride: '' })
+    expect(parseScreen({ ...saved, nameOverride: 3, scene: { ...church, name: 7 } })).toMatchObject({ scene: { ...fog, place: 'church' }, nameOverride: null })
+    expect(parseScreen({ ...saved, nameOverride: 'y'.repeat(200), scene: { ...church, name: 'z'.repeat(200) } })).toMatchObject({ nameOverride: 'y'.repeat(80), scene: { name: 'z'.repeat(80) } })
+    expect(parseScreen({ ...saved, scene: { ...church, name: '   ' } }).scene).not.toHaveProperty('name')
+    expect(INITIAL_SCREEN.nameOverride).toBeNull()
   })
 })

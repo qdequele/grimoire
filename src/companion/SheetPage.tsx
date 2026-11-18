@@ -8,16 +8,20 @@ import { skillName, useT, type T } from '@/i18n/t'
 import { cn } from '@/lib/utils'
 import type { Points } from '@/play/companion'
 import { CHARACTERISTIC_INFO, CHARACTERISTICS, PROFILE_FIELDS, SKILL_BY_ID } from '@/rules/d100'
-import { Masthead, SkinToggle } from '@/theme/Masthead'
-import { pointsOf, rememberCharacter, useSetPhoto, useSetPoints, type CompanionMember } from './api'
+import { Masthead } from '@/theme/Masthead'
+import { pointsOf, rememberCharacter, useSetPhoto, useSetPoints, type CompanionMember, type CompanionView } from './api'
 import { useCompanionContext, type CompanionContext } from './CompanionLayout'
 import type { PickState } from './PickPage'
 import { RollDialog, type RollTarget } from './Dice'
+import { useIsWide } from './table'
+import { TableView } from './TableView'
 import { rollableSkillKey } from './rolls'
 import { skillRows } from './sheet'
 
 export interface SheetContext extends CompanionContext {
   member: CompanionMember
+  /** On a computer the sheet's pages open over the table, which already shows the points. */
+  table?: boolean
 }
 export const useSheetContext = () => useOutletContext<SheetContext>()
 
@@ -29,7 +33,10 @@ const TABS = [
   { to: 'profil', label: 'Profil' },
 ]
 
-/** `/t/:token/c/:characterId`: one investigator, tabs Fiche · Dés · Objets · Carnet · Profil. */
+/**
+ * `/t/:token/c/:characterId`: one investigator. On a phone, tabs Fiche · Dés · Objets · Carnet ·
+ * Profil; on a computer, the table (TableView): the scene's décor with the same pages over it.
+ */
 export function SheetPage() {
   const t = useT()
   const ctx = useCompanionContext()
@@ -38,6 +45,7 @@ export function SheetPage() {
   const member = view.party.find((m) => m.id === characterId)
   const [photoOpen, setPhotoOpen] = useState(false)
   const setPhoto = useSetPhoto(token)
+  const wide = useIsWide()
 
   useEffect(() => {
     if (member && !view.focus) rememberCharacter(token, member.id)
@@ -59,10 +67,10 @@ export function SheetPage() {
   const subtitle = [d.occupation, d.age ? t('{n} ans', { n: d.age }) : ''].filter(Boolean).join(' · ')
   return (
     <>
-      {/* Phone: one column, tabs at the bottom. Computer (lg): the investigator and the tabs in a
-          side column that stays put, the tab's content beside it. */}
-      <div className="flex flex-col gap-6 lg:grid lg:grid-cols-[16rem_minmax(0,1fr)] lg:items-start lg:gap-12">
-        <aside className="flex flex-col gap-6 lg:sticky lg:top-10">
+      {wide ? (
+        <TableView ctx={{ ...ctx, member }} onPhoto={() => setPhotoOpen(true)} />
+      ) : (
+        <div className="flex flex-col gap-6">
           <header className="flex flex-col items-center gap-2">
             <button
               type="button"
@@ -70,7 +78,7 @@ export function SheetPage() {
               aria-label={member.photo ? t('Changer la photo de {name}', { name: d.name }) : t('Ajouter une photo de {name}', { name: d.name })}
               onClick={() => setPhotoOpen(true)}
             >
-              <Avatar name={d.name} photo={member.photo} className="size-20 text-2xl group-hover:border-foreground lg:size-24" />
+              <Avatar name={d.name} photo={member.photo} className="size-20 text-2xl group-hover:border-foreground" />
               <span aria-hidden="true" className="absolute -right-1 -bottom-1 grid size-7 place-items-center rounded-full border border-gold bg-background text-gold">
                 <Camera className="size-3.5" />
               </span>
@@ -88,17 +96,12 @@ export function SheetPage() {
             </p>
           </header>
           <span className="double-rule" />
-          <SideTabs />
-          <div className="hidden flex-col items-center gap-4 lg:flex">
+          <div className="flex min-w-0 flex-col gap-6">
+            <Outlet context={{ ...ctx, member } satisfies SheetContext} />
             {!view.focus && <ChangeLink token={token} />}
-            <SkinToggle />
           </div>
-        </aside>
-        <div className="flex min-w-0 flex-col gap-6">
-          <Outlet context={{ ...ctx, member } satisfies SheetContext} />
-          {!view.focus && <ChangeLink token={token} className="lg:hidden" />}
         </div>
-      </div>
+      )}
       <PhotoDialog
         name={d.name}
         photo={member.photo}
@@ -108,7 +111,7 @@ export function SheetPage() {
       />
       <nav
         aria-label={t('Fiche')}
-        className="fixed inset-x-0 bottom-0 z-10 border-t border-border bg-background/95 backdrop-blur lg:hidden"
+        className={cn('fixed inset-x-0 bottom-0 z-10 border-t border-border bg-background/95 backdrop-blur', wide && 'hidden')}
       >
         <div className="mx-auto flex max-w-lg justify-around">
           {TABS.map((tab) => (
@@ -132,35 +135,7 @@ export function SheetPage() {
   )
 }
 
-/** The tabs on a computer: a legacy diamond-bullet menu in the side column. */
-function SideTabs() {
-  const t = useT()
-  return (
-    <nav aria-label={t('Fiche')} className="hidden lg:block">
-      <ul className="flex flex-col gap-3">
-        {TABS.map((tab) => (
-          <li key={tab.label}>
-            <NavLink to={tab.to} end={tab.end} className="group flex items-center gap-3">
-              {({ isActive }) => (
-                <>
-                  <span
-                    aria-hidden="true"
-                    className={cn('size-2.5 shrink-0 rotate-45 border border-gold/50 group-hover:bg-gold', isActive && 'bg-gold')}
-                  />
-                  <span className={cn('font-heading text-2xl leading-tight group-hover:text-gold', isActive && 'text-gold')}>
-                    {t(tab.label)}
-                  </span>
-                </>
-              )}
-            </NavLink>
-          </li>
-        ))}
-      </ul>
-    </nav>
-  )
-}
-
-function ChangeLink({ token, className }: { token: string; className?: string }) {
+export function ChangeLink({ token, className }: { token: string; className?: string }) {
   const t = useT()
   return (
     <Link
@@ -194,9 +169,15 @@ function statWhat(t: T, key: keyof Points): string | null {
  * HP / SAN / Luck / MP with − / +. Each tap is a ±1 on the latest value, so quick taps all count.
  * SAN and Luck are also rolled: their label opens the roll dialog with the current value.
  */
-function StatTiles({ member, onRoll }: { member: CompanionMember; onRoll: (r: RollTarget) => void }) {
+export function StatTiles({ token, view, member, onRoll, compact }: {
+  token: string
+  view: CompanionView
+  member: CompanionMember
+  onRoll: (r: RollTarget) => void
+  /** Two by two whatever the width (the table's side column). */
+  compact?: boolean
+}) {
   const t = useT()
-  const { token, view } = useSheetContext()
   const setPoints = useSetPoints(token)
   const maxHp = member.data.hp ?? 10
   const now = pointsOf(view, member)
@@ -204,7 +185,7 @@ function StatTiles({ member, onRoll }: { member: CompanionMember; onRoll: (r: Ro
   const tap = (field: keyof Points, delta: number) => setPoints.mutate({ characterId: member.id, field, delta })
 
   return (
-    <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
+    <div className={cn('grid grid-cols-2 gap-2', !compact && 'sm:grid-cols-4')}>
       {STATS.map(({ key, label }) => {
         const max = key === 'pv' ? maxHp : 99
         const low = key === 'pv' && now.pv <= Math.floor(maxHp / 2)
@@ -260,7 +241,7 @@ function StatTiles({ member, onRoll }: { member: CompanionMember; onRoll: (r: Ro
 /** Fiche tab: points, characteristics, skills. */
 export function SheetTab() {
   const t = useT()
-  const { view, member } = useSheetContext()
+  const { token, view, member, table } = useSheetContext()
   const [rolling, setRolling] = useState<RollTarget | null>(null)
   const d = member.data
   const rows = skillRows(d, pointsOf(view, member).checks)
@@ -274,7 +255,7 @@ export function SheetTab() {
   return (
     <div className="flex flex-col gap-6">
       <RollDialog target={rolling} onClose={() => setRolling(null)} />
-      <StatTiles member={member} onRoll={setRolling} />
+      {!table && <StatTiles token={token} view={view} member={member} onRoll={setRolling} />}
 
       {/* Computer: characteristics in a narrow column beside the skills. */}
       <div className="flex flex-col gap-6 lg:grid lg:grid-cols-[17rem_minmax(0,1fr)] lg:items-start lg:gap-8">

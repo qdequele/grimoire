@@ -117,6 +117,12 @@ export interface PlayHost {
   useItem?: (itemId: string, delta: number) => void
   /** Give one of the story's items (its id in the story) to an investigator: a dialog above the game. */
   giveItem?: (storyItemId: string) => boolean
+  /**
+   * The keeper rolled for an investigator (roll picker: a test, a SAN roll, damage): the table's
+   * players see it with their own rolls. `roll` is a game_rolls row's kind, subject, target, net,
+   * dice, result, level and effect.
+   */
+  rolled?: (characterId: string, roll: Record<string, unknown>) => void
   /** The narrator's text generation (what claude.use("sample") gave in claude.ai). */
   sample?: (messages: SampleMessage[], opts?: SampleOptions) => Promise<{ text: string }>
 }

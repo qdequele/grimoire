@@ -273,6 +273,57 @@ export type Database = {
           },
         ]
       }
+      game_documents: {
+        Row: {
+          body: string | null
+          created_at: string
+          game_id: string
+          id: string
+          image: Json | null
+          key: string
+          owner_id: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          body?: string | null
+          created_at?: string
+          game_id: string
+          id?: string
+          image?: Json | null
+          key: string
+          owner_id?: string
+          title?: string
+          updated_at?: string
+        }
+        Update: {
+          body?: string | null
+          created_at?: string
+          game_id?: string
+          id?: string
+          image?: Json | null
+          key?: string
+          owner_id?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "game_documents_game_fkey"
+            columns: ["game_id", "owner_id"]
+            isOneToOne: false
+            referencedRelation: "games"
+            referencedColumns: ["id", "owner_id"]
+          },
+          {
+            foreignKeyName: "game_documents_owner_id_fkey"
+            columns: ["owner_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       game_points: {
         Row: {
           chance: number | null
@@ -339,6 +390,7 @@ export type Database = {
           character_id: string
           created_at: string
           dice: Json
+          effect: Json | null
           game_id: string
           id: string
           kind: string
@@ -346,13 +398,17 @@ export type Database = {
           net: number
           owner_id: string
           result: number
+          source: string
           subject: string | null
           target: number | null
+          companion_roll_json: Json | null
         }
+        ComputedFields: "companion_roll_json"
         Insert: {
           character_id: string
           created_at?: string
           dice: Json
+          effect?: Json | null
           game_id: string
           id?: string
           kind: string
@@ -360,6 +416,7 @@ export type Database = {
           net?: number
           owner_id: string
           result: number
+          source?: string
           subject?: string | null
           target?: number | null
         }
@@ -367,6 +424,7 @@ export type Database = {
           character_id?: string
           created_at?: string
           dice?: Json
+          effect?: Json | null
           game_id?: string
           id?: string
           kind?: string
@@ -374,6 +432,7 @@ export type Database = {
           net?: number
           owner_id?: string
           result?: number
+          source?: string
           subject?: string | null
           target?: number | null
         }
@@ -934,7 +993,26 @@ export type Database = {
         }
         Returns: Json
       }
+      companion_roll_json: {
+        Args: {
+          r: Omit<
+            Database["public"]["Tables"]["game_rolls"]["Row"],
+            Database["public"]["Tables"]["game_rolls"]["ComputedFields"]
+          >
+        }
+        Returns: Json
+      }
+      companion_roll_loss: { Args: { p_formula: string }; Returns: number }
       companion_roll_prune: { Args: { p_game: string }; Returns: undefined }
+      companion_roll_san: {
+        Args: {
+          p_character: string
+          p_loss_fail: string
+          p_loss_ok: string
+          p_token: string
+        }
+        Returns: Json
+      }
       companion_set_photo: {
         Args: { p_character: string; p_photo: string; p_token: string }
         Returns: undefined
@@ -953,6 +1031,7 @@ export type Database = {
         Returns: number
       }
       companion_skill_id: { Args: { p: Json }; Returns: string }
+      companion_table: { Args: { p_token: string }; Returns: Json }
       companion_text: { Args: { p: Json; p_max: number }; Returns: string }
       companion_use_item: {
         Args: { p_delta: number; p_item: string; p_token: string }

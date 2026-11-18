@@ -343,7 +343,7 @@ export interface StoryScene {
   ambience?: string[]
   handouts?: string[]
   images?: Array<{ src: string; caption?: string; keeperOnly?: boolean }>
-  screen?: { image?: string; preset?: string; place?: string; time?: string; fire?: unknown }
+  screen?: { image?: string; preset?: string; place?: string; time?: string; fire?: unknown; name?: unknown }
 }
 export interface StoryForScreen {
   acts: Array<{ scenes: StoryScene[] }>
@@ -361,6 +361,18 @@ export interface SceneAmbiance {
   place: PlaceId | null
   /** Time of day; null: the preset's own (LOOKS[preset].time). */
   time: TimeOfDay | null
+  /** The place's name as the players may read it (`screen.name`); absent: none (never guessed from the title). */
+  name?: string
+}
+
+/** Longest place name shown on the screen (spec: `screen.name`, 1..80 characters). */
+export const PLACE_NAME_MAX = 80
+
+/** A place name as the screen shows it: a trimmed string cut to PLACE_NAME_MAX, or undefined when empty. */
+export function placeName(v: unknown): string | undefined {
+  if (typeof v !== 'string') return undefined
+  const name = v.trim().slice(0, PLACE_NAME_MAX).trim()
+  return name || undefined
 }
 
 export const findScene = (story: StoryForScreen, sceneId: string | undefined): StoryScene | undefined =>
@@ -400,5 +412,6 @@ export function sceneAmbiance(story: StoryForScreen, sceneId: string | undefined
   const background = packImagePath(scene?.screen?.image)
   const image = has(background) ? background : (shared ?? null)
   const time = isTime(scene?.screen?.time) ? scene.screen.time : scene ? (timeFromText(scene.title, scene.id) ?? timeFromSounds(scene.ambience)) : null
-  return { preset, image, sounds: (scene?.ambience ?? []).slice(0, 3), fire: asFire(scene?.screen?.fire), place, time }
+  const name = placeName(scene?.screen?.name)
+  return { preset, image, sounds: (scene?.ambience ?? []).slice(0, 3), fire: asFire(scene?.screen?.fire), place, time, ...(name ? { name } : {}) }
 }

@@ -87,7 +87,8 @@
           "screen": {
             "place": "library",
             "preset": "dust",
-            "time": "day"
+            "time": "day",
+            "name": "L'atelier de la montée Saint-Sébastien"
           },
           "readAloud": [
             "La montée Saint-Sébastien grimpe raide entre des immeubles hauts et gris, percés de grandes fenêtres. Derrière les vitres, partout, le claquement des métiers à tisser. Au numéro 12, une voûte mène à une cour humide où sèche du linge.",
@@ -220,7 +221,8 @@
           "screen": {
             "place": "street",
             "preset": "fog",
-            "time": "dusk"
+            "time": "dusk",
+            "name": "La Croix-Rousse"
           },
           "readAloud": [
             "En haut de la colline, sur le plateau, les immeubles de canuts alignent leurs fenêtres immenses. Au cinquième, sans ascenseur, une porte s'entrouvre sur une pièce de quatre mètres sous plafond, où une femme dévide de la soie sur un rouet.",
@@ -330,7 +332,8 @@
           "screen": {
             "place": "police",
             "preset": "rain",
-            "time": "day"
+            "time": "day",
+            "name": "Le commissariat du 1ᵉʳ arrondissement"
           },
           "readAloud": [
             "Une salle de garde qui sent le poêle à charbon et le drap mouillé. Des agents en pèlerine secouent la pluie de leur képi. Derrière un guichet, un planton tape à la machine avec deux doigts.",
@@ -422,7 +425,8 @@
           "screen": {
             "place": "library",
             "preset": "candle",
-            "time": "dusk"
+            "time": "dusk",
+            "name": "La librairie Montcharmont, rue Juiverie"
           },
           "readAloud": [
             "Rue Juiverie, dans le Vieux-Lyon, les façades de la Renaissance se penchent les unes vers les autres. Une enseigne de fer : *I. Montcharmont, livres anciens*. Le grelot de la porte sonne longtemps.",
@@ -496,7 +500,8 @@
           "screen": {
             "place": "library",
             "preset": "dust",
-            "time": "day"
+            "time": "day",
+            "name": "La bibliothèque du palais Saint-Jean"
           },
           "readAloud": [
             "La Bibliothèque de la Ville occupe l'ancien palais des archevêques, collé à la cathédrale Saint-Jean. On monte un escalier de pierre usé en cuvette. Dans la salle de lecture, sous les hautes fenêtres, des lecteurs en pardessus prennent des notes dans le froid.",
@@ -572,7 +577,8 @@
           "screen": {
             "place": "street",
             "preset": "fog",
-            "time": "night"
+            "time": "night",
+            "name": "Une traboule des pentes"
           },
           "readAloud": [
             "On entre par une porte quelconque de la rue des Tables-Claudiennes. Derrière, un couloir voûté qui sent la pierre mouillée, une cour, un escalier à vis à jour, une seconde voûte. La traboule descend par paliers vers la montée des Carmélites, de cour en cour.",
@@ -685,7 +691,8 @@
           "screen": {
             "place": "manor",
             "preset": "rain",
-            "time": "dusk"
+            "time": "dusk",
+            "name": "L'hôtel Bellevrand"
           },
           "readAloud": [
             "Rue Sala, près de Bellecour, une façade claire aux balcons de fer forgé. Un valet prend vos manteaux mouillés. Dans le vestibule, le grand miroir est voilé de crêpe noir, comme ceux de l'escalier, comme celui du salon.",
@@ -785,7 +792,8 @@
           "screen": {
             "place": "church",
             "preset": "candle",
-            "time": "dusk"
+            "time": "dusk",
+            "name": "Fourvière"
           },
           "readAloud": [
             "La ficelle vous hisse au flanc de la colline, puis il faut monter à pied, dans le vent. En haut, la basilique toute neuve écrase de sa masse blanche la vieille chapelle. En bas, Lyon fume sous un ciel bas, entre ses deux fleuves.",
@@ -877,7 +885,8 @@
           "screen": {
             "place": "street",
             "preset": "fog",
-            "time": "night"
+            "time": "night",
+            "name": "Les pentes de la Croix-Rousse"
           },
           "readAloud": [
             "Il est tard. Le brouillard monte de la Saône et noie les becs de gaz des pentes. La montée est déserte, sauf un café dont la vitrine éclaire encore le pavé mouillé.",
@@ -982,7 +991,8 @@
           "screen": {
             "place": "crypt",
             "preset": "candle",
-            "time": "night"
+            "time": "night",
+            "name": "Les caves sous la traboule"
           },
           "readAloud": [
             "L'escalier descend plus bas que des caves ordinaires. La pierre change : de grands blocs taillés, très anciens, puis une voûte de briques plates. L'air est sec et sent le papier.",
@@ -1090,7 +1100,8 @@
           "screen": {
             "place": "manor",
             "preset": "ritual",
-            "time": "night"
+            "time": "night",
+            "name": "La salle des glaces"
           },
           "readAloud": [
             "À la nuit tombée, Lyon s'allume fenêtre par fenêtre. Sur chaque rebord, des lumignons dans leurs verres de couleur. Les rues sont noires de monde ; une procession de flambeaux monte vers Fourvière, et là-haut la basilique brille comme une lanterne.",
@@ -1317,7 +1328,8 @@
           "screen": {
             "place": "street",
             "preset": "rain",
-            "time": "dusk"
+            "time": "dusk",
+            "name": "Les pentes de la Croix-Rousse"
           },
           "readAloud": [
             "Au petit jour, une pluie fine lave les pentes. Sur les rebords des fenêtres, les lumignons éteints gardent un fond de cire noire. D'un immeuble à l'autre, les métiers reprennent leur claquement, comme chaque matin."

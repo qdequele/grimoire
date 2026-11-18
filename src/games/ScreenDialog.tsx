@@ -1,18 +1,20 @@
 import { useQuery, useQueryClient } from '@tanstack/react-query'
-import { Copy, Eraser, ExternalLink, FileText, ImagePlus, Monitor, Plus, RefreshCw, X } from 'lucide-react'
+import { Copy, Eraser, ExternalLink, FileText, ImagePlus, Monitor, Plus, RefreshCw, Trash2, X } from 'lucide-react'
 import { QRCodeSVG } from 'qrcode.react'
-import { useRef, useState, useSyncExternalStore } from 'react'
+import { useEffect, useRef, useState, useSyncExternalStore } from 'react'
 import { toast } from 'sonner'
 import { useAuth } from '@/auth/auth'
 import { Button } from '@/components/ui/button'
 import { Checkbox } from '@/components/ui/checkbox'
 import { Dialog, DialogClose, DialogContent, DialogDescription, DialogTitle } from '@/components/ui/dialog'
+import { Input } from '@/components/ui/input'
 import { NativeSelect, NativeSelectOption } from '@/components/ui/native-select'
 import { Skeleton } from '@/components/ui/skeleton'
 import { useT } from '@/i18n/t'
 import { cn } from '@/lib/utils'
 import { findScene, isPlace, isPreset, isTime, LOOKS, PLACE_LABEL, PLACES, PRESET_LABEL, PRESETS, sceneImages, TIME_LABEL, TIMES } from '@/screen/ambiance'
 import type { ImageRef, ScreenHandout } from '@/screen/state'
+import { documentKeys, useGameDocuments, useRemoveDocument } from './documents'
 import {
   listUploads, packImage, storyHandout, screenUrl, uploadPicture, useCreateScreenLink, useReplaceScreenLink, useScreenLink,
   type ScreenControl, type ScreenStory,
@@ -159,6 +161,12 @@ export function ScreenDialog({ gameId, control, story, open, onOpenChange }: {
     enabled: open && !!ownerId,
     queryFn: () => listUploads(ownerId!, gameId),
   })
+  // What the players keep: every document shown, until the keeper takes it back.
+  const kept = useGameDocuments(gameId, open)
+  const removeKept = useRemoveDocument(gameId)
+  useEffect(() => control.onKept(() => void qc.invalidateQueries({ queryKey: documentKeys.game(gameId) })), [control, qc, gameId])
+  // The place's name as the players read it: the scene's own, unless the keeper types another.
+  const sceneName = state.scene?.name ?? ''
   const uploadItems: Item[] = (uploads.data ?? []).map((image) => ({ label: '', handout: { key: `upload:${image.path}`, title: '', image } }))
 
   const onFile = async (f: File | undefined) => {
@@ -242,6 +250,23 @@ export function ScreenDialog({ gameId, control, story, open, onOpenChange }: {
               {TIMES.map((x) => <NativeSelectOption key={x} value={x}>{t(TIME_LABEL[x])}</NativeSelectOption>)}
             </NativeSelect>
           </div>
+          <div className="flex items-center gap-2">
+            <label htmlFor="scr-name" className="shrink-0">{t('Nom du lieu')}</label>
+            {/* Keyed on the scene's name: a new scene shows its own name again. */}
+            <Input
+              id="scr-name"
+              key={`${sceneName}|${state.nameOverride === null}`}
+              defaultValue={state.nameOverride ?? sceneName}
+              maxLength={80}
+              placeholder={t('Aucun nom : le genre de décor')}
+              onBlur={(e) => {
+                const v = e.target.value.trim()
+                control.dispatch({ type: 'name', name: v === sceneName ? null : v })
+              }}
+              onKeyDown={(e) => e.key === 'Enter' && e.currentTarget.blur()}
+            />
+          </div>
+          <p className="text-sm text-muted-foreground">{t('Les joueurs à distance lisent ce nom au-dessus du décor. Il vient de l’histoire ; change-le ou efface-le pour cette scène.')}</p>
           {state.scene?.image && (state.placeOverride ?? state.scene.place) && state.placeOverride !== 'none' && (
             <p className="text-sm text-muted-foreground">{t("Cette scène a une image : le décor dessiné ne s'affiche que sans image.")}</p>
           )}
@@ -272,6 +297,29 @@ export function ScreenDialog({ gameId, control, story, open, onOpenChange }: {
           <Button variant="outline" className="self-start" disabled={uploading || !ownerId} onClick={() => file.current?.click()}>
             <ImagePlus /> {uploading ? t('Envoi…') : t('Envoyer une image…')}
           </Button>
+        </section>
+
+        <section className="flex flex-col gap-3">
+          <h3 className="eyebrow">{t('Chez les joueurs')}</h3>
+          <p className="text-sm text-muted-foreground">
+            {t('Chaque document montré reste dans les Documents des joueurs à distance, qui peuvent le relire quand ils veulent.')}
+          </p>
+          {kept.data?.length ? (
+            <ul className="flex flex-col" aria-label={t('Chez les joueurs')}>
+              {kept.data.map((d) => (
+                <li key={d.id} className="flex items-center gap-3 border-t border-border py-2 first:border-t-0">
+                  <FileText aria-hidden="true" className="size-4 shrink-0 text-gold" />
+                  <span className="min-w-0 flex-1 truncate">{d.title || t('Image')}</span>
+                  <Button size="sm" variant="ghost" disabled={removeKept.isPending} onClick={() => removeKept.mutate(d.id)}
+                    aria-label={t('Reprendre aux joueurs : {name}', { name: d.title || t('Image') })}>
+                    <Trash2 /> {t('Reprendre')}
+                  </Button>
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <p className="text-sm italic text-muted-foreground">{t('Rien pour l’instant.')}</p>
+          )}
         </section>
       </DialogContent>
     </Dialog>

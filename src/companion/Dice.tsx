@@ -5,12 +5,13 @@ import { Button } from '@/components/ui/button'
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { useT } from '@/i18n/t'
 import { cn } from '@/lib/utils'
-import { useRollCheck, useRollDice } from './api'
+import { Input } from '@/components/ui/input'
+import { isLoss, useRollCheck, useRollDice, useRollSan, type CompanionMember } from './api'
 import { checkDice, freeDice } from './dice3d/dice'
 import { DiceTray } from './dice3d/DiceTray'
 import { RollResult, Stepper, useThrow } from './RollResult'
 import {
-  DICE_SIDES, diceFormula, keptTens, LEVEL_LABEL, MAX_DICE, MAX_MODIFIER, MAX_NET, netLabel, subjectName,
+  DICE_SIDES, diceFormula, effectText, keptTens, LEVEL_LABEL, MAX_DICE, MAX_MODIFIER, MAX_NET, netLabel, subjectName,
   type Roll, type RollSubject,
 } from './rolls'
 import { useSheetContext } from './SheetPage'
@@ -40,13 +41,24 @@ export interface RollTarget {
 /**
  * Tapping a skill, a characteristic, SAN or Luck: what it is for, the thresholds, and a d100 roll
  * (with bonus or penalty dice) made by the server. The keeper's game screen shows the result too.
+ * A SAN roll also takes the loss the keeper announced: the server rolls it and changes the SAN, for
+ * everyone at once. `ctx`: the sheet, where the dialog isn't inside one of its pages (the table).
  */
-export function RollDialog({ target, onClose }: { target: RollTarget | null; onClose: () => void }) {
+export function RollDialog({ target, onClose, ctx }: {
+  target: RollTarget | null
+  onClose: () => void
+  ctx?: { token: string; member: CompanionMember }
+}) {
   const t = useT()
-  const { token, member } = useSheetContext()
-  const roll = useRollCheck(token)
+  const page = useSheetContext() as { token: string; member: CompanionMember } | undefined
+  const { token, member } = ctx ?? page!
+  const check = useRollCheck(token)
+  const sanRoll = useRollSan(token)
   const add = useRollHistory((s) => s.add)
   const [net, setNet] = useState(0)
+  // The loss as the keeper announces it, "success / failure": 0/1D6 until the player types another.
+  const [lossOk, setLossOk] = useState('0')
+  const [lossFail, setLossFail] = useState('1D6')
   const [last, setLast] = useState<Roll | null>(null)
   const throwing = useThrow()
   // Keep showing the last target while the dialog closes.
@@ -55,17 +67,21 @@ export function RollDialog({ target, onClose }: { target: RollTarget | null; onC
     setShown(target)
     setNet(0)
     setLast(null)
+    setLossOk('0')
+    setLossFail('1D6')
   }
   const v = shown?.value ?? 0
+  const san = shown?.subject.kind === 'san'
+  const lossValid = isLoss(lossOk) && isLoss(lossFail)
 
   const go = () => {
     if (!shown) return
-    roll.mutate(
-      { characterId: member.id, subject: shown.subject, target: shown.value, net },
-      { onSuccess: (r) => { setLast(r); throwing.received(r); add(r) } },
-    )
+    const onSuccess = (r: Roll) => { setLast(r); throwing.received(r); add(r) }
+    if (san) sanRoll.mutate({ characterId: member.id, lossOk, lossFail }, { onSuccess })
+    else check.mutate({ characterId: member.id, subject: shown.subject, target: shown.value, net }, { onSuccess })
   }
-  const pending = roll.isPending
+  const pending = check.isPending || sanRoll.isPending
+  const cost = last?.kind === 'check' ? last.effect : undefined
   const dice = pending
     ? checkDice(1 + Math.abs(net), null)
     : last?.kind === 'check' ? checkDice(last.tens.length, { tens: last.tens, units: last.units, kept: keptTens(last) }) : null
@@ -89,20 +105,44 @@ export function RollDialog({ target, onClose }: { target: RollTarget | null; onC
             </div>
           ))}
         </dl>
-        <Stepper
-          label={t('Dés bonus ou de pénalité')}
-          value={net}
-          text={netLabel(t, net) || t('Ni bonus ni pénalité')}
-          min={-MAX_NET}
-          max={MAX_NET}
-          onChange={setNet}
-        />
-        <Button size="lg" onClick={go} disabled={roll.isPending}>
+        {san ? (
+          <fieldset className="flex flex-col gap-2">
+            <legend className="eyebrow pb-2">{t('Perte annoncée par le gardien')}</legend>
+            <div className="grid grid-cols-2 gap-2">
+              <label className="flex flex-col gap-1 text-xs text-muted-foreground">
+                {t('Si le jet réussit')}
+                <Input value={lossOk} onChange={(e) => setLossOk(e.target.value)} maxLength={8} inputMode="text" autoCapitalize="characters" aria-invalid={!isLoss(lossOk)} className="font-mono" />
+              </label>
+              <label className="flex flex-col gap-1 text-xs text-muted-foreground">
+                {t('Si le jet rate')}
+                <Input value={lossFail} onChange={(e) => setLossFail(e.target.value)} maxLength={8} inputMode="text" autoCapitalize="characters" aria-invalid={!isLoss(lossFail)} className="font-mono" />
+              </label>
+            </div>
+            <p className={cn('text-xs', lossValid ? 'text-muted-foreground' : 'text-destructive')}>
+              {lossValid ? t('La perte est lancée et retirée de ta SAN toute seule. Le gardien peut la corriger.') : t('Écris un nombre ou des dés : 0, 1, 1D6, 1D4+1.')}
+            </p>
+          </fieldset>
+        ) : (
+          <Stepper
+            label={t('Dés bonus ou de pénalité')}
+            value={net}
+            text={netLabel(t, net) || t('Ni bonus ni pénalité')}
+            min={-MAX_NET}
+            max={MAX_NET}
+            onChange={setNet}
+          />
+        )}
+        <Button size="lg" onClick={go} disabled={pending || (san && !lossValid)}>
           <Dices data-icon="inline-start" />
           {last ? t('Relancer') : t('Lancer 1D100')}
         </Button>
         {dice && <DiceTray dice={dice} throwKey={pending ? null : throwing.fresh} onSettled={throwing.onSettled} />}
         {throwing.revealed(last, pending) && <RollResult roll={last} />}
+        {cost && throwing.revealed(last, pending) && (
+          <p data-testid="roll-effect" className={cn('text-center font-mono text-sm', cost.delta < 0 ? 'text-destructive' : 'text-muted-foreground')}>
+            {cost.formula && /D/i.test(cost.formula) ? `${cost.formula} : ` : ''}{effectText(t, cost)}
+          </p>
+        )}
         <p className="text-center text-xs text-muted-foreground">{t('Le gardien voit le résultat sur son écran.')}</p>
       </DialogContent>
     </Dialog>

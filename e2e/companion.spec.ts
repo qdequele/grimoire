@@ -128,26 +128,101 @@ test('keeper shows the table link; a player picks an investigator and sees their
   await expect(phone.getByRole('heading', { name: 'Alpha', level: 1 })).toBeVisible()
 })
 
-test('on a computer (a table playing online), the sheet keeps its tabs in a side column', async ({ browser, baseURL }) => {
-  const { tableUrl } = await setUpTable(browser, baseURL)
+// 1×1 PNG, for a picture the keeper shows to the table.
+const PIXEL = Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==', 'base64')
+
+test('on a computer (a table playing online), the player sits at the table: décor, place, live points, shared rolls, kept documents', async ({ browser, baseURL }) => {
+  const { keeper, game, tableUrl, phone } = await setUpTable(browser, baseURL)
   const desk = await (await browser.newContext({ viewport: { width: 1280, height: 800 }, baseURL })).newPage()
   watch(desk)
-  await pick(desk, tableUrl, 'Alpha')
+  await desk.goto(tableUrl)
+  await desk.getByRole('link', { name: /Alpha/ }).click()
+  const table = desk.getByTestId('table')
+  await expect(table.getByRole('heading', { name: 'Alpha', level: 2 })).toBeVisible()
 
-  // One tab list, beside the sheet (the phone's bottom bar is hidden)
-  const tabs = desk.getByRole('navigation', { name: 'Fiche' })
-  await expect(tabs.getByRole('link')).toHaveText(['Fiche', 'Dés', 'Objets', 'Carnet', 'Profil'])
-  const side = await tabs.boundingBox()
-  const skills = await desk.getByRole('heading', { name: 'Compétences' }).boundingBox()
-  expect(side && skills && side.x + side.width < skills.x).toBe(true)
-  await expect(desk.getByText('Clique sur une compétence pour savoir à quoi elle sert et la lancer.')).toBeVisible()
+  // The scene's décor behind everything, the place's name on top, the sheet's pages in the bar
+  await expect(table.locator('.scr-root [data-scene-key]')).not.toHaveAttribute('data-scene-key', '', LIVE)
+  await expect(desk.getByTestId('table-place')).toHaveText(/\S/, LIVE)
+  const bar = desk.getByRole('navigation', { name: 'Fiche' })
+  await expect(bar.getByRole('link')).toHaveText([/Fiche/, /Dés/, /Objets/, /Documents/, /Carnet/, /Profil/])
 
-  // Ctrl+Enter adds a note
-  await tabs.getByRole('link', { name: 'Carnet' }).click()
+  // Escape opens the table's settings (sound, theme, another investigator), Escape closes them
+  await desk.keyboard.press('Escape')
+  const settings = desk.getByRole('dialog', { name: 'Réglages' })
+  await expect(settings.getByRole('button', { name: 'Ambiance sonore : non' })).toBeVisible()
+  await expect(settings.getByRole('link', { name: "Changer d'investigateur" })).toBeVisible()
+  // It stays open and works: the sound choice is made there
+  await settings.getByRole('button', { name: 'Ambiance sonore : non' }).click()
+  await expect(settings.getByRole('button', { name: 'Ambiance sonore : oui' })).toBeVisible()
+  await settings.getByRole('button', { name: 'Ambiance sonore : oui' }).click()
+  await desk.waitForTimeout(600)
+  await expect(settings).toBeVisible()
+  await desk.keyboard.press('Escape')
+  await expect(settings).toBeHidden()
+
+  // Points are live both ways
+  await unfold(game, 'Alpha')
+  await desk.getByRole('button', { name: 'Retirer 1 PV' }).click()
+  await expect(engineStat(game, 'Alpha', 'pv')).toHaveText('12/13', LIVE)
+  await card(game, 'Alpha').locator('button[data-k="san"][data-d="-1"]').click()
+  await expect(phoneStat(desk, 'SAN')).toHaveText('59', LIVE)
+
+  // A page of the sheet opens over the décor; the points stay beside it, once
+  await bar.getByRole('link', { name: 'Fiche' }).click()
+  await expect(desk.getByRole('heading', { name: 'Compétences' })).toBeVisible()
+  await expect(phoneStat(desk, 'SAN')).toHaveCount(1)
+  await bar.getByRole('link', { name: 'Carnet' }).click()
   await desk.getByRole('textbox', { name: 'Écrire une note…' }).fill('Note du bureau')
   await desk.getByRole('textbox', { name: 'Écrire une note…' }).press('Control+Enter')
   await expect(desk.getByText('Note du bureau')).toBeVisible(LIVE)
-  await expect(desk.getByRole('textbox', { name: 'Écrire une note…' })).toHaveValue('')
+  await desk.getByRole('link', { name: 'Fermer' }).click()
+  await expect(desk.locator('[data-panel]')).toHaveCount(0)
+
+  // A SAN roll takes its loss off by itself, for the keeper too
+  await desk.getByRole('button', { name: 'Jet de SAN' }).click()
+  const dialog = desk.getByRole('dialog')
+  await dialog.getByLabel('Si le jet réussit').fill('2')
+  await dialog.getByLabel('Si le jet rate').fill('2')
+  await dialog.getByRole('button', { name: 'Lancer 1D100' }).click()
+  await expect(dialog.getByTestId('roll-effect')).toHaveText('−2 SAN (59 → 57)', { timeout: 10_000 })
+  await desk.keyboard.press('Escape')
+  await expect(phoneStat(desk, 'SAN')).toHaveText('57', LIVE)
+  await expect(engineStat(game, 'Alpha', 'san')).toHaveText('57', LIVE)
+
+  // Everyone's rolls: this one, another player's from a phone, and one the keeper makes for the investigator
+  const rolls = desk.getByRole('region', { name: 'Jets de la table' }).locator('[data-roll]')
+  await expect(rolls).toHaveCount(1, LIVE)
+  await pick(phone, tableUrl, 'Alpha')
+  await phone.getByRole('navigation', { name: 'Fiche' }).getByRole('link', { name: 'Dés' }).click()
+  await phone.getByRole('button', { name: 'Lancer 1D6' }).click()
+  await expect(rolls).toHaveCount(2, LIVE)
+  await game.locator('body').evaluate(() => (window as unknown as { openPick: (k: string, l: string, v: string) => void }).openPick('test', 'Chance', ''))
+  await game.locator('#pkGo').click()
+  await expect(rolls).toHaveCount(3, LIVE)
+  await expect(rolls.first()).toContainText('lancé par le gardien')
+  await game.locator('#pkClose').click()
+
+  // A picture the keeper shows opens on the player's table, and stays in their documents
+  await game.locator('#qaScreen').click()
+  const screen = keeper.getByRole('dialog')
+  await screen.getByLabel('Image à montrer').setInputFiles({ name: 'plan.png', mimeType: 'image/png', buffer: PIXEL })
+  const paper = desk.locator('[data-document]')
+  await expect(paper).toBeVisible({ timeout: 15_000 })
+  await expect(paper.locator('img')).toHaveJSProperty('complete', true)
+  await desk.getByRole('button', { name: 'Fermer' }).click()
+  await expect(paper).toBeHidden()
+  const documents = desk.getByRole('region', { name: 'Documents' })
+  await expect(documents.getByRole('button')).toHaveCount(1)
+  await documents.getByRole('button').click()
+  await expect(paper).toBeVisible()
+  await desk.getByRole('button', { name: 'Fermer' }).click()
+
+  // The keeper names the place for this scene, and takes the document back
+  await screen.getByLabel('Nom du lieu').fill('Le vieux moulin')
+  await screen.getByLabel('Nom du lieu').press('Enter')
+  await expect(desk.getByTestId('table-place')).toHaveText('Le vieux moulin', LIVE)
+  await screen.getByRole('button', { name: /Reprendre aux joueurs/ }).click()
+  await expect(documents.getByRole('button')).toHaveCount(0, LIVE)
 })
 
 test('SAN removed on the game screen shows on the phone, and HP changed on the phone shows on the game screen', async ({ browser, baseURL }) => {

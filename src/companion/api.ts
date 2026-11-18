@@ -74,6 +74,8 @@ async function call<T>(run: () => PromiseLike<{ data: T | null; error: unknown }
 export const companionKeys = {
   all: ['companion'] as const,
   one: (token: string) => [...companionKeys.all, token] as const,
+  /** Its own root: the sheet's refetches (every write) don't read the table again. */
+  table: (token: string) => ['companion-table', token] as const,
 }
 const pointsMutationKey = (token: string) => [...companionKeys.one(token), 'points'] as const
 
@@ -508,6 +510,28 @@ function rolled(raw: unknown): Roll {
 export interface CheckRequest { characterId: string; subject: RollSubject; target: number; net: number }
 export interface DiceRequest { characterId: string; count: number; sides: number; modifier: number }
 
+/** The loss the keeper announces with a SAN roll: on a success, on a failure ("0", "1", "1D6", "1D4+1"). */
+export interface SanRequest { characterId: string; lossOk: string; lossFail: string }
+
+/** What the server takes as a loss (companion_roll_loss). */
+export const isLoss = (v: string) => /^([0-9]{1,2}|[1-9]?D(2|3|4|6|8|10|20|100)(\+[0-9]{1,2})?)$/i.test(v.trim())
+
+/**
+ * A SAN roll: the server rolls against the investigator's SAN as it holds it, rolls the loss and
+ * takes it off. The answer carries what it cost; the sheet is read again for the new SAN.
+ */
+export function useRollSan(token: string) {
+  const qc = useQueryClient()
+  return useMutation<Roll, CompanionError, SanRequest>({
+    mutationFn: async ({ characterId, lossOk, lossFail }) =>
+      rolled(await call(() => supabase.rpc('companion_roll_san', {
+        p_token: token, p_character: characterId, p_loss_ok: lossOk.trim(), p_loss_fail: lossFail.trim(),
+      }))),
+    onError: (e) => onWriteError(qc, token, e),
+    onSettled: () => qc.invalidateQueries({ queryKey: companionKeys.one(token) }),
+  })
+}
+
 /** A d100 check rolled by the server, which tells the keeper's game screen. */
 export function useRollCheck(token: string) {
   const qc = useQueryClient()
@@ -611,6 +635,10 @@ export function receiveItems(qc: QueryClient, token: string, payload: unknown, n
  * A revoke sends `rotate` on the old topic before moving the game: refetching gives a still-valid
  * link the new channel (this hook resubscribes) and a revoked one the invalid-link state.
  */
+/** The table's read (src/companion/table.ts), when one is mounted: read again, giving up a read under way. */
+const tableHint = (qc: QueryClient, token: string) =>
+  void qc.invalidateQueries({ queryKey: companionKeys.table(token) }, { cancelRefetch: true })
+
 export function useCompanionLive(token: string, channel: string | undefined): boolean {
   const qc = useQueryClient()
   const [live, setLive] = useState(false)
@@ -625,6 +653,10 @@ export function useCompanionLive(token: string, channel: string | undefined): bo
       .on('broadcast', { event: 'photo' }, () => void qc.invalidateQueries({ queryKey: key }))
       .on('broadcast', { event: 'items' }, ({ payload }) => receiveItems(qc, token, payload))
       .on('broadcast', { event: 'rotate' }, () => void qc.invalidateQueries({ queryKey: key }))
+      // The table around the sheet (a computer): hints to read companion_table again.
+      .on('broadcast', { event: 'screen' }, () => tableHint(qc, token))
+      .on('broadcast', { event: 'documents' }, () => tableHint(qc, token))
+      .on('broadcast', { event: 'roll' }, () => tableHint(qc, token))
       .subscribe((status) => {
         setLive(status === 'SUBSCRIBED')
         // Changes made while we were not listening.

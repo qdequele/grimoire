@@ -10,6 +10,7 @@ import {
   type ImageRef, type ScreenAction, type ScreenHandout, type ScreenScene, type ScreenState,
 } from '@/screen/state'
 import { packFolder } from '@/stories/packStorage'
+import { keepDocument, renewDocuments } from './documents'
 
 export type ScreenLink = Tables<'screen_links'>
 
@@ -136,6 +137,7 @@ export class ScreenControl {
   private published: ScreenState | null
   private scene: string | undefined
   private listeners = new Set<() => void>()
+  private kept = new Set<() => void>()
   private signed = new Map<string, { url: string; until: number }>()
   private running: Promise<void> | null = null
   private dirty = false
@@ -166,6 +168,7 @@ export class ScreenControl {
     this.clearRetry()
     if (typeof window !== 'undefined') window.removeEventListener('online', this.online)
     this.listeners.clear()
+    this.kept.clear()
   }
 
   /** The network is back: a state that could not be saved is written now, with the short waits again. */
@@ -222,6 +225,12 @@ export class ScreenControl {
 
   dispatch(action: ScreenAction) {
     const a = action.type === 'follow' && action.on && !action.scene ? { ...action, scene: this.ambianceOf(this.scene) } : action
+    // What is shown to the table is kept for the players (their Documents), shown again or not.
+    if (a.type === 'show') {
+      void keepDocument(this.gameId, a.handout).then(() => {
+        for (const fn of this.kept) fn()
+      })
+    }
     const next = screenReducer(this.state, a)
     if (next === this.state) return
     this.state = next
@@ -302,6 +311,14 @@ export class ScreenControl {
 
   private renew() {
     if (this.unsaved || this.needsRenewal()) this.publish(true)
+    // The players' kept documents: their pictures' long signatures, before they run out.
+    if (!this.disposed) void renewDocuments(this.gameId)
+  }
+
+  /** Called when a document shown has been kept for the players (the dialog lists them). */
+  onKept(fn: () => void): () => void {
+    this.kept.add(fn)
+    return () => void this.kept.delete(fn)
   }
 
   private async withUrls(s: ScreenState): Promise<ScreenState> {

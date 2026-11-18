@@ -89,7 +89,8 @@
           "screen": {
             "place": "street",
             "preset": "snow",
-            "time": "dusk"
+            "time": "dusk",
+            "name": "L'auberge Chabert"
           },
           "readAloud": [
             "La carriole a quitté Saint-Chély-d'Apcher en début d'après-midi. Depuis, la route n'a fait que monter, entre des blocs de granit gros comme des maisons, des landes de genêts roussis et des bois de pins si noirs qu'ils semblent brûlés. Le vent du plateau passe sous les couvertures.",
@@ -231,7 +232,8 @@
           "screen": {
             "place": "church",
             "preset": "fog",
-            "time": "day"
+            "time": "day",
+            "name": "L'église Saint-Ferréol"
           },
           "readAloud": [
             "La cloche sonne dans un air si froid qu'il en paraît cassant. L'église est petite, basse, en granit gris, avec un clocher plat comme un mur percé de deux arches. Tout le hameau est là, en noir, les hommes d'un côté, les femmes de l'autre.",
@@ -332,7 +334,8 @@
           "screen": {
             "place": "graveyard",
             "preset": "fog",
-            "time": "dusk"
+            "time": "dusk",
+            "name": "Le cimetière de la Sagne-Noire"
           },
           "readAloud": [
             "Le cimetière entoure l'église, derrière un muret de pierres sèches. Les croix de fer penchent toutes du même côté, celui du vent. La brume monte de la tourbière et noie les tombes jusqu'à mi-hauteur.",
@@ -432,7 +435,8 @@
           "screen": {
             "place": "library",
             "preset": "candle",
-            "time": "night"
+            "time": "night",
+            "name": "Le presbytère"
           },
           "readAloud": [
             "L'abbé a posé le phonographe sur la table de son bureau, entre deux piles de bréviaires. Le pavillon de fer-blanc, peint de fleurs, ressemble à un liseron géant. La lampe fait monter les ombres jusqu'au plafond.",
@@ -545,7 +549,8 @@
           "screen": {
             "place": "moor",
             "preset": "snow",
-            "time": "day"
+            "time": "day",
+            "name": "Le champ de la Croix"
           },
           "readAloud": [
             "La neige est tombée toute la nuit, une neige fine et sèche qui crisse sous les pas. Le plateau est blanc jusqu'aux bois, et le ciel a la couleur du granit.",
@@ -646,7 +651,8 @@
           "screen": {
             "place": "forest",
             "preset": "fog",
-            "time": "day"
+            "time": "day",
+            "name": "La vieille draille"
           },
           "readAloud": [
             "Au Plan des Feux, les fagots sont déjà en tas, hauts comme des hommes. Derrière eux, la draille entre dans la forêt : un chemin creux, large de trois charrettes, bordé de deux murets moussus, si droit qu'on n'en voit pas la fin.",
@@ -750,7 +756,8 @@
           "screen": {
             "place": "castle",
             "preset": "snow",
-            "time": "dusk"
+            "time": "dusk",
+            "name": "Le prieuré Saint-Ferréol"
           },
           "readAloud": [
             "Le prieuré se dresse sur un éperon de granit au-dessus de la draille : une tour carrée sans toit, des pans de murailles, l'abside d'une chapelle ouverte au ciel. Des sapins ont poussé dans la nef. La neige recommence, en flocons lourds qui tombent droit.",
@@ -858,7 +865,8 @@
           "screen": {
             "place": "farm",
             "preset": "candle",
-            "time": "dusk"
+            "time": "dusk",
+            "name": "La maison de Rosalie"
           },
           "readAloud": [
             "La maison de Rosalie est collée au four commun, si basse qu'il faut se pencher pour entrer. Une seule pièce, une cheminée immense où pend une marmite, un lit clos, et des chèvres qu'on entend remuer derrière la cloison.",
@@ -960,7 +968,8 @@
           "screen": {
             "place": "farm",
             "preset": "night",
-            "time": "night"
+            "time": "night",
+            "name": "Le Mas-Haut"
           },
           "readAloud": [
             "Le Mas-Haut domine le hameau : une longue ferme de granit au toit de lauzes, et contre elle la grange, si grande qu'une charrette chargée monte par une rampe de terre jusqu'au fenil. Une lampe brûle à la fenêtre de la cuisine.",
@@ -1107,7 +1116,8 @@
           "screen": {
             "place": "moor",
             "preset": "ritual",
-            "time": "night"
+            "time": "night",
+            "name": "Le Plan des Feux"
           },
           "readAloud": [
             "À la tombée de la nuit, le Plan des Feux s'embrase d'un coup : sept bûchers en demi-cercle devant la forêt, si hauts que leurs flammes couchent les ombres jusqu'au hameau. Autour d'eux, la neige fond en pluie tiède.",
@@ -1213,7 +1223,8 @@
           "screen": {
             "place": "forest",
             "preset": "fog",
-            "time": "night"
+            "time": "night",
+            "name": "La vieille draille"
           },
           "readAloud": [
             "La draille descend entre ses murets, et les torches n'éclairent pas à plus de dix pas. Le brouillard est monté du ruisseau ; il ne bouge pas, même quand le vent souffle dans les cimes.",
@@ -1357,7 +1368,8 @@
           "screen": {
             "place": "graveyard",
             "preset": "snow",
-            "time": "day"
+            "time": "day",
+            "name": "Le cimetière de la Sagne-Noire"
           },
           "readAloud": [
             "Le matin de la Toussaint est d'un blanc parfait. Sur le Plan des Feux, sept ronds noirs fument encore dans la neige.",

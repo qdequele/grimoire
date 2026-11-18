@@ -87,7 +87,8 @@
           "screen": {
             "place": "church",
             "preset": "fog",
-            "time": "day"
+            "time": "day",
+            "name": "L'église de la cité 7"
           },
           "readAloud": [
             "Le glas sonne sur la cité 7. Au bout des rangées de corons en brique, le chevalement de la fosse Sainte-Barbe se dresse dans le brouillard, et ses molettes ne tournent pas. Devant l'église, la foule en noir piétine la boue : des mineurs endimanchés, des femmes en châle, des enfants qu'on fait taire.",
@@ -239,7 +240,8 @@
           "screen": {
             "place": "street",
             "preset": "rain",
-            "time": "dusk"
+            "time": "dusk",
+            "name": "Les corons de la cité 7"
           },
           "readAloud": [
             "Les corons s'alignent au cordeau : brique noircie, une porte, une fenêtre, une porte, une fenêtre. Au fond de chaque jardin, le cabinet, le clapier, le pigeonnier. La pluie fine sent le charbon et la soupe aux poireaux.",
@@ -388,7 +390,8 @@
           "screen": {
             "place": "asylum",
             "preset": "bulb",
-            "time": "day"
+            "time": "day",
+            "name": "Le dispensaire de la Compagnie"
           },
           "readAloud": [
             "Le dispensaire sent l'éther et le savon noir. Une ampoule nue grésille au-dessus de la table d'examen. Au mur, une affiche : « Mineur, ta lampe est ta vie », et un squelette aux os numérotés.",
@@ -505,7 +508,8 @@
           "screen": {
             "place": "mine",
             "preset": "fog",
-            "time": "day"
+            "time": "day",
+            "name": "Le carreau de la fosse 7"
           },
           "readAloud": [
             "Le carreau de la fosse 7 est une ville de brique et de fer : le chevalement, la machine d'extraction, les bains-douches, le grand terril qui fume dans le brouillard. Tout est à l'arrêt. On n'entend que les pompes, qui tournent jour et nuit pour que le fond ne se noie pas.",
@@ -642,7 +646,8 @@
           "screen": {
             "place": "library",
             "preset": "rain",
-            "time": "dusk"
+            "time": "dusk",
+            "name": "Les Grands Bureaux"
           },
           "readAloud": [
             "Les Grands Bureaux de la Compagnie des Mines d'Hennequelle ressemblent à un château de brique : un perron, une horloge, des grilles dorées. Dans le hall, le portrait du fondateur et, sous verre, la lampe du premier mineur de la Compagnie.",
@@ -783,7 +788,8 @@
           "screen": {
             "place": "street",
             "preset": "rain",
-            "time": "night"
+            "time": "night",
+            "name": "La Maison du Peuple"
           },
           "readAloud": [
             "La grande salle de la Maison du Peuple est pleine à craquer : trois cents hommes debout dans la fumée des pipes, les femmes au fond, les drapeaux du syndicat accrochés aux poutres. Il fait chaud. Les vitres ruissellent.",
@@ -907,7 +913,8 @@
           "screen": {
             "place": "cavern",
             "preset": "bulb",
-            "time": "night"
+            "time": "night",
+            "name": "La fosse Sainte-Barbe, à 480 mètres"
           },
           "readAloud": [
             "La cage tombe dans le noir avec un bruit de ferraille, si vite que les oreilles se bouchent. Puis elle ralentit, s'arrête, et la recette du 480 s'ouvre devant vous : des voûtes blanchies à la chaux, des ampoules qui grésillent, de l'eau qui ruisselle le long des parois.",
@@ -1132,7 +1139,8 @@
           "screen": {
             "place": "mine",
             "preset": "fog",
-            "time": "dusk"
+            "time": "dusk",
+            "name": "Le carreau de la fosse 7"
           },
           "readAloud": [
             "Le jour se lève sur la cité 7, gris et mouillé. Devant les grilles du carreau, la foule attend comme il y a cinq jours : les femmes en châle, les enfants sur les épaules, les hommes qui ne disent rien.",

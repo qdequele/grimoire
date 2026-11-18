@@ -470,6 +470,12 @@
               ],
               "description": "Time of day: the light, apart from the preset's weather and mood. Default: guessed from the scene's title or sounds, else the preset's own (night, except dust)."
             },
+            "name": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 80,
+              "description": "The place's name as the players may read it on the screen, plain text, e.g. 'The Saint-Roch church'. Scenes in the same place carry the same name. Never a spoiler. Default: none (never guessed from the title)."
+            },
             "fire": {
               "type": "object",
               "additionalProperties": false,
