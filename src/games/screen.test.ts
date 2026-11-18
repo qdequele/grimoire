@@ -13,6 +13,9 @@ vi.mock('@/lib/supabase', () => ({
           return { error: db.down ? { message: 'Failed to fetch' } : null }
         },
       }),
+      // The kept documents (game_documents): nothing stored, every write accepted.
+      upsert: async () => ({ error: null }),
+      select: () => ({ eq: () => ({ not: async () => ({ data: [], error: null }) }) }),
     }),
     storage: { from: () => ({ createSignedUrl: async () => ({ data: { signedUrl: 'https://db.example/signed' }, error: null }) }) },
   },
