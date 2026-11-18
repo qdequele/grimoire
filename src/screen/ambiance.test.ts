@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest'
 import SOUNDS from '../../spec/sounds.json'
 import schema from '../../spec/story.schema.json'
 import sample from '../../stories/the-silent-light/story.json'
-import { AMBIENCE_FILE, asFire, LOOKS, mix, packImagePath, paletteFor, PLACE_PRESET, PLACES, placeFromText, PRESETS, presetFromSounds, sceneAmbiance, sceneImages, soundUrls, TIMES, timeFromSounds, timeFromText, type StoryForScreen } from './ambiance'
+import { AMBIENCE_FILE, asFire, LOOKS, mix, packImagePath, paletteFor, PLACE_NAME_MAX, PLACE_PRESET, PLACES, placeFromText, placeName, PRESETS, presetFromSounds, sceneAmbiance, sceneImages, soundUrls, TIMES, timeFromSounds, timeFromText, type StoryForScreen } from './ambiance'
 
 const story = (scene: Record<string, unknown>): StoryForScreen => ({ acts: [{ scenes: [{ id: 's', ...scene }] }] })
 
@@ -231,5 +231,28 @@ describe('time of day', () => {
   it('the story format lists the same times', () => {
     const m = /"time":\{"enum":(\[[^\]]*\])/.exec(JSON.stringify(schema))
     expect(m && JSON.parse(m[1])).toEqual([...TIMES])
+  })
+})
+
+describe('place name (players)', () => {
+  it("reads the scene's screen.name, trimmed and cut to 80 characters", () => {
+    expect(sceneAmbiance(story({ screen: { name: '  The old church ' } }), 's', []).name).toBe('The old church')
+    expect(sceneAmbiance(story({ screen: { name: 'x'.repeat(120) } }), 's', []).name).toHaveLength(PLACE_NAME_MAX)
+  })
+
+  it('is absent when empty, not a string, or not given: never guessed from the title', () => {
+    for (const name of ['', '   ', 42, null, undefined]) expect(sceneAmbiance(story({ screen: { name } }), 's', [])).not.toHaveProperty('name')
+    expect(sceneAmbiance(story({ title: 'The church of Saint-Roch' }), 's', [])).not.toHaveProperty('name')
+    expect(placeName(' a ')).toBe('a')
+  })
+
+  it('the story format describes screen.name with the same length', () => {
+    const find = (o: unknown): { maxLength?: number; minLength?: number } | undefined => {
+      if (!o || typeof o !== 'object') return undefined
+      const r = o as Record<string, unknown>
+      const name = (r.screen as { properties?: { name?: { maxLength?: number } } } | undefined)?.properties?.name
+      return name ?? Object.values(r).map(find).find(Boolean)
+    }
+    expect(find(schema)).toMatchObject({ type: 'string', minLength: 1, maxLength: PLACE_NAME_MAX })
   })
 })

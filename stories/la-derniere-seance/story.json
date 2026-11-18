@@ -81,7 +81,8 @@
           "screen": {
             "place": "street",
             "preset": "rain",
-            "time": "night"
+            "time": "night",
+            "name": "Rue des Trois-Frères"
           },
           "readAloud": [
             "Une pluie fine fait briller les pavés de la rue des Trois-Frères. Sous une marquise dont la moitié des ampoules sont mortes, une enseigne peinte annonce : LE MIRAGE. La file d'attente déborde déjà sur le trottoir d'en face.",
@@ -203,7 +204,8 @@
           "screen": {
             "place": "street",
             "preset": "bulb",
-            "time": "night"
+            "time": "night",
+            "name": "Le Mirage"
           },
           "readAloud": [
             "Le foyer sent la laine mouillée, le tabac et le poêle à charbon. Au-dessus de la buvette, une ampoule nue grésille, s'éteint, se rallume. Par la porte battante, on aperçoit la salle : deux cents fauteuils de velours râpé, un piano sous sa housse, et l'écran, immense et blanc, qui attend.",
@@ -395,7 +397,8 @@
           "screen": {
             "place": "manor",
             "preset": "night",
-            "time": "night"
+            "time": "night",
+            "name": "Le Mirage"
           },
           "readAloud": [
             "Les lumières baissent. Dans le noir, deux cents personnes se taisent d'un coup. Derrière vous, le projecteur se met à cliqueter, et un faisceau de poussière blanche passe au-dessus des têtes.",
@@ -506,7 +509,8 @@
           "screen": {
             "place": "manor",
             "preset": "nightmare",
-            "time": "night"
+            "time": "night",
+            "name": "Le bal"
           },
           "readAloud": [
             "Le faisceau s'ouvre comme une porte. Les fauteuils ont disparu : sous vos pieds, un parquet ciré ; au-dessus, des lustres de cristal où brûlent des bougies qui ne fument pas. Tout est gris et argent, comme sur l'écran. Vos mains aussi.",
@@ -770,7 +774,8 @@
           "screen": {
             "place": "street",
             "preset": "fog",
-            "time": "night"
+            "time": "night",
+            "name": "Rue des Trois-Frères"
           },
           "readAloud": [
             "La pluie a cessé. Rue des Trois-Frères, les spectateurs se dispersent sans se regarder, comme on sort d'un rêve qu'on ne veut pas raconter.",

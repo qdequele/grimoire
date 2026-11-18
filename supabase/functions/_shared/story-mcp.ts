@@ -8,7 +8,7 @@
 //
 // Pure TypeScript, no Deno or browser APIs: used by the mcp Edge Function and unit-tested with Vitest.
 import { CRAFT_RULES, EXAMPLE_INTRO, FORBIDDEN_NAMES, ORIGINALITY_RULES, SOUND_RULES } from './create-prompt.ts'
-import { importDraftSchema, SCREEN_PLACES, SCREEN_PRESETS, SCREEN_TIMES, SOUND_IDS, type ImportDraft } from './import-draft.ts'
+import { importDraftSchema, PLACE_NAME_MAX, placeName, SCREEN_PLACES, SCREEN_PRESETS, SCREEN_TIMES, SOUND_IDS, type ImportDraft } from './import-draft.ts'
 import {
   AGE_RANGE,
   CHARACTERISTICS,
@@ -282,14 +282,15 @@ export function applyEdits(content: unknown, ops: unknown): Json {
       }
       case 'set_screen': {
         // Only the ambiance screen of a scene, without sending the whole scene back. {} removes place,
-        // preset and time; the picture (save_image) and the fire stay unless named ("" removes them).
+        // preset and time; the picture (save_image), the fire and the place name stay unless named ("" removes them).
+        // A place name is trimmed to one line of at most PLACE_NAME_MAX characters (anything else is a schema error).
         const target = needId(op.id, 'id', n)
         const sc = s.acts.flatMap((a) => a.scenes).find((x) => x.id === target)
         if (!sc) throw new ToolError('not_found', `ops[${n}]: scene "${target}" does not exist.`)
         if (!isObj(op.screen)) throw new ToolError('bad_request', `ops[${n}]: screen must be an object.`)
-        const given = op.screen
+        const given = typeof op.screen.name === 'string' ? { ...op.screen, name: placeName(op.screen.name) } : op.screen
         const before = isObj(sc.screen) ? sc.screen : {}
-        const kept = Object.entries(before).filter(([k]) => (k === 'image' || k === 'fire') && !(k in given))
+        const kept = Object.entries(before).filter(([k]) => (k === 'image' || k === 'fire' || k === 'name') && !(k in given))
         const screen = Object.fromEntries([...kept, ...Object.entries(given)].filter(([, v]) => v !== '' && v !== null && v !== undefined))
         if (Object.keys(screen).length) sc.screen = screen
         else delete sc.screen
@@ -549,7 +550,7 @@ You write the story; Grimoire checks it, saves it as a private story in the keep
 # Revising one of the keeper's stories
 
 1. list_my_stories, then get_story (part "summary" first: ids of every act, scene, NPC, handout and item; then the scenes or NPCs you need).
-2. edit_story with the "version" get_story returned and a list of operations. Scenes, NPCs, handouts and items are sent whole, in the story.json format of get_story (topic "format"): put_scene replaces the scene with the same id (or adds it to actId), put_npc, put_handout and put_item the same. remove_* also removes links to what is gone. set_screen changes only a scene's ambiance screen (décor, atmosphere and time of day, topic "sounds"). All operations apply or none do; the result must pass the format's schema.
+2. edit_story with the "version" get_story returned and a list of operations. Scenes, NPCs, handouts and items are sent whole, in the story.json format of get_story (topic "format"): put_scene replaces the scene with the same id (or adds it to actId), put_npc, put_handout and put_item the same. remove_* also removes links to what is gone. set_screen changes only a scene's ambiance screen (décor, atmosphere, time of day and the place's name the players read, topic "sounds"). All operations apply or none do; the result must pass the format's schema.
 3. On "conflict", the story changed since you read it: call get_story again and redo the edit on the new version.
 4. Pictures: save_image stores an SVG you draw as a scene's background or a handout's picture, replaces it, or removes it (topic "images"). get_story lists the story's pictures and where they are used. save_image and edit_story both return the new version: use it for the next call.
 
@@ -749,7 +750,7 @@ export function toolDefinitions(): ToolDef[] {
     {
       name: 'edit_story',
       title: 'Edit a story',
-      description: `Change one of the keeper's private stories (story.json format, see grimoire_guide "format"). Operations, applied in order, all or none: put_scene {scene, actId?, after?} adds or replaces a whole scene; remove_scene {id}; set_screen {id, screen: {place?, preset?, time?, image?}} sets a scene's ambiance screen ({} removes place, preset and time; a picture stays unless image is ""); put_act {act: {id, title}, after?}; remove_act {id} (empty acts only); put_npc {npc, after?}; remove_npc {id}; put_handout {handout, after?}; remove_handout {id}; put_item {item, after?} (an object the investigators keep, as a card); remove_item {id}; set_overview {overview}; set_info {info: ${INFO_FIELDS.join(', ')}}. Needs the version from get_story.`,
+      description: `Change one of the keeper's private stories (story.json format, see grimoire_guide "format"). Operations, applied in order, all or none: put_scene {scene, actId?, after?} adds or replaces a whole scene; remove_scene {id}; set_screen {id, screen: {place?, preset?, time?, image?, name?}} sets a scene's ambiance screen ({} removes place, preset and time; a picture and a place name stay unless image or name is ""); put_act {act: {id, title}, after?}; remove_act {id} (empty acts only); put_npc {npc, after?}; remove_npc {id}; put_handout {handout, after?}; remove_handout {id}; put_item {item, after?} (an object the investigators keep, as a card); remove_item {id}; set_overview {overview}; set_info {info: ${INFO_FIELDS.join(', ')}}. Needs the version from get_story.`,
       inputSchema: {
         type: 'object',
         properties: {
@@ -766,12 +767,13 @@ export function toolDefinitions(): ToolDef[] {
                 id: { type: 'string', description: 'For remove_* operations, and the scene id for set_screen.' },
                 screen: {
                   type: 'object',
-                  description: 'set_screen: the scene\'s ambiance screen (see grimoire_guide "sounds"). {} removes place, preset and time; the picture stays unless image is "" (save_image sets pictures).',
+                  description: 'set_screen: the scene\'s ambiance screen (see grimoire_guide "sounds"). {} removes place, preset and time; the picture and the place name stay unless image or name is "" (save_image sets pictures).',
                   properties: {
                     place: { enum: [...SCREEN_PLACES] },
                     preset: { enum: [...SCREEN_PRESETS] },
                     time: { enum: [...SCREEN_TIMES] },
                     image: { type: 'string', description: 'A picture already stored ("images/<name>.svg"), or "" to take it off the scene.' },
+                    name: { type: 'string', maxLength: PLACE_NAME_MAX, description: 'The place\'s name as the players read it on the screen (e.g. "L\'église Saint-Roch"), the same for every scene in the same place, never a spoiler; "" removes it.' },
                   },
                 },
                 actId: { type: 'string', description: 'put_scene: the act to put the scene in (default: where it is now).' },

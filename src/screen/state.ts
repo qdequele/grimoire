@@ -1,7 +1,7 @@
 // What the ambiance screen shows (games.screen), and how the keeper's actions change it. Pure.
 // The keeper's game screen owns this state: it reduces actions, signs the image URLs and saves it;
 // the screen only reads it (screen_open, then Realtime broadcasts of every change).
-import { asFire, isPlace, isPreset, isTime, type FirePlace, type PlaceId, type PresetId, type SceneAmbiance, type TimeOfDay } from './ambiance'
+import { asFire, isPlace, isPreset, isTime, placeName, PLACE_NAME_MAX, type FirePlace, type PlaceId, type PresetId, type SceneAmbiance, type TimeOfDay } from './ambiance'
 
 /** A picture in Storage. `url` is a short-lived signed URL the keeper adds when publishing. */
 export interface ImageRef {
@@ -21,6 +21,8 @@ export interface ScreenScene {
   place?: PlaceId
   /** Time of day; absent: the preset's own. */
   time?: TimeOfDay
+  /** The place's name as the players may read it (the scene's `screen.name`); absent: none. Not part of `sceneKey`. */
+  name?: string
 }
 
 export interface ScreenHandout {
@@ -44,10 +46,12 @@ export interface ScreenState {
   placeOverride: PlaceId | 'none' | null
   /** The keeper's choice of time of day for the scene on screen; reset like `override`. */
   timeOverride: TimeOfDay | null
+  /** The keeper's place name for the scene on screen ('': hide the name, null: the scene's own); reset like `override`. */
+  nameOverride: string | null
   handout: ScreenHandout | null
 }
 
-export const INITIAL_SCREEN: ScreenState = { v: 1, follow: true, sound: false, scene: null, override: null, placeOverride: null, timeOverride: null, handout: null }
+export const INITIAL_SCREEN: ScreenState = { v: 1, follow: true, sound: false, scene: null, override: null, placeOverride: null, timeOverride: null, nameOverride: null, handout: null }
 
 export type ScreenAction =
   /** The game moved to a scene (ignored while pinned). */
@@ -57,6 +61,8 @@ export type ScreenAction =
   | { type: 'preset'; preset: PresetId | null }
   | { type: 'place'; place: PlaceId | 'none' | null }
   | { type: 'time'; time: TimeOfDay | null }
+  /** The keeper's place name: a name, '' to hide it, null for the scene's own. */
+  | { type: 'name'; name: string | null }
   | { type: 'sound'; on: boolean }
   | { type: 'show'; handout: ScreenHandout }
   | { type: 'clear' }
@@ -65,10 +71,10 @@ export function screenReducer(state: ScreenState, action: ScreenAction): ScreenS
   switch (action.type) {
     case 'scene':
       if (!state.follow || sameScene(state.scene, action.scene)) return state
-      return { ...state, scene: action.scene, override: null, placeOverride: null, timeOverride: null }
+      return { ...state, scene: action.scene, override: null, placeOverride: null, timeOverride: null, nameOverride: null }
     case 'follow':
       if (!action.on) return state.follow ? { ...state, follow: false } : state
-      if (action.scene && !sameScene(state.scene, action.scene)) return { ...state, follow: true, scene: action.scene, override: null, placeOverride: null, timeOverride: null }
+      if (action.scene && !sameScene(state.scene, action.scene)) return { ...state, follow: true, scene: action.scene, override: null, placeOverride: null, timeOverride: null, nameOverride: null }
       return state.follow ? state : { ...state, follow: true }
     case 'preset':
       return state.override === action.preset ? state : { ...state, override: action.preset }
@@ -76,6 +82,10 @@ export function screenReducer(state: ScreenState, action: ScreenAction): ScreenS
       return state.placeOverride === action.place ? state : { ...state, placeOverride: action.place }
     case 'time':
       return state.timeOverride === action.time ? state : { ...state, timeOverride: action.time }
+    case 'name': {
+      const name = asNameOverride(action.name)
+      return state.nameOverride === name ? state : { ...state, nameOverride: name }
+    }
     case 'sound':
       return state.sound === action.on ? state : { ...state, sound: action.on }
     case 'show':
@@ -85,14 +95,23 @@ export function screenReducer(state: ScreenState, action: ScreenAction): ScreenS
   }
 }
 
-/** The scene as the screen draws it: the keeper's preset, décor and time, if any, over the scene's own. */
+/** The scene as the screen draws it: the keeper's preset, décor, time and place name, if any, over the scene's own. */
 export function shownScene(state: ScreenState): ScreenScene | null {
-  const { override, placeOverride, timeOverride } = state
-  if (!state.scene && !override && !placeOverride && !timeOverride) return null
-  const { place, time, ...scene }: ScreenScene = state.scene ?? { preset: 'fog', image: null, sounds: [] }
+  const { override, placeOverride, timeOverride, nameOverride } = state
+  if (!state.scene && !override && !placeOverride && !timeOverride && !nameOverride) return null
+  const { place, time, name, ...scene }: ScreenScene = state.scene ?? { preset: 'fog', image: null, sounds: [] }
   const shownPlace = placeOverride === 'none' ? undefined : (placeOverride ?? place)
   const shownTime = timeOverride ?? time
-  return { ...scene, preset: override ?? scene.preset, ...(shownPlace ? { place: shownPlace } : {}), ...(shownTime ? { time: shownTime } : {}) }
+  const shownName = nameOverride === null ? name : (nameOverride || undefined)
+  return {
+    ...scene, preset: override ?? scene.preset,
+    ...(shownPlace ? { place: shownPlace } : {}), ...(shownTime ? { time: shownTime } : {}), ...(shownName ? { name: shownName } : {}),
+  }
+}
+
+/** A keeper's place name as stored: trimmed and cut to PLACE_NAME_MAX; '' hides the name; null (or not a string): the scene's own. */
+function asNameOverride(v: unknown): string | null {
+  return typeof v === 'string' ? v.trim().slice(0, PLACE_NAME_MAX).trim() : null
 }
 
 /** Identity of a background on screen: a new key crossfades, the same key keeps the layers running. */
@@ -101,7 +120,7 @@ export const sceneKey = (s: ScreenScene | null): string =>
 
 const sameImage = (a: ImageRef | null, b: ImageRef | null) => a?.bucket === b?.bucket && a?.path === b?.path
 const sameScene = (a: ScreenScene | null, b: ScreenScene | null) =>
-  !!a && !!b && a.preset === b.preset && sameImage(a.image, b.image) && a.sounds.join() === b.sounds.join() && a.place === b.place && a.time === b.time &&
+  !!a && !!b && a.preset === b.preset && sameImage(a.image, b.image) && a.sounds.join() === b.sounds.join() && a.place === b.place && a.time === b.time && a.name === b.name &&
   JSON.stringify(a.fire ?? null) === JSON.stringify(b.fire ?? null)
 const sameHandout = (a: ScreenHandout, b: ScreenHandout) =>
   a.key === b.key && a.title === b.title && a.text === b.text && sameImage(a.image, b.image)
@@ -115,6 +134,7 @@ export function toScreenScene(a: SceneAmbiance, packFolder: string): ScreenScene
     ...(a.fire ? { fire: a.fire } : {}),
     ...(a.place ? { place: a.place } : {}),
     ...(a.time ? { time: a.time } : {}),
+    ...(a.name ? { name: a.name } : {}),
   }
 }
 
@@ -153,7 +173,11 @@ function asScene(v: unknown): ScreenScene | null {
   if (!o || !isPreset(o.preset)) return null
   const sounds = Array.isArray(o.sounds) ? o.sounds.filter((x): x is string => typeof x === 'string') : []
   const fire = asFire(o.fire)
-  return { preset: o.preset, image: asImage(o.image), sounds, ...(fire ? { fire } : {}), ...(isPlace(o.place) ? { place: o.place } : {}), ...(isTime(o.time) ? { time: o.time } : {}) }
+  const name = placeName(o.name)
+  return {
+    preset: o.preset, image: asImage(o.image), sounds, ...(fire ? { fire } : {}), ...(isPlace(o.place) ? { place: o.place } : {}),
+    ...(isTime(o.time) ? { time: o.time } : {}), ...(name ? { name } : {}),
+  }
 }
 
 function asHandout(v: unknown): ScreenHandout | null {
@@ -176,6 +200,7 @@ export function parseScreen(raw: unknown): ScreenState {
     override: isPreset(o.override) ? o.override : null,
     placeOverride: isPlace(o.placeOverride) || o.placeOverride === 'none' ? o.placeOverride : null,
     timeOverride: isTime(o.timeOverride) ? o.timeOverride : null,
+    nameOverride: asNameOverride(o.nameOverride),
     handout: asHandout(o.handout),
   }
 }

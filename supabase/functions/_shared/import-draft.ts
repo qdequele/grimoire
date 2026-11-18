@@ -43,6 +43,20 @@ export const SCREEN_PRESETS: readonly string[] = screenEnum('preset')
 /** Time of day on the ambiance screen (day, dusk, night). */
 export const SCREEN_TIMES: readonly string[] = screenEnum('time')
 
+/** Longest place name on the ambiance screen (story.json `screen.name`; src/screen/ambiance.ts has the same). */
+export const PLACE_NAME_MAX = 80
+
+/** What the model is told about a scene's place name (draft field `placeName`). */
+export const PLACE_NAME_HINT =
+  'Ambiance screen: a short proper name for the place where the scene happens, as the players would call it, in the story\'s language ' +
+  '(e.g. "L\'église Saint-Roch", "Carrow Manor"). Shown to the players over the background: the same name for every scene in the same place, ' +
+  'never a spoiler, never the scene title when that reveals something. "" if the place has no name worth showing.'
+
+/** A place name as story.json keeps it: one line, trimmed, at most PLACE_NAME_MAX characters ("" = none). */
+export function placeName(v: unknown): string {
+  return typeof v === 'string' ? v.replace(/\s+/g, ' ').trim().slice(0, PLACE_NAME_MAX).trim() : ''
+}
+
 /** The allowed values of an item field, read from spec/story.schema.json ($defs.item). */
 function itemEnum(path: string[]): string[] {
   let v: unknown = (STORY_SCHEMA as { $defs?: { item?: unknown } }).$defs?.item
@@ -100,6 +114,8 @@ export interface DraftScene {
   preset: string
   /** Time of day (one of SCREEN_TIMES), "" = let the app choose. */
   time: string
+  /** Ambiance screen: the place's name as the players may read it (story.json `screen.name`, ≤ PLACE_NAME_MAX), "" = none. */
+  placeName: string
   /** Story creator: the map the scene needs (a place explored room by room), "" = none. */
   mapKind: string
   /** What that map shows, secrets included. */
@@ -248,6 +264,7 @@ export function importDraftSchema(sounds: { ambience: string[]; sfx: string[] })
     place: { enum: ['', ...SCREEN_PLACES], description: 'Ambiance screen: the drawn décor that matches where the scene happens, or "" if none fits.' },
     preset: { enum: ['', ...SCREEN_PRESETS], description: 'Ambiance screen: the atmosphere (weather, light, mood) of the scene, or "" to let the app pick one from the sounds.' },
     time: { enum: ['', ...SCREEN_TIMES], description: 'Ambiance screen: time of day of the scene, or "" if it doesn\'t matter.' },
+    placeName: str(PLACE_NAME_HINT),
     mapKind: { enum: ['', ...DRAFT_MAP_KINDS], description: 'When the investigators explore this place room by room or part by part (a house, a crypt, a village), the kind of map that would help the keeper; else "". At most a few scenes of a story.' },
     mapDescription: str('If mapKind is set: what the map shows, in a few sentences (rooms or parts, what is in them, what is secret). Else "".'),
     next: arr(id, 'Likely next scenes, or [] for the following one.'),
@@ -374,6 +391,7 @@ function scene(v: Json, sounds: typeof SOUND_IDS): DraftScene | null {
     place: oneOf(v.place ?? screen.place, SCREEN_PLACES, ''),
     preset: oneOf(v.preset ?? screen.preset, SCREEN_PRESETS, ''),
     time: oneOf(v.time ?? screen.time, SCREEN_TIMES, ''),
+    placeName: placeName(v.placeName ?? screen.name),
     mapKind: oneOf<string>(v.mapKind, ['', ...DRAFT_MAP_KINDS], ''),
     mapDescription: text(v.mapDescription, 800),
     next: ids(v.next, 8),
@@ -573,14 +591,14 @@ export function mergeDraft(acc: ImportDraft, batch: ImportDraft): ImportDraft {
 export function draftContext(d: ImportDraft): string {
   if (!d.acts.length && !d.npcs.length) return 'Nothing imported yet: these are the first pages.'
   const acts = d.acts
-    .map((a) => `- act "${a.id}" (${a.title}): ${a.scenes.map((s) => `"${s.id}" (${s.title})`).join(', ')}`)
+    .map((a) => `- act "${a.id}" (${a.title}): ${a.scenes.map((s) => `"${s.id}" (${s.title})${s.placeName ? ` at "${s.placeName}"` : ''}`).join(', ')}`)
     .join('\n')
   const npcs = d.npcs.map((n) => `"${n.id}" (${n.name})`).join(', ')
   const handouts = d.handouts.map((h) => `"${h.id}"`).join(', ')
   const items = (d.items ?? []).map((x) => `"${x.id}"`).join(', ')
   return [
     `Story so far: "${d.title}".`,
-    'Acts and scenes already imported (reuse these ids; to continue a scene cut by a page break, output it again with the same id and its full content):',
+    'Acts and scenes already imported, with their place names (reuse these ids, and the same place name for a scene in the same place; to continue a scene cut by a page break, output it again with the same id and its full content):',
     acts,
     `NPCs already imported: ${npcs || 'none'}.`,
     `Handouts already imported: ${handouts || 'none'}.`,
@@ -666,12 +684,12 @@ function toItem(x: DraftItem): Json {
   })
 }
 
-/** A scene's `screen` field from its draft place, preset and time; values the format doesn't know are dropped. */
+/** A scene's `screen` field from its draft place, preset, time and place name; values the format doesn't know are dropped. */
 function screenOf(s: DraftScene): Json | undefined {
   const place = SCREEN_PLACES.includes(s.place) ? s.place : ''
   const preset = SCREEN_PRESETS.includes(s.preset) ? s.preset : ''
   const time = SCREEN_TIMES.includes(s.time) ? s.time : ''
-  return compact({ place, preset, time })
+  return compact({ place, preset, time, name: placeName(s.placeName) })
 }
 
 export interface StoryMetaInput {

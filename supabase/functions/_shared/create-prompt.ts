@@ -60,6 +60,7 @@ The app shows one scene per screen: a one-line lead, "read to the players" parag
 - Use [[scene-id]] to link scenes and {{npc:id}} to mention NPCs in text.
 - Sounds: pick up to 3 ambience ids that fit each scene and any matching sound effects, from the allowed ids only. Leave them empty when nothing fits.
 - Ambiance screen: give each scene the drawn décor ("place") that matches where it happens, the atmosphere ("preset": weather and mood) and the time of day ("time"), from the lists under "Ambiance screen". Use "" for a place when none fits; the strong atmospheres (abyss, ritual, nightmare, bulb, blaze) only for the scenes that call for them.
+- Place names: give each scene a "placeName", a short proper name for the place where it happens, as the players would call it, in the story's language ("L'église Saint-Roch", "Carrow Manor"). The players read it on the ambiance screen: the same name for every scene in the same place, never a spoiler, never the scene title when that title reveals something. "" when the place has no name worth showing.
 - Maps: when the investigators explore a place room by room or part by part (a house to search, a crypt, a village to walk through), set the scene's "mapKind" (building, underground or outdoor) and describe the place in "mapDescription": its rooms or parts, what is in them, what is hidden. Grimoire draws the map. Two or three scenes per story at most; most scenes need none.
 - Respect the keeper's lines and veils exactly: content they ask to avoid never appears, not even off-screen or hinted at.`
 
@@ -118,6 +119,7 @@ Sound effects: ${soundList(SOUNDS.sfx)}
 # Ambiance screen
 
 The keeper can show each scene on a TV at the table: a drawn décor under a living atmosphere. A scene's "place", "preset" and "time" choose them (in story.json: "screen": { "place": …, "preset": …, "time": … }). The preset is the weather and the mood, the time the light: any preset goes with any time (rain by day, snow at night).
+A scene's "placeName" (in story.json: "screen": { "name": … }, at most 80 characters, plain text) is shown to the players over the décor: the place's name as they would call it, in the story's language, the same for every scene in the same place. Never a spoiler: scene titles are written for the keeper, so don't copy one that gives something away.
 
 Places: ${SCREEN_PLACES.map((p) => `${p} (${PLACE_HINTS[p] ?? p})`).join('; ')}
 Presets: ${SCREEN_PRESETS.map((p) => `${p} (${PRESET_HINTS[p] ?? p})`).join('; ')}

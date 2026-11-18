@@ -149,6 +149,12 @@ describe('draftAnswerFormat', () => {
     expect(f).toContain('"flow"')
   })
 
+  it('describes the place name to the model', () => {
+    const f = draftAnswerFormat({ ambience: ['amb-rain'], sfx: [] })
+    expect(f).toContain('"placeName"')
+    expect(f).toContain('never a spoiler')
+  })
+
   it('pairs with normalizeDraft: a sloppy answer becomes a well-typed draft', () => {
     const d = normalizeDraft(parseJsonAnswer('{"acts":[{"id":"a","scenes":[{"id":"s","place":"nowhere","preset":"fog"}]}]}'))
     expect(d.acts[0].scenes[0]).toMatchObject({ id: 's', place: '', preset: 'fog', flow: [], readAloud: [] })
@@ -198,6 +204,28 @@ describe('draftToStory', () => {
     expect(road.screen).toEqual({ preset: 'snow' })
     expect(plain).not.toHaveProperty('screen')
     expect(validate(story), JSON.stringify(validate.errors)).toBe(true)
+  })
+
+  it("writes the place's name as screen.name, even alone, and reads it back from story.json", () => {
+    const d = { ...emptyDraft(), title: 'T', acts: [{ id: 'a', title: 'A', scenes: [
+      scene('crypt', 'Crypt', { place: 'crypt', placeName: 'The Bellamy vault' }),
+      scene('inn', 'Inn', { placeName: 'The Grey Heron' }),
+      scene('plain', 'Plain', { placeName: '' }),
+    ] }] }
+    const story = draftToStory(d, { id: 'x', lang: 'en' }) as { acts: Array<{ scenes: Array<Record<string, unknown>> }> }
+    const [crypt, inn, plain] = story.acts[0].scenes
+    expect(crypt.screen).toEqual({ place: 'crypt', name: 'The Bellamy vault' })
+    expect(inn.screen).toEqual({ name: 'The Grey Heron' })
+    expect(plain).not.toHaveProperty('screen')
+    expect(validate(story), JSON.stringify(validate.errors)).toBe(true)
+    expect(normalizeDraft(story).acts[0].scenes.map((x) => x.placeName)).toEqual(['The Bellamy vault', 'The Grey Heron', ''])
+  })
+
+  it('coerces the place name: one line, trimmed, at most 80 characters, "" when not a string', () => {
+    const d = normalizeDraft({ acts: [{ id: 'a', scenes: [
+      { id: 's1', placeName: '  The old\n  mill  ' }, { id: 's2', placeName: 'x'.repeat(200) }, { id: 's3', placeName: 42 }, { id: 's4' },
+    ] }] })
+    expect(d.acts[0].scenes.map((x) => x.placeName)).toEqual(['The old mill', 'x'.repeat(80), '', ''])
   })
 
   it('writes items as story items: weapons, uses, help; sloppy values are coerced or dropped', () => {

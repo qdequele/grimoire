@@ -223,7 +223,7 @@ describe('applyEdits', () => {
   it("set_screen changes only a scene's ambiance screen; {} removes it", () => {
     const s = sample()
     const id = firstScene(s).id
-    const out = applyEdits(s, [{ op: 'set_screen', id, screen: { place: 'harbour', preset: 'storm', image: '' } }]) as Record<string, any> // eslint-disable-line @typescript-eslint/no-explicit-any
+    const out = applyEdits(s, [{ op: 'set_screen', id, screen: { place: 'harbour', preset: 'storm', image: '', name: '' } }]) as Record<string, any> // eslint-disable-line @typescript-eslint/no-explicit-any
     expect(firstScene(out)).toEqual({ ...firstScene(s), screen: { place: 'harbour', preset: 'storm' } })
     expect(validate(out), JSON.stringify(validate.errors)).toBe(true)
     const back = applyEdits(out, [{ op: 'set_screen', id, screen: {} }]) as Record<string, any> // eslint-disable-line @typescript-eslint/no-explicit-any
@@ -234,6 +234,21 @@ describe('applyEdits', () => {
     expect(() => applyEdits(s, [{ op: 'set_screen', id, screen: 'fog' }])).toThrow(ToolError)
     // An unknown value gets through applyEdits but not the schema check that follows it.
     expect(validate(applyEdits(s, [{ op: 'set_screen', id, screen: { place: 'moon' } }]))).toBe(false)
+  })
+
+  it("set_screen keeps the place's name unless it is named; a name is trimmed, \"\" removes it", () => {
+    const s = sample()
+    const id = firstScene(s).id
+    firstScene(s).screen = { place: 'harbour', name: 'The old pier' }
+    const kept = applyEdits(s, [{ op: 'set_screen', id, screen: { preset: 'fog' } }]) as Record<string, any> // eslint-disable-line @typescript-eslint/no-explicit-any
+    expect(firstScene(kept).screen).toEqual({ name: 'The old pier', preset: 'fog' })
+    const renamed = applyEdits(kept, [{ op: 'set_screen', id, screen: { name: '  The  quay \n' } }]) as Record<string, any> // eslint-disable-line @typescript-eslint/no-explicit-any
+    expect(firstScene(renamed).screen).toEqual({ name: 'The quay' })
+    expect(validate(renamed), JSON.stringify(validate.errors)).toBe(true)
+    const off = applyEdits(renamed, [{ op: 'set_screen', id, screen: { name: '' } }]) as Record<string, any> // eslint-disable-line @typescript-eslint/no-explicit-any
+    expect(firstScene(off)).not.toHaveProperty('screen')
+    expect(firstScene(applyEdits(s, [{ op: 'set_screen', id, screen: { name: 'x'.repeat(200) } }])).screen.name).toHaveLength(80)
+    expect(validate(applyEdits(s, [{ op: 'set_screen', id, screen: { name: 7 } }]))).toBe(false)
   })
 
   it('set_screen keeps a picture and a fire unless they are named', () => {

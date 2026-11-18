@@ -22,6 +22,7 @@ If the Grimoire tools are not available, tell the user to add the connector firs
 - Every story is original: invent places, people, entities and books. Names from published games or fiction are refused by the tools.
 - Respect what the keeper asked to avoid, completely.
 - Objects that matter (a key, a found weapon, a talisman, a lamp the ending needs) can be story **items**: the keeper gives them as cards during play and the investigators keep them. Two or three per story at most, each with the scene where it is found (topic `format`, §6).
+- Give each scene a place name (`placeName` in `write_scenes`, `screen.name` in story.json, `edit_story` `set_screen` `name`): the players read it on the ambiance screen, so a short proper name as they would call the place, in the story's language ("L'église Saint-Roch"), the same for every scene in the same place, never a spoiler and never a scene title that gives something away.
 - At the end, give the story's link and suggest one thing the keeper could check or change, and offer pictures (below).
 
 ## Revising
