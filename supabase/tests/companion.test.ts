@@ -1220,3 +1220,144 @@ describe('companion: progression saved from a game', () => {
     expect((await dataOf(g.ids[0])).progress).toEqual({ san: 40 })
   })
 })
+
+// ------------------------------------------------------------------ the remote table
+describe('companion: the table (décor, documents, shared rolls)', () => {
+  interface TableRead {
+    screen: Record<string, unknown> | null
+    documents: Array<{ id: string; key: string; title: string; text: string | null; image: { url?: string } | null }>
+    rolls: Array<Record<string, unknown>>
+  }
+  const table = async (token: string) => {
+    const { data, error } = await anon.rpc('companion_table', { p_token: token })
+    if (error) throw error
+    return data as unknown as TableRead
+  }
+  const channelOf = async (gameId: string) =>
+    (await alice.client.from('games').select('channel').eq('id', gameId).single()).data!.channel
+
+  it('a link reads the screen, the kept documents and the rolls of its game only', async () => {
+    const g = await newGame(alice, [{ name: 'One' }, { name: 'Two' }])
+    const other = await newGame(alice, [{ name: 'Elsewhere' }])
+    const l = await link(alice, g.gameId, g.ids[0])
+    const screen = { v: 1, follow: true, sound: false, scene: { preset: 'fog', image: null, sounds: [], name: 'The old mill' }, handout: null }
+    expect((await alice.client.from('games').update({ screen }).eq('id', g.gameId)).error).toBeNull()
+    expect((await alice.client.from('game_documents').insert({ game_id: g.gameId, key: 'handout:letter', title: 'A letter', body: 'Dear **friend**' })).error).toBeNull()
+    expect((await alice.client.from('game_documents').insert({ game_id: other.gameId, key: 'handout:secret', title: 'Not theirs', body: 'x' })).error).toBeNull()
+    // The other investigator's roll shows too: the table shares them.
+    const tableLink = await link(alice, g.gameId)
+    expect((await anon.rpc('companion_roll_dice', { p_token: tableLink.token, p_character: g.ids[1], p_count: 1, p_sides: 6, p_modifier: 0 })).error).toBeNull()
+
+    const t = await table(l.token)
+    expect((t.screen?.scene as { name: string }).name).toBe('The old mill')
+    expect(t.documents.map((d) => d.key)).toEqual(['handout:letter'])
+    expect(t.documents[0]).toMatchObject({ title: 'A letter', text: 'Dear **friend**' })
+    expect(t.rolls).toHaveLength(1)
+    expect(t.rolls[0]).toMatchObject({ characterId: g.ids[1], kind: 'dice', source: 'phone', effect: null })
+  })
+
+  it('refuses a revoked or unknown link', async () => {
+    const g = await newGame(alice, [{ name: 'One' }])
+    const l = await link(alice, g.gameId)
+    expect((await anon.rpc('companion_table', { p_token: 'nope' })).error?.message).toBe('link_invalid')
+    expect((await alice.client.rpc('revoke_table_link', { p_link: l.id })).error).toBeNull()
+    expect((await anon.rpc('companion_table', { p_token: l.token })).error?.message).toBe('link_invalid')
+  })
+
+  it('documents: only the keeper writes them, showing one again updates it, and the table gets a hint', async () => {
+    const g = await newGame(alice, [{ name: 'One' }])
+    const hint = await waitFor<unknown>(
+      async (resolve) => listen(await channelOf(g.gameId), 'documents', resolve),
+      async () => {
+        expect((await alice.client.from('game_documents').insert({ game_id: g.gameId, key: 'k', title: 'Plan', body: 'v1' })).error).toBeNull()
+      },
+    )
+    expect(hint).toBeDefined()
+    const again = await alice.client.from('game_documents').upsert({ game_id: g.gameId, key: 'k', title: 'Plan', body: 'v2' }, { onConflict: 'game_id,key' })
+    expect(again.error).toBeNull()
+    const { data } = await alice.client.from('game_documents').select('body').eq('game_id', g.gameId)
+    expect(data).toEqual([{ body: 'v2' }])
+    // Not empty, not another keeper's game, not readable by another keeper or a visitor.
+    expect((await alice.client.from('game_documents').insert({ game_id: g.gameId, key: 'empty', title: 'x' })).error).not.toBeNull()
+    expect((await bob.client.from('game_documents').insert({ game_id: g.gameId, key: 'theirs', title: 'x', body: 'x' })).error).not.toBeNull()
+    expect((await bob.client.from('game_documents').select('id').eq('game_id', g.gameId)).data).toEqual([])
+    expect((await anon.from('game_documents').select('id').eq('game_id', g.gameId)).data ?? []).toEqual([])
+  })
+
+  it('the screen changing sends a hint on the table’s topic, without what it shows', async () => {
+    const g = await newGame(alice, [{ name: 'One' }])
+    const hint = await waitFor<unknown>(
+      async (resolve) => listen(await channelOf(g.gameId), 'screen', resolve),
+      async () => {
+        expect((await alice.client.from('games').update({ screen: { v: 1, scene: { preset: 'rain', image: null, sounds: [] } } }).eq('id', g.gameId)).error).toBeNull()
+      },
+    )
+    // Realtime adds its own message id: nothing of the screen travels.
+    expect(Object.keys(hint as object).filter((k) => k !== 'id')).toEqual([])
+  })
+
+  it('a SAN roll takes its loss off by itself and says what it cost', async () => {
+    const g = await newGame(alice, [{ name: 'One', san: 60, hp: 11, luck: 45, mp: 12 }])
+    const l = await link(alice, g.gameId)
+    const { data, error } = await anon.rpc('companion_roll_san', { p_token: l.token, p_character: g.ids[0], p_loss_ok: '1', p_loss_fail: '1d6+1' })
+    expect(error).toBeNull()
+    const roll = data as { result: number; level: string; target: number; subject: string; effect: { field: string; delta: number; from: number; to: number; formula: string } }
+    expect(roll).toMatchObject({ kind: 'check', subject: 'san', target: 60, source: 'phone' })
+    const failed = roll.result > 60
+    expect(roll.level === 'failure').toBe(failed)
+    expect(roll.effect.field).toBe('san')
+    expect(roll.effect.from).toBe(60)
+    expect(roll.effect.formula).toBe(failed ? '1D6+1' : '1')
+    if (failed) {
+      expect(roll.effect.delta).toBeLessThanOrEqual(-2)
+      expect(roll.effect.delta).toBeGreaterThanOrEqual(-7)
+    } else expect(roll.effect.delta).toBe(-1)
+    expect(roll.effect.to).toBe(60 + roll.effect.delta)
+    // The live points hold the new SAN (the other values come from the sheet), and the next roll starts from it.
+    const { data: row } = await alice.client.from('game_points').select('pv, san, chance, pm, source').eq('game_id', g.gameId).single()
+    expect(row).toEqual({ pv: 11, san: roll.effect.to, chance: 45, pm: 12, source: 'phone' })
+    const next = await anon.rpc('companion_roll_san', { p_token: l.token, p_character: g.ids[0], p_loss_ok: '0', p_loss_fail: '0' })
+    expect(next.data).toMatchObject({ target: roll.effect.to, effect: { delta: 0, to: roll.effect.to } })
+  })
+
+  it('a SAN roll never goes below 0 and refuses a loss that isn’t one', async () => {
+    const g = await newGame(alice, [{ name: 'One', san: 2 }])
+    const l = await link(alice, g.gameId)
+    const { data, error } = await anon.rpc('companion_roll_san', { p_token: l.token, p_character: g.ids[0], p_loss_ok: '50', p_loss_fail: '50' })
+    expect(error).toBeNull()
+    expect((data as { effect: { to: number; delta: number } }).effect).toMatchObject({ to: 0, delta: -2 })
+    for (const bad of ['', 'abc', '1D7', '100', '-1', '1D6-1', '<b>', '10D6']) {
+      const r = await anon.rpc('companion_roll_san', { p_token: l.token, p_character: g.ids[0], p_loss_ok: '0', p_loss_fail: bad })
+      expect(r.error?.message, bad).toBe('bad_value')
+    }
+    // A personal link rolls for its own investigator only.
+    const two = await newGame(alice, [{ name: 'A' }, { name: 'B' }])
+    const personal = await link(alice, two.gameId, two.ids[0])
+    const r = await anon.rpc('companion_roll_san', { p_token: personal.token, p_character: two.ids[1], p_loss_ok: '0', p_loss_fail: '1' })
+    expect(r.error?.message).toBe('not_in_game')
+  })
+
+  it('the keeper’s rolls for an investigator join the table’s, marked as the keeper’s', async () => {
+    const g = await newGame(alice, [{ name: 'One' }])
+    const l = await link(alice, g.gameId)
+    const base = { game_id: g.gameId, owner_id: alice.id, character_id: g.ids[0], source: 'keeper' }
+    const check = await alice.client.from('game_rolls').insert({
+      ...base, kind: 'check', subject: 'label:Bibliothèque', target: 60, net: 0, dice: { tens: [3], units: 4 }, result: 34, level: 'hard',
+    })
+    expect(check.error).toBeNull()
+    const damage = await alice.client.from('game_rolls').insert({
+      ...base, kind: 'damage', subject: 'label:Chute', dice: { formula: '1D6', total: 4 }, result: 4, effect: { field: 'pv', delta: -4, from: 11, to: 7 },
+    })
+    expect(damage.error).toBeNull()
+    const t = await table(l.token)
+    expect(t.rolls.map((r) => [r.kind, r.source])).toEqual([['damage', 'keeper'], ['check', 'keeper']])
+    expect(t.rolls[0].effect).toEqual({ field: 'pv', delta: -4, from: 11, to: 7 })
+
+    // Never as a player's roll, never in another keeper's game, never with a malformed cost.
+    expect((await alice.client.from('game_rolls').insert({ ...base, source: 'phone', kind: 'dice', dice: {}, result: 1 })).error).not.toBeNull()
+    expect((await bob.client.from('game_rolls').insert({ ...base, owner_id: bob.id, kind: 'damage', subject: 'label:x', dice: {}, result: 1 })).error).not.toBeNull()
+    expect((await bob.client.from('game_rolls').insert({ ...base, kind: 'damage', subject: 'label:x', dice: {}, result: 1 })).error).not.toBeNull()
+    expect((await alice.client.from('game_rolls').insert({ ...base, kind: 'damage', subject: 'label:x', dice: {}, result: 1, effect: { field: 'luck', delta: 1, from: 1, to: 2 } })).error).not.toBeNull()
+    expect((await alice.client.from('game_rolls').insert({ ...base, kind: 'damage', subject: 'x'.repeat(91), dice: {}, result: 1 })).error).not.toBeNull()
+  })
+})

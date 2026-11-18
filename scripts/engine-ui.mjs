@@ -87,6 +87,22 @@ export const UI_PATCHES = [
     'const openOver=()=>["#npcDlg","#pick","#saveDlg","#gmMenu","#hdDlg"]',
     'no shortcuts while a document is open',
   ],
+  // The table (players at a computer) sees the rolls the keeper makes for an investigator.
+  [
+    'res.push({n:c.n,txt,cls,dz});jlog(`${c.n} · SAN ${P.label} : ${txt}`,"san");}',
+    'res.push({n:c.n,txt,cls,dz});jlog(`${c.n} · SAN ${P.label} : ${txt}`,"san");tblRoll(sl.cid,{kind:"check",subject:"san",target:from,net:0,dice:{tens:dz.tens,units:dz.u},result:x.r,level:tblLevel(x.r,from),effect:{field:"san",delta:sl.san-from,from,to:sl.san,formula:String(f)}});}',
+    'table rolls: a SAN roll the keeper makes for an investigator, with the SAN it cost',
+  ],
+  [
+    'res.push({n:c.n,txt,cls:ok?"ok":"bad",dz});jlog(`${c.n} · ${P.label} : ${txt}`,"test");}',
+    'res.push({n:c.n,txt,cls:ok?"ok":"bad",dz});jlog(`${c.n} · ${P.label} : ${txt}`,"test");tblRoll(sl.cid,{kind:"check",subject:tblSubject(P.label),target:v,net:Math.max(-2,Math.min(2,P.B-P.M)),dice:{tens:dz.tens,units:dz.u},result:x.r,level:tblLevel(x.r,v)});}',
+    'table rolls: a skill or characteristic test the keeper makes for an investigator',
+  ],
+  [
+    'res.push({n:c.n,txt,cls:"bad",dz});jlog(`${c.n} · ${P.label} : ${txt}`,"pv");}',
+    'res.push({n:c.n,txt,cls:"bad",dz});jlog(`${c.n} · ${P.label} : ${txt}`,"pv");tblRoll(sl.cid,{kind:"damage",subject:tblSubject(P.label),dice:{formula:String(P.val),total:v},result:v,effect:{field:"pv",delta:sl.pv-from,from,to:sl.pv}});}',
+    'table rolls: damage the keeper rolls on an investigator, with the HP it cost',
+  ],
 ]
 
 const MARK = '/* Grimoire UI (scripts/engine-ui.mjs)'

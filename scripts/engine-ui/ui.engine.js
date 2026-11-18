@@ -120,3 +120,8 @@ GRIMOIRE_ENGINE.setItems=function(m){ITEMS=m&&typeof m==="object"?m:{};
 function itRowHTML(s){const I=GRIMOIRE_DATA.ITEMS||{};const ids=(s.it||[]).filter(id=>I[id]);if(!ids.length||!GRIMOIRE_HOST.giveItem)return "";
   return `<div class="hd-row it-row"><span class="hd-lbl">Objets</span>${ids.map(id=>`<button type="button" class="hdc" data-giveit="${esc(id)}" title="Donner à un investigateur">${itIcon()}<span>${esc(I[id].t)}</span></button>`).join("")}</div>`;}
 $("#scene").addEventListener("click",e=>{const b=e.target.closest("[data-giveit]");if(!b)return;e.preventDefault();GRIMOIRE_HOST.giveItem(b.dataset.giveit);});
+/* Table rolls: what the keeper rolls for an investigator goes to the host, which shows it to the
+   players (GRIMOIRE_HOST.rolled). Same levels as the players' own rolls. */
+function tblRoll(cid,r){try{if(window.GRIMOIRE_HOST&&GRIMOIRE_HOST.rolled)GRIMOIRE_HOST.rolled(cid,r);}catch(e){console.error(e);}}
+function tblLevel(r,v){return r<=Math.floor(v/5)?"extreme":r<=Math.floor(v/2)?"hard":r<=v?"regular":"failure";}
+function tblSubject(l){return l==="Chance"?"luck":"label:"+String(l).slice(0,80);}

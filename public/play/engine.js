@@ -1376,13 +1376,13 @@ function rollPick(){const P=PICK,st=ST();const res=[];PICK_BUSY=true;
           txt+=`. Test d'INT ${y.r} sur ${int} réussi : folie temporaire ${hh} h, folie passagère « ${FOLIES[fr-1].split(" :")[0]} » ${rd} rounds`;histAdd(sl.cid,`${SC().t} : folie temporaire (${P.label})`);cls="mad";}
           else txt+=`. Test d'INT ${y.r} sur ${int} raté : il reste sain d'esprit pour l'instant`;}
         else txt+=". Perte de 5 ou plus : fais un test d'INT (réussi = folie temporaire 1D10 h)";}
-      res.push({n:c.n,txt,cls,dz});jlog(`${c.n} · SAN ${P.label} : ${txt}`,"san");}
+      res.push({n:c.n,txt,cls,dz});jlog(`${c.n} · SAN ${P.label} : ${txt}`,"san");tblRoll(sl.cid,{kind:"check",subject:"san",target:from,net:0,dice:{tens:dz.tens,units:dz.u},result:x.r,level:tblLevel(x.r,from),effect:{field:"san",delta:sl.san-from,from,to:sl.san,formula:String(f)}});}
     if(P.kind==="test"){const f=valFor(c,sl,P.label);const v=+(P.vals[sl.cid]??f.v)||0;if(!v){res.push({n:c.n,txt:"valeur manquante, pas de jet",cls:""});return;}
       const x=d100(P.B,P.M),L=level(x.r,v),dz=LASTD;const ok=L[0]!=="fail";let txt=`${x.r} sur ${v} : ${L[1].toLowerCase()}`;
       if(ok&&f.sk&&!CHARS_K.includes(P.label.toUpperCase())&&P.label!=="Chance"){const p=P_(sl.cid);if(!p.checks.includes(f.sk)){p.checks.push(f.sk);txt+=` · ${f.sk} cochée`;}}
-      res.push({n:c.n,txt,cls:ok?"ok":"bad",dz});jlog(`${c.n} · ${P.label} : ${txt}`,"test");}
+      res.push({n:c.n,txt,cls:ok?"ok":"bad",dz});jlog(`${c.n} · ${P.label} : ${txt}`,"test");tblRoll(sl.cid,{kind:"check",subject:tblSubject(P.label),target:v,net:Math.max(-2,Math.min(2,P.B-P.M)),dice:{tens:dz.tens,units:dz.u},result:x.r,level:tblLevel(x.r,v)});}
     if(P.kind==="dmg"){const x=rollFormula(P.val),dz=LASTF;const v=Math.max(0,x.tot);const from=sl.pv;const note=applyDamage(sl,v);const txt=`${P.val} = ${v} dégâts (PV ${from} → ${sl.pv})${note?" · "+note:""}`;
-      res.push({n:c.n,txt,cls:"bad",dz});jlog(`${c.n} · ${P.label} : ${txt}`,"pv");}
+      res.push({n:c.n,txt,cls:"bad",dz});jlog(`${c.n} · ${P.label} : ${txt}`,"pv");tblRoll(sl.cid,{kind:"damage",subject:tblSubject(P.label),dice:{formula:String(P.val),total:v},result:v,effect:{field:"pv",delta:sl.pv-from,from,to:sl.pv}});}
   });
   PICK_BUSY=false;P.res=res;save();renderPick();pickDice();renderInv();renderNav();
   const good=res.filter(r=>r.cls==="ok").length,bad=res.filter(r=>r.cls==="bad"||r.cls==="mad").length;
@@ -1864,5 +1864,10 @@ GRIMOIRE_ENGINE.setItems=function(m){ITEMS=m&&typeof m==="object"?m:{};
 function itRowHTML(s){const I=GRIMOIRE_DATA.ITEMS||{};const ids=(s.it||[]).filter(id=>I[id]);if(!ids.length||!GRIMOIRE_HOST.giveItem)return "";
   return `<div class="hd-row it-row"><span class="hd-lbl">Objets</span>${ids.map(id=>`<button type="button" class="hdc" data-giveit="${esc(id)}" title="Donner à un investigateur">${itIcon()}<span>${esc(I[id].t)}</span></button>`).join("")}</div>`;}
 $("#scene").addEventListener("click",e=>{const b=e.target.closest("[data-giveit]");if(!b)return;e.preventDefault();GRIMOIRE_HOST.giveItem(b.dataset.giveit);});
+/* Table rolls: what the keeper rolls for an investigator goes to the host, which shows it to the
+   players (GRIMOIRE_HOST.rolled). Same levels as the players' own rolls. */
+function tblRoll(cid,r){try{if(window.GRIMOIRE_HOST&&GRIMOIRE_HOST.rolled)GRIMOIRE_HOST.rolled(cid,r);}catch(e){console.error(e);}}
+function tblLevel(r,v){return r<=Math.floor(v/5)?"extreme":r<=Math.floor(v/2)?"hard":r<=v?"regular":"failure";}
+function tblSubject(l){return l==="Chance"?"luck":"label:"+String(l).slice(0,80);}
 
 try{route()}catch(e){}

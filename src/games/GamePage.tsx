@@ -19,7 +19,7 @@ import { ScreenControl, screenStory } from './screen'
 import { ScreenDialog } from './ScreenDialog'
 import { engineQueue, gameView, inOrder } from './live'
 import { keeperPatch, mergeRow, POINT_FIELDS, type PointField, type PointsWithChecks } from './points'
-import { rollFeed } from './rolls'
+import { keeperRoll, rollFeed } from './rolls'
 import { showRollToast } from './RollToast'
 import { rollJournal } from '@/companion/rolls'
 import { parseScreen } from '@/screen/state'
@@ -508,6 +508,11 @@ export function GamePage() {
           }
           setGiving(storyItemId)
           return true
+        },
+        rolled: (characterId, roll) => {
+          if (!accountIds.has(characterId)) return
+          const row = keeperRoll(g.id, g.owner_id, characterId, roll)
+          if (row) void supabase.from('game_rolls').insert(row).then(({ error }) => error && console.error('Roll not shown to the table', error))
         },
         sample,
       }
